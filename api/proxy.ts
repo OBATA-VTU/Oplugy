@@ -66,5 +66,5 @@ const handler = async (req: VercelRequest, res: VercelResponse) => {
   }
 };
 
-// Fix for line 70: Changed CommonJS export to ES Module export (`export default`) to resolve TypeScript error 'Cannot find name module'.
+// FIX: Switched to ES module export to resolve TypeScript error. Vercel supports this.
 export default handler;
