@@ -46,15 +46,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           setUser(null);
           setWalletBalance(null);
         } else {
-          addNotification(response.message || 'Failed to fetch wallet balance', 'error');
+          // For testing, let's assume a starting balance if the API fails initially
+          setWalletBalance(50000); 
+          addNotification(response.message || 'Failed to fetch wallet balance. Using mock balance for testing.', 'warning');
         }
       }
     } catch (error: any) {
-      addNotification(error.message || 'Error fetching wallet balance', 'error');
+      addNotification(error.message || 'Error fetching wallet balance. Using mock balance for testing.', 'error');
+      setWalletBalance(50000); // Mock balance for testing purposes
     }
   }, [token, addNotification]);
 
   useEffect(() => {
+    // --- TEMPORARY CHANGE FOR TESTING API VENDING ---
+    // This will bypass login and simulate a logged-in user.
+    // To restore authentication, remove these lines and uncomment the original code below.
+    setUser({ id: 'test-user-123', email: 'tester@oplug.com' });
+    setToken('dummy-auth-token-for-testing');
+    setIsLoading(false);
+    // -------------------------------------------------
+    
+    /* --- ORIGINAL AUTHENTICATION CODE ---
     try {
       const storedToken = localStorage.getItem(LOCAL_STORAGE_TOKEN_KEY);
       const storedUser = localStorage.getItem(LOCAL_STORAGE_USER_KEY);
@@ -72,6 +84,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } finally {
       setIsLoading(false);
     }
+    */
   }, []);
 
   useEffect(() => {
@@ -125,11 +138,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, [addNotification]);
 
   const logout = useCallback(() => {
+    // In testing mode, this will clear the session, requiring a page refresh to "log back in".
     authService.logout();
     setToken(null);
     setUser(null);
     setWalletBalance(null);
-    addNotification('Logged out successfully.', 'info');
+    addNotification('Logged out. Refresh page to resume testing.', 'info');
   }, [addNotification]);
 
   const updateWalletBalance = useCallback((newBalance: number) => {
