@@ -33,46 +33,64 @@ export async function apiClient<T>(
     ...customConfig,
   };
 
-  // Fix: Correctly construct the full URL. If endpoint is empty, it means baseUrl already contains the full path (e.g., proxied URL).
   const fullUrl = endpoint ? `${baseUrl}/${endpoint}` : baseUrl;
   
-  console.log('Making API call to:', fullUrl);
-  console.log('Request config:', config);
-  console.log('Request headers (including x-api-key):', headers);
-
+  console.log(`Making API call to: ${fullUrl} with method: ${config.method}`);
+  
   try {
     const response = await fetch(fullUrl, config);
 
     if (!response.ok) {
       let errorData: any;
+      let errorText: string | null = null;
       try {
+        // First, try to parse as JSON, which is the expected error format
         errorData = await response.json();
       } catch (jsonError) {
-        // If response is not JSON, or empty, provide a generic error message
-        const errorMessage = `HTTP error! status: ${response.status} - ${response.statusText || 'Unknown error'}`;
-        console.error('API call failed with non-JSON response:', errorMessage, response);
-        return { data: undefined, message: errorMessage, status: false, errors: [errorMessage] };
+        // If response is not JSON, read it as text for logging
+        try {
+          errorText = await response.text();
+        } catch (textError) {
+          errorText = "Could not read error response body.";
+        }
+        errorData = null; // No valid JSON
       }
-      // CIP API uses "status: 'error'" and provides `message` and `errors` in 4XX responses.
-      const errorMessage = errorData.message || (errorData.errors && errorData.errors[0]?.message) || 'An unknown error occurred';
-      console.error('API call failed with JSON error:', errorData);
-      return { data: undefined, message: errorMessage, status: false, errors: errorData.errors?.map((err: any) => err.message) || [errorMessage] };
+
+      // Log detailed error information for Vercel debugging
+      console.error(
+        '--- API CLIENT HTTP ERROR ---',
+        `\n- URL: ${fullUrl}`,
+        `\n- Method: ${config.method}`,
+        `\n- Status: ${response.status}`,
+        `\n- Status Text: ${response.statusText}`,
+        `\n- Response Body (JSON):`, errorData,
+        `\n- Response Body (Raw Text):`, errorText
+      );
+
+      const errorMessage = errorData?.message || (errorData?.errors && errorData.errors[0]?.message) || response.statusText || 'An unknown error occurred';
+      return { data: undefined, message: errorMessage, status: false, errors: errorData?.errors?.map((err: any) => err.message) || [errorMessage] };
     }
 
     const contentType = response.headers.get('content-type');
     if (contentType && contentType.includes('application/json')) {
       const result = await response.json();
-      // CIP API uses "status": "success"/"error" strings. Map this to boolean.
       const apiStatus = result.status === 'success';
-      console.log('API call successful, response:', result);
+      console.log(`API call to ${fullUrl} successful.`);
       return { data: result.data, message: result.message, status: apiStatus, errors: result.errors };
     } else {
-      // Handle cases where API returns non-JSON but still successful (e.g., 204 No Content)
-      console.log('API call successful, non-JSON response:', response);
+      console.log(`API call to ${fullUrl} successful with non-JSON response.`);
       return { data: undefined, message: response.statusText, status: true };
     }
   } catch (error: any) {
-    console.error('API call failed (network or unexpected error):', error);
-    return { data: undefined, message: error.message || 'Network error', status: false, errors: [error.message] };
+    // Log detailed network error information for Vercel debugging
+    console.error(
+        '--- API CLIENT NETWORK/CORS ERROR ---',
+        `\n- URL: ${fullUrl}`,
+        `\n- Method: ${config.method}`,
+        `\n- Error Name: ${error.name}`,
+        `\n- Error Message: ${error.message}`,
+        `\n- Note: This often indicates a network issue, a CORS problem (check server headers), or that the API endpoint is down.`
+    );
+    return { data: undefined, message: error.message || 'Network error, please check your connection or contact support.', status: false, errors: [error.message] };
   }
 }
