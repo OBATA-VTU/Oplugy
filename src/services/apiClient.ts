@@ -2,7 +2,7 @@ import { ApiResponse } from '../types';
 
 interface RequestOptions extends RequestInit {
   token?: string;
-  xApiKey?: string; // New field for CIP API key
+  xApiKey?: string; // This is now unused here, but kept for other potential APIs
   data?: any;
 }
 
@@ -29,67 +29,45 @@ export async function apiClient<T>(
     method: data ? 'POST' : 'GET',
     body: data ? JSON.stringify(data) : undefined,
     headers,
-    mode: 'cors', // Explicitly set mode to 'cors' for cross-origin requests
     ...customConfig,
   };
 
-  const fullUrl = endpoint ? `${baseUrl}/${endpoint}` : baseUrl;
-  
-  console.log(`Making API call to: ${fullUrl} with method: ${config.method}`);
+  const fullUrl = `${baseUrl}/${endpoint}`;
   
   try {
     const response = await fetch(fullUrl, config);
 
-    if (!response.ok) {
-      let errorData: any;
-      let errorText: string | null = null;
-      try {
-        // First, try to parse as JSON, which is the expected error format
-        errorData = await response.json();
-      } catch (jsonError) {
-        // If response is not JSON, read it as text for logging
-        try {
-          errorText = await response.text();
-        } catch (textError) {
-          errorText = "Could not read error response body.";
-        }
-        errorData = null; // No valid JSON
-      }
+    // Unlike the proxy, the client needs to handle the response differently
+    // as it expects our proxy to always return JSON.
+    const result = await response.json();
 
+    if (!response.ok) {
       // Log detailed error information for Vercel debugging
       console.error(
-        '--- API CLIENT HTTP ERROR ---',
+        '[OPLUG_CLIENT_ERROR] --- API CLIENT HTTP ERROR ---',
         `\n- URL: ${fullUrl}`,
         `\n- Method: ${config.method}`,
         `\n- Status: ${response.status}`,
         `\n- Status Text: ${response.statusText}`,
-        `\n- Response Body (JSON):`, errorData,
-        `\n- Response Body (Raw Text):`, errorText
+        `\n- Response Body:`, result
       );
-
-      const errorMessage = errorData?.message || (errorData?.errors && errorData.errors[0]?.message) || response.statusText || 'An unknown error occurred';
-      return { data: undefined, message: errorMessage, status: false, errors: errorData?.errors?.map((err: any) => err.message) || [errorMessage] };
+      
+      const errorMessage = result?.message || response.statusText || 'An unknown error occurred';
+      return { data: undefined, message: errorMessage, status: false, errors: result?.errors || [errorMessage] };
     }
+    
+    // The proxy now standardizes the response format
+    return { data: result.data, message: result.message, status: result.status === 'success' || result.status === true, errors: result.errors };
 
-    const contentType = response.headers.get('content-type');
-    if (contentType && contentType.includes('application/json')) {
-      const result = await response.json();
-      const apiStatus = result.status === 'success';
-      console.log(`API call to ${fullUrl} successful.`);
-      return { data: result.data, message: result.message, status: apiStatus, errors: result.errors };
-    } else {
-      console.log(`API call to ${fullUrl} successful with non-JSON response.`);
-      return { data: undefined, message: response.statusText, status: true };
-    }
   } catch (error: any) {
     // Log detailed network error information for Vercel debugging
     console.error(
-        '--- API CLIENT NETWORK/CORS ERROR ---',
+        '[OPLUG_CLIENT_ERROR] --- API CLIENT NETWORK/FETCH ERROR ---',
         `\n- URL: ${fullUrl}`,
         `\n- Method: ${config.method}`,
         `\n- Error Name: ${error.name}`,
         `\n- Error Message: ${error.message}`,
-        `\n- Note: This often indicates a network issue, a CORS problem (check server headers), or that the API endpoint is down.`
+        `\n- Note: This often indicates a network issue between the browser and the Vercel proxy, or a problem with the proxy deployment itself.`
     );
     return { data: undefined, message: error.message || 'Network error, please check your connection or contact support.', status: false, errors: [error.message] };
   }

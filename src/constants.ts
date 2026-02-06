@@ -5,15 +5,9 @@ export const LOCAL_STORAGE_USER_KEY = 'oplug_user';
 // API Base URLs - Replace with actual URLs in production
 // For local development, these can be set in a .env file (e.g., REACT_APP_OPLUG_API_BASE_URL)
 export const OPLUG_API_BASE_URL = process.env.REACT_APP_OPLUG_API_BASE_URL || 'https://api.oplug.com/v1'; // Example placeholder for your Oplug backend
-// Reverted to full URL for direct CORS proxying, as `react-scripts` proxy is not active
-export const CIP_API_BASE_URL_DEV = 'https://api-service.cyberbeats.io/v1'; 
-// Public CORS proxy to bypass browser security for local development/testing
-// REMOVED: export const CORS_PROXY_URL = 'https://api.allorigins.win/raw?url='; 
 
-// CIP API Key - MUST be securely managed, ideally from a backend or environment variable
-// For production, consider using process.env.REACT_APP_CIP_API_KEY_DEV.
-// For current testing purposes, the user's provided real API key is directly used here.
-export const CIP_API_KEY_DEV = 'd705f8cecb7221e4b6d758c9ca2ff919'; // User's real API key for testing
+// The CIP API Base URL and Key have been moved to the server-side proxy (`/api/proxy.ts`)
+// for security and to resolve CORS issues.
 
 // Service Categories for Dashboard
 export const SERVICE_CATEGORIES = [
