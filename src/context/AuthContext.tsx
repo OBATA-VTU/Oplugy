@@ -1,7 +1,6 @@
 import React, { createContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { User } from '../types';
 import { authService } from '../services/authService';
-import { LOCAL_STORAGE_TOKEN_KEY, LOCAL_STORAGE_USER_KEY } from '../constants.ts';
 import { useNotifications } from '../hooks/useNotifications';
 
 interface AuthContextType {
