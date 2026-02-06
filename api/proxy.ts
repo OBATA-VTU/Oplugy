@@ -2,16 +2,9 @@
 // It proxies requests from the frontend to the CIP API to bypass CORS issues
 // and provides robust server-side logging that is guaranteed to show up in Vercel logs.
 
-// Fix: Add types for Vercel serverless function request and response.
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-/**
- * Handles incoming requests and forwards them to the CIP API.
- * @param {VercelRequest} req - The incoming request object from the client.
- * @param {VercelResponse} res - The server response object to send back to the client.
- */
-// Fix: Use ES module `export default` instead of CommonJS `module.exports`.
-export default async (req: VercelRequest, res: VercelResponse) => {
+const handler = async (req: VercelRequest, res: VercelResponse) => {
   // --- Configuration from Official CIP API Documentation ---
   const CIP_API_BASE_URL = 'https://dev-api.ciptopup.ng/api'; // Using dev environment URL from docs
   const CIP_API_KEY = '7b908cd0c85f6a18a1feae59b7213633';     // Using test API key from docs
@@ -44,7 +37,7 @@ export default async (req: VercelRequest, res: VercelResponse) => {
       'x-api-key': CIP_API_KEY,
     };
 
-    const config = {
+    const config: RequestInit = {
       method: method || (data ? 'POST' : 'GET'),
       headers,
       body: data ? JSON.stringify(data) : undefined,
@@ -72,3 +65,6 @@ export default async (req: VercelRequest, res: VercelResponse) => {
     });
   }
 };
+
+// Fix for line 70: Changed CommonJS export to ES Module export (`export default`) to resolve TypeScript error 'Cannot find name module'.
+export default handler;
