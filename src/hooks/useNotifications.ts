@@ -1,17 +1,10 @@
-import { useState, useCallback } from 'react';
-import { NotificationState } from '../types';
+import { useContext } from 'react';
+import { NotificationContext } from '../context/NotificationContext';
 
 export const useNotifications = () => {
-  const [notifications, setNotifications] = useState<NotificationState[]>([]);
-
-  const addNotification = useCallback((message: string, type: NotificationState['type'] = 'info') => {
-    const id = Date.now().toString(); // Simple unique ID
-    setNotifications((prev) => [...prev, { id, message, type }]);
-  }, []);
-
-  const removeNotification = useCallback((id: string) => {
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
-  }, []);
-
-  return { notifications, addNotification, removeNotification };
+  const context = useContext(NotificationContext);
+  if (!context) {
+    throw new Error('useNotifications must be used within a NotificationProvider');
+  }
+  return context;
 };

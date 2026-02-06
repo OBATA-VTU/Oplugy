@@ -110,15 +110,18 @@ const DataPage: React.FC = () => {
       } else {
         const errorMessage = response.message || 'Data purchase failed.';
         addNotification(errorMessage, 'error');
-        console.error('Data Purchase API Error:', {
+        // GUARANTEED VERCEL LOGGING
+        console.error('--- DATA PURCHASE FAILED (API LOGIC) ---', {
           message: errorMessage,
-          errors: response.errors,
+          fullResponse: response,
           payload
         });
       }
     } catch (error: any) {
-      addNotification(error.message || 'Error during data purchase.', 'error');
-      console.error('Data Purchase Exception:', {
+      const errorMessage = (error instanceof Error) ? error.message : 'An unknown error occurred.';
+      addNotification(errorMessage, 'error');
+      // GUARANTEED VERCEL LOGGING FOR EXCEPTIONS
+      console.error('--- DATA PURCHASE FAILED (EXCEPTION) ---', {
         error,
         payload
       });

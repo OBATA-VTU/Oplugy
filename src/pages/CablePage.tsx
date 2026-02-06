@@ -92,13 +92,14 @@ const CablePage: React.FC = () => {
         setShowConfirmModal(true);
         addNotification('Smartcard verified successfully.', 'success');
       } else {
-        const errorMessage = response.data?.message || 'Failed to verify smartcard number.';
+        const errorMessage = response.message || 'Failed to verify smartcard number.';
         addNotification(errorMessage, 'error');
-        console.error("Smartcard Verification API Error:", { message: errorMessage, response, payload });
+        console.error("--- SMARTCARD VERIFICATION FAILED (API LOGIC) ---", { message: errorMessage, fullResponse: response, payload });
       }
     } catch (error: any) {
-      addNotification(error.message || 'Error verifying smartcard number.', 'error');
-      console.error("Smartcard Verification Exception:", { error, payload });
+      const errorMessage = (error instanceof Error) ? error.message : 'An unknown error occurred.';
+      addNotification(errorMessage, 'error');
+      console.error("--- SMARTCARD VERIFICATION FAILED (EXCEPTION) ---", { error, payload });
     } finally {
       setIsVerifying(false);
     }
@@ -144,11 +145,14 @@ const CablePage: React.FC = () => {
       } else {
         const errorMessage = response.message || 'Cable subscription failed.';
         addNotification(errorMessage, 'error');
-        console.error("Cable Subscription API Error:", { message: errorMessage, errors: response.errors, payload });
+        // GUARANTEED VERCEL LOGGING
+        console.error("--- CABLE SUBSCRIPTION FAILED (API LOGIC) ---", { message: errorMessage, fullResponse: response, payload });
       }
     } catch (error: any) {
-      addNotification(error.message || 'Error during cable subscription.', 'error');
-      console.error("Cable Subscription Exception:", { error, payload });
+      const errorMessage = (error instanceof Error) ? error.message : 'An unknown error occurred.';
+      addNotification(errorMessage, 'error');
+      // GUARANTEED VERCEL LOGGING FOR EXCEPTIONS
+      console.error("--- CABLE SUBSCRIPTION FAILED (EXCEPTION) ---", { error, payload });
     } finally {
       setIsPurchasing(false);
     }

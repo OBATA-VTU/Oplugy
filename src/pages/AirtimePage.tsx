@@ -90,15 +90,18 @@ const AirtimePage: React.FC = () => {
       } else {
         const errorMessage = response.message || 'Airtime purchase failed.';
         addNotification(errorMessage, 'error');
-        console.error('Airtime Purchase API Error:', {
+        // GUARANTEED VERCEL LOGGING
+        console.error('--- AIRTIME PURCHASE FAILED (API LOGIC) ---', {
           message: errorMessage,
-          errors: response.errors,
+          fullResponse: response,
           payload
         });
       }
     } catch (error: any) {
-      addNotification(error.message || 'Error during airtime purchase.', 'error');
-      console.error('Airtime Purchase Exception:', {
+      const errorMessage = (error instanceof Error) ? error.message : 'An unknown error occurred.';
+      addNotification(errorMessage, 'error');
+      // GUARANTEED VERCEL LOGGING FOR EXCEPTIONS
+      console.error('--- AIRTIME PURCHASE FAILED (EXCEPTION) ---', {
         error,
         payload
       });

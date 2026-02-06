@@ -74,13 +74,14 @@ const BillsPage: React.FC = () => {
         setShowConfirmModal(true);
         addNotification('Meter verified successfully.', 'success');
       } else {
-        const errorMessage = response.data?.message || 'Failed to verify meter number.';
+        const errorMessage = response.message || 'Failed to verify meter number.';
         addNotification(errorMessage, 'error');
-        console.error("Meter Verification API Error:", { message: errorMessage, response, payload });
+        console.error("--- METER VERIFICATION FAILED (API LOGIC) ---", { message: errorMessage, fullResponse: response, payload });
       }
     } catch (error: any) {
-      addNotification(error.message || 'Error verifying meter number.', 'error');
-      console.error("Meter Verification Exception:", { error, payload });
+      const errorMessage = (error instanceof Error) ? error.message : 'An unknown error occurred.';
+      addNotification(errorMessage, 'error');
+      console.error("--- METER VERIFICATION FAILED (EXCEPTION) ---", { error, payload });
     } finally {
       setIsVerifying(false);
     }
@@ -121,11 +122,14 @@ const BillsPage: React.FC = () => {
       } else {
         const errorMessage = response.message || 'Electricity bill payment failed.';
         addNotification(errorMessage, 'error');
-        console.error("Electricity Purchase API Error:", { message: errorMessage, errors: response.errors, payload });
+        // GUARANTEED VERCEL LOGGING
+        console.error("--- ELECTRICITY PURCHASE FAILED (API LOGIC) ---", { message: errorMessage, fullResponse: response, payload });
       }
     } catch (error: any) {
-      addNotification(error.message || 'Error during electricity bill payment.', 'error');
-      console.error("Electricity Purchase Exception:", { error, payload });
+      const errorMessage = (error instanceof Error) ? error.message : 'An unknown error occurred.';
+      addNotification(errorMessage, 'error');
+      // GUARANTEED VERCEL LOGGING FOR EXCEPTIONS
+      console.error("--- ELECTRICITY PURCHASE FAILED (EXCEPTION) ---", { error, payload });
     } finally {
       setIsPurchasing(false);
     }

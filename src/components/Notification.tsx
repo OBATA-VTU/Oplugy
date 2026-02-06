@@ -2,44 +2,42 @@ import React, { useEffect, useState } from 'react';
 import { NotificationState } from '../types';
 
 interface NotificationProps {
-  notification: NotificationState | null;
-  onClose: (id: string) => void;
+  notification: NotificationState;
+  onClose: () => void;
 }
 
 const Notification: React.FC<NotificationProps> = ({ notification, onClose }) => {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    if (notification) {
-      setIsVisible(true);
-      const timer = setTimeout(() => {
-        setIsVisible(false);
-        setTimeout(() => onClose(notification.id), 300); // Allow fade-out transition
-      }, 5000); // Notification auto-hides after 5 seconds
-      return () => clearTimeout(timer);
-    } else {
+    // Mount animation
+    setIsVisible(true);
+    
+    // Auto-hide timer
+    const timer = setTimeout(() => {
       setIsVisible(false);
-    }
-  }, [notification, onClose]);
+      setTimeout(onClose, 300); // Allow fade-out transition before removing
+    }, 5000);
 
-  if (!notification) return null;
+    return () => clearTimeout(timer);
+  }, [notification, onClose]);
 
   const typeStyles = {
     success: 'bg-green-500',
     error: 'bg-red-500',
     info: 'bg-blue-500',
-    warning: 'bg-yellow-500',
+    warning: 'bg-yellow-500 text-black', // Warning more readable with black text
   };
 
   return (
     <div
-      className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg text-white max-w-sm transition-opacity duration-300 ${
+      className={`relative w-full max-w-sm p-4 rounded-lg shadow-lg text-white transition-all duration-300 ease-in-out transform ${
         typeStyles[notification.type]
-      } ${isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+      } ${isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-full'}`}
       role="alert"
     >
       <div className="flex items-center">
-        <div className="mr-2">
+        <div className="mr-3">
           {notification.type === 'success' && (
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -61,8 +59,8 @@ const Notification: React.FC<NotificationProps> = ({ notification, onClose }) =>
             </svg>
           )}
         </div>
-        <div className="flex-grow">{notification.message}</div>
-        <button onClick={() => onClose(notification.id)} className="ml-4 p-1 rounded-full hover:bg-white hover:bg-opacity-20 transition-colors">
+        <div className="flex-grow text-sm font-medium">{notification.message}</div>
+        <button onClick={onClose} className="ml-4 p-1 rounded-full hover:bg-white hover:bg-opacity-20 transition-colors">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
