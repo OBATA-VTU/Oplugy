@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import AuthForm from '../components/AuthForm';
+import SignUpForm from '../components/SignUpForm';
 
-const LoginPage: React.FC = () => {
-  const { login, isAuthenticated, isLoading } = useAuth();
+const SignUpPage: React.FC = () => {
+  const { signup, isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
   const [authError, setAuthError] = useState<string | undefined>(undefined);
 
@@ -14,26 +14,26 @@ const LoginPage: React.FC = () => {
     }
   }, [isAuthenticated, navigate]);
 
-  const handleLoginSubmit = async (email: string, password: string): Promise<boolean> => {
+  const handleSignUpSubmit = async (email: string, password: string): Promise<boolean> => {
     setAuthError(undefined); // Clear previous errors
-    const success = await login(email, password);
+    const success = await signup(email, password);
     if (!success) {
-      setAuthError("Invalid credentials or an unexpected error occurred. Please try again.");
+      setAuthError("Registration failed. This email may already be in use.");
     }
     return success;
   };
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-500 to-indigo-700 p-4">
-      <AuthForm onSubmit={handleLoginSubmit} isLoading={isLoading} error={authError} />
+      <SignUpForm onSubmit={handleSignUpSubmit} isLoading={isLoading} error={authError} />
       <p className="mt-6 text-center text-sm text-white">
-        Don't have an account?{' '}
-        <Link to="/signup" className="font-semibold text-indigo-200 hover:text-white transition-colors">
-          Sign Up
+        Already have an account?{' '}
+        <Link to="/login" className="font-semibold text-indigo-200 hover:text-white transition-colors">
+          Login
         </Link>
       </p>
     </div>
   );
 };
 
-export default LoginPage;
+export default SignUpPage;

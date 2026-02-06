@@ -7,10 +7,26 @@ interface LoginPayload {
   password: string;
 }
 
+interface SignUpPayload extends LoginPayload {
+  // You can add more fields like name, phone_number here if the backend requires it
+}
+
 export const authService = {
   async login(credentials: LoginPayload): Promise<ApiResponse<AuthResponse>> {
     const response = await apiClient<AuthResponse>(OPLUG_API_BASE_URL, 'auth/login', { data: credentials, method: 'POST' });
 
+    if (response.status && response.data) {
+      localStorage.setItem(LOCAL_STORAGE_TOKEN_KEY, response.data.token);
+      localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(response.data.user));
+    }
+    return response;
+  },
+
+  async signup(credentials: SignUpPayload): Promise<ApiResponse<AuthResponse>> {
+    // Assuming a '/auth/register' endpoint. This might need to be adjusted based on the actual backend API.
+    const response = await apiClient<AuthResponse>(OPLUG_API_BASE_URL, 'auth/register', { data: credentials, method: 'POST' });
+
+    // Automatically log in the user upon successful registration
     if (response.status && response.data) {
       localStorage.setItem(LOCAL_STORAGE_TOKEN_KEY, response.data.token);
       localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(response.data.user));

@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, ReactNode, useCallback } from 'react';
-import { User, Wallet, AuthResponse } from '../types';
+import { User } from '../types';
 import { authService } from '../services/authService';
 import { LOCAL_STORAGE_TOKEN_KEY, LOCAL_STORAGE_USER_KEY } from '../constants.ts';
 import { useNotifications } from '../hooks/useNotifications';
@@ -11,6 +11,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<boolean>;
+  signup: (email: string, password: string) => Promise<boolean>; // Added signup
   logout: () => void;
   fetchWalletBalance: () => Promise<void>;
   updateWalletBalance: (newBalance: number) => void;
@@ -96,6 +97,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, [addNotification]);
 
+  const signup = useCallback(async (email: string, password: string): Promise<boolean> => {
+    setIsLoading(true);
+    try {
+      const response = await authService.signup({ email, password });
+      if (response.status && response.data) {
+        setToken(response.data.token);
+        setUser(response.data.user);
+        addNotification('Registration successful! Welcome to Oplug.', 'success');
+        return true;
+      } else {
+        addNotification(response.message || 'Registration failed.', 'error');
+        return false;
+      }
+    } catch (error: any) {
+      addNotification(error.message || 'An error occurred during registration.', 'error');
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [addNotification]);
+
   const logout = useCallback(() => {
     authService.logout();
     setToken(null);
@@ -116,6 +138,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isAuthenticated,
     isLoading,
     login,
+    signup,
     logout,
     fetchWalletBalance,
     updateWalletBalance,

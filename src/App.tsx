@@ -6,6 +6,7 @@ import { useNotifications } from './hooks/useNotifications';
 import Layout from './components/Layout';
 import Notification from './components/Notification';
 import LoginPage from './pages/LoginPage';
+import SignUpPage from './pages/SignUpPage'; // Import the new SignUpPage
 import DashboardPage from './pages/DashboardPage';
 import AirtimePage from './pages/AirtimePage';
 import DataPage from './pages/DataPage';
@@ -30,10 +31,9 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     );
   }
 
-  // TEMPORARILY BYPASSING AUTHENTICATION FOR DEVELOPMENT
-  // if (!isAuthenticated) {
-  //   return <Navigate to="/login" replace />;
-  // }
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
 
   return <>{children}</>;
 };
@@ -46,6 +46,7 @@ const App: React.FC = () => {
       <Router>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignUpPage />} /> {/* Add the new signup route */}
           <Route
             path="/"
             element={
