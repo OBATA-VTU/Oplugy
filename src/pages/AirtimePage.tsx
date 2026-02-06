@@ -1,15 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { useNotifications } from '../hooks/useNotifications'; // Fix: Import useNotifications
+import { useNotifications } from '../hooks/useNotifications';
 import { vtuService } from '../services/vtuService';
 import { Operator } from '../types';
 import Spinner from '../components/Spinner';
 import Modal from '../components/Modal';
-// Fix: Import AIRTIME_NETWORKS from constants.ts
 import { AIRTIME_NETWORKS } from '../constants.ts';
 
 const AirtimePage: React.FC = () => {
-  // Fix: Destructure addNotification from useNotifications hook
   const { addNotification } = useNotifications();
   const { fetchWalletBalance, walletBalance } = useAuth();
   const [operators, setOperators] = useState<Operator[]>([]);
@@ -28,8 +26,8 @@ const AirtimePage: React.FC = () => {
     try {
       // CIP API doesn't have an endpoint for this, so we use a hardcoded list
       setOperators(AIRTIME_NETWORKS);
-      addNotification('Airtime operators loaded.', 'info');
     } catch (error: any) {
+      console.error("Error fetching operators:", error);
       addNotification(error.message || 'Error fetching operators.', 'error');
     } finally {
       setIsFetchingOperators(false);
@@ -40,7 +38,6 @@ const AirtimePage: React.FC = () => {
     fetchOperators();
   }, [fetchOperators]);
 
-  // Handle "verification" as part of the purchase flow, or a client-side check
   const handlePrePurchaseCheck = () => {
     if (!selectedOperator || !phoneNumber || !numericAmount) {
       addNotification('Please fill all required fields.', 'warning');
@@ -55,12 +52,10 @@ const AirtimePage: React.FC = () => {
       return;
     }
 
-    // For CIP, verification is often implicitly handled by the purchase or not explicitly provided.
-    // For the dev environment, the documentation specifies "201000000000" as a success number for ETISALAT (9MOBILE)
     if (phoneNumber === '201000000000' && selectedOperator.id === '9MOBILE') {
-      setCustomerName('CIP Test User'); // Simulate verification success for dev
+      setCustomerName('CIP Test User');
     } else {
-      setCustomerName(null); // Clear if not test user
+      setCustomerName(null);
     }
     setShowConfirmModal(true);
   };
@@ -77,24 +72,36 @@ const AirtimePage: React.FC = () => {
     setIsPurchasing(true);
     setShowConfirmModal(false);
 
+    const payload = {
+      phone: phoneNumber,
+      network: selectedOperator.id,
+      amount: numericAmount,
+    };
+
     try {
-      const response = await vtuService.purchaseAirtime({
-        phone: phoneNumber,
-        network: selectedOperator.id, // CIP expects network string (e.g., "MTN")
-        amount: numericAmount, // Amount is sent in Naira
-      });
+      const response = await vtuService.purchaseAirtime(payload);
 
       if (response.status && response.data) {
         addNotification(`Airtime purchase successful! Ref: ${response.data.reference}. Amount: ₦${response.data.amount}`, 'success');
         setPhoneNumber('');
         setAmount('');
         setSelectedOperator(null);
-        await fetchWalletBalance(); // Refresh wallet balance
+        await fetchWalletBalance();
       } else {
-        addNotification(response.message || 'Airtime purchase failed.', 'error');
+        const errorMessage = response.message || 'Airtime purchase failed.';
+        addNotification(errorMessage, 'error');
+        console.error('Airtime Purchase API Error:', {
+          message: errorMessage,
+          errors: response.errors,
+          payload
+        });
       }
     } catch (error: any) {
       addNotification(error.message || 'Error during airtime purchase.', 'error');
+      console.error('Airtime Purchase Exception:', {
+        error,
+        payload
+      });
     } finally {
       setIsPurchasing(false);
     }
@@ -121,7 +128,7 @@ const AirtimePage: React.FC = () => {
               onChange={(e) => {
                 const op = operators.find((o) => o.id === e.target.value);
                 setSelectedOperator(op || null);
-                setCustomerName(null); // Clear customer name on operator change
+                setCustomerName(null);
               }}
               required
               disabled={isPurchasing}

@@ -1,13 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { useNotifications } from '../hooks/useNotifications'; // Fix: Import useNotifications
+import { useNotifications } from '../hooks/useNotifications';
 import { vtuService } from '../services/vtuService';
 import { Operator } from '../types';
 import Spinner from '../components/Spinner';
 import Modal from '../components/Modal';
 
 const BillsPage: React.FC = () => {
-  // Fix: Destructure addNotification from useNotifications hook
   const { addNotification } = useNotifications();
   const { fetchWalletBalance, walletBalance } = useAuth();
   const [operators, setOperators] = useState<Operator[]>([]);
@@ -15,13 +14,13 @@ const BillsPage: React.FC = () => {
   const [meterNumber, setMeterNumber] = useState('');
   const [meterType, setMeterType] = useState<'prepaid' | 'postpaid'>('prepaid');
   const [amount, setAmount] = useState<string>('');
-  const [phoneNumber, setPhoneNumber] = useState(''); // Added phone number for electricity purchase
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [isFetchingOperators, setIsFetchingOperators] = useState(true);
   const [isVerifying, setIsVerifying] = useState(false);
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [customerInfo, setCustomerInfo] = useState<{ name: string; address: string } | null>(null);
-  const [electricityToken, setElectricityToken] = useState<string | null>(null); // To display the generated token
+  const [electricityToken, setElectricityToken] = useState<string | null>(null);
 
   const numericAmount = parseFloat(amount);
 
@@ -33,9 +32,11 @@ const BillsPage: React.FC = () => {
         setOperators(response.data);
       } else {
         addNotification(response.message || 'Failed to fetch electricity operators.', 'error');
+        console.error("Fetch Electricity Operators Error:", response);
       }
     } catch (error: any) {
       addNotification(error.message || 'Error fetching operators.', 'error');
+      console.error("Fetch Electricity Operators Exception:", error);
     } finally {
       setIsFetchingOperators(false);
     }
@@ -48,33 +49,38 @@ const BillsPage: React.FC = () => {
   const handleVerifyMeter = async () => {
     if (!selectedOperator || !meterNumber || isVerifying) return;
     setIsVerifying(true);
-    setCustomerInfo(null); // Clear previous verification
+    setCustomerInfo(null);
     setElectricityToken(null);
 
-    if (meterNumber.length < 6) { // Assuming meter numbers are at least 6 digits
+    if (meterNumber.length < 6) {
       addNotification('Please enter a valid meter number.', 'warning');
       setIsVerifying(false);
       return;
     }
 
+    const payload = {
+      meter_number: meterNumber,
+      provider_id: selectedOperator.id,
+      meter_type: meterType,
+    };
+
     try {
-      const response = await vtuService.verifyElectricityMeter({
-        meter_number: meterNumber,
-        provider_id: selectedOperator.id, // CIP expects provider_id string
-        meter_type: meterType,
-      });
+      const response = await vtuService.verifyElectricityMeter(payload);
       if (response.status && response.data?.status) {
         setCustomerInfo({
           name: response.data.customerName || 'N/A',
-          address: response.data.customerAddress || 'N/A', // CIP doesn't return address here
+          address: response.data.customerAddress || 'N/A',
         });
         setShowConfirmModal(true);
         addNotification('Meter verified successfully.', 'success');
       } else {
-        addNotification(response.data?.message || 'Failed to verify meter number.', 'error');
+        const errorMessage = response.data?.message || 'Failed to verify meter number.';
+        addNotification(errorMessage, 'error');
+        console.error("Meter Verification API Error:", { message: errorMessage, response, payload });
       }
     } catch (error: any) {
       addNotification(error.message || 'Error verifying meter number.', 'error');
+      console.error("Meter Verification Exception:", { error, payload });
     } finally {
       setIsVerifying(false);
     }
@@ -92,29 +98,34 @@ const BillsPage: React.FC = () => {
     setIsPurchasing(true);
     setShowConfirmModal(false);
 
+    const payload = {
+      meter_number: meterNumber,
+      provider_id: selectedOperator.id,
+      amount: numericAmount,
+      meter_type: meterType,
+      phone: phoneNumber,
+    };
+
     try {
-      const response = await vtuService.purchaseElectricity({
-        meter_number: meterNumber,
-        provider_id: selectedOperator.id,
-        amount: numericAmount, // Amount is sent in Naira
-        meter_type: meterType,
-        phone: phoneNumber, // Added phone number to payload
-      });
+      const response = await vtuService.purchaseElectricity(payload);
 
       if (response.status && response.data) {
         setElectricityToken(response.data.token || null);
-        addNotification(`Electricity bill payment successful! Ref: ${response.data.reference}. Token: ${response.data.token || 'N/A'}. Amount: ₦${response.data.amount}`, 'success');
+        addNotification(`Electricity bill payment successful! Ref: ${response.data.reference}.`, 'success');
         setMeterNumber('');
         setAmount('');
         setPhoneNumber('');
         setSelectedOperator(null);
         setCustomerInfo(null);
-        await fetchWalletBalance(); // Refresh wallet balance
+        await fetchWalletBalance();
       } else {
-        addNotification(response.message || 'Electricity bill payment failed.', 'error');
+        const errorMessage = response.message || 'Electricity bill payment failed.';
+        addNotification(errorMessage, 'error');
+        console.error("Electricity Purchase API Error:", { message: errorMessage, errors: response.errors, payload });
       }
     } catch (error: any) {
       addNotification(error.message || 'Error during electricity bill payment.', 'error');
+      console.error("Electricity Purchase Exception:", { error, payload });
     } finally {
       setIsPurchasing(false);
     }
@@ -141,7 +152,7 @@ const BillsPage: React.FC = () => {
               onChange={(e) => {
                 const op = operators.find((o) => o.id === e.target.value);
                 setSelectedOperator(op || null);
-                setCustomerInfo(null); // Clear customer info on operator change
+                setCustomerInfo(null);
                 setElectricityToken(null);
               }}
               required

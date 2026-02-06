@@ -1,58 +1,57 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { useNotifications } from '../hooks/useNotifications'; // Fix: Import useNotifications
+import { useNotifications } from '../hooks/useNotifications';
 import { vtuService } from '../services/vtuService';
 import { Operator, DataPlan } from '../types';
 import Spinner from '../components/Spinner';
 import Modal from '../components/Modal';
-// Fix: Import DATA_NETWORKS and DATA_PLAN_TYPES from constants.ts
 import { DATA_NETWORKS, DATA_PLAN_TYPES } from '../constants.ts';
 
 const DataPage: React.FC = () => {
-  // Fix: Destructure addNotification from useNotifications hook
   const { addNotification } = useNotifications();
   const { fetchWalletBalance, walletBalance } = useAuth();
   const [operators, setOperators] = useState<Operator[]>([]);
   const [dataTypes, setDataTypes] = useState<{ id: string; name: string }[]>([]);
   const [dataPlans, setDataPlans] = useState<DataPlan[]>([]);
   const [selectedOperator, setSelectedOperator] = useState<Operator | null>(null);
-  const [selectedDataType, setSelectedDataType] = useState<string>(''); // e.g., AWOOF, GIFTING, SME
+  const [selectedDataType, setSelectedDataType] = useState<string>('');
   const [selectedPlan, setSelectedPlan] = useState<DataPlan | null>(null);
   const [phoneNumber, setPhoneNumber] = useState('');
   const [isFetchingOperators, setIsFetchingOperators] = useState(true);
   const [isFetchingPlans, setIsFetchingPlans] = useState(false);
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [customerName, setCustomerName] = useState<string | null>(null); // For display in modal
+  const [customerName, setCustomerName] = useState<string | null>(null);
 
   const fetchOperators = useCallback(async () => {
     setIsFetchingOperators(true);
     try {
-      // CIP API does not have an endpoint for this, so we use a hardcoded list
       setOperators(DATA_NETWORKS);
-      setDataTypes(DATA_PLAN_TYPES); // Set data types as well
-      addNotification('Data operators and types loaded.', 'info');
+      setDataTypes(DATA_PLAN_TYPES);
     } catch (error: any) {
+      console.error("Error fetching data operators:", error);
       addNotification(error.message || 'Error fetching data operators.', 'error');
     } finally {
       setIsFetchingOperators(false);
     }
   }, [addNotification]);
 
-  // Fix: Define fetchPlans using useCallback to make it a stable function
   const fetchPlans = useCallback(async (network: string, type: string) => {
     setIsFetchingPlans(true);
-    setDataPlans([]); // Clear previous plans
-    setSelectedPlan(null); // Clear selected plan
+    setDataPlans([]);
+    setSelectedPlan(null);
     try {
       const response = await vtuService.getDataPlans({ network, type });
       if (response.status && response.data) {
         setDataPlans(response.data);
       } else {
-        addNotification(response.message || 'Failed to fetch data plans.', 'error');
+        const errorMessage = response.message || 'Failed to fetch data plans.';
+        addNotification(errorMessage, 'error');
+        console.error("Fetch Data Plans API Error:", { message: errorMessage, errors: response.errors, network, type });
       }
     } catch (error: any) {
       addNotification(error.message || 'Error fetching data plans.', 'error');
+      console.error("Fetch Data Plans Exception:", { error, network, type });
     } finally {
       setIsFetchingPlans(false);
     }
@@ -68,7 +67,6 @@ const DataPage: React.FC = () => {
     }
   }, [selectedOperator, selectedDataType, fetchPlans]);
 
-  // Handle "verification" as part of the purchase flow, similar to airtime
   const handlePrePurchaseCheck = () => {
     if (!selectedOperator || !selectedDataType || !selectedPlan || !phoneNumber) {
       addNotification('Please fill all required fields.', 'warning');
@@ -78,10 +76,7 @@ const DataPage: React.FC = () => {
       addNotification('Please enter a valid 11-digit phone number.', 'warning');
       return;
     }
-
-    // CIP API doesn't have explicit data number verification.
-    // Assuming for dev, any valid number will proceed to purchase.
-    setCustomerName('Verified Customer'); // Generic name for display
+    setCustomerName('Verified Customer');
     setShowConfirmModal(true);
   };
 
@@ -97,11 +92,13 @@ const DataPage: React.FC = () => {
     setIsPurchasing(true);
     setShowConfirmModal(false);
 
+    const payload = {
+      phone_number: phoneNumber,
+      plan_id: selectedPlan.id,
+    };
+
     try {
-      const response = await vtuService.purchaseData({
-        phone_number: phoneNumber,
-        plan_id: selectedPlan.id, // CIP expects plan_id string
-      });
+      const response = await vtuService.purchaseData(payload);
 
       if (response.status && response.data) {
         addNotification(`Data purchase successful! Ref: ${response.data.reference}. Amount: ₦${response.data.amount}`, 'success');
@@ -109,12 +106,22 @@ const DataPage: React.FC = () => {
         setSelectedOperator(null);
         setSelectedDataType('');
         setSelectedPlan(null);
-        await fetchWalletBalance(); // Refresh wallet balance
+        await fetchWalletBalance();
       } else {
-        addNotification(response.message || 'Data purchase failed.', 'error');
+        const errorMessage = response.message || 'Data purchase failed.';
+        addNotification(errorMessage, 'error');
+        console.error('Data Purchase API Error:', {
+          message: errorMessage,
+          errors: response.errors,
+          payload
+        });
       }
     } catch (error: any) {
       addNotification(error.message || 'Error during data purchase.', 'error');
+      console.error('Data Purchase Exception:', {
+        error,
+        payload
+      });
     } finally {
       setIsPurchasing(false);
     }
@@ -141,7 +148,7 @@ const DataPage: React.FC = () => {
               onChange={(e) => {
                 const op = operators.find((o) => o.id === e.target.value);
                 setSelectedOperator(op || null);
-                setSelectedDataType(''); // Reset data type when operator changes
+                setSelectedDataType('');
                 setCustomerName(null);
               }}
               required
@@ -166,7 +173,7 @@ const DataPage: React.FC = () => {
               value={selectedDataType}
               onChange={(e) => {
                 setSelectedDataType(e.target.value);
-                setSelectedPlan(null); // Reset plan when data type changes
+                setSelectedPlan(null);
               }}
               required
               disabled={!selectedOperator || isPurchasing}

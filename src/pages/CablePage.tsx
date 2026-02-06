@@ -1,24 +1,22 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { useNotifications } from '../hooks/useNotifications'; // Fix: Import useNotifications
+import { useNotifications } from '../hooks/useNotifications';
 import { vtuService } from '../services/vtuService';
-import { Operator, DataPlan } from '../types'; // Reusing DataPlan for cable plans as they have similar structure
+import { Operator, DataPlan } from '../types';
 import Spinner from '../components/Spinner';
 import Modal from '../components/Modal';
-// Fix: Import CABLE_BILLERS and SUBSCRIPTION_TYPES from constants.ts
 import { CABLE_BILLERS, SUBSCRIPTION_TYPES } from '../constants.ts';
 
 const CablePage: React.FC = () => {
-  // Fix: Destructure addNotification from useNotifications hook
   const { addNotification } = useNotifications();
   const { fetchWalletBalance, walletBalance } = useAuth();
   const [operators, setOperators] = useState<Operator[]>([]);
-  const [cablePlans, setCablePlans] = useState<DataPlan[]>([]); // Using DataPlan interface
+  const [cablePlans, setCablePlans] = useState<DataPlan[]>([]);
   const [selectedOperator, setSelectedOperator] = useState<Operator | null>(null);
   const [selectedPlan, setSelectedPlan] = useState<DataPlan | null>(null);
   const [smartcardNo, setSmartcardNo] = useState('');
-  const [subscriptionType, setSubscriptionType] = useState<string>('RENEW'); // RENEW or CHANGE
-  const [phoneNumber, setPhoneNumber] = useState(''); // Phone number for the subscriber
+  const [subscriptionType, setSubscriptionType] = useState<string>('RENEW');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [isFetchingOperators, setIsFetchingOperators] = useState(true);
   const [isFetchingPlans, setIsFetchingPlans] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
@@ -30,11 +28,10 @@ const CablePage: React.FC = () => {
   const fetchOperators = useCallback(async () => {
     setIsFetchingOperators(true);
     try {
-      // CIP API implies billers are fixed, so we use a hardcoded list
       setOperators(CABLE_BILLERS);
-      addNotification('Cable operators loaded.', 'info');
     } catch (error: any) {
       addNotification(error.message || 'Error fetching operators.', 'error');
+      console.error("Fetch Cable Operators Exception:", error);
     } finally {
       setIsFetchingOperators(false);
     }
@@ -50,9 +47,11 @@ const CablePage: React.FC = () => {
         setCablePlans(response.data);
       } else {
         addNotification(response.message || 'Failed to fetch cable plans.', 'error');
+        console.error("Fetch Cable Plans API Error:", { response, billerName });
       }
     } catch (error: any) {
       addNotification(error.message || 'Error fetching cable plans.', 'error');
+      console.error("Fetch Cable Plans Exception:", { error, billerName });
     } finally {
       setIsFetchingPlans(false);
     }
@@ -64,37 +63,42 @@ const CablePage: React.FC = () => {
 
   useEffect(() => {
     if (selectedOperator) {
-      fetchPlans(selectedOperator.id); // Use operator.id which is the biller name string
+      fetchPlans(selectedOperator.id);
     }
   }, [selectedOperator, fetchPlans]);
 
   const handleVerifySmartcard = async () => {
     if (!selectedOperator || !smartcardNo || isVerifying) return;
     setIsVerifying(true);
-    setCustomerName(null); // Clear previous verification
+    setCustomerName(null);
     setCustomerDueDate(null);
 
-    if (smartcardNo.length < 5) { // Assuming min 5 chars for smartcard
+    if (smartcardNo.length < 5) {
       addNotification('Please enter a valid smartcard/IUC number.', 'warning');
       setIsVerifying(false);
       return;
     }
+    
+    const payload = {
+        smartCardNumber: smartcardNo,
+        biller: selectedOperator.id,
+    };
 
     try {
-      const response = await vtuService.verifyCableSmartcard({
-        smartCardNumber: smartcardNo,
-        biller: selectedOperator.id, // CIP expects biller string (e.g., "GOTV")
-      });
+      const response = await vtuService.verifyCableSmartcard(payload);
       if (response.status && response.data?.status) {
         setCustomerName(response.data.customerName || 'Verified Customer');
         setCustomerDueDate(response.data.dueDate || null);
         setShowConfirmModal(true);
         addNotification('Smartcard verified successfully.', 'success');
       } else {
-        addNotification(response.data?.message || 'Failed to verify smartcard number.', 'error');
+        const errorMessage = response.data?.message || 'Failed to verify smartcard number.';
+        addNotification(errorMessage, 'error');
+        console.error("Smartcard Verification API Error:", { message: errorMessage, response, payload });
       }
     } catch (error: any) {
       addNotification(error.message || 'Error verifying smartcard number.', 'error');
+      console.error("Smartcard Verification Exception:", { error, payload });
     } finally {
       setIsVerifying(false);
     }
@@ -114,18 +118,19 @@ const CablePage: React.FC = () => {
       return;
     }
 
-
     setIsPurchasing(true);
     setShowConfirmModal(false);
 
-    try {
-      const response = await vtuService.purchaseCable({
+    const payload = {
         smartCardNumber: smartcardNo,
         biller: selectedOperator.id,
-        planCode: selectedPlan.id, // CIP expects plan code string
+        planCode: selectedPlan.id,
         subscriptionType: subscriptionType as 'RENEW' | 'CHANGE',
         phoneNumber: phoneNumber,
-      });
+    };
+
+    try {
+      const response = await vtuService.purchaseCable(payload);
 
       if (response.status && response.data) {
         addNotification(`Cable subscription successful! Ref: ${response.data.reference}. Amount: ₦${response.data.amount}`, 'success');
@@ -135,12 +140,15 @@ const CablePage: React.FC = () => {
         setSelectedPlan(null);
         setCustomerName(null);
         setCustomerDueDate(null);
-        await fetchWalletBalance(); // Refresh wallet balance
+        await fetchWalletBalance();
       } else {
-        addNotification(response.message || 'Cable subscription failed.', 'error');
+        const errorMessage = response.message || 'Cable subscription failed.';
+        addNotification(errorMessage, 'error');
+        console.error("Cable Subscription API Error:", { message: errorMessage, errors: response.errors, payload });
       }
     } catch (error: any) {
       addNotification(error.message || 'Error during cable subscription.', 'error');
+      console.error("Cable Subscription Exception:", { error, payload });
     } finally {
       setIsPurchasing(false);
     }
@@ -167,7 +175,7 @@ const CablePage: React.FC = () => {
               onChange={(e) => {
                 const op = operators.find((o) => o.id === e.target.value);
                 setSelectedOperator(op || null);
-                setSelectedPlan(null); // Reset plan when operator changes
+                setSelectedPlan(null);
                 setCustomerName(null);
                 setCustomerDueDate(null);
               }}
