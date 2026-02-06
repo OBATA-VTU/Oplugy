@@ -56,17 +56,20 @@ export const DATA_NETWORKS = [
   { id: '9MOBILE', name: '9Mobile', image: 'https://img.oplug.com/networks/9mobile.png' },
 ];
 
+// CORRECTED: Data plan types now match the CIP API documentation
 export const DATA_PLAN_TYPES = [
-  { id: 'SME', name: 'SME Data' },
+  { id: 'AWOOF', name: 'Awoof Data' },
   { id: 'GIFTING', name: 'Gifting Data' },
-  { id: 'CORPORATE', name: 'Corporate Gifting' },
-  { id: 'DIRECT', name: 'Direct Top-Up' },
+  { id: 'SME', name: 'SME Data' },
+  { id: 'DATASHARE', name: 'Data Share' },
 ];
 
+// CORRECTED: Added SHOWMAX to the list of cable billers
 export const CABLE_BILLERS = [
   { id: 'DSTV', name: 'DSTV', image: 'https://img.oplug.com/billers/dstv.png' },
   { id: 'GOTV', name: 'GOTV', image: 'https://img.oplug.com/billers/gotv.png' },
   { id: 'STARTIMES', name: 'Startimes', image: 'https://img.oplug.com/billers/startimes.png' },
+  { id: 'SHOWMAX', name: 'Showmax', image: 'https://img.oplug.com/billers/showmax.png' },
 ];
 
 export const SUBSCRIPTION_TYPES = [

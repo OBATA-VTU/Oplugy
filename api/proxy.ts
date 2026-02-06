@@ -8,10 +8,9 @@
  * @param {import('http').ServerResponse} res - The server response object to send back to the client.
  */
 export default async function handler(req, res) {
-  // --- Configuration ---
-  const CIP_API_BASE_URL = 'https://api-service.cyberbeats.io/v1';
-  // IMPORTANT: This key should be in Vercel Environment Variables, not hardcoded.
-  const CIP_API_KEY = 'd705f8cecb7221e4b6d758c9ca2ff919'; 
+  // --- Configuration from Official CIP API Documentation ---
+  const CIP_API_BASE_URL = 'https://dev-api.ciptopup.ng/api'; // CORRECTED: Using dev environment URL from docs
+  const CIP_API_KEY = '7b908cd0c85f6a18a1feae59b7213633';     // CORRECTED: Using test API key from docs
 
   // --- Security: Only allow POST requests to this proxy ---
   if (req.method !== 'POST') {
@@ -30,6 +29,10 @@ export default async function handler(req, res) {
     
     const fullUrl = `${CIP_API_BASE_URL}/${endpoint}`;
     console.log(`[OPLUG_PROXY_LOG] Initiating ${method} request to: ${fullUrl}`);
+    if (data) {
+      console.log(`[OPLUG_PROXY_LOG] Request Body:`, JSON.stringify(data, null, 2));
+    }
+
 
     const headers = {
       'Content-Type': 'application/json',
@@ -47,9 +50,10 @@ export default async function handler(req, res) {
 
     // --- Logging the response from the external API ---
     const responseStatus = apiResponse.status;
+    const responseBody = await apiResponse.json(); // Read body once
     console.log(`[OPLUG_PROXY_LOG] Received response from CIP API for ${endpoint}. Status: ${responseStatus}`);
+    console.log(`[OPLUG_PROXY_LOG] Response Body:`, JSON.stringify(responseBody, null, 2));
 
-    const responseBody = await apiResponse.json();
 
     // --- Forwarding headers, status code, and body ---
     res.setHeader('Content-Type', 'application/json');

@@ -1,4 +1,5 @@
 {
   "name": "Oplug VTU",
-  "description": "Oplug is a Virtual Top-Up (VTU) platform for seamless data, airtime, bills payment, and cable subscriptions."
+  "description": "Oplug is a Virtual Top-Up (VTU) platform for seamless data, airtime, bills payment, and cable subscriptions.",
+  "requestFramePermissions": []
 }
