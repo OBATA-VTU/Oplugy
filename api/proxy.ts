@@ -66,5 +66,7 @@ const handler = async (req: VercelRequest, res: VercelResponse) => {
   }
 };
 
-// FIX: Switched to ES module export to resolve TypeScript error. Vercel supports this.
+// Fix for: Cannot find name 'module'.
+// Switched from CommonJS `module.exports` to standard ES Module `export default`.
+// This is the correct way to export a handler in a TypeScript Vercel Function.
 export default handler;
