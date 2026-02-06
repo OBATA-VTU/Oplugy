@@ -32,7 +32,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const isAuthenticated = !!token && !!user;
 
-  // Moved fetchWalletBalance definition before its usage in useEffect
   const fetchWalletBalance = useCallback(async () => {
     if (!token) return;
     try {
@@ -40,7 +39,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (response.status && response.data) {
         setWalletBalance(response.data.balance);
       } else {
-        // If the token is invalid or expired, log out the user
         if (response.message === 'Unauthorized' || response.message === 'Token expired') {
           addNotification('Session expired. Please log in again.', 'error');
           authService.logout();
@@ -57,14 +55,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, [token, addNotification]);
 
   useEffect(() => {
-    const storedToken = localStorage.getItem(LOCAL_STORAGE_TOKEN_KEY);
-    const storedUser = localStorage.getItem(LOCAL_STORAGE_USER_KEY);
+    try {
+      const storedToken = localStorage.getItem(LOCAL_STORAGE_TOKEN_KEY);
+      const storedUser = localStorage.getItem(LOCAL_STORAGE_USER_KEY);
 
-    if (storedToken && storedUser) {
-      setToken(storedToken);
-      setUser(JSON.parse(storedUser));
+      if (storedToken && storedUser) {
+        setToken(storedToken);
+        setUser(JSON.parse(storedUser));
+      }
+    } catch (error) {
+      console.error("Failed to parse user data from localStorage", error);
+      // If parsing fails, clear the corrupted data
+      authService.logout();
+      setToken(null);
+      setUser(null);
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   }, []);
 
   useEffect(() => {
@@ -74,7 +81,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setWalletBalance(null);
     }
   }, [isAuthenticated, fetchWalletBalance]);
-
 
   const login = useCallback(async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
@@ -125,7 +131,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setWalletBalance(null);
     addNotification('Logged out successfully.', 'info');
   }, [addNotification]);
-
 
   const updateWalletBalance = useCallback((newBalance: number) => {
     setWalletBalance(newBalance);
