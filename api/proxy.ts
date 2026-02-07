@@ -8,8 +8,8 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 const handler = async (req: VercelRequest, res: VercelResponse) => {
   // --- Configuration from Official CIP API Documentation ---
   const CIP_API_BASE_URL = 'https://dev-api.ciptopup.ng/api'; // Using dev environment URL from docs
-  // RESTORED: Using hardcoded test API key for debugging and testing as requested.
-  const CIP_API_KEY = '7b908cd0c85f6a18a1feae59b7213633';
+  // IMPORTANT: The API key is stored as an environment variable for security.
+  const CIP_API_KEY = process.env.CIP_API_KEY || '7b908cd0c85f6a18a1feae59b7213633'; // Fallback to test key for simplicity
 
   // --- Security: Only allow POST requests to this proxy ---
   if (req.method !== 'POST') {
@@ -19,7 +19,6 @@ const handler = async (req: VercelRequest, res: VercelResponse) => {
   }
 
   try {
-    // Vercel automatically parses JSON bodies for us.
     const { endpoint, method, data } = req.body;
 
     if (!endpoint) {
@@ -31,7 +30,6 @@ const handler = async (req: VercelRequest, res: VercelResponse) => {
     if (data) {
       console.log(`[OPLUG_PROXY_LOG] Request Body:`, JSON.stringify(data, null, 2));
     }
-
 
     const headers = {
       'Content-Type': 'application/json',
@@ -47,14 +45,11 @@ const handler = async (req: VercelRequest, res: VercelResponse) => {
 
     const apiResponse = await fetch(fullUrl, config);
 
-    // --- Logging the response from the external API ---
     const responseStatus = apiResponse.status;
-    const responseBody = await apiResponse.json(); // Read body once
+    const responseBody = await apiResponse.json();
     console.log(`[OPLUG_PROXY_LOG] Received response from CIP API for ${endpoint}. Status: ${responseStatus}`);
     console.log(`[OPLUG_PROXY_LOG] Response Body:`, JSON.stringify(responseBody, null, 2));
 
-
-    // --- Forwarding headers, status code, and body ---
     res.setHeader('Content-Type', 'application/json');
     res.status(responseStatus).json(responseBody);
 
@@ -68,7 +63,4 @@ const handler = async (req: VercelRequest, res: VercelResponse) => {
   }
 };
 
-// Fix for: Cannot find name 'module'.
-// Switched from CommonJS `module.exports` to standard ES Module `export default`.
-// This is the correct way to export a handler in a TypeScript Vercel Function.
 export default handler;

@@ -1,7 +1,8 @@
+
+// --- User & Auth ---
 export interface User {
   id: string;
   email: string;
-  // Add other user properties as needed from the API
 }
 
 export interface AuthResponse {
@@ -13,52 +14,66 @@ export interface Wallet {
   balance: number;
 }
 
+// --- VTU Services ---
 export interface Operator {
-  id: string; // Changed to string to accommodate CIP's string IDs (e.g., "ikeja-electric", "AIRTEL")
+  id: string;
   name: string;
-  image?: string; // URL to operator logo, optional as not always provided by CIP
+  image?: string;
 }
 
 export interface DataPlan {
-  id: string; // Changed to string (e.g., "AIRTEL_150MB_AWOOF_DAILY", "gotv-lite")
+  id: string; // plan_id or code
   name: string;
-  amount: number; // Stored in Naira, converted from Kobo price in API response
+  amount: number; // Stored in Naira
   validity: string;
-  // Additional fields from CIP Data Plans
-  type?: string; // e.g., AWOOF, GIFTING, SME, DATASHARE
-  size?: string; // e.g., 0.15
-  network?: string; // e.g., AIRTEL
+  type?: string;
+  size?: string;
+  network?: string;
 }
 
 export interface TransactionResponse {
-  reference: string; // CIP's "id" field
-  amount: number; // CIP's "amount" field, which is in Kobo. Will be converted to Naira in UI.
-  status: string; // e.g., SUCCESS, PENDING, FAILED
-  message?: string; // CIP's "message" field
+  id: string; // CIP's "id" field
+  amount: number; // In Kobo from API, converted to Naira in service
+  status: 'SUCCESS' | 'PENDING' | 'FAILED';
+  type: string; // e.g., 'AIRTIME', 'DATA'
+  source: string; // e.g., 'AIRTIME', 'CABLE TV'
+  remarks: string;
+  date_created: string;
+  date_updated: string;
   token?: string; // For electricity purchases
-  // Add other transaction details as needed from CIP response (type, source, remarks, date_created, date_updated)
 }
 
+export interface VerificationResponse {
+  status: boolean;
+  message: string;
+  customerName?: string;
+  customerAddress?: string;
+  dueDate?: string;
+  smartCardNumber?: string;
+  meterNumber?: string;
+}
+
+// --- API Layer ---
+// This represents the raw response from the CIP API via our proxy
+export interface CipApiResponse<T> {
+  status: 'success' | 'error';
+  message: string;
+  data: T | null;
+  errors: { path: string; message: string; code: string }[] | null;
+}
+
+// This is the standardized response format our services will return
 export interface ApiResponse<T> {
-  data?: T;
+  status: boolean; // true for success, false for error
   message?: string;
-  status: boolean; // Renamed from CIP's "status": "success"/"error" to boolean for consistency
+  data?: T;
   errors?: string[];
 }
 
+
+// --- UI & State ---
 export interface NotificationState {
   id: string;
   message: string;
   type: 'success' | 'error' | 'info' | 'warning';
-}
-
-export interface VerificationResponse {
-  status: boolean; // CIP's "status": "success"/"error"
-  message: string;
-  customerName?: string; // For meter or smartcard verification (CIP's 'name' field)
-  customerAddress?: string; // For meter verification (CIP doesn't provide, will be N/A)
-  customerInfo?: string; // Generic customer info (CIP's 'name' or any other relevant info)
-  dueDate?: string; // For cable TV verification
-  smartCardNumber?: string; // For cable TV verification
-  meterNumber?: string; // For electricity verification
 }

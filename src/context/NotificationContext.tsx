@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useCallback, ReactNode } from 'react';
 import { NotificationState } from '../types';
 
@@ -17,7 +18,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
   const [notifications, setNotifications] = useState<NotificationState[]>([]);
 
   const addNotification = useCallback((message: string, type: NotificationState['type'] = 'info') => {
-    const id = Date.now().toString() + Math.random().toString(); // More unique ID
+    const id = Date.now().toString() + Math.random().toString();
     setNotifications((prev) => [...prev, { id, message, type }]);
   }, []);
 

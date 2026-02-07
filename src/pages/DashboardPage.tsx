@@ -1,8 +1,17 @@
+
 import React, { useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import ServiceCard from '../components/ServiceCard';
 import Spinner from '../components/Spinner';
-import { SERVICE_CATEGORIES } from '../constants.ts'; // Updated import path
+import { SERVICE_CATEGORIES } from '../constants';
+import { PhoneIcon, SignalIcon, BoltIcon, TvIcon } from '../components/Icons';
+
+const serviceIcons: { [key: string]: React.ReactNode } = {
+  airtime: <PhoneIcon />,
+  data: <SignalIcon />,
+  bills: <BoltIcon />,
+  cable: <TvIcon />,
+};
 
 const DashboardPage: React.FC = () => {
   const { fetchWalletBalance, isLoading, isAuthenticated } = useAuth();
@@ -12,7 +21,6 @@ const DashboardPage: React.FC = () => {
       fetchWalletBalance();
     }
   }, [isAuthenticated, fetchWalletBalance]);
-
 
   if (isLoading) {
     return (
@@ -37,7 +45,7 @@ const DashboardPage: React.FC = () => {
             key={service.id}
             title={service.name}
             description={service.description}
-            icon={service.icon}
+            icon={serviceIcons[service.id]}
             to={service.path}
           />
         ))}

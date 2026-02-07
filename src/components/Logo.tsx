@@ -1,8 +1,10 @@
-import React from 'react';
 
-const Logo: React.FC<{ className?: string }> = ({ className = 'h-10 w-auto' }) => {
+import React from 'react';
+import { Link } from 'react-router-dom';
+
+const Logo: React.FC<{ className?: string }> = ({ className = 'h-8 w-auto' }) => {
   return (
-    <div className="flex items-center space-x-2">
+    <Link to="/" className="flex items-center space-x-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-md">
       <svg
         className={className}
         viewBox="0 0 100 100"
@@ -17,8 +19,8 @@ const Logo: React.FC<{ className?: string }> = ({ className = 'h-10 w-auto' }) =
         <rect fill="white" x="55" y="30" width="10" height="25" rx="3" />
         <rect fill="white" x="45" y="60" width="10" height="15" rx="3" />
       </svg>
-       <span className="text-2xl font-bold text-blue-700">Oplug</span>
-    </div>
+       <span className="text-2xl font-bold text-gray-800">Oplug</span>
+    </Link>
   );
 };
 

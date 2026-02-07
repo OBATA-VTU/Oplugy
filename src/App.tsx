@@ -1,10 +1,11 @@
+
 import React from 'react';
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
-import { NotificationProvider } from './context/NotificationContext'; // Import the provider
+import { NotificationProvider } from './context/NotificationContext';
 import { useAuth } from './hooks/useAuth';
 import Layout from './components/Layout';
-import NotificationContainer from './components/NotificationContainer'; // Import the container
+import NotificationContainer from './components/NotificationContainer';
 import LoginPage from './pages/LoginPage';
 import SignUpPage from './pages/SignUpPage';
 import DashboardPage from './pages/DashboardPage';
@@ -23,11 +24,9 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
   if (isLoading) {
     return (
-      <Layout>
-        <div className="flex items-center justify-center h-[calc(100vh-150px)]">
-          <Spinner />
-        </div>
-      </Layout>
+      <div className="flex items-center justify-center h-screen">
+        <Spinner />
+      </div>
     );
   }
 
@@ -35,72 +34,34 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     return <Navigate to="/login" replace />;
   }
 
-  return <>{children}</>;
+  return <Layout>{children}</Layout>;
+};
+
+const AppContent: React.FC = () => {
+  return (
+      <Router>
+        <NotificationContainer />
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignUpPage />} />
+          
+          <Route path="/" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+          <Route path="/airtime" element={<ProtectedRoute><AirtimePage /></ProtectedRoute>} />
+          <Route path="/data" element={<ProtectedRoute><DataPage /></ProtectedRoute>} />
+          <Route path="/bills" element={<ProtectedRoute><BillsPage /></ProtectedRoute>} />
+          <Route path="/cable" element={<ProtectedRoute><CablePage /></ProtectedRoute>} />
+          
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Router>
+  );
 };
 
 const App: React.FC = () => {
   return (
     <NotificationProvider>
       <AuthProvider>
-        <Router>
-          <NotificationContainer /> {/* Display notifications globally */}
-          <Routes>
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/signup" element={<SignUpPage />} />
-            <Route
-              path="/"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <DashboardPage />
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/airtime"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <AirtimePage />
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/data"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <DataPage />
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/bills"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <BillsPage />
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/cable"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <CablePage />
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-            {/* Fallback for unknown routes */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </Router>
+        <AppContent />
       </AuthProvider>
     </NotificationProvider>
   );
