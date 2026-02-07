@@ -5,7 +5,6 @@ import { useNotifications } from '../hooks/useNotifications';
 import { vtuService } from '../services/vtuService';
 import { Operator } from '../types';
 import Spinner from '../components/Spinner';
-import Modal from '../components/Modal';
 
 const BillsPage: React.FC = () => {
   const { addNotification } = useNotifications();

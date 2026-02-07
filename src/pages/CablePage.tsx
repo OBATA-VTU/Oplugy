@@ -1,11 +1,10 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNotifications } from '../hooks/useNotifications';
 import { vtuService } from '../services/vtuService';
 import { Operator, DataPlan } from '../types';
 import Spinner from '../components/Spinner';
-import Modal from '../components/Modal';
 import { CABLE_BILLERS, SUBSCRIPTION_TYPES } from '../constants';
 
 const CablePage: React.FC = () => {

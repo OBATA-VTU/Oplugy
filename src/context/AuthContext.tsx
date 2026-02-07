@@ -1,9 +1,7 @@
 
-import React, { createContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import React, { createContext, useState, ReactNode, useCallback } from 'react';
 import { User } from '../types';
-import { authService } from '../services/authService';
 import { useNotifications } from '../hooks/useNotifications';
-import { LOCAL_STORAGE_TOKEN_KEY, LOCAL_STORAGE_USER_KEY } from '../constants'; // Import keys
 
 interface AuthContextType {
   user: User | null;
@@ -30,10 +28,10 @@ const MOCK_TOKEN = 'test-auth-token';
 const MOCK_BALANCE = 50000;
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(MOCK_USER);
-  const [token, setToken] = useState<string | null>(MOCK_TOKEN);
+  const [user] = useState<User | null>(MOCK_USER);
+  const [token] = useState<string | null>(MOCK_TOKEN);
   const [walletBalance, setWalletBalance] = useState<number | null>(MOCK_BALANCE);
-  const [isLoading, setIsLoading] = useState<boolean>(false); // Start with loading false
+  const [isLoading] = useState<boolean>(false); // Start with loading false
   const { addNotification } = useNotifications();
 
   const isAuthenticated = !!token && !!user;
