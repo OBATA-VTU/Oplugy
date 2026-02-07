@@ -1,3 +1,4 @@
+
 // This is a Vercel serverless function located at /api/proxy.ts
 // It proxies requests from the frontend to the CIP API to bypass CORS issues
 // and provides robust server-side logging that is guaranteed to show up in Vercel logs.
@@ -7,7 +8,8 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 const handler = async (req: VercelRequest, res: VercelResponse) => {
   // --- Configuration from Official CIP API Documentation ---
   const CIP_API_BASE_URL = 'https://dev-api.ciptopup.ng/api'; // Using dev environment URL from docs
-  const CIP_API_KEY = '7b908cd0c85f6a18a1feae59b7213633';     // Using test API key from docs
+  // RESTORED: Using hardcoded test API key for debugging and testing as requested.
+  const CIP_API_KEY = '7b908cd0c85f6a18a1feae59b7213633';
 
   // --- Security: Only allow POST requests to this proxy ---
   if (req.method !== 'POST') {
