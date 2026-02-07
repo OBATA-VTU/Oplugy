@@ -44,14 +44,44 @@ const handler = async (req: VercelRequest, res: VercelResponse) => {
     };
 
     const apiResponse = await fetch(fullUrl, config);
-
     const responseStatus = apiResponse.status;
-    const responseBody = await apiResponse.json();
-    console.log(`[OPLUG_PROXY_LOG] Received response from CIP API for ${endpoint}. Status: ${responseStatus}`);
-    console.log(`[OPLUG_PROXY_LOG] Response Body:`, JSON.stringify(responseBody, null, 2));
+    const responseText = await apiResponse.text(); // Read the raw text of the response first
 
-    res.setHeader('Content-Type', 'application/json');
-    res.status(responseStatus).json(responseBody);
+    console.log(`[OPLUG_PROXY_LOG] Received response from CIP API for ${endpoint}. Status: ${responseStatus}`);
+    console.log(`[OPLUG_PROXY_LOG] Raw Response Body:`, responseText);
+
+    // If the response body is empty, we cannot parse it as JSON.
+    if (!responseText.trim()) {
+      console.warn(`[OPLUG_PROXY_WARN] Empty response body from CIP API for ${endpoint}. Status: ${responseStatus}.`);
+      // Return a structured error to the client instead of an empty body.
+      const message = apiResponse.ok ? 'Operation successful with empty response.' : 'Request failed with empty response.';
+      return res.status(responseStatus).json({
+          status: apiResponse.ok ? 'success' : 'error',
+          message: message,
+          data: null,
+          errors: [],
+      });
+    }
+
+    // Now, try to parse the non-empty response text.
+    try {
+      const responseBody = JSON.parse(responseText);
+      res.setHeader('Content-Type', 'application/json');
+      res.status(responseStatus).json(responseBody);
+    } catch (jsonError) {
+      console.error('[OPLUG_PROXY_ERROR] Failed to parse JSON from CIP API.', {
+        endpoint,
+        status: responseStatus,
+        body: responseText,
+        error: jsonError instanceof Error ? jsonError.message : String(jsonError),
+      });
+      // The upstream API returned a non-JSON response. Inform the client.
+      res.status(502).json({
+          status: 'error',
+          message: 'Bad Gateway: The upstream API returned an invalid response.',
+          data: responseText, // Send the raw text for debugging on the client
+      });
+    }
 
   } catch (error) {
     console.error('[OPLUG_PROXY_ERROR] An unexpected error occurred in the proxy function:', error);
