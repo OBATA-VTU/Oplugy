@@ -6,89 +6,99 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 const handler = async (req: VercelRequest, res: VercelResponse) => {
-  // --- Configuration from Official CIP API Documentation ---
-  const CIP_API_BASE_URL = 'https://dev-api.ciptopup.ng/api'; // Using dev environment URL from docs
-  // IMPORTANT: The API key is stored as an environment variable for security.
-  const CIP_API_KEY = process.env.CIP_API_KEY || '7b908cd0c85f6a18a1feae59b7213633'; // Fallback to test key for simplicity
+  // --- VERBOSE LOGGING: Start of function execution ---
+  console.log(`[PROXY_INIT] Function invoked. Method: ${req.method}. URL: ${req.url}`);
+  console.log('[PROXY_INIT] Request Headers:', JSON.stringify(req.headers, null, 2));
 
-  // --- Security: Only allow POST requests to this proxy ---
+  // --- Configuration ---
+  const CIP_API_BASE_URL = 'https://dev-api.ciptopup.ng/api';
+  const CIP_API_KEY = process.env.CIP_API_KEY || '7b908cd0c85f6a18a1feae59b7213633';
+
+  // --- Request Validation ---
   if (req.method !== 'POST') {
+    console.warn(`[PROXY_WARN] Blocked non-POST request. Method: ${req.method}`);
     res.setHeader('Allow', ['POST']);
-    res.status(405).json({ message: `Method ${req.method} Not Allowed` });
-    return;
+    return res.status(405).json({ message: `Method ${req.method} Not Allowed on this proxy.` });
+  }
+
+  // Vercel automatically parses the body for 'application/json' content-type.
+  // If req.body is empty or not an object, parsing failed or the client sent an empty/invalid body.
+  if (!req.body || typeof req.body !== 'object' || Object.keys(req.body).length === 0) {
+    console.error('[PROXY_ERROR] Request body is missing, empty, or not a valid JSON object.');
+    console.error('[PROXY_ERROR] Received Body:', req.body);
+    return res.status(400).json({
+      status: 'error',
+      message: 'The server received an invalid request. A valid JSON body is required.',
+      data: null,
+      errors: [{ path: 'body', message: 'Request body is missing or malformed.' }],
+    });
   }
 
   try {
+    // --- Destructure and Log Payload ---
     const { endpoint, method, data } = req.body;
+    console.log(`[PROXY_REQUEST] Processing request for endpoint: "${endpoint}" with method: "${method}"`);
+    if(data) {
+        console.log(`[PROXY_REQUEST] Payload data:`, JSON.stringify(data, null, 2));
+    }
 
     if (!endpoint) {
-      return res.status(400).json({ message: 'Error: `endpoint` is required in the request body.' });
+      console.warn('[PROXY_WARN] Request rejected. Missing "endpoint" in payload.');
+      return res.status(400).json({ status: 'error', message: '`endpoint` is required in the request body.' });
     }
-    
+
+    // --- Prepare and Send Upstream Request ---
     const fullUrl = `${CIP_API_BASE_URL}/${endpoint}`;
-    console.log(`[OPLUG_PROXY_LOG] Initiating ${method} request to: ${fullUrl}`);
-    if (data) {
-      console.log(`[OPLUG_PROXY_LOG] Request Body:`, JSON.stringify(data, null, 2));
-    }
-
-    const headers = {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      'x-api-key': CIP_API_KEY,
-    };
-
+    const headers = { 'Content-Type': 'application/json', 'Accept': 'application/json', 'x-api-key': CIP_API_KEY };
     const config: RequestInit = {
       method: method || (data ? 'POST' : 'GET'),
       headers,
       body: data ? JSON.stringify(data) : undefined,
     };
 
+    console.log(`[PROXY_UPSTREAM] Sending request to CIP API: ${config.method} ${fullUrl}`);
     const apiResponse = await fetch(fullUrl, config);
     const responseStatus = apiResponse.status;
-    const responseText = await apiResponse.text(); // Read the raw text of the response first
+    const responseText = await apiResponse.text(); // Read as text first for safety
 
-    console.log(`[OPLUG_PROXY_LOG] Received response from CIP API for ${endpoint}. Status: ${responseStatus}`);
-    console.log(`[OPLUG_PROXY_LOG] Raw Response Body:`, responseText);
+    console.log(`[PROXY_UPSTREAM] Received response from CIP API. Status: ${responseStatus}`);
+    
+    // Log the full text for debugging, especially for errors.
+    if (!apiResponse.ok || responseText.length < 500) {
+        console.log(`[PROXY_UPSTREAM] Raw Response Body:`, responseText);
+    } else {
+        console.log(`[PROXY_UPSTREAM] Received successful response body (length: ${responseText.length}).`);
+    }
 
-    // If the response body is empty, we cannot parse it as JSON.
+    // --- Process and Forward Response ---
     if (!responseText.trim()) {
-      console.warn(`[OPLUG_PROXY_WARN] Empty response body from CIP API for ${endpoint}. Status: ${responseStatus}.`);
-      // Return a structured error to the client instead of an empty body.
-      const message = apiResponse.ok ? 'Operation successful with empty response.' : 'Request failed with empty response.';
+      console.warn(`[PROXY_WARN] Empty response body from CIP API for endpoint: ${endpoint}.`);
       return res.status(responseStatus).json({
-          status: apiResponse.ok ? 'success' : 'error',
-          message: message,
-          data: null,
-          errors: [],
+        status: apiResponse.ok ? 'success' : 'error',
+        message: 'Operation completed, but the API returned no content.',
+        data: null,
       });
     }
 
-    // Now, try to parse the non-empty response text.
     try {
       const responseBody = JSON.parse(responseText);
       res.setHeader('Content-Type', 'application/json');
-      res.status(responseStatus).json(responseBody);
+      return res.status(responseStatus).json(responseBody);
     } catch (jsonError) {
-      console.error('[OPLUG_PROXY_ERROR] Failed to parse JSON from CIP API.', {
-        endpoint,
-        status: responseStatus,
-        body: responseText,
-        error: jsonError instanceof Error ? jsonError.message : String(jsonError),
-      });
-      // The upstream API returned a non-JSON response. Inform the client.
-      res.status(502).json({
-          status: 'error',
-          message: 'Bad Gateway: The upstream API returned an invalid response.',
-          data: responseText, // Send the raw text for debugging on the client
+      console.error(`[PROXY_ERROR] Failed to parse JSON from CIP API for endpoint: ${endpoint}.`, jsonError);
+      return res.status(502).json({
+        status: 'error',
+        message: 'Bad Gateway: The upstream API returned an invalid (non-JSON) response.',
+        data: responseText, // Send raw text for client-side debugging
       });
     }
 
   } catch (error) {
-    console.error('[OPLUG_PROXY_ERROR] An unexpected error occurred in the proxy function:', error);
-    res.status(500).json({ 
-        message: 'An internal server error occurred in the proxy.',
-        status: 'error',
-        error: error instanceof Error ? error.message : String(error),
+    console.error('[PROXY_FATAL] An unexpected error occurred in the proxy function:', error);
+    return res.status(500).json({
+      status: 'error',
+      message: 'An internal server error occurred in the proxy.',
+      error: error instanceof Error ? { name: error.name, message: error.message } : String(error),
     });
   }
 };
