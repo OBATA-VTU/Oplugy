@@ -11,18 +11,24 @@ export async function apiClient<T>(
   endpoint: string,
   { data, headers: customHeaders, token, xApiKey, ...customConfig }: RequestOptions = {}
 ): Promise<ApiResponse<T>> {
-  const headers: HeadersInit = {
+  // FIX: Use the Headers class to robustly handle different HeadersInit types.
+  const headers = new Headers({
     'Content-Type': 'application/json',
     Accept: 'application/json',
-    ...customHeaders,
-  };
+  });
+
+  if (customHeaders) {
+    new Headers(customHeaders).forEach((value, key) => {
+      headers.set(key, value);
+    });
+  }
 
   if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
+    headers.set('Authorization', `Bearer ${token}`);
   }
 
   if (xApiKey) {
-    headers['x-api-key'] = xApiKey;
+    headers.set('x-api-key', xApiKey);
   }
 
   const config: RequestInit = {
