@@ -51,6 +51,7 @@ export const authService = {
 
   async getWalletBalance(): Promise<ApiResponse<Wallet>> {
     const token = localStorage.getItem(LOCAL_STORAGE_TOKEN_KEY);
-    return apiClient<Wallet>(OPLUG_API_BASE_URL, 'user/wallet', { method: 'GET', token });
+    // FIX: Ensure the token is `string | undefined`, not `string | null`.
+    return apiClient<Wallet>(OPLUG_API_BASE_URL, 'user/wallet', { method: 'GET', token: token || undefined });
   },
 };
