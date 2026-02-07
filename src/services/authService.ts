@@ -1,6 +1,7 @@
+
 import { AuthResponse, User, Wallet, ApiResponse } from '../types';
 import { apiClient } from './apiClient';
-import { LOCAL_STORAGE_TOKEN_KEY, LOCAL_STORAGE_USER_KEY, OPLUG_API_BASE_URL } from '../constants.ts';
+import { LOCAL_STORAGE_TOKEN_KEY, LOCAL_STORAGE_USER_KEY, OPLUG_API_BASE_URL } from '../constants';
 
 interface LoginPayload {
   email: string;

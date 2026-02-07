@@ -3,7 +3,7 @@ import React, { createContext, useState, useEffect, ReactNode, useCallback } fro
 import { User } from '../types';
 import { authService } from '../services/authService';
 import { useNotifications } from '../hooks/useNotifications';
-import { LOCAL_STORAGE_TOKEN_KEY, LOCAL_STORAGE_USER_KEY } from '../constants.ts'; // Import keys
+import { LOCAL_STORAGE_TOKEN_KEY, LOCAL_STORAGE_USER_KEY } from '../constants'; // Import keys
 
 interface AuthContextType {
   user: User | null;
