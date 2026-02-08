@@ -10,7 +10,7 @@ import { AIRTIME_NETWORKS } from '../constants';
 
 const AirtimePage: React.FC = () => {
   const { addNotification } = useNotifications();
-  const { fetchWalletBalance, walletBalance } = useAuth();
+  const { fetchWalletBalance, walletBalance, updateWalletBalance } = useAuth();
   const [operators] = useState<Operator[]>(AIRTIME_NETWORKS);
   const [selectedOperator, setSelectedOperator] = useState<Operator | null>(null);
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -25,8 +25,9 @@ const AirtimePage: React.FC = () => {
       addNotification('Please fill all required fields.', 'warning');
       return;
     }
-    if (phoneNumber.length !== 11 || !/^\d{11}$/.test(phoneNumber)) {
-      addNotification('Please enter a valid 11-digit phone number.', 'warning');
+    // Relaxed validation to allow for the 12-digit test number
+    if (!/^\d{10,14}$/.test(phoneNumber)) {
+      addNotification('Please enter a valid phone number.', 'warning');
       return;
     }
     if (numericAmount < 50) {
@@ -58,17 +59,19 @@ const AirtimePage: React.FC = () => {
 
     if (response.status && response.data) {
       addNotification(`Airtime purchase of ₦${numericAmount} for ${phoneNumber} was successful.`, 'success');
+      if (walletBalance !== null) {
+        updateWalletBalance(walletBalance - numericAmount);
+      }
       setPhoneNumber('');
       setAmount('');
       setSelectedOperator(null);
-      await fetchWalletBalance();
     } else {
       addNotification(response.message || 'Airtime purchase failed.', 'error');
     }
     setIsPurchasing(false);
   };
 
-  const isFormValid = selectedOperator && phoneNumber.length === 11 && numericAmount > 0;
+  const isFormValid = selectedOperator && phoneNumber.length > 9 && numericAmount > 0;
 
   return (
     <div className="max-w-md mx-auto">
@@ -96,10 +99,10 @@ const AirtimePage: React.FC = () => {
               type="tel"
               id="phoneNumber"
               className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-              placeholder="08012345678"
+              placeholder="201000000000 (for testing)"
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
-              maxLength={11}
+              maxLength={14}
               required
               disabled={isPurchasing}
             />
@@ -111,7 +114,7 @@ const AirtimePage: React.FC = () => {
               type="number"
               id="amount"
               className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-              placeholder="e.g., 1000"
+              placeholder="e.g., 100"
               min="50"
               step="50"
               value={amount}

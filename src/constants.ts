@@ -4,7 +4,8 @@ export const LOCAL_STORAGE_TOKEN_KEY = 'oplug_token';
 export const LOCAL_STORAGE_USER_KEY = 'oplug_user';
 
 // API Base URLs - This is for a potential separate backend for Oplug user management.
-export const OPLUG_API_BASE_URL = process.env.REACT_APP_OPLUG_API_BASE_URL || 'https://api.oplug.com/v1';
+// Kept for structure, but not used by the hardcoded auth system.
+export const OPLUG_API_BASE_URL = process.env.REACT_APP_OPLUG_API_BASE_URL || '/api/mock';
 
 // The CIP API Base URL and Key are managed by the server-side proxy (`/api/proxy.ts`).
 
@@ -41,7 +42,8 @@ export const AIRTIME_NETWORKS = [
   { id: 'MTN', name: 'MTN', image: 'https://img.oplug.com/networks/mtn.png' },
   { id: 'AIRTEL', name: 'Airtel', image: 'https://img.oplug.com/networks/airtel.png' },
   { id: 'GLO', name: 'Glo', image: 'https://img.oplug.com/networks/glo.png' },
-  { id: '9MOBILE', name: '9Mobile', image: 'https://img.oplug.com/networks/9mobile.png' },
+  // CORRECTED: The CIP API uses 'ETISALAT' as the identifier for 9Mobile.
+  { id: 'ETISALAT', name: '9Mobile', image: 'https://img.oplug.com/networks/9mobile.png' },
 ];
 
 export const DATA_NETWORKS = [...AIRTIME_NETWORKS];

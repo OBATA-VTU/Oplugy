@@ -57,7 +57,14 @@ export async function apiClient<T>(
         return { data: undefined, message: errorMessage, status: false, errors: result?.errors || [errorMessage] };
       }
       
-      return { data: result.data, message: result.message, status: result.status === 'success' || result.status === true, errors: result.errors };
+      // CORRECTED LOGIC: For a successful response, we pass the entire JSON result
+      // as the 'data' payload. The calling function is responsible for interpreting
+      // the structure of the response body. This makes the apiClient truly generic.
+      return {
+        status: true,
+        message: 'Request successful',
+        data: result, // result is the full, unaltered JSON body
+      };
 
     } catch (jsonError) {
       // This catch block runs if response.json() fails.
