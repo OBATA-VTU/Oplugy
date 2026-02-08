@@ -10,7 +10,7 @@ import { AIRTIME_NETWORKS } from '../constants';
 
 const AirtimePage: React.FC = () => {
   const { addNotification } = useNotifications();
-  const { fetchWalletBalance, walletBalance, updateWalletBalance } = useAuth();
+  const { walletBalance, updateWalletBalance } = useAuth();
   const [operators] = useState<Operator[]>(AIRTIME_NETWORKS);
   const [selectedOperator, setSelectedOperator] = useState<Operator | null>(null);
   const [phoneNumber, setPhoneNumber] = useState('');
