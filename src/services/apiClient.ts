@@ -5,7 +5,7 @@ interface RequestOptions extends RequestInit {
   token?: string;
   xApiKey?: string;
   data?: any;
-  timeout?: number; // Timeout in milliseconds
+  timeout?: number; 
 }
 
 export async function apiClient<T>(
@@ -35,15 +35,25 @@ export async function apiClient<T>(
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeout);
 
+  // Ensure we have a clean path without double slashes
+  const cleanEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
+  
+  // Use window.location.origin for local API calls to ensure absolute URLs
+  const effectiveBaseUrl = baseUrl || window.location.origin;
+  const fullUrl = `${effectiveBaseUrl.replace(/\/$/, '')}/${cleanEndpoint}`;
+
+  // Priority: customConfig.method > (data ? 'POST' : 'GET')
+  const method = (customConfig.method as string) || (data ? 'POST' : 'GET');
+
   const config: RequestInit = {
-    method: data ? 'POST' : 'GET',
+    ...customConfig,
+    method,
     body: data ? JSON.stringify(data) : undefined,
     headers,
     signal: controller.signal,
-    ...customConfig,
   };
 
-  const fullUrl = `${baseUrl}/${endpoint}`;
+  console.log(`[OPLUG_DEBUG] Fetching: ${method} ${fullUrl}`);
   
   try {
     const response = await fetch(fullUrl, config);
@@ -57,7 +67,7 @@ export async function apiClient<T>(
       if (!response.ok) {
         console.error(
           '[OPLUG_CLIENT_ERROR] --- API CLIENT HTTP ERROR ---',
-          `\n- URL: ${fullUrl}\n- Method: ${config.method}\n- Status: ${response.status} ${response.statusText}\n- Response Body:`, result
+          `\n- URL: ${fullUrl}\n- Method: ${method}\n- Status: ${response.status} ${response.statusText}\n- Response Body:`, result
         );
         const errorMessage = result?.message || response.statusText || 'An unknown error occurred';
         return { data: undefined, message: errorMessage, status: false, errors: result?.errors?.map((e: any) => e.message) || [errorMessage] };
@@ -73,7 +83,9 @@ export async function apiClient<T>(
       const responseText = await clonedResponse.text();
       let userMessage = 'Received an invalid response from the server.';
       
-      if (clonedResponse.status === 504) {
+      if (clonedResponse.status === 405) {
+        userMessage = 'Method Not Allowed. The server rejected the request format. Please contact support.';
+      } else if (clonedResponse.status === 504) {
         userMessage = 'The server took too long to respond (Gateway Timeout). Please try again later.';
       } else if (clonedResponse.status === 502) {
         userMessage = 'A temporary issue occurred with the payment provider (Bad Gateway). Please try again later.';
@@ -84,7 +96,6 @@ export async function apiClient<T>(
         `\n- URL: ${fullUrl}`,
         `\n- Status: ${clonedResponse.status} ${clonedResponse.statusText}`,
         `\n- User Message: ${userMessage}`,
-        `\n- Note: The response body was not valid JSON. This is expected for server errors like 504, which return an HTML page.`,
         `\n- RAW RESPONSE BODY:\n------------------\n${responseText}\n------------------`
       );
       return { data: undefined, message: userMessage, status: false, errors: [userMessage] };
@@ -100,7 +111,7 @@ export async function apiClient<T>(
 
     console.error(
         '[OPLUG_CLIENT_ERROR] --- API CLIENT NETWORK/FETCH ERROR ---',
-        `\n- URL: ${fullUrl}\n- Method: ${config.method}\n- Error Name: ${error.name}\n- Error Message: ${error.message}`
+        `\n- URL: ${fullUrl}\n- Method: ${method}\n- Error Name: ${error.name}\n- Error Message: ${error.message}`
     );
     return { data: undefined, message: userMessage, status: false, errors: [userMessage] };
   }
