@@ -6,7 +6,9 @@ import {
   signOut,
   updateProfile,
   GoogleAuthProvider,
-  signInWithPopup
+  signInWithPopup,
+  setPersistence,
+  browserLocalPersistence
 } from 'firebase/auth';
 import { 
   doc, 
@@ -18,6 +20,8 @@ import {
 export const authService = {
   async login(email: string, password: string): Promise<ApiResponse<any>> {
     try {
+      // Ensure persistence is set to local before signing in
+      await setPersistence(auth, browserLocalPersistence);
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
       
@@ -40,7 +44,13 @@ export const authService = {
 
   async loginWithGoogle(): Promise<ApiResponse<any>> {
     try {
+      // Setting persistence explicitly can help with the 'missing initial state' error
+      await setPersistence(auth, browserLocalPersistence);
+      
       const provider = new GoogleAuthProvider();
+      // Forces the account picker to show up every time and improves flow reliability
+      provider.setCustomParameters({ prompt: 'select_account' });
+      
       const userCredential = await signInWithPopup(auth, provider);
       const user = userCredential.user;
 
@@ -69,13 +79,18 @@ export const authService = {
       };
     } catch (error: any) {
       console.error("Google Login Error:", error);
-      return { status: false, message: error.message || 'Google login failed' };
+      // Informative error message for the specific browser storage issue
+      const msg = error.code === 'auth/internal-error' || error.message.includes('sessionStorage')
+        ? "Please check your browser settings. Third-party cookies or storage might be blocked."
+        : error.message || 'Google login failed';
+      return { status: false, message: msg };
     }
   },
 
   async signup(payload: { email: string, password: string, fullName?: string }): Promise<ApiResponse<any>> {
     try {
       const { email, password, fullName } = payload;
+      await setPersistence(auth, browserLocalPersistence);
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
