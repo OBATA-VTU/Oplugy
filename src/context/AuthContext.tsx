@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { auth, db } from '../firebase/config';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -13,6 +12,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<boolean>;
+  loginWithGoogle: () => Promise<boolean>;
   signup: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
   fetchWalletBalance: () => Promise<void>;
@@ -34,14 +34,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const isAuthenticated = !!user;
 
-  // Real-time listener for Auth and Firestore User data
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         const idToken = await firebaseUser.getIdToken();
         setToken(idToken);
         
-        // Subscribe to Firestore changes for real-time wallet balance
         const unsubscribeDoc = onSnapshot(doc(db, "users", firebaseUser.uid), (docSnap) => {
           if (docSnap.exists()) {
             const data = docSnap.data();
@@ -77,13 +75,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, [addNotification]);
 
+  const loginWithGoogle = useCallback(async (): Promise<boolean> => {
+    setIsLoading(true);
+    const result = await authService.loginWithGoogle();
+    setIsLoading(false);
+    
+    if (result.status) {
+      addNotification('Google login successful', 'success');
+      return true;
+    } else {
+      addNotification(result.message || 'Google login failed', 'error');
+      return false;
+    }
+  }, [addNotification]);
+
   const signup = useCallback(async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
     const result = await authService.signup({ email, password });
     setIsLoading(false);
     
     if (result.status) {
-      addNotification('Registration successful! Please login.', 'success');
+      addNotification('Registration successful!', 'success');
       return true;
     } else {
       addNotification(result.message || 'Signup failed', 'error');
@@ -96,9 +108,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     addNotification('Logged out', 'info');
   }, [addNotification]);
 
-  const fetchWalletBalance = useCallback(async () => {
-    // Already handled by real-time onSnapshot in useEffect
-  }, []);
+  const fetchWalletBalance = useCallback(async () => {}, []);
 
   const updateWalletBalance = useCallback(async (newBalance: number) => {
     if (user?.id) {
@@ -120,6 +130,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isAuthenticated,
     isLoading,
     login,
+    loginWithGoogle,
     signup,
     logout,
     fetchWalletBalance,

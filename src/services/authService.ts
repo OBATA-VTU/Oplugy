@@ -1,11 +1,12 @@
-
 import { ApiResponse } from '../types';
 import { auth, db } from '../firebase/config';
 import { 
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword, 
   signOut,
-  updateProfile
+  updateProfile,
+  GoogleAuthProvider,
+  signInWithPopup
 } from 'firebase/auth';
 import { 
   doc, 
@@ -20,7 +21,6 @@ export const authService = {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
       
-      // Fetch extra profile data from Firestore
       const userDoc = await getDoc(doc(db, "users", user.uid));
       
       if (userDoc.exists()) {
@@ -38,6 +38,41 @@ export const authService = {
     }
   },
 
+  async loginWithGoogle(): Promise<ApiResponse<any>> {
+    try {
+      const provider = new GoogleAuthProvider();
+      const userCredential = await signInWithPopup(auth, provider);
+      const user = userCredential.user;
+
+      const userDocRef = doc(db, "users", user.uid);
+      const userDoc = await getDoc(userDocRef);
+      let userData;
+
+      if (!userDoc.exists()) {
+        userData = {
+          id: user.uid,
+          email: user.email,
+          fullName: user.displayName || 'Google User',
+          walletBalance: 0,
+          role: 'user',
+          createdAt: serverTimestamp()
+        };
+        await setDoc(userDocRef, userData);
+      } else {
+        userData = userDoc.data();
+      }
+
+      return { 
+        status: true, 
+        data: { user: { ...userData, id: user.uid }, token: await user.getIdToken() },
+        message: 'Google login successful' 
+      };
+    } catch (error: any) {
+      console.error("Google Login Error:", error);
+      return { status: false, message: error.message || 'Google login failed' };
+    }
+  },
+
   async signup(payload: { email: string, password: string, fullName?: string }): Promise<ApiResponse<any>> {
     try {
       const { email, password, fullName } = payload;
@@ -48,12 +83,11 @@ export const authService = {
         await updateProfile(user, { displayName: fullName });
       }
 
-      // Create user profile in Firestore with initial balance
       const userData = {
         id: user.uid,
         email: email,
         fullName: fullName || 'New User',
-        walletBalance: 0, // Initial balance
+        walletBalance: 0,
         role: 'user',
         createdAt: serverTimestamp()
       };
@@ -71,7 +105,6 @@ export const authService = {
     await signOut(auth);
   },
 
-  // Helper to get current Firestore user data
   async getProfile(uid: string): Promise<any> {
     const userDoc = await getDoc(doc(db, "users", uid));
     return userDoc.exists() ? userDoc.data() : null;

@@ -1,0 +1,22 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Rules for the 'users' collection
+    match /users/{userId} {
+      // Allow users to read their own profile data
+      allow get, list: if request.auth != null && request.auth.uid == userId;
+      
+      // Allow users to create their own profile during signup
+      allow create: if request.auth != null && request.auth.uid == userId;
+      
+      // Allow users to update their own profile (including wallet balance)
+      // Note: In a production environment, sensitive fields like walletBalance 
+      // should ideally be updated via secure Cloud Functions to prevent client-side tampering.
+      allow update: if request.auth != null && request.auth.uid == userId;
+      
+      // Disallow deletion of user accounts from the client for safety
+      allow delete: if false;
+    }
+  }
+}
