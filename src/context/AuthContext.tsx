@@ -4,15 +4,8 @@ import { User } from '../types';
 import { authService } from '../services/authService';
 import { useNotifications } from '../hooks/useNotifications';
 
-// --- Hardcoded Credentials ---
-const MOCK_EMAIL = 'user@oplug.com';
-const MOCK_PASSWORD = 'P@ssword123!';
-const MOCK_USER: User = { id: 'mock-user-123', email: MOCK_EMAIL };
-const MOCK_TOKEN = 'mock-auth-token-for-session-management';
-const MOCK_WALLET_BALANCE = 50000;
-
 interface AuthContextType {
-  user: User | null;
+  user: any | null;
   token: string | null;
   walletBalance: number | null;
   isAuthenticated: boolean;
@@ -31,7 +24,7 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<any | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [walletBalance, setWalletBalance] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -39,38 +32,37 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const isAuthenticated = !!token && !!user;
 
-  // Check for existing session on initial app load
+  // Initialize session from storage
   useEffect(() => {
-    const checkUserSession = () => {
-      setIsLoading(true);
+    const initSession = () => {
       const storedToken = authService.getToken();
       const storedUser = authService.getUser();
-
-      if (storedToken === MOCK_TOKEN && storedUser) {
+      if (storedToken && storedUser) {
         setToken(storedToken);
         setUser(storedUser);
-        setWalletBalance(MOCK_WALLET_BALANCE); // Restore balance on session load
+        // Balance is stored with the user object for quick access
+        if ((storedUser as any).walletBalance !== undefined) {
+          setWalletBalance((storedUser as any).walletBalance);
+        }
       }
       setIsLoading(false);
     };
-    checkUserSession();
+    initSession();
   }, []);
 
   const login = useCallback(async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
-    // Simulate network delay
-    await new Promise(res => setTimeout(res, 500));
-
-    if (email.toLowerCase() === MOCK_EMAIL && password === MOCK_PASSWORD) {
-      setUser(MOCK_USER);
-      setToken(MOCK_TOKEN);
-      setWalletBalance(MOCK_WALLET_BALANCE);
-      authService.saveSession(MOCK_TOKEN, MOCK_USER);
-      addNotification('Login successful!', 'success');
+    const result = await authService.login(email, password);
+    
+    if (result.status && result.data) {
+      setToken(result.data.token);
+      setUser(result.data.user);
+      setWalletBalance(result.data.user.walletBalance);
+      addNotification(result.message || 'Login successful', 'success');
       setIsLoading(false);
       return true;
     } else {
-      addNotification('Invalid credentials.', 'error');
+      addNotification(result.message || 'Login failed', 'error');
       setIsLoading(false);
       return false;
     }
@@ -78,10 +70,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const signup = useCallback(async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
-    await new Promise(res => setTimeout(res, 500));
-    addNotification('Sign up is disabled in this version.', 'info');
-    setIsLoading(false);
-    return false;
+    const result = await authService.signup({ email, password });
+    
+    if (result.status) {
+      addNotification(result.message || 'Account created!', 'success');
+      setIsLoading(false);
+      return true;
+    } else {
+      addNotification(result.message || 'Signup failed', 'error');
+      setIsLoading(false);
+      return false;
+    }
   }, [addNotification]);
 
   const logout = useCallback(() => {
@@ -89,20 +88,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setUser(null);
     setToken(null);
     setWalletBalance(null);
-    addNotification('You have been logged out.', 'info');
+    addNotification('Logged out successfully', 'info');
   }, [addNotification]);
-  
+
   const fetchWalletBalance = useCallback(async () => {
-    // In this mock version, we just ensure the balance is set if authenticated.
-    if (isAuthenticated) {
-      setWalletBalance(MOCK_WALLET_BALANCE);
+    // This will eventually call /api/auth/me to get fresh data
+    if (user) {
+      // For now, use the value from our current user state
+      // This is populated during login
     }
-  }, [isAuthenticated]);
+  }, [user]);
 
   const updateWalletBalance = useCallback((newBalance: number) => {
-    // This allows services to optimistically update the balance after a purchase
     setWalletBalance(newBalance);
-  }, []);
+    if (user) {
+      const updatedUser = { ...user, walletBalance: newBalance };
+      setUser(updatedUser);
+      authService.saveSession(token!, updatedUser);
+    }
+  }, [user, token]);
 
   const contextValue = {
     user,

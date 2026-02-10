@@ -24,8 +24,10 @@ export async function apiClient<T>(
     });
   }
 
-  if (token) {
-    headers.set('Authorization', `Bearer ${token}`);
+  // Use token if available in state or explicitly passed
+  const sessionToken = token || localStorage.getItem('oplug_token');
+  if (sessionToken) {
+    headers.set('Authorization', `Bearer ${sessionToken}`);
   }
 
   if (xApiKey) {
@@ -35,8 +37,8 @@ export async function apiClient<T>(
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeout);
 
-  // For Vercel, relative paths starting with /api/ are correctly routed to the api folder.
-  const fullUrl = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  // Normalize endpoint: ensure it starts with / and handle full URLs if passed
+  const fullUrl = endpoint.startsWith('http') ? endpoint : (endpoint.startsWith('/') ? endpoint : `/${endpoint}`);
 
   const method = (customConfig.method as string) || (data ? 'POST' : 'GET');
 
@@ -48,8 +50,6 @@ export async function apiClient<T>(
     signal: controller.signal,
   };
 
-  console.log(`[OPLUG_DEBUG] Fetching ${method}: ${fullUrl}`);
-  
   try {
     const response = await fetch(fullUrl, config);
     clearTimeout(timeoutId);
@@ -60,10 +60,6 @@ export async function apiClient<T>(
       const result = await response.json();
 
       if (!response.ok) {
-        console.error(
-          '[OPLUG_CLIENT_ERROR] --- API ERROR ---',
-          `\n- URL: ${fullUrl}\n- Status: ${response.status}\n- Data:`, result
-        );
         const errorMessage = result?.message || response.statusText || 'An error occurred';
         return { data: undefined, message: errorMessage, status: false, errors: result?.errors?.map((e: any) => e.message) || [errorMessage] };
       }
@@ -76,29 +72,11 @@ export async function apiClient<T>(
 
     } catch (jsonError) {
       const responseText = await clonedResponse.text();
-      let userMessage = 'Received an invalid response from the server.';
-      
-      if (clonedResponse.status === 405) {
-        userMessage = 'Routing Error (405): The server rejected the request method. This often means the API endpoint was not found.';
-      } else if (clonedResponse.status === 504) {
-        userMessage = 'Server Timeout: The payment provider is taking too long.';
-      }
-      
-      console.error(
-        '[OPLUG_CLIENT_ERROR] --- PARSE ERROR ---',
-        `\n- URL: ${fullUrl}`,
-        `\n- Status: ${clonedResponse.status}`,
-        `\n- Body Snippet: ${responseText.substring(0, 100)}`
-      );
-      return { data: undefined, message: userMessage, status: false, errors: [userMessage] };
+      return { data: undefined, message: 'Invalid server response', status: false, errors: [responseText.substring(0, 100)] };
     }
 
   } catch (error: any) {
     clearTimeout(timeoutId);
-    let userMessage = error.message || 'Network error.';
-    if (error.name === 'AbortError') userMessage = 'Request timed out.';
-
-    console.error('[OPLUG_CLIENT_ERROR] --- NETWORK ERROR ---', `\n- URL: ${fullUrl}\n- Error: ${error.message}`);
-    return { data: undefined, message: userMessage, status: false, errors: [userMessage] };
+    return { data: undefined, message: error.message || 'Network error', status: false };
   }
 }
