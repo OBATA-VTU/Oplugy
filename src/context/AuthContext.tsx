@@ -1,6 +1,5 @@
 
 import React, { createContext, useState, useEffect, ReactNode, useCallback } from 'react';
-import { User } from '../types';
 import { authService } from '../services/authService';
 import { useNotifications } from '../hooks/useNotifications';
 
