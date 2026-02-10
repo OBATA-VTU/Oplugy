@@ -64,7 +64,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ onSubmit, onGoogleSignUp, isLoa
         </div>
 
         <div className="mb-6">
-          <label htmlFor="confirm-password" class="block text-gray-700 text-sm font-semibold mb-2">
+          <label htmlFor="confirm-password" className="block text-gray-700 text-sm font-semibold mb-2">
             Confirm Password
           </label>
           <input
