@@ -1,5 +1,8 @@
 
 import React, { createContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import { auth, db } from '../firebase/config';
+import { onAuthStateChanged } from 'firebase/auth';
+import { doc, onSnapshot, updateDoc } from 'firebase/firestore';
 import { authService } from '../services/authService';
 import { useNotifications } from '../hooks/useNotifications';
 
@@ -13,7 +16,7 @@ interface AuthContextType {
   signup: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
   fetchWalletBalance: () => Promise<void>;
-  updateWalletBalance: (newBalance: number) => void;
+  updateWalletBalance: (newBalance: number) => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -29,48 +32,47 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const { addNotification } = useNotifications();
 
-  const isAuthenticated = !!token && !!user;
+  const isAuthenticated = !!user;
 
-  // Verify and sync session with backend on load
+  // Real-time listener for Auth and Firestore User data
   useEffect(() => {
-    const syncSession = async () => {
-      const storedToken = authService.getToken();
-      if (!storedToken) {
-        setIsLoading(false);
-        return;
-      }
+    const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        const idToken = await firebaseUser.getIdToken();
+        setToken(idToken);
+        
+        // Subscribe to Firestore changes for real-time wallet balance
+        const unsubscribeDoc = onSnapshot(doc(db, "users", firebaseUser.uid), (docSnap) => {
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+            setUser({ ...data, id: firebaseUser.uid });
+            setWalletBalance(data.walletBalance || 0);
+          }
+          setIsLoading(false);
+        });
 
-      // Check with backend if token is still valid
-      const result = await authService.getProfile();
-      if (result.status && result.data) {
-        setToken(storedToken);
-        setUser(result.data.user);
-        setWalletBalance(result.data.user.walletBalance);
+        return () => unsubscribeDoc();
       } else {
-        // Token invalid or expired
-        authService.logout();
-        setToken(null);
         setUser(null);
+        setToken(null);
+        setWalletBalance(null);
+        setIsLoading(false);
       }
-      setIsLoading(false);
-    };
-    syncSession();
+    });
+
+    return () => unsubscribeAuth();
   }, []);
 
   const login = useCallback(async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
     const result = await authService.login(email, password);
+    setIsLoading(false);
     
-    if (result.status && result.data) {
-      setToken(result.data.token);
-      setUser(result.data.user);
-      setWalletBalance(result.data.user.walletBalance);
-      addNotification(result.message || 'Login successful', 'success');
-      setIsLoading(false);
+    if (result.status) {
+      addNotification('Login successful', 'success');
       return true;
     } else {
       addNotification(result.message || 'Login failed', 'error');
-      setIsLoading(false);
       return false;
     }
   }, [addNotification]);
@@ -78,42 +80,38 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const signup = useCallback(async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
     const result = await authService.signup({ email, password });
+    setIsLoading(false);
     
     if (result.status) {
-      addNotification(result.message || 'Account created!', 'success');
-      setIsLoading(false);
+      addNotification('Registration successful! Please login.', 'success');
       return true;
     } else {
       addNotification(result.message || 'Signup failed', 'error');
-      setIsLoading(false);
       return false;
     }
   }, [addNotification]);
 
-  const logout = useCallback(() => {
-    authService.logout();
-    setUser(null);
-    setToken(null);
-    setWalletBalance(null);
-    addNotification('Logged out successfully', 'info');
+  const logout = useCallback(async () => {
+    await authService.logout();
+    addNotification('Logged out', 'info');
   }, [addNotification]);
 
   const fetchWalletBalance = useCallback(async () => {
-    const result = await authService.getProfile();
-    if (result.status && result.data) {
-      setWalletBalance(result.data.user.walletBalance);
-      setUser(result.data.user);
-    }
+    // Already handled by real-time onSnapshot in useEffect
   }, []);
 
-  const updateWalletBalance = useCallback((newBalance: number) => {
-    setWalletBalance(newBalance);
-    if (user) {
-      const updatedUser = { ...user, walletBalance: newBalance };
-      setUser(updatedUser);
-      authService.saveSession(token!, updatedUser);
+  const updateWalletBalance = useCallback(async (newBalance: number) => {
+    if (user?.id) {
+      try {
+        await updateDoc(doc(db, "users", user.id), {
+          walletBalance: newBalance
+        });
+      } catch (error) {
+        console.error("Error updating balance:", error);
+        addNotification('Failed to update balance in cloud.', 'error');
+      }
     }
-  }, [user, token]);
+  }, [user, addNotification]);
 
   const contextValue = {
     user,

@@ -1,73 +1,79 @@
 
-import { User, ApiResponse } from '../types';
-import { apiClient } from './apiClient';
-import { LOCAL_STORAGE_TOKEN_KEY, LOCAL_STORAGE_USER_KEY } from '../constants';
+import { ApiResponse } from '../types';
+import { auth, db } from '../firebase/config';
+import { 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword, 
+  signOut,
+  updateProfile
+} from 'firebase/auth';
+import { 
+  doc, 
+  getDoc, 
+  setDoc, 
+  serverTimestamp 
+} from 'firebase/firestore';
 
 export const authService = {
-  async login(email: string, password: string): Promise<ApiResponse<{ token: string; user: any }>> {
-    const response = await apiClient<{status: string, message: string, data: any}>(
-      '', 
-      '/api/auth/login', 
-      { data: { email, password }, method: 'POST' }
-    );
-
-    if (response.status && response.data?.status === 'success') {
-      const { token, user } = response.data.data;
-      this.saveSession(token, user);
-      return { status: true, data: { token, user }, message: response.data.message };
+  async login(email: string, password: string): Promise<ApiResponse<any>> {
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      
+      // Fetch extra profile data from Firestore
+      const userDoc = await getDoc(doc(db, "users", user.uid));
+      
+      if (userDoc.exists()) {
+        return { 
+          status: true, 
+          data: { user: { ...userDoc.data(), id: user.uid }, token: await user.getIdToken() },
+          message: 'Login successful' 
+        };
+      }
+      
+      return { status: true, data: { user, token: await user.getIdToken() } };
+    } catch (error: any) {
+      console.error("Login Error:", error);
+      return { status: false, message: error.message || 'Login failed' };
     }
-
-    return { 
-      status: false, 
-      message: response.message || 'Login failed',
-      errors: response.errors 
-    };
   },
 
-  async getProfile(): Promise<ApiResponse<{ user: any }>> {
-    const response = await apiClient<{status: string, message: string, data: any}>(
-      '', 
-      '/api/auth/me', 
-      { method: 'GET' }
-    );
+  async signup(payload: { email: string, password: string, fullName?: string }): Promise<ApiResponse<any>> {
+    try {
+      const { email, password, fullName } = payload;
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
 
-    if (response.status && response.data?.status === 'success') {
-      return { status: true, data: response.data.data };
+      if (fullName) {
+        await updateProfile(user, { displayName: fullName });
+      }
+
+      // Create user profile in Firestore with initial balance
+      const userData = {
+        id: user.uid,
+        email: email,
+        fullName: fullName || 'New User',
+        walletBalance: 0, // Initial balance
+        role: 'user',
+        createdAt: serverTimestamp()
+      };
+
+      await setDoc(doc(db, "users", user.uid), userData);
+
+      return { status: true, message: 'Account created successfully!' };
+    } catch (error: any) {
+      console.error("Signup Error:", error);
+      return { status: false, message: error.message || 'Registration failed' };
     }
-
-    return { status: false, message: 'Session expired' };
   },
 
-  async signup(payload: any): Promise<ApiResponse<any>> {
-    const response = await apiClient<{status: string, message: string, data: any}>(
-      '', 
-      '/api/auth/signup', 
-      { data: payload, method: 'POST' }
-    );
-
-    if (response.status && response.data?.status === 'success') {
-      return { status: true, message: response.data.message };
-    }
-
-    return { status: false, message: response.message || 'Signup failed' };
+  async logout(): Promise<void> {
+    await signOut(auth);
   },
 
-  saveSession(token: string, user: User): void {
-    localStorage.setItem(LOCAL_STORAGE_TOKEN_KEY, token);
-    localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(user));
-  },
-
-  logout(): void {
-    localStorage.removeItem(LOCAL_STORAGE_TOKEN_KEY);
-    localStorage.removeItem(LOCAL_STORAGE_USER_KEY);
-  },
-
-  getToken(): string | null {
-    return localStorage.getItem(LOCAL_STORAGE_TOKEN_KEY);
-  },
-
-  getUser(): User | null {
-    const user = localStorage.getItem(LOCAL_STORAGE_USER_KEY);
-    return user ? JSON.parse(user) : null;
-  },
+  // Helper to get current Firestore user data
+  async getProfile(uid: string): Promise<any> {
+    const userDoc = await getDoc(doc(db, "users", uid));
+    return userDoc.exists() ? userDoc.data() : null;
+  }
 };
