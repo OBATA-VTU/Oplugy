@@ -13,6 +13,9 @@ import AirtimePage from './pages/AirtimePage';
 import DataPage from './pages/DataPage';
 import BillsPage from './pages/BillsPage';
 import CablePage from './pages/CablePage';
+import LandingPage from './pages/LandingPage';
+import TermsPage from './pages/TermsPage';
+import PrivacyPage from './pages/PrivacyPage';
 import Spinner from './components/Spinner';
 
 interface ProtectedRouteProps {
@@ -24,7 +27,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="flex items-center justify-center h-screen bg-white">
         <Spinner />
       </div>
     );
@@ -42,10 +45,17 @@ const AppContent: React.FC = () => {
       <Router>
         <NotificationContainer />
         <Routes>
+          {/* Public Landing Page */}
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/terms" element={<TermsPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
+          
+          {/* Auth Pages */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignUpPage />} />
           
-          <Route path="/" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+          {/* Dashboard & Services */}
+          <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
           <Route path="/airtime" element={<ProtectedRoute><AirtimePage /></ProtectedRoute>} />
           <Route path="/data" element={<ProtectedRoute><DataPage /></ProtectedRoute>} />
           <Route path="/bills" element={<ProtectedRoute><BillsPage /></ProtectedRoute>} />
