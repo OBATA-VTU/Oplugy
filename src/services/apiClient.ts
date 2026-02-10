@@ -11,7 +11,7 @@ interface RequestOptions extends RequestInit {
 export async function apiClient<T>(
   baseUrl: string,
   endpoint: string,
-  { data, headers: customHeaders, token, xApiKey, timeout = 12000, ...customConfig }: RequestOptions = {}
+  { data, headers: customHeaders, token, xApiKey, timeout = 15000, ...customConfig }: RequestOptions = {}
 ): Promise<ApiResponse<T>> {
   const headers = new Headers({
     'Content-Type': 'application/json',
@@ -35,14 +35,11 @@ export async function apiClient<T>(
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeout);
 
-  // Ensure we have a clean path without double slashes
-  const cleanEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
-  
-  // Use window.location.origin for local API calls to ensure absolute URLs
-  const effectiveBaseUrl = baseUrl || window.location.origin;
-  const fullUrl = `${effectiveBaseUrl.replace(/\/$/, '')}/${cleanEndpoint}`;
+  // If baseUrl is provided, use it. Otherwise, assume it's a relative path to the root.
+  // This is safer for mobile browsers than trying to construct an absolute URL with origin.
+  const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  const fullUrl = baseUrl ? `${baseUrl.replace(/\/$/, '')}${cleanEndpoint}` : cleanEndpoint;
 
-  // Priority: customConfig.method > (data ? 'POST' : 'GET')
   const method = (customConfig.method as string) || (data ? 'POST' : 'GET');
 
   const config: RequestInit = {
@@ -53,7 +50,7 @@ export async function apiClient<T>(
     signal: controller.signal,
   };
 
-  console.log(`[OPLUG_DEBUG] Fetching: ${method} ${fullUrl}`);
+  console.log(`[OPLUG_DEBUG] Sending ${method} request to: ${fullUrl}`);
   
   try {
     const response = await fetch(fullUrl, config);
@@ -84,7 +81,7 @@ export async function apiClient<T>(
       let userMessage = 'Received an invalid response from the server.';
       
       if (clonedResponse.status === 405) {
-        userMessage = 'Method Not Allowed. The server rejected the request format. Please contact support.';
+        userMessage = 'Method Not Allowed. This is usually a routing error. Please ensure you are calling the correct API endpoint.';
       } else if (clonedResponse.status === 504) {
         userMessage = 'The server took too long to respond (Gateway Timeout). Please try again later.';
       } else if (clonedResponse.status === 502) {
@@ -94,6 +91,7 @@ export async function apiClient<T>(
       console.error(
         '[OPLUG_CLIENT_ERROR] --- FAILED TO PARSE JSON RESPONSE ---',
         `\n- URL: ${fullUrl}`,
+        `\n- Method: ${method}`,
         `\n- Status: ${clonedResponse.status} ${clonedResponse.statusText}`,
         `\n- User Message: ${userMessage}`,
         `\n- RAW RESPONSE BODY:\n------------------\n${responseText}\n------------------`

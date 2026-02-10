@@ -1,5 +1,4 @@
 
-
 import { apiClient } from './apiClient';
 import { ApiResponse, CipApiResponse } from '../types';
 
@@ -12,15 +11,15 @@ export async function cipApiClient<T>(
   { data, headers: customHeaders, method }: { data?: any; headers?: HeadersInit; method?: string } = {}
 ): Promise<ApiResponse<T>> {
   const proxyPayload = {
-    endpoint,
+    endpoint: endpoint.startsWith('/') ? endpoint.slice(1) : endpoint,
     method: method || (data ? 'POST' : 'GET'),
     data,
   };
 
-  // Use the generic apiClient to call our own proxy. Base URL is empty for a local endpoint.
+  // We use '/api/proxy' to call our local Vercel function relative to the domain root
   const response = await apiClient<CipApiResponse<T>>(
-    '', // Our own domain
-    'api/proxy',
+    '', // Relative to current domain
+    '/api/proxy',
     {
       data: proxyPayload,
       method: 'POST',
@@ -28,12 +27,7 @@ export async function cipApiClient<T>(
     }
   );
   
-  // If the fetch call itself failed (network error, etc.), apiClient returns a formatted error.
   if (!response.status) {
-    // FIX: The type of `response` is `ApiResponse<CipApiResponse<T>>`, which is not directly
-    // assignable to the required return type `ApiResponse<T>`.
-    // In this error case, `response.data` is `undefined`. We create a new object that
-    // matches the `ApiResponse<T>` structure, letting TypeScript correctly infer the types.
     return {
       status: false,
       message: response.message,
@@ -42,9 +36,7 @@ export async function cipApiClient<T>(
     };
   }
   
-  // The fetch was successful, but the CIP API might have returned an error.
-  // We translate the CIP format to our app's standard format.
-  const cipData = response.data; // This is the CipApiResponse<T>
+  const cipData = response.data;
   
   if (cipData?.status === 'success') {
     return {
@@ -53,7 +45,6 @@ export async function cipApiClient<T>(
       data: cipData.data as T,
     };
   } else {
-    // Map CIP errors to a simple string array for notifications.
     const errorMessages = cipData?.errors?.map(e => `${e.path}: ${e.message}`) || [cipData?.message || 'An unknown API error occurred.'];
     return {
       status: false,
