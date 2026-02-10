@@ -20,7 +20,6 @@ import {
 export const authService = {
   async login(email: string, password: string): Promise<ApiResponse<any>> {
     try {
-      // Ensure persistence is set to local before signing in
       await setPersistence(auth, browserLocalPersistence);
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
@@ -44,13 +43,17 @@ export const authService = {
 
   async loginWithGoogle(): Promise<ApiResponse<any>> {
     try {
-      // Setting persistence explicitly can help with the 'missing initial state' error
+      // Step 1: Force persistence to be local
       await setPersistence(auth, browserLocalPersistence);
       
       const provider = new GoogleAuthProvider();
-      // Forces the account picker to show up every time and improves flow reliability
-      provider.setCustomParameters({ prompt: 'select_account' });
+      // Forces the account picker and helps resolve state issues by ensuring a fresh flow
+      provider.setCustomParameters({ 
+        prompt: 'select_account',
+        // Optional: auth_type: 'reauthenticate' - use with caution as it forces password
+      });
       
+      // Step 2: Attempt Popup Login
       const userCredential = await signInWithPopup(auth, provider);
       const user = userCredential.user;
 
@@ -79,11 +82,16 @@ export const authService = {
       };
     } catch (error: any) {
       console.error("Google Login Error:", error);
-      // Informative error message for the specific browser storage issue
-      const msg = error.code === 'auth/internal-error' || error.message.includes('sessionStorage')
-        ? "Please check your browser settings. Third-party cookies or storage might be blocked."
-        : error.message || 'Google login failed';
-      return { status: false, message: msg };
+      
+      // Handle "missing initial state" or storage partitioning errors specifically
+      if (error.code === 'auth/internal-error' || error.message.includes('initial state')) {
+        return { 
+          status: false, 
+          message: "Auth flow interrupted. This happens if cookies are blocked or if you are in a private window. Please try refreshing the page or using a different browser." 
+        };
+      }
+      
+      return { status: false, message: error.message || 'Google login failed' };
     }
   },
 
