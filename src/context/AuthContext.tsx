@@ -31,22 +31,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const isAuthenticated = !!token && !!user;
 
-  // Initialize session from storage
+  // Verify and sync session with backend on load
   useEffect(() => {
-    const initSession = () => {
+    const syncSession = async () => {
       const storedToken = authService.getToken();
-      const storedUser = authService.getUser();
-      if (storedToken && storedUser) {
+      if (!storedToken) {
+        setIsLoading(false);
+        return;
+      }
+
+      // Check with backend if token is still valid
+      const result = await authService.getProfile();
+      if (result.status && result.data) {
         setToken(storedToken);
-        setUser(storedUser);
-        // Balance is stored with the user object for quick access
-        if ((storedUser as any).walletBalance !== undefined) {
-          setWalletBalance((storedUser as any).walletBalance);
-        }
+        setUser(result.data.user);
+        setWalletBalance(result.data.user.walletBalance);
+      } else {
+        // Token invalid or expired
+        authService.logout();
+        setToken(null);
+        setUser(null);
       }
       setIsLoading(false);
     };
-    initSession();
+    syncSession();
   }, []);
 
   const login = useCallback(async (email: string, password: string): Promise<boolean> => {
@@ -91,12 +99,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, [addNotification]);
 
   const fetchWalletBalance = useCallback(async () => {
-    // This will eventually call /api/auth/me to get fresh data
-    if (user) {
-      // For now, use the value from our current user state
-      // This is populated during login
+    const result = await authService.getProfile();
+    if (result.status && result.data) {
+      setWalletBalance(result.data.user.walletBalance);
+      setUser(result.data.user);
     }
-  }, [user]);
+  }, []);
 
   const updateWalletBalance = useCallback((newBalance: number) => {
     setWalletBalance(newBalance);

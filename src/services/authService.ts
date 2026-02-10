@@ -24,6 +24,20 @@ export const authService = {
     };
   },
 
+  async getProfile(): Promise<ApiResponse<{ user: any }>> {
+    const response = await apiClient<{status: string, message: string, data: any}>(
+      '', 
+      '/api/auth/me', 
+      { method: 'GET' }
+    );
+
+    if (response.status && response.data?.status === 'success') {
+      return { status: true, data: response.data.data };
+    }
+
+    return { status: false, message: 'Session expired' };
+  },
+
   async signup(payload: any): Promise<ApiResponse<any>> {
     const response = await apiClient<{status: string, message: string, data: any}>(
       '', 
