@@ -38,8 +38,13 @@ export const vtuService = {
     return { status: true, data: AIRTIME_NETWORKS, message: 'Operators fetched.' };
   },
   purchaseAirtime: async (payload: { network: string; phone: string; amount: number }): Promise<ApiResponse<TransactionResponse>> => {
-    const res = await cipApiClient<TransactionResponse>('airtime', { data: payload, method: 'POST' });
-    if (res.data) res.data.amount /= 100; // Kobo to Naira
+    // CIP API expects network in UPPERCASE
+    const normalizedPayload = {
+      ...payload,
+      network: payload.network.toUpperCase()
+    };
+    const res = await cipApiClient<TransactionResponse>('airtime', { data: normalizedPayload, method: 'POST' });
+    if (res.data) res.data.amount /= 100; // Kobo to Naira conversion
     return res;
   },
 
@@ -57,7 +62,7 @@ export const vtuService = {
   },
   purchaseData: async (payload: { plan_id: string; phone_number: string }): Promise<ApiResponse<TransactionResponse>> => {
     const res = await cipApiClient<TransactionResponse>('data/plans', { data: payload, method: 'POST' });
-    if (res.data) res.data.amount /= 100; // Kobo to Naira
+    if (res.data) res.data.amount /= 100; // Kobo to Naira conversion
     return res;
   },
 
@@ -84,7 +89,7 @@ export const vtuService = {
   },
   purchaseElectricity: async (payload: { meter_number: string; provider_id: string; meter_type: 'prepaid' | 'postpaid'; phone: string; amount: number }): Promise<ApiResponse<TransactionResponse>> => {
     const res = await cipApiClient<TransactionResponse>('electricity', { data: payload, method: 'POST' });
-    if (res.data) res.data.amount /= 100; // Kobo to Naira
+    if (res.data) res.data.amount /= 100; // Kobo to Naira conversion
     return res;
   },
 
@@ -118,10 +123,10 @@ export const vtuService = {
     return { status: false, message: res.message, data: undefined };
   },
   purchaseCable: async (payload: { biller: string; planCode: string; smartCardNumber: string; subscriptionType: 'RENEW' | 'CHANGE'; phoneNumber: string }): Promise<ApiResponse<TransactionResponse>> => {
-    // API docs expect `planCode`, not `planId`. Renaming it here.
+    // API docs expect `planCode`, not `planId`. Renaming it here to be explicit.
     const apiPayload = { ...payload, code: payload.planCode };
     const res = await cipApiClient<TransactionResponse>('tv', { data: apiPayload, method: 'POST' });
-    if (res.data) res.data.amount /= 100; // Kobo to Naira
+    if (res.data) res.data.amount /= 100; // Kobo to Naira conversion
     return res;
   },
 };
