@@ -2,16 +2,10 @@
 {
   "version": 2,
   "cleanUrls": true,
-  "framework": "create-react-app",
-  "functions": {
-    "api/**/*.ts": {
-      "runtime": "vercel-node@3.2.0"
-    }
-  },
   "rewrites": [
     {
-      "source": "/api/(.*)",
-      "destination": "/api/$1"
+      "source": "/api/:path*",
+      "destination": "/api/:path*"
     },
     {
       "source": "/(.*)",

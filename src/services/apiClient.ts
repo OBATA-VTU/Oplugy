@@ -11,7 +11,7 @@ interface RequestOptions extends RequestInit {
 export async function apiClient<T>(
   baseUrl: string,
   endpoint: string,
-  { data, headers: customHeaders, token, xApiKey, timeout = 15000, ...customConfig }: RequestOptions = {}
+  { data, headers: customHeaders, token, xApiKey, timeout = 20000, ...customConfig }: RequestOptions = {}
 ): Promise<ApiResponse<T>> {
   const headers = new Headers({
     'Content-Type': 'application/json',
@@ -35,10 +35,8 @@ export async function apiClient<T>(
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeout);
 
-  // If baseUrl is provided, use it. Otherwise, assume it's a relative path to the root.
-  // This is safer for mobile browsers than trying to construct an absolute URL with origin.
-  const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
-  const fullUrl = baseUrl ? `${baseUrl.replace(/\/$/, '')}${cleanEndpoint}` : cleanEndpoint;
+  // For Vercel, relative paths starting with /api/ are correctly routed to the api folder.
+  const fullUrl = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
 
   const method = (customConfig.method as string) || (data ? 'POST' : 'GET');
 
@@ -50,7 +48,7 @@ export async function apiClient<T>(
     signal: controller.signal,
   };
 
-  console.log(`[OPLUG_DEBUG] Sending ${method} request to: ${fullUrl}`);
+  console.log(`[OPLUG_DEBUG] Fetching ${method}: ${fullUrl}`);
   
   try {
     const response = await fetch(fullUrl, config);
@@ -63,16 +61,16 @@ export async function apiClient<T>(
 
       if (!response.ok) {
         console.error(
-          '[OPLUG_CLIENT_ERROR] --- API CLIENT HTTP ERROR ---',
-          `\n- URL: ${fullUrl}\n- Method: ${method}\n- Status: ${response.status} ${response.statusText}\n- Response Body:`, result
+          '[OPLUG_CLIENT_ERROR] --- API ERROR ---',
+          `\n- URL: ${fullUrl}\n- Status: ${response.status}\n- Data:`, result
         );
-        const errorMessage = result?.message || response.statusText || 'An unknown error occurred';
+        const errorMessage = result?.message || response.statusText || 'An error occurred';
         return { data: undefined, message: errorMessage, status: false, errors: result?.errors?.map((e: any) => e.message) || [errorMessage] };
       }
       
       return {
         status: true,
-        message: 'Request successful',
+        message: 'Success',
         data: result,
       };
 
@@ -81,36 +79,26 @@ export async function apiClient<T>(
       let userMessage = 'Received an invalid response from the server.';
       
       if (clonedResponse.status === 405) {
-        userMessage = 'Method Not Allowed. This is usually a routing error. Please ensure you are calling the correct API endpoint.';
+        userMessage = 'Routing Error (405): The server rejected the request method. This often means the API endpoint was not found.';
       } else if (clonedResponse.status === 504) {
-        userMessage = 'The server took too long to respond (Gateway Timeout). Please try again later.';
-      } else if (clonedResponse.status === 502) {
-        userMessage = 'A temporary issue occurred with the payment provider (Bad Gateway). Please try again later.';
+        userMessage = 'Server Timeout: The payment provider is taking too long.';
       }
       
       console.error(
-        '[OPLUG_CLIENT_ERROR] --- FAILED TO PARSE JSON RESPONSE ---',
+        '[OPLUG_CLIENT_ERROR] --- PARSE ERROR ---',
         `\n- URL: ${fullUrl}`,
-        `\n- Method: ${method}`,
-        `\n- Status: ${clonedResponse.status} ${clonedResponse.statusText}`,
-        `\n- User Message: ${userMessage}`,
-        `\n- RAW RESPONSE BODY:\n------------------\n${responseText}\n------------------`
+        `\n- Status: ${clonedResponse.status}`,
+        `\n- Body Snippet: ${responseText.substring(0, 100)}`
       );
       return { data: undefined, message: userMessage, status: false, errors: [userMessage] };
     }
 
   } catch (error: any) {
     clearTimeout(timeoutId);
-    let userMessage = error.message || 'Network error, please check your connection.';
-    
-    if (error.name === 'AbortError') {
-      userMessage = 'The request timed out. Please check your connection and try again.';
-    }
+    let userMessage = error.message || 'Network error.';
+    if (error.name === 'AbortError') userMessage = 'Request timed out.';
 
-    console.error(
-        '[OPLUG_CLIENT_ERROR] --- API CLIENT NETWORK/FETCH ERROR ---',
-        `\n- URL: ${fullUrl}\n- Method: ${method}\n- Error Name: ${error.name}\n- Error Message: ${error.message}`
-    );
+    console.error('[OPLUG_CLIENT_ERROR] --- NETWORK ERROR ---', `\n- URL: ${fullUrl}\n- Error: ${error.message}`);
     return { data: undefined, message: userMessage, status: false, errors: [userMessage] };
   }
 }
