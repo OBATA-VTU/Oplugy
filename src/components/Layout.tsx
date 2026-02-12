@@ -29,7 +29,7 @@ const NavItem: React.FC<{ to: string; icon: ReactNode; children: ReactNode; onCl
 );
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const { user, walletBalance, isAuthenticated, logout, isLoading } = useAuth();
+  const { walletBalance, isAuthenticated, logout, isLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);

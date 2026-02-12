@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Spinner from './Spinner';
 
@@ -45,7 +44,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ onSubmit, onGoogleLogin, isLoading,
         <div>
           <label htmlFor="password" className="block text-gray-700 text-sm font-bold mb-2 flex justify-between">
             Password
-            <a href="#" className="text-blue-600 hover:underline">Forgot?</a>
+            <button type="button" className="text-blue-600 hover:underline">Forgot?</button>
           </label>
           <input
             type="password"

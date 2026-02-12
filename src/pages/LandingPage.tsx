@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Logo from '../components/Logo';
 import Footer from '../components/Footer';
-import { PhoneIcon, SignalIcon, BoltIcon, TvIcon, MenuIcon, WalletIcon } from '../components/Icons';
+import { PhoneIcon, SignalIcon, BoltIcon, TvIcon, MenuIcon } from '../components/Icons';
 
 const LandingPage: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
