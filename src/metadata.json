@@ -1,5 +1,6 @@
+
 {
-  "name": "Oplug VTU",
-  "description": "Oplug is a Virtual Top-Up (VTU) platform for seamless data, airtime, bills payment, and cable subscriptions.",
+  "name": "OBATA v2",
+  "description": "OBATA is the ultimate platform for instant data, airtime, bills payment, gaming top-ups, and gift cards.",
   "requestFramePermissions": []
 }
