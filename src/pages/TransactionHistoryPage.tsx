@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { vtuService } from '../services/vtuService';
 import { TransactionResponse } from '../types';
@@ -24,6 +23,35 @@ const TransactionHistoryPage: React.FC = () => {
     fetchHistory();
   }, []);
 
+  const downloadCSV = () => {
+    if (transactions.length === 0) return;
+
+    const headers = ['Transaction ID', 'Type', 'Source', 'Amount (Naira)', 'Status', 'Date', 'Time'];
+    const rows = transactions.map(txn => {
+      const dateObj = new Date(txn.date_created);
+      return [
+        txn.id,
+        txn.type,
+        txn.source,
+        txn.amount.toString(),
+        txn.status,
+        dateObj.toLocaleDateString(),
+        dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      ].map(field => `"${field}"`).join(',');
+    });
+
+    const csvContent = [headers.join(','), ...rows].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `OBATA_Transactions_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const getStatusStyle = (status: string) => {
     switch (status) {
       case 'SUCCESS': return 'bg-green-100 text-green-700 border-green-200';
@@ -41,10 +69,24 @@ const TransactionHistoryPage: React.FC = () => {
 
   return (
     <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
         <div>
           <h2 className="text-4xl font-black text-gray-900 tracking-tighter">Activity Logs</h2>
           <p className="text-gray-400 font-medium">Real-time ledger of your OBATA v2 transactions.</p>
+        </div>
+        
+        <div className="flex items-center space-x-3">
+          {transactions.length > 0 && (
+            <button 
+              onClick={downloadCSV}
+              className="bg-gray-900 hover:bg-black text-white px-6 py-3 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all flex items-center space-x-2 shadow-xl shadow-gray-200"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <span>Download CSV</span>
+            </button>
+          )}
         </div>
       </div>
 
