@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
@@ -13,6 +12,7 @@ import AirtimePage from './pages/AirtimePage';
 import DataPage from './pages/DataPage';
 import BillsPage from './pages/BillsPage';
 import CablePage from './pages/CablePage';
+import TransactionHistoryPage from './pages/TransactionHistoryPage';
 import LandingPage from './pages/LandingPage';
 import TermsPage from './pages/TermsPage';
 import PrivacyPage from './pages/PrivacyPage';
@@ -45,21 +45,19 @@ const AppContent: React.FC = () => {
       <Router>
         <NotificationContainer />
         <Routes>
-          {/* Public Landing Page */}
           <Route path="/" element={<LandingPage />} />
           <Route path="/terms" element={<TermsPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
           
-          {/* Auth Pages */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignUpPage />} />
           
-          {/* Dashboard & Services */}
           <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
           <Route path="/airtime" element={<ProtectedRoute><AirtimePage /></ProtectedRoute>} />
           <Route path="/data" element={<ProtectedRoute><DataPage /></ProtectedRoute>} />
           <Route path="/bills" element={<ProtectedRoute><BillsPage /></ProtectedRoute>} />
           <Route path="/cable" element={<ProtectedRoute><CablePage /></ProtectedRoute>} />
+          <Route path="/history" element={<ProtectedRoute><TransactionHistoryPage /></ProtectedRoute>} />
           
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

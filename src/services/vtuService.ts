@@ -1,4 +1,3 @@
-
 import { ApiResponse, Operator, DataPlan, TransactionResponse, VerificationResponse } from '../types';
 import { cipApiClient } from './cipApiClient';
 import { AIRTIME_NETWORKS, DATA_NETWORKS, CABLE_BILLERS } from '../constants';
@@ -38,7 +37,6 @@ export const vtuService = {
     return { status: true, data: AIRTIME_NETWORKS, message: 'Operators fetched.' };
   },
   purchaseAirtime: async (payload: { network: string; phone: string; amount: number }): Promise<ApiResponse<TransactionResponse>> => {
-    // CIP API expects network in UPPERCASE
     const normalizedPayload = {
       ...payload,
       network: payload.network.toUpperCase()
@@ -123,10 +121,25 @@ export const vtuService = {
     return { status: false, message: res.message, data: undefined };
   },
   purchaseCable: async (payload: { biller: string; planCode: string; smartCardNumber: string; subscriptionType: 'RENEW' | 'CHANGE'; phoneNumber: string }): Promise<ApiResponse<TransactionResponse>> => {
-    // API docs expect `planCode`, not `planId`. Renaming it here to be explicit.
     const apiPayload = { ...payload, code: payload.planCode };
     const res = await cipApiClient<TransactionResponse>('tv', { data: apiPayload, method: 'POST' });
     if (res.data) res.data.amount /= 100; // Kobo to Naira conversion
     return res;
   },
+
+  // --- Transactions ---
+  getTransactionHistory: async (): Promise<ApiResponse<TransactionResponse[]>> => {
+    // Assuming /api/transactions endpoint exists
+    const res = await fetch('/api/transactions', {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('oplug_token')}`
+      }
+    });
+    const data = await res.json();
+    return {
+      status: res.ok,
+      message: data.message,
+      data: data.data || []
+    };
+  }
 };

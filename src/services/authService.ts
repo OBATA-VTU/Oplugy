@@ -30,30 +30,29 @@ export const authService = {
         return { 
           status: true, 
           data: { user: { ...userDoc.data(), id: user.uid }, token: await user.getIdToken() },
-          message: 'Login successful' 
+          message: 'Welcome back to Oplug VTU!' 
         };
       }
       
       return { status: true, data: { user, token: await user.getIdToken() } };
     } catch (error: any) {
-      console.error("Login Error:", error);
-      return { status: false, message: error.message || 'Login failed' };
+      console.error("Login Error:", error.code);
+      return { status: false, message: 'Invalid email or password. Please try again.' };
     }
   },
 
   async loginWithGoogle(): Promise<ApiResponse<any>> {
     try {
-      // Step 1: Force persistence to be local
+      // Set persistence first to handle session across tabs/reloads
       await setPersistence(auth, browserLocalPersistence);
       
       const provider = new GoogleAuthProvider();
-      // Forces the account picker and helps resolve state issues by ensuring a fresh flow
+      // Ensure the experience feels branded and intentional
       provider.setCustomParameters({ 
         prompt: 'select_account',
-        // Optional: auth_type: 'reauthenticate' - use with caution as it forces password
+        display: 'popup'
       });
       
-      // Step 2: Attempt Popup Login
       const userCredential = await signInWithPopup(auth, provider);
       const user = userCredential.user;
 
@@ -65,7 +64,7 @@ export const authService = {
         userData = {
           id: user.uid,
           email: user.email,
-          fullName: user.displayName || 'Google User',
+          fullName: user.displayName || 'Oplug User',
           walletBalance: 0,
           role: 'user',
           createdAt: serverTimestamp()
@@ -78,20 +77,23 @@ export const authService = {
       return { 
         status: true, 
         data: { user: { ...userData, id: user.uid }, token: await user.getIdToken() },
-        message: 'Google login successful' 
+        message: 'Successfully signed in with Google' 
       };
     } catch (error: any) {
-      console.error("Google Login Error:", error);
+      // Log only the code to console for debugging, don't show technical jargon to user
+      console.error("Google Auth Error Code:", error.code);
       
-      // Handle "missing initial state" or storage partitioning errors specifically
-      if (error.code === 'auth/internal-error' || error.message.includes('initial state')) {
-        return { 
-          status: false, 
-          message: "Auth flow interrupted. This happens if cookies are blocked or if you are in a private window. Please try refreshing the page or using a different browser." 
-        };
+      let friendlyMessage = 'Google sign-in was interrupted. Please try again.';
+      
+      if (error.code === 'auth/popup-closed-by-user') {
+        friendlyMessage = 'Sign-in window was closed before completion.';
+      } else if (error.code === 'auth/internal-error' || error.message.includes('initial state')) {
+        friendlyMessage = 'Authentication error. Please ensure cookies are enabled in your browser or try another browser.';
+      } else if (error.code === 'auth/network-request-failed') {
+        friendlyMessage = 'Network error. Please check your internet connection.';
       }
-      
-      return { status: false, message: error.message || 'Google login failed' };
+
+      return { status: false, message: friendlyMessage };
     }
   },
 
@@ -109,7 +111,7 @@ export const authService = {
       const userData = {
         id: user.uid,
         email: email,
-        fullName: fullName || 'New User',
+        fullName: fullName || 'New Oplug User',
         walletBalance: 0,
         role: 'user',
         createdAt: serverTimestamp()
@@ -117,10 +119,12 @@ export const authService = {
 
       await setDoc(doc(db, "users", user.uid), userData);
 
-      return { status: true, message: 'Account created successfully!' };
+      return { status: true, message: 'Your Oplug account has been created!' };
     } catch (error: any) {
-      console.error("Signup Error:", error);
-      return { status: false, message: error.message || 'Registration failed' };
+      console.error("Signup Error:", error.code);
+      let msg = 'Registration failed. This email might already be in use.';
+      if (error.code === 'auth/weak-password') msg = 'Password is too weak. Use at least 6 characters.';
+      return { status: false, message: msg };
     }
   },
 
