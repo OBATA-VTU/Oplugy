@@ -9,17 +9,16 @@ const Logo: React.FC<{ className?: string }> = ({ className = 'h-8 w-auto' }) =>
         className={className}
         viewBox="0 0 100 100"
         xmlns="http://www.w3.org/2000/svg"
-        aria-label="Oplug Logo"
+        aria-label="OBATA Logo"
       >
+        <rect width="100" height="100" rx="24" fill="#2563eb" />
         <path
-          fill="#2563eb"
-          d="M50,5 A45,45 0 1,1 5,50 A45,45 0 0,1 50,5 M50,15 A35,35 0 1,0 85,50 A35,35 0 0,0 50,15"
+          fill="white"
+          d="M30 30h40v10H30zM30 45h40v10H30zM30 60h25v10H30z"
         />
-        <rect fill="white" x="35" y="30" width="10" height="25" rx="3" />
-        <rect fill="white" x="55" y="30" width="10" height="25" rx="3" />
-        <rect fill="white" x="45" y="60" width="10" height="15" rx="3" />
+        <circle cx="70" cy="65" r="8" fill="#fbbf24" />
       </svg>
-       <span className="text-2xl font-bold text-gray-800">Oplug</span>
+       <span className="text-2xl font-black text-gray-900 tracking-tighter uppercase">OBATA <span className="text-blue-600">v2</span></span>
     </Link>
   );
 };

@@ -1,13 +1,10 @@
 
 // Local Storage Keys
-export const LOCAL_STORAGE_TOKEN_KEY = 'oplug_token';
-export const LOCAL_STORAGE_USER_KEY = 'oplug_user';
+export const LOCAL_STORAGE_TOKEN_KEY = 'obata_token';
+export const LOCAL_STORAGE_USER_KEY = 'obata_user';
 
-// API Base URLs - This is for a potential separate backend for Oplug user management.
-// Kept for structure, but not used by the hardcoded auth system.
-export const OPLUG_API_BASE_URL = process.env.REACT_APP_OPLUG_API_BASE_URL || '/api/mock';
-
-// The CIP API Base URL and Key are managed by the server-side proxy (`/api/proxy.ts`).
+// API Base URLs
+export const OBATA_API_BASE_URL = process.env.REACT_APP_OBATA_API_BASE_URL || '/api/mock';
 
 // Service Categories for Dashboard
 export const SERVICE_CATEGORIES = [
@@ -32,23 +29,38 @@ export const SERVICE_CATEGORIES = [
   {
     id: 'cable',
     name: 'Cable TV',
-    description: 'Subscribe to your favorite TV packages.',
+    description: 'Subscribe to DStv, GOtv, and Startimes.',
     path: '/cable',
+  },
+  {
+    id: 'gaming',
+    name: 'Gaming Topup',
+    description: 'Free Fire, COD, and more.',
+    path: '/gaming',
+  },
+  {
+    id: 'giftcards',
+    name: 'Gift Cards',
+    description: 'Buy & Sell global gift cards.',
+    path: '/giftcards',
+  },
+  {
+    id: 'airtime_to_cash',
+    name: 'Airtime to Cash',
+    description: 'Convert excess airtime to bank alert.',
+    path: '/airtime-to-cash',
   },
 ];
 
-// Specific lists for operators and plan types, used by VTU services
 export const AIRTIME_NETWORKS = [
-  { id: 'MTN', name: 'MTN', image: 'https://img.oplug.com/networks/mtn.png' },
-  { id: 'AIRTEL', name: 'Airtel', image: 'https://img.oplug.com/networks/airtel.png' },
-  { id: 'GLO', name: 'Glo', image: 'https://img.oplug.com/networks/glo.png' },
-  // CORRECTED: The CIP API uses 'ETISALAT' as the identifier for 9Mobile.
-  { id: 'ETISALAT', name: '9Mobile', image: 'https://img.oplug.com/networks/9mobile.png' },
+  { id: 'MTN', name: 'MTN', image: 'https://upload.wikimedia.org/wikipedia/commons/a/af/MTN_Logo.svg' },
+  { id: 'AIRTEL', name: 'Airtel', image: 'https://upload.wikimedia.org/wikipedia/commons/e/e1/Airtel_logo.svg' },
+  { id: 'GLO', name: 'Glo', image: 'https://upload.wikimedia.org/wikipedia/en/7/77/Glo_Telecom_logo.png' },
+  { id: 'ETISALAT', name: '9Mobile', image: 'https://upload.wikimedia.org/wikipedia/en/thumb/d/d4/9mobile_Logo.svg/1200px-9mobile_Logo.svg.png' },
 ];
 
 export const DATA_NETWORKS = [...AIRTIME_NETWORKS];
 
-// CORRECTED: Data plan types now match the CIP API documentation
 export const DATA_PLAN_TYPES = [
   { id: 'AWOOF', name: 'Awoof Data' },
   { id: 'GIFTING', name: 'Gifting Data' },
@@ -56,7 +68,6 @@ export const DATA_PLAN_TYPES = [
   { id: 'DATASHARE', name: 'Data Share' },
 ];
 
-// CORRECTED: Added SHOWMAX to the list of cable billers as per API docs
 export const CABLE_BILLERS = [
   { id: 'DSTV', name: 'DSTV', image: 'https://img.oplug.com/billers/dstv.png' },
   { id: 'GOTV', name: 'GOTV', image: 'https://img.oplug.com/billers/gotv.png' },
