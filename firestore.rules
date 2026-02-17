@@ -1,19 +1,25 @@
+
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Helper function to check if the current user is an admin
+    function isAdmin() {
+      return request.auth != null && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
     // Rules for the 'users' collection
     match /users/{userId} {
-      // Allow users to read their own profile data
-      allow get, list: if request.auth != null && request.auth.uid == userId;
+      // Admins can do anything
+      allow read, write: if isAdmin();
       
-      // Allow users to create their own profile during signup
+      // Regular users can only access their own documents
+      allow get: if request.auth != null && request.auth.uid == userId;
       allow create: if request.auth != null && request.auth.uid == userId;
-      
-      // Allow users to update their own profile (including wallet balance)
       allow update: if request.auth != null && request.auth.uid == userId;
       
-      // Disallow deletion of user accounts from the client for safety
+      // Disallow deletion by users themselves
       allow delete: if false;
     }
   }

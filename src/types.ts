@@ -1,8 +1,16 @@
 
 // --- User & Auth ---
+export type UserRole = 'user' | 'reseller' | 'api' | 'admin';
+export type UserStatus = 'active' | 'suspended';
+
 export interface User {
   id: string;
   email: string;
+  fullName: string;
+  walletBalance: number;
+  role: UserRole;
+  status: UserStatus;
+  createdAt?: any;
 }
 
 export interface AuthResponse {
