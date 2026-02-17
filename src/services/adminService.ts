@@ -7,15 +7,17 @@ import {
   updateDoc, 
   getDoc, 
   query, 
-  increment
+  increment,
+  limit,
+  orderBy,
+  setDoc
 } from 'firebase/firestore';
-import { ApiResponse, User, UserRole, UserStatus } from '../types';
+import { ApiResponse, User, UserRole, UserStatus, TransactionResponse } from '../types';
 
 export const adminService = {
   // --- User Management ---
   async getAllUsers(): Promise<ApiResponse<User[]>> {
     try {
-      // Simplified query: Removing orderBy to prevent failures if fields are missing or indexes are not set
       const usersQuery = query(collection(db, "users"));
       const snapshot = await getDocs(usersQuery);
       
@@ -84,6 +86,37 @@ export const adminService = {
       return { status: true, message: `Successfully debited account with ₦${amount.toLocaleString()}` };
     } catch (error: any) {
       return { status: false, message: error.message || "Failed to debit user" };
+    }
+  },
+
+  // --- Transaction Ledger ---
+  async getSystemTransactions(): Promise<ApiResponse<TransactionResponse[]>> {
+    try {
+      const txQuery = query(collection(db, "transactions"), orderBy("date_created", "desc"), limit(100));
+      const snapshot = await getDocs(txQuery);
+      const txs = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as TransactionResponse));
+      return { status: true, data: txs };
+    } catch (error: any) {
+      return { status: false, message: error.message || "Failed to fetch ledger" };
+    }
+  },
+
+  // --- Global Settings ---
+  async getGlobalSettings(): Promise<ApiResponse<any>> {
+    try {
+      const settingsDoc = await getDoc(doc(db, "settings", "global"));
+      return { status: true, data: settingsDoc.exists() ? settingsDoc.data() : { announcement: '', maintenance: false } };
+    } catch (error: any) {
+      return { status: false, message: "Failed to fetch settings" };
+    }
+  },
+
+  async updateGlobalSettings(settings: any): Promise<ApiResponse<void>> {
+    try {
+      await setDoc(doc(db, "settings", "global"), settings, { merge: true });
+      return { status: true, message: "System settings updated." };
+    } catch (error: any) {
+      return { status: false, message: "Failed to update settings" };
     }
   },
 

@@ -1,9 +1,44 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { adminService } from '../services/adminService';
+import { useNotifications } from '../hooks/useNotifications';
+import Spinner from '../components/Spinner';
 
 const AdminSettingsPage: React.FC = () => {
+  const { addNotification } = useNotifications();
+  const [loading, setLoading] = useState(true);
+  const [announcement, setAnnouncement] = useState('');
   const [maintenance, setMaintenance] = useState(false);
   const [apiMode, setApiMode] = useState<'LIVE' | 'TEST'>('LIVE');
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  const fetchSettings = useCallback(async () => {
+    setLoading(true);
+    const res = await adminService.getGlobalSettings();
+    if (res.status && res.data) {
+      setAnnouncement(res.data.announcement || '');
+      setMaintenance(res.data.maintenance || false);
+      setApiMode(res.data.apiMode || 'LIVE');
+    }
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    fetchSettings();
+  }, [fetchSettings]);
+
+  const handleUpdate = async () => {
+    setIsUpdating(true);
+    const res = await adminService.updateGlobalSettings({ announcement, maintenance, apiMode });
+    if (res.status) {
+      addNotification("System settings synchronized successfully.", "success");
+    } else {
+      addNotification("Failed to sync settings.", "error");
+    }
+    setIsUpdating(false);
+  };
+
+  if (loading) return <div className="flex justify-center p-20"><Spinner /></div>;
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -14,7 +49,7 @@ const AdminSettingsPage: React.FC = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
          <div className="bg-white p-12 rounded-[3rem] shadow-xl border border-gray-50">
-            <h3 className="text-2xl font-black text-gray-900 mb-8 tracking-tight">Service Controls</h3>
+            <h3 className="text-2xl font-black text-gray-900 mb-8 tracking-tight">System Controls</h3>
             <div className="space-y-8">
                <div className="flex items-center justify-between p-6 bg-gray-50 rounded-3xl">
                   <div>
@@ -43,18 +78,23 @@ const AdminSettingsPage: React.FC = () => {
          </div>
 
          <div className="bg-white p-12 rounded-[3rem] shadow-xl border border-gray-50">
-            <h3 className="text-2xl font-black text-gray-900 mb-8 tracking-tight">Contact Information</h3>
+            <h3 className="text-2xl font-black text-gray-900 mb-8 tracking-tight">Broadcasting</h3>
             <div className="space-y-6">
                <div>
-                  <label className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-3">Support Email</label>
-                  <input type="text" className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl font-bold" defaultValue="support@obata.com" />
+                  <label className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-3">Global Announcement</label>
+                  <textarea 
+                    className="w-full p-6 bg-gray-50 border border-gray-100 rounded-3xl font-bold min-h-[150px] focus:ring-4 focus:ring-blue-50 transition-all" 
+                    placeholder="Enter message for all users..."
+                    value={announcement}
+                    onChange={(e) => setAnnouncement(e.target.value)}
+                  />
                </div>
-               <div>
-                  <label className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-3">WhatsApp Hotline</label>
-                  <input type="text" className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl font-bold" defaultValue="+2348142452729" />
-               </div>
-               <button className="w-full bg-gray-900 text-white py-5 rounded-3xl font-black text-[10px] uppercase tracking-widest hover:bg-black transition-all shadow-xl shadow-gray-200">
-                  Update System Meta
+               <button 
+                onClick={handleUpdate}
+                disabled={isUpdating}
+                className="w-full bg-gray-900 text-white py-5 rounded-3xl font-black text-[10px] uppercase tracking-widest hover:bg-black transition-all shadow-xl shadow-gray-200 flex items-center justify-center"
+               >
+                  {isUpdating ? <Spinner /> : 'Save System Configuration'}
                </button>
             </div>
          </div>

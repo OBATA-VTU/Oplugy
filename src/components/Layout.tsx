@@ -9,7 +9,7 @@ import {
   HomeIcon, PhoneIcon, SignalIcon, BoltIcon, TvIcon, 
   LogoutIcon, MenuIcon, HistoryIcon, WalletIcon,
   GamingIcon, GiftIcon, ExchangeIcon, ShieldCheckIcon,
-  CurrencyDollarIcon
+  CurrencyDollarIcon, UsersIcon
 } from './Icons';
 
 interface LayoutProps {
@@ -55,7 +55,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     '/gaming': 'Gaming Hub',
     '/giftcards': 'Digital Assets',
     '/airtime-to-cash': 'Liquidity Conversion',
-    '/admin': 'Master Hub'
+    '/admin': 'Master Hub',
+    '/referral': 'Referral Program',
+    '/support': 'Support Center',
+    '/api-docs': 'API Documentation'
   };
 
   const handleLogout = () => {
@@ -82,6 +85,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         <div className="px-4 mb-3 text-[9px] font-black uppercase tracking-[0.2em] text-gray-400">Core</div>
         <NavItem to="/dashboard" icon={<HomeIcon />} onClick={closeSidebar}>Dashboard</NavItem>
         <NavItem to="/pricing" icon={<CurrencyDollarIcon />} onClick={closeSidebar}>Price List</NavItem>
+        <NavItem to="/referral" icon={<UsersIcon />} onClick={closeSidebar}>Referral Program</NavItem>
         
         <div className="px-4 mt-8 mb-3 text-[9px] font-black uppercase tracking-[0.2em] text-gray-400">Telephony</div>
         <NavItem to="/airtime" icon={<PhoneIcon />} onClick={closeSidebar}>Airtime</NavItem>
@@ -98,6 +102,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
         <div className="px-4 mt-8 mb-3 text-[9px] font-black uppercase tracking-[0.2em] text-gray-400">Repository</div>
         <NavItem to="/history" icon={<HistoryIcon />} onClick={closeSidebar}>Transactions</NavItem>
+        {user?.role === 'api' && <NavItem to="/api-docs" icon={<BoltIcon />} onClick={closeSidebar}>Developer API</NavItem>}
+        <NavItem to="/support" icon={<ShieldCheckIcon />} onClick={closeSidebar}>Help & Support</NavItem>
       </nav>
       <div className="p-6 border-t border-gray-50">
         <button

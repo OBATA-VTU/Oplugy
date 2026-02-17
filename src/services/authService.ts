@@ -18,6 +18,10 @@ import {
   serverTimestamp 
 } from 'firebase/firestore';
 
+const generateReferralCode = () => {
+  return Math.random().toString(36).substring(2, 8).toUpperCase();
+};
+
 export const authService = {
   async login(email: string, password: string): Promise<ApiResponse<any>> {
     try {
@@ -66,6 +70,10 @@ export const authService = {
           fullName: user.displayName || 'OBATA User',
           walletBalance: 0,
           role: 'user',
+          status: 'active',
+          referralCode: generateReferralCode(),
+          referralEarnings: 0,
+          referralCount: 0,
           createdAt: serverTimestamp()
         };
         await setDoc(userDocRef, userData);
@@ -112,6 +120,10 @@ export const authService = {
         fullName: fullName || 'New OBATA User',
         walletBalance: 0,
         role: 'user',
+        status: 'active',
+        referralCode: generateReferralCode(),
+        referralEarnings: 0,
+        referralCount: 0,
         createdAt: serverTimestamp()
       };
 

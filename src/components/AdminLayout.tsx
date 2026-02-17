@@ -1,6 +1,6 @@
 
 import React, { useState, ReactNode } from 'react';
-import { NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import Spinner from './Spinner';
 import Logo from './Logo';
@@ -38,9 +38,8 @@ const AdminNavItem: React.FC<{ to: string; icon: ReactNode; children: ReactNode;
 );
 
 const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
-  const { user, logout, isLoading } = useAuth();
+  const { logout, isLoading } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const handleLogout = () => {

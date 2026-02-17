@@ -24,6 +24,9 @@ import AdminUsersPage from './pages/AdminUsersPage';
 import AdminTransactionsPage from './pages/AdminTransactionsPage';
 import AdminSettingsPage from './pages/AdminSettingsPage';
 import PricingPage from './pages/PricingPage';
+import ReferralPage from './pages/ReferralPage';
+import SupportPage from './pages/SupportPage';
+import ApiDocsPage from './pages/ApiDocsPage';
 import Spinner from './components/Spinner';
 
 interface ProtectedRouteProps {
@@ -145,6 +148,9 @@ const AppContent: React.FC = () => {
           <Route path="/cable" element={<ProtectedRoute><CablePage /></ProtectedRoute>} />
           <Route path="/history" element={<ProtectedRoute><TransactionHistoryPage /></ProtectedRoute>} />
           <Route path="/pricing" element={<ProtectedRoute><PricingPage /></ProtectedRoute>} />
+          <Route path="/referral" element={<ProtectedRoute><ReferralPage /></ProtectedRoute>} />
+          <Route path="/support" element={<ProtectedRoute><SupportPage /></ProtectedRoute>} />
+          <Route path="/api-docs" element={<ProtectedRoute><ApiDocsPage /></ProtectedRoute>} />
           
           <Route path="/admin" element={<AdminRoute><AdminDashboardPage /></AdminRoute>} />
           <Route path="/admin/users" element={<AdminRoute><AdminUsersPage /></AdminRoute>} />
