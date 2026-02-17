@@ -1,6 +1,9 @@
+
 import { ApiResponse, Operator, DataPlan, TransactionResponse, VerificationResponse } from '../types';
 import { cipApiClient } from './cipApiClient';
 import { AIRTIME_NETWORKS, DATA_NETWORKS, CABLE_BILLERS } from '../constants';
+import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
+import { db, auth } from '../firebase/config';
 
 // --- Type definitions for raw CIP API responses ---
 interface RawCipDataPlan {
@@ -129,17 +132,21 @@ export const vtuService = {
 
   // --- Transactions ---
   getTransactionHistory: async (): Promise<ApiResponse<TransactionResponse[]>> => {
-    // Assuming /api/transactions endpoint exists
-    const res = await fetch('/api/transactions', {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('oplug_token')}`
-      }
-    });
-    const data = await res.json();
-    return {
-      status: res.ok,
-      message: data.message,
-      data: data.data || []
-    };
+    const user = auth.currentUser;
+    if (!user) return { status: false, message: 'Unauthenticated' };
+    
+    try {
+      const txQuery = query(
+        collection(db, "transactions"), 
+        where("userId", "==", user.uid),
+        orderBy("date_created", "desc"), 
+        limit(10)
+      );
+      const snapshot = await getDocs(txQuery);
+      const txs = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as TransactionResponse));
+      return { status: true, data: txs };
+    } catch (error: any) {
+      return { status: false, message: "Failed to fetch user ledger" };
+    }
   }
 };

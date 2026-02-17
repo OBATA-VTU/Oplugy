@@ -72,3 +72,7 @@ export const CurrencyDollarIcon = () => (
 export const BanIcon = () => (
   <svg {...iconProps}><path strokeLinecap="round" strokeLinejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636" /></svg>
 );
+
+export const ArrowIcon = () => (
+  <svg {...iconProps}><path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+);
