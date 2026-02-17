@@ -54,9 +54,9 @@ export const SERVICE_CATEGORIES = [
 
 export const AIRTIME_NETWORKS = [
   { id: 'MTN', name: 'MTN', image: 'https://upload.wikimedia.org/wikipedia/commons/a/af/MTN_Logo.svg' },
-  { id: 'AIRTEL', name: 'Airtel', image: 'https://upload.wikimedia.org/wikipedia/commons/e/e1/Airtel_logo.svg' },
-  { id: 'GLO', name: 'Glo', image: 'https://upload.wikimedia.org/wikipedia/en/7/77/Glo_Telecom_logo.png' },
-  { id: 'ETISALAT', name: '9Mobile', image: 'https://upload.wikimedia.org/wikipedia/en/thumb/d/d4/9mobile_Logo.svg/1200px-9mobile_Logo.svg.png' },
+  { id: 'AIRTEL', name: 'Airtel', image: 'https://cdn.freebiesupply.com/logos/large/2x/airtel-logo-png-transparent.png' },
+  { id: 'GLO', name: 'Glo', image: 'https://upload.wikimedia.org/wikipedia/en/thumb/7/77/Glo_Telecom_logo.png/220px-Glo_Telecom_logo.png' },
+  { id: '9MOBILE', name: '9Mobile', image: 'https://upload.wikimedia.org/wikipedia/en/thumb/d/d4/9mobile_Logo.svg/1200px-9mobile_Logo.svg.png' },
 ];
 
 export const DATA_NETWORKS = [...AIRTIME_NETWORKS];
@@ -69,10 +69,10 @@ export const DATA_PLAN_TYPES = [
 ];
 
 export const CABLE_BILLERS = [
-  { id: 'DSTV', name: 'DSTV', image: 'https://img.oplug.com/billers/dstv.png' },
-  { id: 'GOTV', name: 'GOTV', image: 'https://img.oplug.com/billers/gotv.png' },
-  { id: 'STARTIMES', name: 'Startimes', image: 'https://img.oplug.com/billers/startimes.png' },
-  { id: 'SHOWMAX', name: 'Showmax', image: 'https://img.oplug.com/billers/showmax.png' },
+  { id: 'DSTV', name: 'DSTV', image: 'https://upload.wikimedia.org/wikipedia/en/thumb/d/d3/DStv_logo.svg/1200px-DStv_logo.svg.png' },
+  { id: 'GOTV', name: 'GOTV', image: 'https://upload.wikimedia.org/wikipedia/en/thumb/a/a2/GOtv_Logo.svg/1200px-GOtv_Logo.svg.png' },
+  { id: 'STARTIMES', name: 'Startimes', image: 'https://upload.wikimedia.org/wikipedia/en/thumb/0/07/StarTimes_logo.svg/1200px-StarTimes_logo.svg.png' },
+  { id: 'SHOWMAX', name: 'Showmax', image: 'https://upload.wikimedia.org/wikipedia/en/thumb/5/52/Showmax_Logo.svg/1200px-Showmax_Logo.svg.png' },
 ];
 
 export const SUBSCRIPTION_TYPES = [

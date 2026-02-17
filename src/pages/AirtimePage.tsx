@@ -25,9 +25,8 @@ const AirtimePage: React.FC = () => {
       addNotification('Please fill all required fields.', 'warning');
       return;
     }
-    // Relaxed validation to allow for the 12-digit test number
-    if (!/^\d{10,14}$/.test(phoneNumber)) {
-      addNotification('Please enter a valid phone number.', 'warning');
+    if (!/^\d{11}$/.test(phoneNumber)) {
+      addNotification('Please enter a valid 11-digit phone number.', 'warning');
       return;
     }
     if (numericAmount < 50) {
@@ -66,70 +65,79 @@ const AirtimePage: React.FC = () => {
       setAmount('');
       setSelectedOperator(null);
     } else {
-      addNotification(response.message || 'Airtime purchase failed.', 'error');
+      addNotification(response.message || 'Airtime purchase failed. Please check network status.', 'error');
     }
     setIsPurchasing(false);
   };
 
-  const isFormValid = selectedOperator && phoneNumber.length > 9 && numericAmount > 0;
+  const isFormValid = selectedOperator && phoneNumber.length === 11 && numericAmount >= 50;
 
   return (
-    <div className="max-w-md mx-auto">
-      <div className="bg-white p-8 rounded-xl shadow-lg">
-        <h2 className="text-3xl font-bold text-center text-gray-800 mb-8">Buy Airtime</h2>
-        <div className="space-y-6">
+    <div className="max-w-2xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="text-center">
+        <h2 className="text-4xl font-black text-gray-900 tracking-tighter mb-2">Airtime Recharge</h2>
+        <p className="text-gray-400 font-medium">Fast and reliable top-up across all networks.</p>
+      </div>
+
+      <div className="bg-white p-10 rounded-[3rem] shadow-xl border border-gray-50">
+        <div className="space-y-10">
           <div>
-            <label className="block text-gray-700 text-sm font-semibold mb-2">Select Operator</label>
-            <div className="grid grid-cols-4 gap-2">
+            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 text-center">Select Network</label>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {operators.map(op => (
                 <button
                   key={op.id}
                   onClick={() => setSelectedOperator(op)}
-                  className={`p-2 border rounded-lg transition-all duration-200 ${selectedOperator?.id === op.id ? 'border-blue-500 ring-2 ring-blue-500' : 'border-gray-300'}`}
+                  className={`p-6 border-2 rounded-[2rem] transition-all duration-300 flex flex-col items-center gap-3 ${selectedOperator?.id === op.id ? 'border-blue-600 bg-blue-50 shadow-xl shadow-blue-100' : 'border-gray-100 hover:border-gray-200'}`}
                 >
-                  <img src={op.image} alt={op.name} className="h-8 mx-auto" />
+                  <img src={op.image} alt={op.name} className="h-12 w-12 object-contain" />
+                  <span className={`text-[10px] font-black uppercase tracking-widest ${selectedOperator?.id === op.id ? 'text-blue-600' : 'text-gray-400'}`}>{op.name}</span>
                 </button>
               ))}
             </div>
           </div>
 
-          <div>
-            <label htmlFor="phoneNumber" className="block text-gray-700 text-sm font-semibold mb-2">Phone Number</label>
-            <input
-              type="tel"
-              id="phoneNumber"
-              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-              placeholder="201000000000 (for testing)"
-              value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
-              maxLength={14}
-              required
-              disabled={isPurchasing}
-            />
-          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div>
+              <label htmlFor="phoneNumber" className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-2">Recipient Phone</label>
+              <input
+                type="tel"
+                id="phoneNumber"
+                className="w-full p-5 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-blue-50 focus:bg-white focus:border-blue-200 transition-all text-xl font-black tracking-tight"
+                placeholder="08012345678"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
+                maxLength={11}
+                required
+                disabled={isPurchasing}
+              />
+            </div>
 
-          <div>
-            <label htmlFor="amount" className="block text-gray-700 text-sm font-semibold mb-2">Amount (₦)</label>
-            <input
-              type="number"
-              id="amount"
-              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-              placeholder="e.g., 100"
-              min="50"
-              step="50"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              required
-              disabled={isPurchasing}
-            />
+            <div>
+              <label htmlFor="amount" className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-2">Amount (₦)</label>
+              <div className="relative">
+                <span className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 font-bold">₦</span>
+                <input
+                  type="number"
+                  id="amount"
+                  className="w-full p-5 pl-10 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-blue-50 focus:bg-white focus:border-blue-200 transition-all text-xl font-black tracking-tight"
+                  placeholder="0.00"
+                  min="50"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  required
+                  disabled={isPurchasing}
+                />
+              </div>
+            </div>
           </div>
 
           <button
             onClick={handlePrePurchaseCheck}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-md focus:outline-none focus:shadow-outline transition-all duration-200 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-blue-600 hover:bg-black text-white font-black py-6 rounded-[2rem] shadow-2xl shadow-blue-200 transition-all duration-300 transform hover:-translate-y-1 disabled:opacity-50 flex items-center justify-center uppercase tracking-[0.2em] text-sm"
             disabled={!isFormValid || isPurchasing}
           >
-            {isPurchasing ? <Spinner /> : 'Purchase Airtime'}
+            {isPurchasing ? <Spinner /> : 'Purchase Now'}
           </button>
         </div>
       </div>
@@ -137,17 +145,24 @@ const AirtimePage: React.FC = () => {
       <Modal
         isOpen={showConfirmModal}
         onClose={() => setShowConfirmModal(false)}
-        title="Confirm Airtime Purchase"
+        title="Confirm Recharge"
         footer={
-          <>
-            <button className="bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-md mr-2" onClick={() => setShowConfirmModal(false)}>Cancel</button>
-            <button className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md flex items-center" onClick={handlePurchase} disabled={isPurchasing}>
-              {isPurchasing ? <Spinner /> : `Confirm (₦${numericAmount.toLocaleString()})`}
+          <div className="flex gap-4 w-full">
+            <button className="flex-1 bg-gray-100 text-gray-500 font-black py-4 rounded-2xl uppercase tracking-widest text-[10px]" onClick={() => setShowConfirmModal(false)}>Cancel</button>
+            <button className="flex-2 bg-blue-600 hover:bg-black text-white font-black py-4 rounded-2xl uppercase tracking-widest text-[10px] flex items-center justify-center min-w-[150px]" onClick={handlePurchase} disabled={isPurchasing}>
+              {isPurchasing ? <Spinner /> : `Recharge ₦${numericAmount.toLocaleString()}`}
             </button>
-          </>
+          </div>
         }
       >
-        <p>Please confirm you want to buy <span className="font-bold">₦{numericAmount.toLocaleString()}</span> airtime for <span className="font-bold">{phoneNumber}</span> ({selectedOperator?.name}).</p>
+        <div className="text-center py-6 space-y-4">
+           <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
+              <img src={selectedOperator?.image} alt={selectedOperator?.name} className="w-8 h-8 object-contain" />
+           </div>
+           <p className="text-gray-500 font-medium">You are about to send <span className="text-gray-900 font-black tracking-tight">₦{numericAmount.toLocaleString()}</span> airtime to:</p>
+           <h3 className="text-3xl font-black text-gray-900 tracking-tighter">{phoneNumber}</h3>
+           <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Network: {selectedOperator?.name}</p>
+        </div>
       </Modal>
     </div>
   );

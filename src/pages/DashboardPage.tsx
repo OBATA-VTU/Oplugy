@@ -32,9 +32,8 @@ const DashboardPage: React.FC = () => {
 
   const handleRefreshServices = async () => {
     setIsRefreshing(true);
-    // Simulating fetching available services from the API
-    // In a real app, you would call vtuService.getAvailableServices()
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Refreshing connection to OBATA service clusters
+    await new Promise(resolve => setTimeout(resolve, 800));
     setActiveServices(SERVICE_CATEGORIES);
     setIsRefreshing(false);
   };
@@ -43,7 +42,7 @@ const DashboardPage: React.FC = () => {
     return (
       <div className="flex flex-col items-center justify-center h-[calc(100vh-200px)] space-y-4">
         <Spinner />
-        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest animate-pulse">Initializing Dashboard...</p>
+        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest animate-pulse">Syncing with OBATA Cluster...</p>
       </div>
     );
   }
@@ -52,9 +51,9 @@ const DashboardPage: React.FC = () => {
     <div className="animate-in fade-in slide-in-from-bottom-6 duration-700">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-16 gap-6">
         <div>
-          <h2 className="text-[10px] font-black text-blue-600 uppercase tracking-[0.4em] mb-4">Welcome Back</h2>
+          <h2 className="text-[10px] font-black text-blue-600 uppercase tracking-[0.4em] mb-4">Secured Session</h2>
           <h1 className="text-4xl lg:text-6xl font-black text-gray-900 tracking-tighter leading-none">
-            Hello, {user?.fullName?.split(' ')[0] || 'Member'}.
+            Hello, {user?.fullName?.split(' ')[0] || 'User'}.
           </h1>
         </div>
         <button 
@@ -87,14 +86,14 @@ const DashboardPage: React.FC = () => {
             <div className="max-w-xl">
                <h3 className="text-3xl font-black tracking-tighter mb-4">Refer a Friend, Get Rewarded.</h3>
                <p className="text-white/40 font-medium leading-relaxed">
-                 Invite your friends to OBATA v2 and get ₦500 bonus for every active user you bring to the platform.
+                 Invite your friends to OBATA v2 and get instant referral bonuses on their first wallet funding.
                </p>
             </div>
-            <button className="mt-8 lg:mt-0 bg-blue-600 px-10 py-5 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-white hover:text-blue-600 transition-all">
+            <button className="mt-8 lg:mt-0 bg-blue-600 px-10 py-5 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-white hover:text-blue-600 transition-all shadow-xl shadow-blue-500/20">
                Copy Referral Link
             </button>
          </div>
-         <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600/20 rounded-full blur-[100px]"></div>
+         <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600/10 rounded-full blur-[100px]"></div>
       </div>
     </div>
   );

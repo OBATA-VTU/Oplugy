@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
@@ -16,6 +17,7 @@ import TransactionHistoryPage from './pages/TransactionHistoryPage';
 import LandingPage from './pages/LandingPage';
 import TermsPage from './pages/TermsPage';
 import PrivacyPage from './pages/PrivacyPage';
+import ComingSoonPage from './pages/ComingSoonPage';
 import Spinner from './components/Spinner';
 
 interface ProtectedRouteProps {
@@ -58,6 +60,11 @@ const AppContent: React.FC = () => {
           <Route path="/bills" element={<ProtectedRoute><BillsPage /></ProtectedRoute>} />
           <Route path="/cable" element={<ProtectedRoute><CablePage /></ProtectedRoute>} />
           <Route path="/history" element={<ProtectedRoute><TransactionHistoryPage /></ProtectedRoute>} />
+          
+          {/* Coming Soon Services */}
+          <Route path="/gaming" element={<ProtectedRoute><ComingSoonPage title="Gaming Topup" description="Free Fire Diamonds, Call of Duty Points and more are currently being integrated. Stay tuned!" /></ProtectedRoute>} />
+          <Route path="/giftcards" element={<ProtectedRoute><ComingSoonPage title="Gift Cards" description="Global gift cards from iTunes, Steam, and Amazon will be available soon for instant purchase." /></ProtectedRoute>} />
+          <Route path="/airtime-to-cash" element={<ProtectedRoute><ComingSoonPage title="Airtime to Cash" description="Convert your excess airtime to instant bank credit. This feature is in active development." /></ProtectedRoute>} />
           
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

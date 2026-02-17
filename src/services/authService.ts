@@ -1,3 +1,4 @@
+
 import { ApiResponse } from '../types';
 import { auth, db } from '../firebase/config';
 import { 
@@ -30,7 +31,7 @@ export const authService = {
         return { 
           status: true, 
           data: { user: { ...userDoc.data(), id: user.uid }, token: await user.getIdToken() },
-          message: 'Welcome back to Oplug VTU!' 
+          message: 'Welcome back to OBATA v2!' 
         };
       }
       
@@ -43,11 +44,9 @@ export const authService = {
 
   async loginWithGoogle(): Promise<ApiResponse<any>> {
     try {
-      // Set persistence first to handle session across tabs/reloads
       await setPersistence(auth, browserLocalPersistence);
       
       const provider = new GoogleAuthProvider();
-      // Ensure the experience feels branded and intentional
       provider.setCustomParameters({ 
         prompt: 'select_account',
         display: 'popup'
@@ -64,7 +63,7 @@ export const authService = {
         userData = {
           id: user.uid,
           email: user.email,
-          fullName: user.displayName || 'Oplug User',
+          fullName: user.displayName || 'OBATA User',
           walletBalance: 0,
           role: 'user',
           createdAt: serverTimestamp()
@@ -77,10 +76,9 @@ export const authService = {
       return { 
         status: true, 
         data: { user: { ...userData, id: user.uid }, token: await user.getIdToken() },
-        message: 'Successfully signed in with Google' 
+        message: 'Successfully signed in to OBATA v2' 
       };
     } catch (error: any) {
-      // Log only the code to console for debugging, don't show technical jargon to user
       console.error("Google Auth Error Code:", error.code);
       
       let friendlyMessage = 'Google sign-in was interrupted. Please try again.';
@@ -111,7 +109,7 @@ export const authService = {
       const userData = {
         id: user.uid,
         email: email,
-        fullName: fullName || 'New Oplug User',
+        fullName: fullName || 'New OBATA User',
         walletBalance: 0,
         role: 'user',
         createdAt: serverTimestamp()
@@ -119,7 +117,7 @@ export const authService = {
 
       await setDoc(doc(db, "users", user.uid), userData);
 
-      return { status: true, message: 'Your Oplug account has been created!' };
+      return { status: true, message: 'Your OBATA account has been created!' };
     } catch (error: any) {
       console.error("Signup Error:", error.code);
       let msg = 'Registration failed. This email might already be in use.';

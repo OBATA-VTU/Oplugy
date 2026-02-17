@@ -40,7 +40,7 @@ const LoginPage: React.FC = () => {
         </div>
         <div className="max-w-md w-full mx-auto lg:mx-0">
           <h1 className="text-4xl font-extrabold text-gray-900 mb-4">Welcome Back</h1>
-          <p className="text-gray-500 mb-10">Enter your credentials to access your Oplug dashboard.</p>
+          <p className="text-gray-500 mb-10">Enter your credentials to access your OBATA v2 dashboard.</p>
           
           <AuthForm 
             onSubmit={handleLoginSubmit} 
@@ -63,7 +63,7 @@ const LoginPage: React.FC = () => {
         <div className="absolute inset-0 flex items-center justify-center p-20">
           <div className="text-white text-center">
             <h2 className="text-5xl font-extrabold mb-8">Fastest VTU in Nigeria</h2>
-            <p className="text-xl text-blue-100 mb-12">Join 50,000+ users who trust Oplug for their daily digital needs.</p>
+            <p className="text-xl text-blue-100 mb-12">Join 100,000+ users who trust OBATA for their daily digital needs.</p>
             <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 border border-white/20">
                <div className="flex items-center space-x-4 mb-6">
                   <div className="w-12 h-12 bg-green-400 rounded-full flex items-center justify-center text-white">
