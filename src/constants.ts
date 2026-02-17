@@ -33,6 +33,12 @@ export const SERVICE_CATEGORIES = [
     path: '/cable',
   },
   {
+    id: 'pricing',
+    name: 'Price List',
+    description: 'Check current rates for all services.',
+    path: '/pricing',
+  },
+  {
     id: 'gaming',
     name: 'Gaming Topup',
     description: 'Free Fire, COD, and more.',
@@ -78,4 +84,14 @@ export const CABLE_BILLERS = [
 export const SUBSCRIPTION_TYPES = [
   { id: 'RENEW', name: 'Renew Subscription' },
   { id: 'CHANGE', name: 'Change Plan' },
+];
+
+export const PRICING_DATA = [
+  { network: 'MTN', type: 'SME', size: '500MB', price: 150, validity: '30 Days' },
+  { network: 'MTN', type: 'SME', size: '1GB', price: 285, validity: '30 Days' },
+  { network: 'MTN', type: 'SME', size: '2GB', price: 570, validity: '30 Days' },
+  { network: 'MTN', type: 'SME', size: '5GB', price: 1425, validity: '30 Days' },
+  { network: 'AIRTEL', type: 'CG', size: '1GB', price: 290, validity: '30 Days' },
+  { network: 'GLO', type: 'CG', size: '1GB', price: 275, validity: '30 Days' },
+  { network: '9MOBILE', type: 'SME', size: '1GB', price: 230, validity: '30 Days' },
 ];

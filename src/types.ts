@@ -10,6 +10,10 @@ export interface User {
   walletBalance: number;
   role: UserRole;
   status: UserStatus;
+  referralCode: string;
+  referredBy?: string;
+  referralEarnings: number;
+  referralCount: number;
   createdAt?: any;
 }
 
@@ -40,46 +44,53 @@ export interface DataPlan {
 }
 
 export interface TransactionResponse {
-  id: string; // CIP's "id" field
-  amount: number; // In Kobo from API, converted to Naira in service
+  id: string;
+  userId: string;
+  userEmail?: string;
+  amount: number; 
   status: 'SUCCESS' | 'PENDING' | 'FAILED';
-  type: string; // e.g., 'AIRTIME', 'DATA'
-  source: string; // e.g., 'AIRTIME', 'CABLE TV'
+  type: 'AIRTIME' | 'DATA' | 'CABLE' | 'ELECTRICITY' | 'FUNDING' | 'REFERRAL';
+  source: string;
   remarks: string;
   date_created: string;
   date_updated: string;
-  token?: string; // For electricity purchases
+  token?: string; 
 }
 
+// --- Verification & API Structure ---
+/**
+ * Standardized response for electricity and cable verification.
+ */
 export interface VerificationResponse {
   status: boolean;
-  message: string;
-  customerName?: string;
+  message?: string;
+  customerName: string;
+  meterNumber?: string;
   customerAddress?: string;
   dueDate?: string;
   smartCardNumber?: string;
-  meterNumber?: string;
 }
 
-// --- API Layer ---
-// This represents the raw response from the CIP API via our proxy
-export interface CipApiResponse<T> {
-  status: 'success' | 'error';
-  message: string;
-  data: T | null;
-  errors: { path: string; message: string; code: string }[] | null;
-}
-
-// This is the standardized response format our services will return
+/**
+ * Standardized response for Oplug internal API requests.
+ */
 export interface ApiResponse<T> {
-  status: boolean; // true for success, false for error
+  status: boolean; 
   message?: string;
   data?: T;
   errors?: string[];
 }
 
+/**
+ * Raw response structure from the CIP Topup provider API.
+ */
+export interface CipApiResponse<T> {
+  status: string;
+  message?: string;
+  data?: T;
+  errors?: Array<{ path: string; message: string }>;
+}
 
-// --- UI & State ---
 export interface NotificationState {
   id: string;
   message: string;

@@ -10,7 +10,9 @@ import {
   ShieldCheckIcon,
   LogoutIcon, 
   MenuIcon,
-  BoltIcon
+  BoltIcon,
+  HistoryIcon,
+  ExchangeIcon
 } from './Icons';
 
 interface AdminLayoutProps {
@@ -54,30 +56,28 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         <Logo />
         <div className="mt-4 inline-flex items-center space-x-2 bg-black text-white px-3 py-1 rounded-full">
            <ShieldCheckIcon />
-           <span className="text-[9px] font-black uppercase tracking-widest">Master Admin</span>
+           <span className="text-[9px] font-black uppercase tracking-widest">Master Terminal</span>
         </div>
       </div>
       
       <nav className="flex-grow px-5 space-y-1.5 overflow-y-auto custom-scrollbar">
-        <div className="px-4 mb-3 text-[9px] font-black uppercase tracking-[0.2em] text-gray-400">Governance</div>
-        <AdminNavItem to="/admin" icon={<HomeIcon />} onClick={closeSidebar}>Admin Hub</AdminNavItem>
-        <AdminNavItem to="/admin/users" icon={<UsersIcon />} onClick={closeSidebar}>User Management</AdminNavItem>
+        <div className="px-4 mb-3 text-[9px] font-black uppercase tracking-[0.2em] text-gray-400">Operations</div>
+        <AdminNavItem to="/admin" icon={<HomeIcon />} onClick={closeSidebar}>Hub Overview</AdminNavItem>
+        <AdminNavItem to="/admin/users" icon={<UsersIcon />} onClick={closeSidebar}>User Repository</AdminNavItem>
+        <AdminNavItem to="/admin/transactions" icon={<HistoryIcon />} onClick={closeSidebar}>System Ledger</AdminNavItem>
         
-        <div className="px-4 mt-8 mb-3 text-[9px] font-black uppercase tracking-[0.2em] text-gray-400">System</div>
-        <AdminNavItem to="/dashboard" icon={<BoltIcon />} onClick={closeSidebar}>Go to User App</AdminNavItem>
+        <div className="px-4 mt-8 mb-3 text-[9px] font-black uppercase tracking-[0.2em] text-gray-400">Environment</div>
+        <AdminNavItem to="/admin/settings" icon={<ExchangeIcon />} onClick={closeSidebar}>Config Center</AdminNavItem>
+        <AdminNavItem to="/dashboard" icon={<BoltIcon />} onClick={closeSidebar}>Switch to User App</AdminNavItem>
       </nav>
 
       <div className="p-6 border-t border-gray-50">
-        <div className="mb-6 p-4 bg-gray-50 rounded-2xl">
-          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Signed in as</p>
-          <p className="text-gray-900 font-black truncate">{user?.fullName}</p>
-        </div>
         <button
           onClick={handleLogout}
           className="w-full flex items-center space-x-3 p-4 rounded-2xl text-red-500 hover:bg-red-50 transition-all font-black text-[11px] uppercase tracking-widest"
         >
           <LogoutIcon />
-          <span>Exit Panel</span>
+          <span>Exit Secure Session</span>
         </button>
       </div>
     </div>
@@ -101,15 +101,15 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
               <MenuIcon />
             </button>
             <h1 className="text-xl font-black text-gray-900 tracking-tighter">
-              {location.pathname === '/admin' ? 'Administrative Dashboard' : 'User Governance'}
+              Admin Control
             </h1>
           </div>
           
           <div className="flex items-center space-x-4">
             {isLoading && <Spinner />}
             <div className="hidden sm:flex flex-col items-end">
-              <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">System Online</span>
-              <span className="text-[8px] font-bold text-gray-400">{new Date().toDateString()}</span>
+              <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Master Node: Active</span>
+              <span className="text-[8px] font-bold text-gray-400">Ver. 2.0.4-LATEST</span>
             </div>
           </div>
         </header>

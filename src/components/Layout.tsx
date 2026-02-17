@@ -8,7 +8,8 @@ import Modal from './Modal';
 import { 
   HomeIcon, PhoneIcon, SignalIcon, BoltIcon, TvIcon, 
   LogoutIcon, MenuIcon, HistoryIcon, WalletIcon,
-  GamingIcon, GiftIcon, ExchangeIcon, ShieldCheckIcon
+  GamingIcon, GiftIcon, ExchangeIcon, ShieldCheckIcon,
+  CurrencyDollarIcon
 } from './Icons';
 
 interface LayoutProps {
@@ -50,10 +51,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     '/bills': 'Utility Bills',
     '/cable': 'Cable TV',
     '/history': 'Activity Logs',
-    '/gaming': 'Gaming Topup',
-    '/giftcards': 'Gift Cards',
-    '/airtime-to-cash': 'Airtime to Cash',
-    '/admin': 'Admin Control'
+    '/pricing': 'Service Rates',
+    '/gaming': 'Gaming Hub',
+    '/giftcards': 'Digital Assets',
+    '/airtime-to-cash': 'Liquidity Conversion',
+    '/admin': 'Master Hub'
   };
 
   const handleLogout = () => {
@@ -63,20 +65,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   const closeSidebar = () => setIsSidebarOpen(false);
 
-  const handleFundWallet = () => {
-    if (fundMethod === 'AUTO') {
-      alert(`Paystack Integration: Redirecting to pay ₦${fundAmount}...`);
-      setIsFundModalOpen(false);
-    }
-  };
-
   const sidebarContent = (
     <div className="h-full flex flex-col bg-white">
       <div className="p-8 mb-6">
         <Logo />
       </div>
       <nav className="flex-grow px-5 space-y-1.5 overflow-y-auto custom-scrollbar">
-        {/* Admin Section - Only visible to Admin roles */}
         {user?.role === 'admin' && (
           <>
             <div className="px-4 mb-3 text-[9px] font-black uppercase tracking-[0.2em] text-blue-600">Administration</div>
@@ -85,24 +79,25 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </>
         )}
 
-        <div className="px-4 mb-3 text-[9px] font-black uppercase tracking-[0.2em] text-gray-400">Main</div>
+        <div className="px-4 mb-3 text-[9px] font-black uppercase tracking-[0.2em] text-gray-400">Core</div>
         <NavItem to="/dashboard" icon={<HomeIcon />} onClick={closeSidebar}>Dashboard</NavItem>
+        <NavItem to="/pricing" icon={<CurrencyDollarIcon />} onClick={closeSidebar}>Price List</NavItem>
         
-        <div className="px-4 mt-8 mb-3 text-[9px] font-black uppercase tracking-[0.2em] text-gray-400">Top-Up</div>
+        <div className="px-4 mt-8 mb-3 text-[9px] font-black uppercase tracking-[0.2em] text-gray-400">Telephony</div>
         <NavItem to="/airtime" icon={<PhoneIcon />} onClick={closeSidebar}>Airtime</NavItem>
-        <NavItem to="/data" icon={<SignalIcon />} onClick={closeSidebar}>Data Bundles</NavItem>
+        <NavItem to="/data" icon={<SignalIcon />} onClick={closeSidebar}>Data Plans</NavItem>
         
-        <div className="px-4 mt-8 mb-3 text-[9px] font-black uppercase tracking-[0.2em] text-gray-400">Utilities</div>
-        <NavItem to="/bills" icon={<BoltIcon />} onClick={closeSidebar}>Electricity</NavItem>
-        <NavItem to="/cable" icon={<TvIcon />} onClick={closeSidebar}>Cable TV</NavItem>
+        <div className="px-4 mt-8 mb-3 text-[9px] font-black uppercase tracking-[0.2em] text-gray-400">Subscription</div>
+        <NavItem to="/bills" icon={<BoltIcon />} onClick={closeSidebar}>Power Bill</NavItem>
+        <NavItem to="/cable" icon={<TvIcon />} onClick={closeSidebar}>TV Subscription</NavItem>
 
-        <div className="px-4 mt-8 mb-3 text-[9px] font-black uppercase tracking-[0.2em] text-gray-400">Specialized</div>
+        <div className="px-4 mt-8 mb-3 text-[9px] font-black uppercase tracking-[0.2em] text-gray-400">Value Added</div>
         <NavItem to="/gaming" icon={<GamingIcon />} onClick={closeSidebar}>Gaming</NavItem>
         <NavItem to="/giftcards" icon={<GiftIcon />} onClick={closeSidebar}>Gift Cards</NavItem>
-        <NavItem to="/airtime-to-cash" icon={<ExchangeIcon />} onClick={closeSidebar}>Airtime to Cash</NavItem>
+        <NavItem to="/airtime-to-cash" icon={<ExchangeIcon />} onClick={closeSidebar}>Air-to-Cash</NavItem>
 
-        <div className="px-4 mt-8 mb-3 text-[9px] font-black uppercase tracking-[0.2em] text-gray-400">Records</div>
-        <NavItem to="/history" icon={<HistoryIcon />} onClick={closeSidebar}>History</NavItem>
+        <div className="px-4 mt-8 mb-3 text-[9px] font-black uppercase tracking-[0.2em] text-gray-400">Repository</div>
+        <NavItem to="/history" icon={<HistoryIcon />} onClick={closeSidebar}>Transactions</NavItem>
       </nav>
       <div className="p-6 border-t border-gray-50">
         <button
@@ -110,7 +105,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           className="w-full flex items-center space-x-3 p-4 rounded-2xl text-red-500 hover:bg-red-50 transition-all font-black text-[11px] uppercase tracking-widest"
         >
           <LogoutIcon />
-          <span>Logout</span>
+          <span>Secure Sign Out</span>
         </button>
       </div>
     </div>
@@ -144,10 +139,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   className="bg-blue-600 hover:bg-black text-white px-6 py-2.5 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all shadow-xl shadow-blue-100 flex items-center space-x-2"
                 >
                   <WalletIcon />
-                  <span className="hidden sm:inline">Fund</span>
+                  <span className="hidden sm:inline">Fund Wallet</span>
                 </button>
                 <div className="text-right">
-                  <span className="block text-[8px] font-black text-gray-400 uppercase tracking-widest">Balance</span>
+                  <span className="block text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Portfolio</span>
                   <div className="text-gray-900 font-black text-lg tracking-tighter leading-none">
                     ₦{walletBalance !== null ? walletBalance.toLocaleString('en-US', { minimumFractionDigits: 2 }) : '...'}
                   </div>
@@ -172,11 +167,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             <button className="flex-1 bg-gray-100 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest text-gray-500" onClick={() => setIsFundModalOpen(false)}>Close</button>
             {fundMethod === 'AUTO' && (
               <button 
-                className="flex-1 bg-blue-600 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest text-white shadow-xl shadow-blue-100 disabled:opacity-50"
-                onClick={handleFundWallet}
-                disabled={!fundAmount || parseFloat(fundAmount) < 100}
+                className="flex-1 bg-blue-600 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest text-white shadow-xl shadow-blue-100"
+                onClick={() => { alert('Initializing Secure Payment Gateway...'); setIsFundModalOpen(false); }}
               >
-                Launch Paystack
+                Continue
               </button>
             )}
           </div>
@@ -184,27 +178,24 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       >
         <div className="space-y-8">
           <div className="flex p-1.5 bg-gray-100 rounded-2xl">
-            <button className={`flex-1 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${fundMethod === 'AUTO' ? 'bg-white text-blue-600 shadow-md' : 'text-gray-400'}`} onClick={() => setFundMethod('AUTO')}>Paystack</button>
-            <button className={`flex-1 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${fundMethod === 'MANUAL' ? 'bg-white text-blue-600 shadow-md' : 'text-gray-400'}`} onClick={() => setFundMethod('MANUAL')}>Transfer</button>
+            <button className={`flex-1 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${fundMethod === 'AUTO' ? 'bg-white text-blue-600 shadow-md' : 'text-gray-400'}`} onClick={() => setFundMethod('AUTO')}>Paystack (Auto)</button>
+            <button className={`flex-1 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${fundMethod === 'MANUAL' ? 'bg-white text-blue-600 shadow-md' : 'text-gray-400'}`} onClick={() => setFundMethod('MANUAL')}>Manual Transfer</button>
           </div>
 
           {fundMethod === 'AUTO' ? (
             <div className="animate-in fade-in slide-in-from-bottom-2">
-              <label className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-3">Funding Amount (₦)</label>
-              <div className="relative">
-                <span className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 font-bold">₦</span>
-                <input type="number" className="w-full p-6 pl-12 bg-gray-50 border border-gray-100 rounded-3xl focus:ring-4 focus:ring-blue-50 focus:bg-white transition-all text-2xl font-black tracking-tighter" placeholder="0.00" value={fundAmount} onChange={(e) => setFundAmount(e.target.value)} />
-              </div>
+              <label className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-3">Amount to fund (₦)</label>
+              <input type="number" className="w-full p-6 bg-gray-50 border border-gray-100 rounded-3xl text-2xl font-black tracking-tighter" placeholder="0.00" value={fundAmount} onChange={(e) => setFundAmount(e.target.value)} />
             </div>
           ) : (
             <div className="bg-gray-900 text-white p-10 rounded-[2.5rem] space-y-6 text-center animate-in fade-in slide-in-from-bottom-2">
-              <p className="text-white/40 text-[9px] font-black uppercase tracking-widest">Account Number</p>
-              <h3 className="text-4xl font-black tracking-tighter">8142452729</h3>
+              <p className="text-white/40 text-[9px] font-black uppercase tracking-widest">Bank Details</p>
+              <h3 className="text-3xl font-black tracking-tighter">8142452729</h3>
               <div className="bg-white/5 p-4 rounded-2xl">
                 <p className="text-blue-500 font-black text-sm">Palmpay</p>
                 <p className="text-xs font-medium text-white/70">Boluwatife Oluwapelumi Ayuba</p>
               </div>
-              <p className="text-[10px] text-white/30 italic">Send receipt to support@obata.com or +2348142452729 for instant credit.</p>
+              <p className="text-[10px] text-white/30 italic leading-relaxed">Send payment proof to WhatsApp +2348142452729 for instant verification.</p>
             </div>
           )}
         </div>

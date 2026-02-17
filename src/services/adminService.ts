@@ -7,7 +7,6 @@ import {
   updateDoc, 
   getDoc, 
   query, 
-  orderBy, 
   increment
 } from 'firebase/firestore';
 import { ApiResponse, User, UserRole, UserStatus } from '../types';
@@ -16,19 +15,31 @@ export const adminService = {
   // --- User Management ---
   async getAllUsers(): Promise<ApiResponse<User[]>> {
     try {
-      const usersQuery = query(collection(db, "users"), orderBy("createdAt", "desc"));
+      // Simplified query: Removing orderBy to prevent failures if fields are missing or indexes are not set
+      const usersQuery = query(collection(db, "users"));
       const snapshot = await getDocs(usersQuery);
+      
+      if (snapshot.empty) {
+        return { status: true, data: [], message: "No users found in the repository." };
+      }
+
       const users = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as User));
       return { status: true, data: users };
     } catch (error: any) {
-      return { status: false, message: error.message || "Failed to fetch users" };
+      console.error("Firestore Admin Error:", error);
+      return { 
+        status: false, 
+        message: error.code === 'permission-denied' 
+          ? "Access Denied: You do not have sufficient administrative privileges." 
+          : error.message || "Failed to fetch users" 
+      };
     }
   },
 
   async updateUserRole(userId: string, newRole: UserRole): Promise<ApiResponse<void>> {
     try {
       await updateDoc(doc(db, "users", userId), { role: newRole });
-      return { status: true, message: `User role updated to ${newRole}` };
+      return { status: true, message: `Account tier updated to ${newRole.toUpperCase()}` };
     } catch (error: any) {
       return { status: false, message: error.message || "Failed to update role" };
     }
@@ -37,7 +48,7 @@ export const adminService = {
   async updateUserStatus(userId: string, status: UserStatus): Promise<ApiResponse<void>> {
     try {
       await updateDoc(doc(db, "users", userId), { status: status });
-      return { status: true, message: `User status updated to ${status}` };
+      return { status: true, message: `Account status set to ${status.toUpperCase()}` };
     } catch (error: any) {
       return { status: false, message: error.message || "Failed to update status" };
     }
@@ -50,7 +61,7 @@ export const adminService = {
       await updateDoc(doc(db, "users", userId), {
         walletBalance: increment(amount)
       });
-      return { status: true, message: `Successfully credited user with ₦${amount}` };
+      return { status: true, message: `Successfully credited account with ₦${amount.toLocaleString()}` };
     } catch (error: any) {
       return { status: false, message: error.message || "Failed to credit user" };
     }
@@ -64,13 +75,13 @@ export const adminService = {
       const currentBalance = userDoc.data()?.walletBalance || 0;
       
       if (currentBalance < amount) {
-        throw new Error("Insufficient user balance for debit");
+        throw new Error("Action Aborted: Insufficient user balance.");
       }
 
       await updateDoc(doc(db, "users", userId), {
         walletBalance: increment(-amount)
       });
-      return { status: true, message: `Successfully debited user with ₦${amount}` };
+      return { status: true, message: `Successfully debited account with ₦${amount.toLocaleString()}` };
     } catch (error: any) {
       return { status: false, message: error.message || "Failed to debit user" };
     }
@@ -102,7 +113,7 @@ export const adminService = {
         }
       };
     } catch (error: any) {
-      return { status: false, message: error.message || "Failed to fetch system stats" };
+      return { status: false, message: error.message || "Failed to calculate system statistics" };
     }
   }
 };

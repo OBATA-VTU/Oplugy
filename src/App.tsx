@@ -21,6 +21,9 @@ import PrivacyPage from './pages/PrivacyPage';
 import ComingSoonPage from './pages/ComingSoonPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
 import AdminUsersPage from './pages/AdminUsersPage';
+import AdminTransactionsPage from './pages/AdminTransactionsPage';
+import AdminSettingsPage from './pages/AdminSettingsPage';
+import PricingPage from './pages/PricingPage';
 import Spinner from './components/Spinner';
 
 interface ProtectedRouteProps {
@@ -84,7 +87,6 @@ const AdminRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     );
   }
 
-  // Admin access requires both a logged-in admin user and the master password
   if (!isAuthenticated || user?.role !== 'admin') {
     return <Navigate to="/dashboard" replace />;
   }
@@ -117,10 +119,6 @@ const AdminRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
                  Unlock System
               </button>
            </form>
-           
-           <div className="mt-8 text-center">
-              <button onClick={() => window.history.back()} className="text-[10px] font-black text-gray-400 uppercase tracking-widest hover:text-blue-600">Return to Safety</button>
-           </div>
         </div>
       </div>
     );
@@ -137,7 +135,6 @@ const AppContent: React.FC = () => {
           <Route path="/" element={<LandingPage />} />
           <Route path="/terms" element={<TermsPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
-          
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignUpPage />} />
           
@@ -147,15 +144,16 @@ const AppContent: React.FC = () => {
           <Route path="/bills" element={<ProtectedRoute><BillsPage /></ProtectedRoute>} />
           <Route path="/cable" element={<ProtectedRoute><CablePage /></ProtectedRoute>} />
           <Route path="/history" element={<ProtectedRoute><TransactionHistoryPage /></ProtectedRoute>} />
+          <Route path="/pricing" element={<ProtectedRoute><PricingPage /></ProtectedRoute>} />
           
-          {/* Admin Routes */}
           <Route path="/admin" element={<AdminRoute><AdminDashboardPage /></AdminRoute>} />
           <Route path="/admin/users" element={<AdminRoute><AdminUsersPage /></AdminRoute>} />
+          <Route path="/admin/transactions" element={<AdminRoute><AdminTransactionsPage /></AdminRoute>} />
+          <Route path="/admin/settings" element={<AdminRoute><AdminSettingsPage /></AdminRoute>} />
           
-          {/* Coming Soon Services */}
-          <Route path="/gaming" element={<ProtectedRoute><ComingSoonPage title="Gaming Topup" description="Free Fire Diamonds, Call of Duty Points and more are currently being integrated. Stay tuned!" /></ProtectedRoute>} />
-          <Route path="/giftcards" element={<ProtectedRoute><ComingSoonPage title="Gift Cards" description="Global gift cards from iTunes, Steam, and Amazon will be available soon for instant purchase." /></ProtectedRoute>} />
-          <Route path="/airtime-to-cash" element={<ProtectedRoute><ComingSoonPage title="Airtime to Cash" description="Convert your excess airtime to instant bank credit. This feature is in active development." /></ProtectedRoute>} />
+          <Route path="/gaming" element={<ProtectedRoute><ComingSoonPage title="Gaming Topup" description="Gaming credits are currently being integrated." /></ProtectedRoute>} />
+          <Route path="/giftcards" element={<ProtectedRoute><ComingSoonPage title="Gift Cards" description="Global gift cards will be available soon." /></ProtectedRoute>} />
+          <Route path="/airtime-to-cash" element={<ProtectedRoute><ComingSoonPage title="Airtime to Cash" description="Convert excess airtime to cash soon." /></ProtectedRoute>} />
           
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

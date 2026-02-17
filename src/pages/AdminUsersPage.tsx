@@ -1,11 +1,10 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { adminService } from '../services/adminService';
 import { User, UserRole, UserStatus } from '../types';
 import Spinner from '../components/Spinner';
 import Modal from '../components/Modal';
 import { useNotifications } from '../hooks/useNotifications';
-// Added SignalIcon to the imports below to fix the "Cannot find name 'SignalIcon'" error
 import { 
   UsersIcon, 
   CurrencyDollarIcon, 
@@ -28,23 +27,27 @@ const AdminUsersPage: React.FC = () => {
   const [finType, setFinType] = useState<'CREDIT' | 'DEBIT'>('CREDIT');
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const fetchUsers = async () => {
-    setLoading(true);
+  const fetchUsers = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
     const res = await adminService.getAllUsers();
-    if (res.status && res.data) setUsers(res.data);
+    if (res.status && res.data) {
+      setUsers(res.data);
+    } else {
+      addNotification(res.message || "Failed to load user data", "error");
+    }
     setLoading(false);
-  };
+  }, [addNotification]);
 
   useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [fetchUsers]);
 
   const handleRoleChange = async (userId: string, newRole: UserRole) => {
     setIsProcessing(true);
     const res = await adminService.updateUserRole(userId, newRole);
     if (res.status) {
       addNotification(res.message || "Role updated", "success");
-      fetchUsers();
+      fetchUsers(true);
       setIsManageModalOpen(false);
     } else {
       addNotification(res.message || "Failed to update role", "error");
@@ -57,7 +60,7 @@ const AdminUsersPage: React.FC = () => {
     const res = await adminService.updateUserStatus(userId, newStatus);
     if (res.status) {
       addNotification(res.message || "Status updated", "success");
-      fetchUsers();
+      fetchUsers(true);
       setIsManageModalOpen(false);
     } else {
       addNotification(res.message || "Failed to update status", "error");
@@ -74,22 +77,27 @@ const AdminUsersPage: React.FC = () => {
       : await adminService.debitUser(selectedUser.id, amount);
     
     if (res.status) {
-      addNotification(res.message || "Transaction successful", "success");
-      fetchUsers();
+      addNotification(res.message || "Financial update successful", "success");
+      fetchUsers(true);
       setIsFinModalOpen(false);
       setFinAmount('');
     } else {
-      addNotification(res.message || "Transaction failed", "error");
+      addNotification(res.message || "Financial update failed", "error");
     }
     setIsProcessing(false);
   };
 
   const filteredUsers = users.filter(u => 
-    u.fullName.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    u.email.toLowerCase().includes(searchTerm.toLowerCase())
+    (u.fullName || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+    (u.email || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  if (loading && users.length === 0) return <div className="flex h-96 items-center justify-center"><Spinner /></div>;
+  if (loading && users.length === 0) return (
+    <div className="flex flex-col h-96 items-center justify-center space-y-4">
+      <Spinner />
+      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest animate-pulse">Scanning User Database...</p>
+    </div>
+  );
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -98,14 +106,25 @@ const AdminUsersPage: React.FC = () => {
           <h2 className="text-[10px] font-black text-blue-600 uppercase tracking-[0.4em] mb-4">Governance</h2>
           <h1 className="text-4xl lg:text-6xl font-black text-gray-900 tracking-tighter">User Repository</h1>
         </div>
-        <div className="w-full md:w-96">
-          <input 
-            type="text" 
-            placeholder="Search by name or email..." 
-            className="w-full p-4 bg-white border border-gray-100 rounded-2xl shadow-sm focus:ring-4 focus:ring-blue-50 transition-all font-medium"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+        <div className="flex w-full md:w-auto items-center space-x-4">
+          <div className="relative flex-grow md:w-80">
+            <input 
+              type="text" 
+              placeholder="Search by identity..." 
+              className="w-full p-4 bg-white border border-gray-100 rounded-2xl shadow-sm focus:ring-4 focus:ring-blue-50 transition-all font-medium text-sm"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <button 
+            onClick={() => fetchUsers()}
+            className="p-4 bg-white border border-gray-100 rounded-2xl shadow-sm text-gray-400 hover:text-blue-600 transition-all"
+            title="Refresh Data"
+          >
+            <svg className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+            </svg>
+          </button>
         </div>
       </div>
 
@@ -122,15 +141,15 @@ const AdminUsersPage: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {filteredUsers.map((u) => (
+              {filteredUsers.length > 0 ? filteredUsers.map((u) => (
                 <tr key={u.id} className="group hover:bg-gray-50/50 transition-all duration-300">
                   <td className="px-10 py-7">
                     <div className="flex items-center space-x-4">
                       <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center font-black text-xl">
-                        {u.fullName.charAt(0)}
+                        {u.fullName?.charAt(0) || '?'}
                       </div>
                       <div>
-                        <div className="font-black text-gray-900 tracking-tight">{u.fullName}</div>
+                        <div className="font-black text-gray-900 tracking-tight">{u.fullName || 'Anonymous'}</div>
                         <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{u.email}</div>
                       </div>
                     </div>
@@ -152,28 +171,42 @@ const AdminUsersPage: React.FC = () => {
                     </span>
                   </td>
                   <td className="px-10 py-7 text-right">
-                    <div className="font-black text-gray-900 text-lg tracking-tighter">₦{u.walletBalance?.toLocaleString()}</div>
+                    <div className="font-black text-gray-900 text-lg tracking-tighter">₦{u.walletBalance?.toLocaleString() || '0'}</div>
                   </td>
                   <td className="px-10 py-7 text-right">
                     <div className="flex justify-end space-x-3">
                       <button 
                         onClick={() => { setSelectedUser(u); setIsFinModalOpen(true); }}
                         className="p-3 bg-green-50 text-green-600 rounded-xl hover:bg-green-600 hover:text-white transition-all shadow-sm"
-                        title="Finance"
+                        title="Finance Adjustment"
                       >
                         <CurrencyDollarIcon />
                       </button>
                       <button 
                         onClick={() => { setSelectedUser(u); setIsManageModalOpen(true); }}
                         className="p-3 bg-gray-100 text-gray-600 rounded-xl hover:bg-gray-900 hover:text-white transition-all shadow-sm"
-                        title="Manage"
+                        title="Governance"
                       >
                         <ShieldCheckIcon />
                       </button>
                     </div>
                   </td>
                 </tr>
-              ))}
+              )) : (
+                <tr>
+                  <td colSpan={5} className="px-10 py-24 text-center">
+                    <div className="flex flex-col items-center space-y-4">
+                      <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center text-gray-300">
+                        <UsersIcon />
+                      </div>
+                      <div>
+                         <p className="text-gray-900 font-black tracking-tight">No Users Found</p>
+                         <p className="text-gray-400 text-xs font-medium">Try adjusting your search or refresh the database.</p>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -203,12 +236,12 @@ const AdminUsersPage: React.FC = () => {
             <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Adjustment Amount (₦)</label>
             <input 
               type="number" 
-              className="w-full p-6 bg-gray-50 border border-gray-100 rounded-3xl text-2xl font-black tracking-tighter"
+              className="w-full p-6 bg-gray-50 border border-gray-100 rounded-3xl text-2xl font-black tracking-tighter focus:ring-4 focus:ring-blue-50 transition-all outline-none"
               placeholder="0.00"
               value={finAmount}
               onChange={(e) => setFinAmount(e.target.value)}
             />
-            <p className="mt-4 text-[11px] text-gray-500 font-medium italic">Target: {selectedUser?.fullName} ({selectedUser?.email})</p>
+            <p className="mt-4 text-[11px] text-gray-500 font-medium italic">Target Identity: {selectedUser?.fullName} ({selectedUser?.email})</p>
           </div>
         </div>
       </Modal>
@@ -221,9 +254,9 @@ const AdminUsersPage: React.FC = () => {
       >
         <div className="space-y-10 py-4">
            <div>
-              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">Promote/Change Tier</label>
+              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">Account Access Tier</label>
               <div className="grid grid-cols-2 gap-4">
-                 <RoleButton label="Normal User" icon={<UsersIcon />} active={selectedUser?.role === 'user'} onClick={() => handleRoleChange(selectedUser!.id, 'user')} />
+                 <RoleButton label="Standard" icon={<UsersIcon />} active={selectedUser?.role === 'user'} onClick={() => handleRoleChange(selectedUser!.id, 'user')} />
                  <RoleButton label="Reseller" icon={<SignalIcon />} active={selectedUser?.role === 'reseller'} onClick={() => handleRoleChange(selectedUser!.id, 'reseller')} />
                  <RoleButton label="API Merchant" icon={<ExchangeIcon />} active={selectedUser?.role === 'api'} onClick={() => handleRoleChange(selectedUser!.id, 'api')} />
                  <RoleButton label="Admin" icon={<ShieldCheckIcon />} active={selectedUser?.role === 'admin'} onClick={() => handleRoleChange(selectedUser!.id, 'admin')} />
@@ -231,22 +264,22 @@ const AdminUsersPage: React.FC = () => {
            </div>
 
            <div className="pt-8 border-t border-gray-100">
-              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">Master Override</label>
+              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">Account Override</label>
               {selectedUser?.status === 'suspended' ? (
                 <button 
                   onClick={() => handleStatusChange(selectedUser!.id, 'active')}
-                  className="w-full bg-green-50 text-green-600 p-6 rounded-3xl font-black flex items-center justify-center space-x-3 hover:bg-green-600 hover:text-white transition-all"
+                  className="w-full bg-green-50 text-green-600 p-6 rounded-3xl font-black flex items-center justify-center space-x-3 hover:bg-green-600 hover:text-white transition-all shadow-sm"
                 >
                   <ShieldCheckIcon />
-                  <span>Unban Account</span>
+                  <span>Restore Full Access</span>
                 </button>
               ) : (
                 <button 
                   onClick={() => handleStatusChange(selectedUser!.id, 'suspended')}
-                  className="w-full bg-red-50 text-red-600 p-6 rounded-3xl font-black flex items-center justify-center space-x-3 hover:bg-red-600 hover:text-white transition-all"
+                  className="w-full bg-red-50 text-red-600 p-6 rounded-3xl font-black flex items-center justify-center space-x-3 hover:bg-red-600 hover:text-white transition-all shadow-sm"
                 >
                   <BanIcon />
-                  <span>Suspend Account</span>
+                  <span>Suspend This Account</span>
                 </button>
               )}
            </div>
