@@ -54,9 +54,9 @@ export const SERVICE_CATEGORIES = [
 
 export const AIRTIME_NETWORKS = [
   { id: 'MTN', name: 'MTN', image: 'https://upload.wikimedia.org/wikipedia/commons/a/af/MTN_Logo.svg' },
-  { id: 'AIRTEL', name: 'Airtel', image: 'https://cdn.freebiesupply.com/logos/large/2x/airtel-logo-png-transparent.png' },
-  { id: 'GLO', name: 'Glo', image: 'https://upload.wikimedia.org/wikipedia/en/thumb/7/77/Glo_Telecom_logo.png/220px-Glo_Telecom_logo.png' },
-  { id: '9MOBILE', name: '9Mobile', image: 'https://upload.wikimedia.org/wikipedia/en/thumb/d/d4/9mobile_Logo.svg/1200px-9mobile_Logo.svg.png' },
+  { id: 'AIRTEL', name: 'Airtel', image: 'https://seeklogo.com/images/A/airtel-logo-439F66699C-seeklogo.com.png' },
+  { id: 'GLO', name: 'Glo', image: 'https://seeklogo.com/images/G/glo-logo-910B0E055B-seeklogo.com.png' },
+  { id: '9MOBILE', name: '9Mobile', image: 'https://seeklogo.com/images/9/9mobile-logo-D4229E7535-seeklogo.com.png' },
 ];
 
 export const DATA_NETWORKS = [...AIRTIME_NETWORKS];
@@ -69,10 +69,10 @@ export const DATA_PLAN_TYPES = [
 ];
 
 export const CABLE_BILLERS = [
-  { id: 'DSTV', name: 'DSTV', image: 'https://upload.wikimedia.org/wikipedia/en/thumb/d/d3/DStv_logo.svg/1200px-DStv_logo.svg.png' },
-  { id: 'GOTV', name: 'GOTV', image: 'https://upload.wikimedia.org/wikipedia/en/thumb/a/a2/GOtv_Logo.svg/1200px-GOtv_Logo.svg.png' },
-  { id: 'STARTIMES', name: 'Startimes', image: 'https://upload.wikimedia.org/wikipedia/en/thumb/0/07/StarTimes_logo.svg/1200px-StarTimes_logo.svg.png' },
-  { id: 'SHOWMAX', name: 'Showmax', image: 'https://upload.wikimedia.org/wikipedia/en/thumb/5/52/Showmax_Logo.svg/1200px-Showmax_Logo.svg.png' },
+  { id: 'DSTV', name: 'DSTV', image: 'https://seeklogo.com/images/D/dstv-logo-30D426E809-seeklogo.com.png' },
+  { id: 'GOTV', name: 'GOTV', image: 'https://seeklogo.com/images/G/gotv-logo-1100342371-seeklogo.com.png' },
+  { id: 'STARTIMES', name: 'Startimes', image: 'https://seeklogo.com/images/S/startimes-logo-BA1A056342-seeklogo.com.png' },
+  { id: 'SHOWMAX', name: 'Showmax', image: 'https://seeklogo.com/images/S/showmax-logo-F91A39B222-seeklogo.com.png' },
 ];
 
 export const SUBSCRIPTION_TYPES = [

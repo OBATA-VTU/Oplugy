@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { NotificationProvider } from './context/NotificationContext';
@@ -59,6 +59,22 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
 const AdminRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { user, isAuthenticated, isLoading } = useAuth();
+  const [password, setPassword] = useState('');
+  const [isAuthorized, setIsAuthorized] = useState(() => sessionStorage.getItem('admin_master_auth') === 'true');
+  const [error, setError] = useState(false);
+
+  const MASTER_PASSWORD = 'OBATAISBACKBYOBA';
+
+  const handlePasswordSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password === MASTER_PASSWORD) {
+      sessionStorage.setItem('admin_master_auth', 'true');
+      setIsAuthorized(true);
+      setError(false);
+    } else {
+      setError(true);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -68,8 +84,46 @@ const AdminRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     );
   }
 
+  // Admin access requires both a logged-in admin user and the master password
   if (!isAuthenticated || user?.role !== 'admin') {
     return <Navigate to="/dashboard" replace />;
+  }
+
+  if (!isAuthorized) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center p-6">
+        <div className="w-full max-w-md bg-white rounded-[3rem] p-12 shadow-2xl animate-in zoom-in-95 duration-300">
+           <div className="text-center mb-10">
+              <div className="w-16 h-16 bg-gray-900 text-white rounded-2xl flex items-center justify-center mx-auto mb-6">
+                 <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+              </div>
+              <h1 className="text-3xl font-black text-gray-900 tracking-tighter">Admin Lockdown</h1>
+              <p className="text-gray-400 font-medium mt-2">Authorized Personnel Only</p>
+           </div>
+
+           <form onSubmit={handlePasswordSubmit} className="space-y-6">
+              <div>
+                 <input 
+                   type="password" 
+                   autoFocus
+                   placeholder="Enter Master Password" 
+                   className={`w-full p-6 bg-gray-50 border-2 rounded-3xl text-center text-xl font-black tracking-widest focus:ring-4 focus:ring-blue-100 transition-all ${error ? 'border-red-500 animate-shake' : 'border-gray-100'}`}
+                   value={password}
+                   onChange={(e) => { setPassword(e.target.value); setError(false); }}
+                 />
+                 {error && <p className="text-red-500 text-[10px] font-black uppercase tracking-widest mt-4 text-center">Incorrect Credentials</p>}
+              </div>
+              <button className="w-full bg-gray-900 hover:bg-black text-white py-6 rounded-3xl font-black uppercase tracking-[0.2em] text-[11px] shadow-xl shadow-gray-200 transition-all">
+                 Unlock System
+              </button>
+           </form>
+           
+           <div className="mt-8 text-center">
+              <button onClick={() => window.history.back()} className="text-[10px] font-black text-gray-400 uppercase tracking-widest hover:text-blue-600">Return to Safety</button>
+           </div>
+        </div>
+      </div>
+    );
   }
 
   return <AdminLayout>{children}</AdminLayout>;
