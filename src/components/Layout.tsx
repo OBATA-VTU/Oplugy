@@ -8,7 +8,7 @@ import Modal from './Modal';
 import { 
   HomeIcon, PhoneIcon, SignalIcon, BoltIcon, TvIcon, 
   LogoutIcon, MenuIcon, HistoryIcon, WalletIcon,
-  GamingIcon, GiftIcon, ExchangeIcon
+  GamingIcon, GiftIcon, ExchangeIcon, ShieldCheckIcon
 } from './Icons';
 
 interface LayoutProps {
@@ -34,7 +34,7 @@ const NavItem: React.FC<{ to: string; icon: ReactNode; children: ReactNode; onCl
 );
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const { walletBalance, isAuthenticated, logout, isLoading } = useAuth();
+  const { user, walletBalance, isAuthenticated, logout, isLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -52,7 +52,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     '/history': 'Activity Logs',
     '/gaming': 'Gaming Topup',
     '/giftcards': 'Gift Cards',
-    '/airtime-to-cash': 'Airtime to Cash'
+    '/airtime-to-cash': 'Airtime to Cash',
+    '/admin': 'Admin Control'
   };
 
   const handleLogout = () => {
@@ -75,6 +76,15 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         <Logo />
       </div>
       <nav className="flex-grow px-5 space-y-1.5 overflow-y-auto custom-scrollbar">
+        {/* Admin Section - Only visible to Admin roles */}
+        {user?.role === 'admin' && (
+          <>
+            <div className="px-4 mb-3 text-[9px] font-black uppercase tracking-[0.2em] text-blue-600">Administration</div>
+            <NavItem to="/admin" icon={<ShieldCheckIcon />} onClick={closeSidebar}>Admin Panel</NavItem>
+            <div className="h-4"></div>
+          </>
+        )}
+
         <div className="px-4 mb-3 text-[9px] font-black uppercase tracking-[0.2em] text-gray-400">Main</div>
         <NavItem to="/dashboard" icon={<HomeIcon />} onClick={closeSidebar}>Dashboard</NavItem>
         
