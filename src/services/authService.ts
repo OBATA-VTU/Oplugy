@@ -64,7 +64,8 @@ export const authService = {
     try {
       await setPersistence(auth, browserLocalPersistence);
       const provider = new GoogleAuthProvider();
-      const userCredential = await signInWithPopup(provider);
+      // FIX: Added 'auth' as the first argument to signInWithPopup
+      const userCredential = await signInWithPopup(auth, provider);
       const user = userCredential.user;
 
       const userDocRef = doc(db, "users", user.uid);
@@ -88,6 +89,12 @@ export const authService = {
         await setDoc(userDocRef, userData);
       } else {
         userData = userDoc.data();
+        // Ensure referral code is the correct format for existing users
+        if (!userData.referralCode || userData.referralCode.length > 8) {
+          const newCode = generateReferralCode();
+          await updateDoc(userDocRef, { referralCode: newCode });
+          userData.referralCode = newCode;
+        }
       }
 
       return { 
@@ -96,7 +103,8 @@ export const authService = {
         message: 'Successfully signed in to OBATA v2' 
       };
     } catch (error: any) {
-      return { status: false, message: 'Auth interrupted.' };
+      console.error("Google login error:", error);
+      return { status: false, message: 'Auth interrupted or failed.' };
     }
   },
 
@@ -135,7 +143,7 @@ export const authService = {
   async setTransactionPin(userId: string, pin: string): Promise<ApiResponse<void>> {
     try {
       await updateDoc(doc(db, "users", userId), {
-        transactionPin: pin, // In production, hash this PIN
+        transactionPin: pin,
         isPinSet: true
       });
       return { status: true, message: "Transaction PIN configured." };
