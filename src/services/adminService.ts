@@ -8,7 +8,6 @@ import {
   getDoc, 
   query, 
   orderBy, 
-  limit,
   increment
 } from 'firebase/firestore';
 import { ApiResponse, User, UserRole, UserStatus } from '../types';
