@@ -15,6 +15,8 @@ export interface User {
   referralEarnings: number;
   referralCount: number;
   createdAt?: any;
+  isPinSet: boolean;
+  transactionPin?: string; // Stored as a string (hashed or plain based on preference)
 }
 
 export interface AuthResponse {
@@ -58,9 +60,6 @@ export interface TransactionResponse {
 }
 
 // --- Verification & API Structure ---
-/**
- * Standardized response for electricity and cable verification.
- */
 export interface VerificationResponse {
   status: boolean;
   message?: string;
@@ -71,9 +70,6 @@ export interface VerificationResponse {
   smartCardNumber?: string;
 }
 
-/**
- * Standardized response for Oplug internal API requests.
- */
 export interface ApiResponse<T> {
   status: boolean; 
   message?: string;
@@ -81,9 +77,6 @@ export interface ApiResponse<T> {
   errors?: string[];
 }
 
-/**
- * Raw response structure from the CIP Topup provider API.
- */
 export interface CipApiResponse<T> {
   status: string;
   message?: string;

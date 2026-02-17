@@ -15,11 +15,17 @@ import {
   doc, 
   getDoc, 
   setDoc, 
+  updateDoc,
   serverTimestamp 
 } from 'firebase/firestore';
 
 const generateReferralCode = () => {
-  return Math.random().toString(36).substring(2, 8).toUpperCase();
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for (let i = 0; i < 6; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
 };
 
 export const authService = {
@@ -29,12 +35,20 @@ export const authService = {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
       
-      const userDoc = await getDoc(doc(db, "users", user.uid));
+      const userDocRef = doc(db, "users", user.uid);
+      const userDoc = await getDoc(userDocRef);
       
       if (userDoc.exists()) {
+        const userData = userDoc.data();
+        if (!userData.referralCode || userData.referralCode.length > 8) {
+          const newCode = generateReferralCode();
+          await updateDoc(userDocRef, { referralCode: newCode });
+          userData.referralCode = newCode;
+        }
+
         return { 
           status: true, 
-          data: { user: { ...userDoc.data(), id: user.uid }, token: await user.getIdToken() },
+          data: { user: { ...userData, id: user.uid }, token: await user.getIdToken() },
           message: 'Welcome back to OBATA v2!' 
         };
       }
@@ -49,14 +63,8 @@ export const authService = {
   async loginWithGoogle(): Promise<ApiResponse<any>> {
     try {
       await setPersistence(auth, browserLocalPersistence);
-      
       const provider = new GoogleAuthProvider();
-      provider.setCustomParameters({ 
-        prompt: 'select_account',
-        display: 'popup'
-      });
-      
-      const userCredential = await signInWithPopup(auth, provider);
+      const userCredential = await signInWithPopup(provider);
       const user = userCredential.user;
 
       const userDocRef = doc(db, "users", user.uid);
@@ -74,6 +82,7 @@ export const authService = {
           referralCode: generateReferralCode(),
           referralEarnings: 0,
           referralCount: 0,
+          isPinSet: false,
           createdAt: serverTimestamp()
         };
         await setDoc(userDocRef, userData);
@@ -87,19 +96,7 @@ export const authService = {
         message: 'Successfully signed in to OBATA v2' 
       };
     } catch (error: any) {
-      console.error("Google Auth Error Code:", error.code);
-      
-      let friendlyMessage = 'Google sign-in was interrupted. Please try again.';
-      
-      if (error.code === 'auth/popup-closed-by-user') {
-        friendlyMessage = 'Sign-in window was closed before completion.';
-      } else if (error.code === 'auth/internal-error' || error.message.includes('initial state')) {
-        friendlyMessage = 'Authentication error. Please ensure cookies are enabled in your browser or try another browser.';
-      } else if (error.code === 'auth/network-request-failed') {
-        friendlyMessage = 'Network error. Please check your internet connection.';
-      }
-
-      return { status: false, message: friendlyMessage };
+      return { status: false, message: 'Auth interrupted.' };
     }
   },
 
@@ -124,26 +121,30 @@ export const authService = {
         referralCode: generateReferralCode(),
         referralEarnings: 0,
         referralCount: 0,
+        isPinSet: false,
         createdAt: serverTimestamp()
       };
 
       await setDoc(doc(db, "users", user.uid), userData);
-
-      return { status: true, message: 'Your OBATA account has been created!' };
+      return { status: true, message: 'Account created!' };
     } catch (error: any) {
-      console.error("Signup Error:", error.code);
-      let msg = 'Registration failed. This email might already be in use.';
-      if (error.code === 'auth/weak-password') msg = 'Password is too weak. Use at least 6 characters.';
-      return { status: false, message: msg };
+      return { status: false, message: error.message };
+    }
+  },
+
+  async setTransactionPin(userId: string, pin: string): Promise<ApiResponse<void>> {
+    try {
+      await updateDoc(doc(db, "users", userId), {
+        transactionPin: pin, // In production, hash this PIN
+        isPinSet: true
+      });
+      return { status: true, message: "Transaction PIN configured." };
+    } catch (error: any) {
+      return { status: false, message: error.message };
     }
   },
 
   async logout(): Promise<void> {
     await signOut(auth);
-  },
-
-  async getProfile(uid: string): Promise<any> {
-    const userDoc = await getDoc(doc(db, "users", uid));
-    return userDoc.exists() ? userDoc.data() : null;
   }
 };

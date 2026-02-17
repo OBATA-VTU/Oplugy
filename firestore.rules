@@ -11,16 +11,43 @@ service cloud.firestore {
 
     // Rules for the 'users' collection
     match /users/{userId} {
-      // Admins can do anything
+      // Admins can read/write any user document
       allow read, write: if isAdmin();
       
-      // Regular users can only access their own documents
+      // Regular users can access their own document
       allow get: if request.auth != null && request.auth.uid == userId;
       allow create: if request.auth != null && request.auth.uid == userId;
       allow update: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Explicit rule for collection-level queries (list)
+    match /users {
+      allow list: if isAdmin();
+    }
+
+    // Rules for the 'transactions' collection
+    match /transactions/{transactionId} {
+      // Admins can read/write any transaction
+      allow read, write: if isAdmin();
       
-      // Disallow deletion by users themselves
-      allow delete: if false;
+      // Users can read their own transactions
+      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+      
+      // Users can create transactions (purchases)
+      allow create: if request.auth != null && request.data.userId == request.auth.uid;
+    }
+    
+    match /transactions {
+      allow list: if request.auth != null && (isAdmin() || request.query.limit <= 100);
+    }
+
+    // Rules for the 'settings' collection
+    match /settings/{settingId} {
+      // Admins can manage settings
+      allow read, write: if isAdmin();
+      
+      // Everyone can read global settings (for announcements/maintenance)
+      allow read: if true;
     }
   }
 }

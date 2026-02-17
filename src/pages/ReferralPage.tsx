@@ -7,7 +7,9 @@ const ReferralPage: React.FC = () => {
   const { user } = useAuth();
   const [copied, setCopied] = useState(false);
 
-  const referralLink = `${window.location.origin}/#/signup?ref=${user?.referralCode || user?.id || 'OBATA'}`;
+  // Fallback to a safe string if referralCode is somehow missing during the transition
+  const displayCode = user?.referralCode || 'JOIN-OBATA';
+  const referralLink = `${window.location.origin}/#/signup?ref=${displayCode}`;
 
   const copyLink = () => {
     navigator.clipboard.writeText(referralLink);
@@ -28,7 +30,10 @@ const ReferralPage: React.FC = () => {
             <h3 className="text-2xl font-black mb-6 tracking-tight">Your Referral Link</h3>
             <div className="bg-white/10 backdrop-blur-md border border-white/20 p-5 rounded-3xl mb-8">
                <p className="text-[10px] font-black uppercase tracking-widest text-white/50 mb-2">Sharable URL</p>
-               <p className="font-bold text-sm truncate">{referralLink}</p>
+               <div className="flex items-center justify-between gap-4">
+                  <p className="font-bold text-sm truncate flex-1">{referralLink}</p>
+                  <div className="px-3 py-1 bg-white/20 rounded-lg font-black text-xs">{displayCode}</div>
+               </div>
             </div>
             <button 
               onClick={copyLink}

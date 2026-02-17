@@ -12,6 +12,7 @@ import {
   orderBy,
   setDoc
 } from 'firebase/firestore';
+import { cipApiClient } from './cipApiClient';
 import { ApiResponse, User, UserRole, UserStatus, TransactionResponse } from '../types';
 
 export const adminService = {
@@ -20,21 +21,10 @@ export const adminService = {
     try {
       const usersQuery = query(collection(db, "users"));
       const snapshot = await getDocs(usersQuery);
-      
-      if (snapshot.empty) {
-        return { status: true, data: [], message: "No users found in the repository." };
-      }
-
       const users = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as User));
       return { status: true, data: users };
     } catch (error: any) {
-      console.error("Firestore Admin Error:", error);
-      return { 
-        status: false, 
-        message: error.code === 'permission-denied' 
-          ? "Access Denied: You do not have sufficient administrative privileges." 
-          : error.message || "Failed to fetch users" 
-      };
+      return { status: false, message: "Failed to fetch users" };
     }
   },
 
@@ -43,7 +33,7 @@ export const adminService = {
       await updateDoc(doc(db, "users", userId), { role: newRole });
       return { status: true, message: `Account tier updated to ${newRole.toUpperCase()}` };
     } catch (error: any) {
-      return { status: false, message: error.message || "Failed to update role" };
+      return { status: false, message: "Failed to update role" };
     }
   },
 
@@ -52,40 +42,26 @@ export const adminService = {
       await updateDoc(doc(db, "users", userId), { status: status });
       return { status: true, message: `Account status set to ${status.toUpperCase()}` };
     } catch (error: any) {
-      return { status: false, message: error.message || "Failed to update status" };
+      return { status: false, message: "Failed to update status" };
     }
   },
 
   // --- Financial Control ---
   async creditUser(userId: string, amount: number): Promise<ApiResponse<void>> {
     try {
-      if (amount <= 0) throw new Error("Amount must be greater than zero");
-      await updateDoc(doc(db, "users", userId), {
-        walletBalance: increment(amount)
-      });
-      return { status: true, message: `Successfully credited account with ₦${amount.toLocaleString()}` };
+      await updateDoc(doc(db, "users", userId), { walletBalance: increment(amount) });
+      return { status: true, message: `Successfully credited ₦${amount.toLocaleString()}` };
     } catch (error: any) {
-      return { status: false, message: error.message || "Failed to credit user" };
+      return { status: false, message: "Failed to credit user" };
     }
   },
 
   async debitUser(userId: string, amount: number): Promise<ApiResponse<void>> {
     try {
-      if (amount <= 0) throw new Error("Amount must be greater than zero");
-      
-      const userDoc = await getDoc(doc(db, "users", userId));
-      const currentBalance = userDoc.data()?.walletBalance || 0;
-      
-      if (currentBalance < amount) {
-        throw new Error("Action Aborted: Insufficient user balance.");
-      }
-
-      await updateDoc(doc(db, "users", userId), {
-        walletBalance: increment(-amount)
-      });
-      return { status: true, message: `Successfully debited account with ₦${amount.toLocaleString()}` };
+      await updateDoc(doc(db, "users", userId), { walletBalance: increment(-amount) });
+      return { status: true, message: `Successfully debited ₦${amount.toLocaleString()}` };
     } catch (error: any) {
-      return { status: false, message: error.message || "Failed to debit user" };
+      return { status: false, message: "Failed to debit user" };
     }
   },
 
@@ -97,7 +73,22 @@ export const adminService = {
       const txs = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as TransactionResponse));
       return { status: true, data: txs };
     } catch (error: any) {
-      return { status: false, message: error.message || "Failed to fetch ledger" };
+      return { status: false, message: "Failed to fetch ledger" };
+    }
+  },
+
+  // --- External Provider Stats ---
+  async getProviderBalance(): Promise<ApiResponse<number>> {
+    try {
+      // Endpoint to check CIP provider balance
+      const response = await cipApiClient<any>('user/balance');
+      if (response.status && response.data) {
+        // Return balance (assuming data contains numeric balance in Kobo/Naira)
+        return { status: true, data: response.data.balance / 100 };
+      }
+      return { status: false, message: "Failed to retrieve provider balance" };
+    } catch (error) {
+      return { status: false, message: "API Gateway unreachable" };
     }
   },
 
@@ -125,7 +116,6 @@ export const adminService = {
     try {
       const snapshot = await getDocs(collection(db, "users"));
       let totalBalance = 0;
-      let totalUsers = snapshot.size;
       let resellers = 0;
       let admins = 0;
 
@@ -139,14 +129,14 @@ export const adminService = {
       return {
         status: true,
         data: {
-          totalUsers,
+          totalUsers: snapshot.size,
           totalBalance,
           resellers,
           admins
         }
       };
     } catch (error: any) {
-      return { status: false, message: error.message || "Failed to calculate system statistics" };
+      return { status: false, message: "Stats failure" };
     }
   }
 };

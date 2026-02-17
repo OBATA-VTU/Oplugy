@@ -3,27 +3,28 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { adminService } from '../services/adminService';
 import Spinner from '../components/Spinner';
 import { useNotifications } from '../hooks/useNotifications';
-import { UsersIcon, CurrencyDollarIcon, ShieldCheckIcon, SignalIcon } from '../components/Icons';
+import { UsersIcon, CurrencyDollarIcon, ShieldCheckIcon, SignalIcon, BoltIcon } from '../components/Icons';
 
 const AdminDashboardPage: React.FC = () => {
   const { addNotification } = useNotifications();
   const [stats, setStats] = useState<any>(null);
+  const [providerBalance, setProviderBalance] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchStats = useCallback(async (silent = false) => {
+  const fetchData = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
-    const res = await adminService.getSystemStats();
-    if (res.status) {
-      setStats(res.data);
-    } else {
-      addNotification(res.message || "Failed to aggregate system statistics", "error");
-    }
+    const resStats = await adminService.getSystemStats();
+    const resProvider = await adminService.getProviderBalance();
+    
+    if (resStats.status) setStats(resStats.data);
+    if (resProvider.status) setProviderBalance(resProvider.data || 0);
+    
     setLoading(false);
-  }, [addNotification]);
+  }, []);
 
   useEffect(() => {
-    fetchStats();
-  }, [fetchStats]);
+    fetchData();
+  }, [fetchData]);
 
   if (loading && !stats) return (
     <div className="flex flex-col h-96 items-center justify-center space-y-4">
@@ -40,22 +41,17 @@ const AdminDashboardPage: React.FC = () => {
           <h1 className="text-4xl lg:text-6xl font-black text-gray-900 tracking-tighter leading-none">System Overview</h1>
         </div>
         <button 
-          onClick={() => fetchStats()}
+          onClick={() => fetchData()}
           className="flex items-center space-x-2 bg-white border border-gray-100 px-6 py-3 rounded-2xl shadow-sm text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-blue-600 hover:border-blue-100 transition-all"
         >
-          {loading ? <Spinner /> : (
-            <>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-              <span>Recalculate Stats</span>
-            </>
-          )}
+          {loading ? <Spinner /> : <span>Refresh Matrix</span>}
         </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
         <StatCard icon={<UsersIcon />} label="User Repository" value={stats?.totalUsers || 0} color="blue" />
         <StatCard icon={<CurrencyDollarIcon />} label="System Liquidity" value={`₦${(stats?.totalBalance || 0).toLocaleString()}`} color="green" />
-        <StatCard icon={<SignalIcon />} label="Merchant Tier" value={stats?.resellers || 0} color="indigo" />
+        <StatCard icon={<BoltIcon />} label="Provider Balance" value={`₦${(providerBalance || 0).toLocaleString()}`} color="indigo" />
         <StatCard icon={<ShieldCheckIcon />} label="Governance Layer" value={stats?.admins || 0} color="gray" />
       </div>
 
