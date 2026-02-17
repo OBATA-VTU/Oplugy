@@ -1,12 +1,9 @@
-
 import React, { useEffect, useState, useCallback } from 'react';
 import { adminService } from '../services/adminService';
 import Spinner from '../components/Spinner';
-import { useNotifications } from '../hooks/useNotifications';
 import { UsersIcon, CurrencyDollarIcon, ShieldCheckIcon, BoltIcon } from '../components/Icons';
 
 const AdminDashboardPage: React.FC = () => {
-  const { } = useNotifications();
   const [stats, setStats] = useState<any>(null);
   const [providerBalance, setProviderBalance] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
