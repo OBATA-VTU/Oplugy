@@ -20,13 +20,22 @@ export interface User {
   transactionPin?: string;
 }
 
+export interface TierPricing {
+  user_margin: number;
+  reseller_margin: number;
+  api_margin: number;
+}
+
+export interface GlobalSettings {
+  announcement: string;
+  maintenance: boolean;
+  apiMode: 'LIVE' | 'TEST';
+  pricing: TierPricing;
+}
+
 export interface AuthResponse {
   user: User;
   token: string;
-}
-
-export interface Wallet {
-  balance: number;
 }
 
 // --- VTU Services ---
@@ -55,7 +64,7 @@ export interface TransactionResponse {
   type: 'AIRTIME' | 'DATA' | 'CABLE' | 'ELECTRICITY' | 'FUNDING' | 'REFERRAL';
   source: string;
   remarks: string;
-  date_created: any; // Firestore Timestamp
+  date_created: any; 
   date_updated: any;
   token?: string; 
 }

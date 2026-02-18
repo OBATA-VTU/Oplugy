@@ -1,11 +1,42 @@
 
-import { ApiResponse, Operator, DataPlan, TransactionResponse, VerificationResponse } from '../types';
+import { ApiResponse, Operator, DataPlan, TransactionResponse, VerificationResponse, UserRole } from '../types';
 import { cipApiClient } from './cipApiClient';
 import { CABLE_BILLERS } from '../constants';
-import { collection, query, where, getDocs, orderBy, limit, addDoc, serverTimestamp, doc, updateDoc, increment } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy, limit, addDoc, serverTimestamp, doc, updateDoc, increment, getDoc } from 'firebase/firestore';
 import { db, auth } from '../firebase/config';
 
-const PROFIT_MARGIN = 10; // Your automated profit margin per transaction
+// Default Fallback Margins
+const DEFAULT_MARGINS = {
+  user: 10,
+  reseller: 5,
+  api: 2
+};
+
+async function getMarginForUser(role: UserRole): Promise<number> {
+  try {
+    const settingsDoc = await getDoc(doc(db, "settings", "global"));
+    if (settingsDoc.exists()) {
+      const pricing = settingsDoc.data().pricing;
+      if (pricing) {
+        if (role === 'reseller') return pricing.reseller_margin ?? DEFAULT_MARGINS.reseller;
+        if (role === 'api') return pricing.api_margin ?? DEFAULT_MARGINS.api;
+        return pricing.user_margin ?? DEFAULT_MARGINS.user;
+      }
+    }
+  } catch (e) {
+    console.error("Pricing fetch error, using defaults");
+  }
+  return DEFAULT_MARGINS.user;
+}
+
+function maskProviderError(message: string): string {
+  const lowBalanceKeywords = ['insufficient balance', 'balance too low', 'low credit', 'unit exhausted'];
+  const lowerMsg = message.toLowerCase();
+  if (lowBalanceKeywords.some(keyword => lowerMsg.includes(keyword))) {
+    return "Purchases off by admin contact Admin for further inquiry";
+  }
+  return message;
+}
 
 async function logTransaction(userId: string, type: TransactionResponse['type'], amount: number, source: string, remarks: string, status: 'SUCCESS' | 'FAILED' = 'SUCCESS') {
   try {
@@ -39,18 +70,25 @@ export const vtuService = {
     const user = auth.currentUser;
     if (!user) return { status: false, message: 'Auth required' };
     const res = await cipApiClient<TransactionResponse>('airtime', { data: payload, method: 'POST' });
-    if (res.status) await logTransaction(user.uid, 'AIRTIME', payload.amount, `${payload.network} Airtime`, `Recharge for ${payload.phone}`);
+    if (res.status) {
+      await logTransaction(user.uid, 'AIRTIME', payload.amount, `${payload.network} Airtime`, `Recharge for ${payload.phone}`);
+    } else {
+      res.message = maskProviderError(res.message || '');
+    }
     return res;
   },
 
   getDataPlans: async (payload: { network: string; type: string }): Promise<ApiResponse<DataPlan[]>> => {
+    const userDoc = auth.currentUser ? await getDoc(doc(db, "users", auth.currentUser.uid)) : null;
+    const role = (userDoc?.data()?.role as UserRole) || 'user';
+    const margin = await getMarginForUser(role);
+
     const res = await cipApiClient<any[]>(`data/plans?network=${payload.network.toUpperCase()}&type=${payload.type.toUpperCase()}`, { method: 'GET' });
     if (res.status && res.data) {
-      // Automatically add N10 profit margin to the price fetched from provider
       const mappedPlans: DataPlan[] = res.data.map(p => ({ 
         ...p, 
         id: p.id, 
-        amount: (p.price / 100) + PROFIT_MARGIN,
+        amount: (p.price / 100) + margin,
         network: payload.network 
       }));
       return { ...res, data: mappedPlans };
@@ -62,7 +100,11 @@ export const vtuService = {
     const user = auth.currentUser;
     if (!user) return { status: false, message: 'Auth required' };
     const res = await cipApiClient<TransactionResponse>('data/plans', { data: { plan_id: payload.plan_id, phone_number: payload.phone_number }, method: 'POST' });
-    if (res.status) await logTransaction(user.uid, 'DATA', payload.amount, `${payload.network} Data`, `Bundle ${payload.plan_name} for ${payload.phone_number}`);
+    if (res.status) {
+      await logTransaction(user.uid, 'DATA', payload.amount, `${payload.network} Data`, `Bundle ${payload.plan_name} for ${payload.phone_number}`);
+    } else {
+      res.message = maskProviderError(res.message || '');
+    }
     return res;
   },
 
@@ -77,10 +119,18 @@ export const vtuService = {
   purchaseElectricity: async (payload: { meter_number: string; provider_id: string; meter_type: 'prepaid' | 'postpaid'; phone: string; amount: number; provider_name: string }): Promise<ApiResponse<TransactionResponse>> => {
     const user = auth.currentUser;
     if (!user) return { status: false, message: 'Auth required' };
-    // Adding profit margin to electricity service if applicable
-    const finalAmount = payload.amount + PROFIT_MARGIN;
+    
+    const userDoc = await getDoc(doc(db, "users", user.uid));
+    const role = (userDoc.data()?.role as UserRole) || 'user';
+    const margin = await getMarginForUser(role);
+    const finalAmount = payload.amount + margin;
+
     const res = await cipApiClient<TransactionResponse>('electricity', { data: { ...payload, amount: payload.amount }, method: 'POST' });
-    if (res.status) await logTransaction(user.uid, 'ELECTRICITY', finalAmount, `${payload.provider_name} Power`, `Meter ${payload.meter_number}`);
+    if (res.status) {
+      await logTransaction(user.uid, 'ELECTRICITY', finalAmount, `${payload.provider_name} Power`, `Meter ${payload.meter_number}`);
+    } else {
+      res.message = maskProviderError(res.message || '');
+    }
     return res;
   },
 
@@ -89,13 +139,16 @@ export const vtuService = {
   },
 
   getCablePlans: async (billerName: string): Promise<ApiResponse<DataPlan[]>> => {
+    const userDoc = auth.currentUser ? await getDoc(doc(db, "users", auth.currentUser.uid)) : null;
+    const role = (userDoc?.data()?.role as UserRole) || 'user';
+    const margin = await getMarginForUser(role);
+
     const res = await cipApiClient<any[]>(`tv?biller=${billerName.toUpperCase()}`, { method: 'GET' });
     if (res.status && res.data) {
-      // Automatically add N10 profit margin to the price fetched from provider
       const mappedPlans: DataPlan[] = res.data.map(p => ({ 
         id: p.code, 
         name: p.name, 
-        amount: (p.price / 100) + PROFIT_MARGIN, 
+        amount: (p.price / 100) + margin, 
         validity: 'Varies' 
       }));
       return { ...res, data: mappedPlans };
@@ -112,7 +165,11 @@ export const vtuService = {
     if (!user) return { status: false, message: 'Auth required' };
     const apiPayload = { biller: payload.biller, code: payload.planCode, smartCardNumber: payload.smartCardNumber, phoneNumber: payload.phoneNumber, subscriptionType: payload.subscriptionType };
     const res = await cipApiClient<TransactionResponse>('tv', { data: apiPayload, method: 'POST' });
-    if (res.status) await logTransaction(user.uid, 'CABLE', payload.amount, `${payload.biller} TV`, `${payload.plan_name} for ${payload.smartCardNumber}`);
+    if (res.status) {
+      await logTransaction(user.uid, 'CABLE', payload.amount, `${payload.biller} TV`, `${payload.plan_name} for ${payload.smartCardNumber}`);
+    } else {
+      res.message = maskProviderError(res.message || '');
+    }
     return res;
   },
 
@@ -128,15 +185,11 @@ export const vtuService = {
         limit(20)
       );
       const snapshot = await getDocs(txQuery);
-      const txs = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as TransactionResponse));
-      return { status: true, data: txs };
+      return { status: true, data: snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as TransactionResponse)) };
     } catch (error: any) {
-      // Fallback query if indexing is not complete to ensure history ALWAYS shows something
-      console.warn("Index not ready, using fallback query");
       const txQueryFallback = query(collection(db, "transactions"), where("userId", "==", user.uid), limit(20));
       const snapshot = await getDocs(txQueryFallback);
-      const txs = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as TransactionResponse));
-      return { status: true, data: txs };
+      return { status: true, data: snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as TransactionResponse)) };
     }
   }
 };

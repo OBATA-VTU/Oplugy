@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNotifications } from '../hooks/useNotifications';
@@ -5,16 +6,19 @@ import { vtuService } from '../services/vtuService';
 import { Operator } from '../types';
 import Spinner from '../components/Spinner';
 
+// Local cache for operators to prevent re-fetching on every mount
+let operatorsCache: Operator[] = [];
+
 const BillsPage: React.FC = () => {
   const { addNotification } = useNotifications();
   const { fetchWalletBalance, walletBalance } = useAuth();
-  const [operators, setOperators] = useState<Operator[]>([]);
+  const [operators, setOperators] = useState<Operator[]>(operatorsCache);
   const [selectedOperator, setSelectedOperator] = useState<Operator | null>(null);
   const [meterNumber, setMeterNumber] = useState('');
   const [meterType, setMeterType] = useState<'prepaid' | 'postpaid'>('prepaid');
   const [amount, setAmount] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [isFetchingOperators, setIsFetchingOperators] = useState(true);
+  const [isFetchingOperators, setIsFetchingOperators] = useState(operatorsCache.length === 0);
   const [isVerifying, setIsVerifying] = useState(false);
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [customerName, setCustomerName] = useState<string | null>(null);
@@ -22,22 +26,22 @@ const BillsPage: React.FC = () => {
   const numericAmount = parseFloat(amount);
 
   const fetchOperators = useCallback(async () => {
+    if (operatorsCache.length > 0) return;
     setIsFetchingOperators(true);
     const response = await vtuService.getElectricityOperators();
-    if (response.status && response.data) setOperators(response.data);
-    else addNotification(response.message || 'Failed to fetch operators.', 'error');
+    if (response.status && response.data) {
+      operatorsCache = response.data;
+      setOperators(response.data);
+    }
     setIsFetchingOperators(false);
-  }, [addNotification]);
+  }, []);
 
   useEffect(() => {
     fetchOperators();
   }, [fetchOperators]);
 
   const handleVerify = async () => {
-    if (!selectedOperator || !meterNumber) {
-      addNotification('Please select an operator and enter a meter number.', 'warning');
-      return;
-    }
+    if (!selectedOperator || !meterNumber) return;
     setIsVerifying(true);
     setCustomerName(null);
     const response = await vtuService.verifyElectricityMeter({
@@ -47,9 +51,9 @@ const BillsPage: React.FC = () => {
     });
     if (response.status && response.data?.customerName) {
       setCustomerName(response.data.customerName);
-      addNotification('Meter verified successfully.', 'success');
+      addNotification('Account identity confirmed.', 'success');
     } else {
-      addNotification(response.message || 'Meter verification failed.', 'error');
+      addNotification(response.message || 'Verification rejected by node.', 'error');
     }
     setIsVerifying(false);
   };
@@ -57,11 +61,10 @@ const BillsPage: React.FC = () => {
   const handlePurchase = async () => {
     if (!customerName || !numericAmount || !phoneNumber || isPurchasing) return;
     if (walletBalance !== null && numericAmount > walletBalance) {
-      addNotification('Insufficient wallet balance.', 'error');
+      addNotification('Insufficient wallet liquidity.', 'error');
       return;
     }
     setIsPurchasing(true);
-    // Added required provider_name from the selected operator to fix type mismatch
     const response = await vtuService.purchaseElectricity({
       provider_id: selectedOperator!.id,
       meter_number: meterNumber,
@@ -71,60 +74,81 @@ const BillsPage: React.FC = () => {
       provider_name: selectedOperator!.name,
     });
     if (response.status && response.data) {
-      addNotification(`Payment of ₦${numericAmount} for ${meterNumber} was successful. Token: ${response.data.token || 'N/A'}.`, 'success');
+      addNotification(`Fulfillment success. Token: ${response.data.token || 'Pending'}.`, 'success');
       setMeterNumber('');
       setAmount('');
       setPhoneNumber('');
       setCustomerName(null);
       await fetchWalletBalance();
     } else {
-      addNotification(response.message || 'Payment failed.', 'error');
+      addNotification(response.message || 'Node connection error.', 'error');
     }
     setIsPurchasing(false);
   };
 
   return (
-    <div className="max-w-md mx-auto bg-white p-8 rounded-xl shadow-lg">
-      <h2 className="text-3xl font-bold text-center text-gray-800 mb-8">Pay Electricity Bills</h2>
-      {isFetchingOperators ? <Spinner /> : (
-        <div className="space-y-6">
-          <div>
-            <label className="block text-gray-700 text-sm font-semibold mb-2">Provider</label>
-            <select className="w-full p-3 border rounded-md" value={selectedOperator?.id || ''} onChange={e => setSelectedOperator(operators.find(o => o.id === e.target.value) || null)}>
-              <option value="">Select Provider</option>
-              {operators.map(op => <option key={op.id} value={op.id}>{op.name}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className="block text-gray-700 text-sm font-semibold mb-2">Meter Type</label>
-            <select className="w-full p-3 border rounded-md" value={meterType} onChange={e => setMeterType(e.target.value as any)}>
-              <option value="prepaid">Prepaid</option>
-              <option value="postpaid">Postpaid</option>
-            </select>
-          </div>
-          <div>
-            <label htmlFor="meterNumber" className="block text-gray-700 text-sm font-semibold mb-2">Meter Number</label>
-            <div className="flex">
-              <input type="text" id="meterNumber" className="w-full p-3 border rounded-l-md" placeholder="Enter meter number" value={meterNumber} onChange={e => setMeterNumber(e.target.value)} />
-              <button onClick={handleVerify} className="bg-gray-200 text-gray-800 font-bold p-3 rounded-r-md" disabled={isVerifying || !selectedOperator || meterNumber.length < 6}>{isVerifying ? <Spinner /> : 'Verify'}</button>
+    <div className="max-w-2xl mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
+      <div className="text-center">
+        <h2 className="text-4xl font-black text-gray-900 tracking-tighter mb-2">Power Hub</h2>
+        <p className="text-gray-400 font-medium">Verified utility fulfillment terminal.</p>
+      </div>
+
+      <div className="bg-white p-8 lg:p-12 rounded-[3rem] shadow-xl border border-gray-50">
+        {isFetchingOperators ? <div className="py-20 flex flex-col items-center"><Spinner /><p className="mt-4 text-[9px] font-black uppercase tracking-widest text-gray-400">Syncing with DISCO Nodes...</p></div> : (
+          <div className="space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div>
+                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-2">Utility Provider</label>
+                <select className="w-full p-5 bg-gray-50 rounded-2xl font-black text-lg border-2 border-transparent focus:border-blue-600 outline-none appearance-none" value={selectedOperator?.id || ''} onChange={e => setSelectedOperator(operators.find(o => o.id === e.target.value) || null)}>
+                  <option value="">Choose Provider</option>
+                  {operators.map(op => <option key={op.id} value={op.id}>{op.name}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-2">Account Type</label>
+                <select className="w-full p-5 bg-gray-50 rounded-2xl font-black text-lg border-2 border-transparent focus:border-blue-600 outline-none appearance-none" value={meterType} onChange={e => setMeterType(e.target.value as any)}>
+                  <option value="prepaid">Prepaid Meter</option>
+                  <option value="postpaid">Postpaid Account</option>
+                </select>
+              </div>
             </div>
-          </div>
-          {customerName && (
-            <div className="bg-green-100 text-green-800 p-3 rounded-md text-center">
-              Verified: <span className="font-bold">{customerName}</span>
+
+            <div>
+              <label htmlFor="meterNumber" className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-2">Meter/Account ID</label>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <input type="text" id="meterNumber" className="flex-1 p-5 bg-gray-50 border border-gray-100 rounded-2xl font-black text-xl outline-none" placeholder="Enter meter number" value={meterNumber} onChange={e => setMeterNumber(e.target.value)} />
+                <button onClick={handleVerify} className="px-10 py-5 bg-gray-900 text-white font-black text-[10px] uppercase tracking-widest rounded-2xl hover:bg-blue-600 transition-all flex items-center justify-center min-w-[150px]" disabled={isVerifying || !selectedOperator || meterNumber.length < 6}>
+                  {isVerifying ? <Spinner /> : 'Identify Account'}
+                </button>
+              </div>
             </div>
-          )}
-          <div className={!customerName ? 'opacity-50' : ''}>
-            <label htmlFor="amount" className="block text-gray-700 text-sm font-semibold mb-2">Amount (₦)</label>
-            <input type="number" id="amount" className="w-full p-3 border rounded-md" placeholder="e.g., 5000" value={amount} onChange={e => setAmount(e.target.value)} disabled={!customerName} />
-            <label htmlFor="phoneNumber" className="block text-gray-700 text-sm font-semibold mb-2 mt-4">Phone Number (for token)</label>
-            <input type="tel" id="phoneNumber" className="w-full p-3 border rounded-md" placeholder="08012345678" value={phoneNumber} onChange={e => setPhoneNumber(e.target.value.replace(/\D/g, ''))} maxLength={11} disabled={!customerName} />
+
+            {customerName && (
+              <div className="bg-green-50 text-green-700 p-8 rounded-[2rem] border border-green-100 text-center animate-in zoom-in-95">
+                <p className="text-[10px] font-black uppercase tracking-widest mb-1 opacity-60">Verified Identity</p>
+                <p className="text-2xl font-black tracking-tight">{customerName}</p>
+              </div>
+            )}
+
+            <div className={`space-y-6 transition-opacity ${!customerName ? 'opacity-30 pointer-events-none' : ''}`}>
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div>
+                    <label htmlFor="amount" className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-2">Amount (₦)</label>
+                    <input type="number" id="amount" className="w-full p-5 bg-gray-50 border border-gray-100 rounded-2xl font-black text-xl outline-none" placeholder="0.00" value={amount} onChange={e => setAmount(e.target.value)} disabled={!customerName} />
+                  </div>
+                  <div>
+                    <label htmlFor="phoneNumber" className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-2">Alert Phone</label>
+                    <input type="tel" id="phoneNumber" className="w-full p-5 bg-gray-50 border border-gray-100 rounded-2xl font-black text-xl outline-none" placeholder="08012345678" value={phoneNumber} onChange={e => setPhoneNumber(e.target.value.replace(/\D/g, ''))} maxLength={11} disabled={!customerName} />
+                  </div>
+               </div>
+            </div>
+
+            <button onClick={handlePurchase} className="w-full bg-blue-600 hover:bg-black text-white font-black py-6 rounded-3xl shadow-2xl transition-all uppercase tracking-widest text-[11px] disabled:opacity-50" disabled={!customerName || !numericAmount || phoneNumber.length !== 11 || isPurchasing}>
+              {isPurchasing ? <Spinner /> : 'Execute Renewal'}
+            </button>
           </div>
-          <button onClick={handlePurchase} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-md" disabled={!customerName || !numericAmount || phoneNumber.length !== 11 || isPurchasing}>
-            {isPurchasing ? <Spinner /> : 'Pay Bill'}
-          </button>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
