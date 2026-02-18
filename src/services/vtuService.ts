@@ -8,9 +8,11 @@ import { db, auth } from '../firebase/config';
 async function logTransaction(userId: string, type: TransactionResponse['type'], amount: number, source: string, remarks: string, status: 'SUCCESS' | 'FAILED' = 'SUCCESS') {
   try {
     const user = auth.currentUser;
+    if (!user) return;
+    
     await addDoc(collection(db, "transactions"), {
-      userId,
-      userEmail: user?.email,
+      userId: user.uid,
+      userEmail: user.email,
       type,
       amount,
       source,
@@ -21,7 +23,7 @@ async function logTransaction(userId: string, type: TransactionResponse['type'],
     });
     
     if (status === 'SUCCESS' && type !== 'FUNDING' && type !== 'REFERRAL') {
-      await updateDoc(doc(db, "users", userId), {
+      await updateDoc(doc(db, "users", user.uid), {
         walletBalance: increment(-amount)
       });
     }
@@ -31,23 +33,14 @@ async function logTransaction(userId: string, type: TransactionResponse['type'],
 }
 
 export const vtuService = {
-  getAirtimeOperators: async (): Promise<ApiResponse<Operator[]>> => {
-    return { status: true, data: AIRTIME_NETWORKS, message: 'Operators fetched.' };
-  },
   purchaseAirtime: async (payload: { network: string; phone: string; amount: number }): Promise<ApiResponse<TransactionResponse>> => {
     const user = auth.currentUser;
     if (!user) return { status: false, message: 'Auth required' };
-
     const res = await cipApiClient<TransactionResponse>('airtime', { data: payload, method: 'POST' });
-    if (res.status) {
-      await logTransaction(user.uid, 'AIRTIME', payload.amount, `${payload.network} Airtime`, `Recharge for ${payload.phone}`);
-    }
+    if (res.status) await logTransaction(user.uid, 'AIRTIME', payload.amount, `${payload.network} Airtime`, `Recharge for ${payload.phone}`);
     return res;
   },
 
-  getDataOperators: async (): Promise<ApiResponse<Operator[]>> => {
-    return { status: true, data: DATA_NETWORKS, message: 'Operators fetched.' };
-  },
   getDataPlans: async (payload: { network: string; type: string }): Promise<ApiResponse<DataPlan[]>> => {
     const res = await cipApiClient<any[]>(`data/plans?network=${payload.network.toUpperCase()}&type=${payload.type.toUpperCase()}`, { method: 'GET' });
     if (res.status && res.data) {
@@ -56,37 +49,35 @@ export const vtuService = {
     }
     return { ...res, data: undefined };
   },
+
   purchaseData: async (payload: { plan_id: string; phone_number: string; amount: number; network: string; plan_name: string }): Promise<ApiResponse<TransactionResponse>> => {
     const user = auth.currentUser;
     if (!user) return { status: false, message: 'Auth required' };
-
     const res = await cipApiClient<TransactionResponse>('data/plans', { data: { plan_id: payload.plan_id, phone_number: payload.phone_number }, method: 'POST' });
-    if (res.status) {
-      await logTransaction(user.uid, 'DATA', payload.amount, `${payload.network} Data`, `Bundle ${payload.plan_name} for ${payload.phone_number}`);
-    }
+    if (res.status) await logTransaction(user.uid, 'DATA', payload.amount, `${payload.network} Data`, `Bundle ${payload.plan_name} for ${payload.phone_number}`);
     return res;
   },
 
   getElectricityOperators: async (): Promise<ApiResponse<Operator[]>> => {
     return cipApiClient<{ id: string; name: string }[]>('electricity', { method: 'GET' });
   },
+
   verifyElectricityMeter: async (payload: { meter_number: string; provider_id: string; meter_type: 'prepaid' | 'postpaid' }): Promise<ApiResponse<VerificationResponse>> => {
     return await cipApiClient<any>('electricity/validate', { data: payload, method: 'POST' });
   },
+
   purchaseElectricity: async (payload: { meter_number: string; provider_id: string; meter_type: 'prepaid' | 'postpaid'; phone: string; amount: number; provider_name: string }): Promise<ApiResponse<TransactionResponse>> => {
     const user = auth.currentUser;
     if (!user) return { status: false, message: 'Auth required' };
-
     const res = await cipApiClient<TransactionResponse>('electricity', { data: payload, method: 'POST' });
-    if (res.status) {
-      await logTransaction(user.uid, 'ELECTRICITY', payload.amount, `${payload.provider_name} Power`, `Meter ${payload.meter_number}`);
-    }
+    if (res.status) await logTransaction(user.uid, 'ELECTRICITY', payload.amount, `${payload.provider_name} Power`, `Meter ${payload.meter_number}`);
     return res;
   },
 
   getCableOperators: async (): Promise<ApiResponse<Operator[]>> => {
     return { status: true, data: CABLE_BILLERS, message: 'Operators fetched.' };
   },
+
   getCablePlans: async (billerName: string): Promise<ApiResponse<DataPlan[]>> => {
     const res = await cipApiClient<any[]>(`tv?biller=${billerName.toUpperCase()}`, { method: 'GET' });
     if (res.status && res.data) {
@@ -95,18 +86,17 @@ export const vtuService = {
     }
     return { ...res, data: undefined };
   },
+
   verifyCableSmartcard: async (payload: { biller: string; smartCardNumber: string }): Promise<ApiResponse<VerificationResponse>> => {
     return await cipApiClient<any>('tv/verify', { data: payload, method: 'POST' });
   },
+
   purchaseCable: async (payload: { biller: string; planCode: string; smartCardNumber: string; subscriptionType: 'RENEW' | 'CHANGE'; phoneNumber: string; amount: number; plan_name: string }): Promise<ApiResponse<TransactionResponse>> => {
     const user = auth.currentUser;
     if (!user) return { status: false, message: 'Auth required' };
-
     const apiPayload = { biller: payload.biller, code: payload.planCode, smartCardNumber: payload.smartCardNumber, phoneNumber: payload.phoneNumber, subscriptionType: payload.subscriptionType };
     const res = await cipApiClient<TransactionResponse>('tv', { data: apiPayload, method: 'POST' });
-    if (res.status) {
-      await logTransaction(user.uid, 'CABLE', payload.amount, `${payload.biller} TV`, `${payload.plan_name} for ${payload.smartCardNumber}`);
-    }
+    if (res.status) await logTransaction(user.uid, 'CABLE', payload.amount, `${payload.biller} TV`, `${payload.plan_name} for ${payload.smartCardNumber}`);
     return res;
   },
 
@@ -126,7 +116,11 @@ export const vtuService = {
       return { status: true, data: txs };
     } catch (error: any) {
       console.error("History fetch error:", error);
-      return { status: false, message: "Ledger sync failed" };
+      // Fallback query if indexing is not complete
+      const txQueryFallback = query(collection(db, "transactions"), where("userId", "==", user.uid), limit(20));
+      const snapshot = await getDocs(txQueryFallback);
+      const txs = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as TransactionResponse));
+      return { status: true, data: txs };
     }
   }
 };
