@@ -72,14 +72,14 @@ export const DATA_NETWORKS = [
   { id: '9MOBILE', name: '9mobile', image: 'https://seeklogo.com/images/1/9mobile-logo-4E386762C9-seeklogo.com.png' },
 ];
 
-// Fixed Data Plan Types to match provider requirements (SME, GIFTING, DATASHARE, etc.)
+// Refined Data Plan Types to strictly match provider API strings
 export const DATA_PLAN_TYPES = [
   { id: 'SME', name: 'SME Data' },
-  { id: 'GIFTING', name: 'Gifting' },
-  { id: 'CORPORATE', name: 'Corporate Gifting' }, // Fallback for general
-  { id: 'AWOOF', name: 'Awoof / Special' },
+  { id: 'GIFTING', name: 'Data Gifting' },
   { id: 'DATASHARE', name: 'Data Share' },
   { id: 'SMEPLUS', name: 'SME Plus' },
+  { id: 'AWOOF', name: 'Awoof / Special' },
+  { id: 'UNLIMITED', name: 'Unlimited Plans' },
 ];
 
 export const CABLE_BILLERS = [
