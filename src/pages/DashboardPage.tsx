@@ -68,43 +68,55 @@ const DashboardPage: React.FC = () => {
   }, [fetchDashboardData, user]);
 
   const handlePaystackUpgrade = () => {
-    addNotification("Insufficient balance. Initializing upgrade funding node...", "info");
+    addNotification("Insufficient balance. Initializing ₦1,200 upgrade payment node...", "info");
     const handler = PaystackPop.setup({
       key: process.env.REACT_APP_PAYSTACK_PUBLIC_KEY || 'pk_test_placeholder',
       email: user.email,
-      amount: 2500 * 100, // Fixed 2500 as requested
+      amount: 1200 * 100, // Pre-filled with exactly 1200
       currency: 'NGN',
       callback: (response: any) => {
-        addNotification("Verification successful! Wallet funded and account upgraded.", "success");
-        handleResellerUpgrade(true); // Retry upgrade after funding
+        addNotification("Payment Verified! Completing Reseller upgrade...", "success");
+        // We pass true to force the upgrade because payment has been verified
+        executeUpgrade(true);
       },
       onClose: () => {
-        addNotification("Transaction aborted.", "warning");
+        addNotification("Upgrade aborted.", "warning");
       }
     });
     handler.openIframe();
   };
 
-  const handleResellerUpgrade = async (force = false) => {
+  const executeUpgrade = async (isPaymentVerified = false) => {
+    setIsUpgrading(true);
+    try {
+      const upgradeRes = await adminService.updateUserRole(user.id, 'reseller');
+      if (upgradeRes.status) {
+        if (!isPaymentVerified) {
+          // If using wallet balance, deduct the fee
+          const currentBalance = walletBalance || 0;
+          await updateWalletBalance(currentBalance - 1200);
+        }
+        addNotification("Welcome to Reseller Tier! Your margins have been updated.", "success");
+        fetchDashboardData();
+      } else {
+        addNotification("Upgrade node failed. Contact support.", "error");
+      }
+    } catch (error) {
+      addNotification("Internal system error during upgrade.", "error");
+    }
+    setIsUpgrading(false);
+  };
+
+  const handleResellerUpgrade = async () => {
     if (user?.role === 'reseller' || user?.role === 'admin') return;
     
     const currentBalance = walletBalance || 0;
-    // Check if user has 0 balance or less than 1200
-    if (currentBalance < 1200 && !force) {
+    if (currentBalance < 1200) {
       handlePaystackUpgrade();
       return;
     }
 
-    setIsUpgrading(true);
-    const upgradeRes = await adminService.updateUserRole(user.id, 'reseller');
-    if (upgradeRes.status) {
-      if (!force) await updateWalletBalance(currentBalance - 1200);
-      addNotification("Welcome to Reseller Tier! Your margins have been updated.", "success");
-      fetchDashboardData();
-    } else {
-      addNotification("Upgrade node failed. Contact support.", "error");
-    }
-    setIsUpgrading(false);
+    await executeUpgrade(false);
   };
 
   const handlePinSuccess = async (pin: string) => {
