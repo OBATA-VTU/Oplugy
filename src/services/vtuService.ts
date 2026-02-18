@@ -1,8 +1,11 @@
+
 import { ApiResponse, Operator, DataPlan, TransactionResponse, VerificationResponse } from '../types';
 import { cipApiClient } from './cipApiClient';
 import { CABLE_BILLERS } from '../constants';
 import { collection, query, where, getDocs, orderBy, limit, addDoc, serverTimestamp, doc, updateDoc, increment } from 'firebase/firestore';
 import { db, auth } from '../firebase/config';
+
+const PROFIT_MARGIN = 10; // Your automated profit margin per transaction
 
 async function logTransaction(userId: string, type: TransactionResponse['type'], amount: number, source: string, remarks: string, status: 'SUCCESS' | 'FAILED' = 'SUCCESS') {
   try {
@@ -43,7 +46,13 @@ export const vtuService = {
   getDataPlans: async (payload: { network: string; type: string }): Promise<ApiResponse<DataPlan[]>> => {
     const res = await cipApiClient<any[]>(`data/plans?network=${payload.network.toUpperCase()}&type=${payload.type.toUpperCase()}`, { method: 'GET' });
     if (res.status && res.data) {
-      const mappedPlans: DataPlan[] = res.data.map(p => ({ ...p, id: p.id, amount: p.price / 100 }));
+      // Automatically add N10 profit margin to the price fetched from provider
+      const mappedPlans: DataPlan[] = res.data.map(p => ({ 
+        ...p, 
+        id: p.id, 
+        amount: (p.price / 100) + PROFIT_MARGIN,
+        network: payload.network 
+      }));
       return { ...res, data: mappedPlans };
     }
     return { ...res, data: undefined };
@@ -68,8 +77,10 @@ export const vtuService = {
   purchaseElectricity: async (payload: { meter_number: string; provider_id: string; meter_type: 'prepaid' | 'postpaid'; phone: string; amount: number; provider_name: string }): Promise<ApiResponse<TransactionResponse>> => {
     const user = auth.currentUser;
     if (!user) return { status: false, message: 'Auth required' };
-    const res = await cipApiClient<TransactionResponse>('electricity', { data: payload, method: 'POST' });
-    if (res.status) await logTransaction(user.uid, 'ELECTRICITY', payload.amount, `${payload.provider_name} Power`, `Meter ${payload.meter_number}`);
+    // Adding profit margin to electricity service if applicable
+    const finalAmount = payload.amount + PROFIT_MARGIN;
+    const res = await cipApiClient<TransactionResponse>('electricity', { data: { ...payload, amount: payload.amount }, method: 'POST' });
+    if (res.status) await logTransaction(user.uid, 'ELECTRICITY', finalAmount, `${payload.provider_name} Power`, `Meter ${payload.meter_number}`);
     return res;
   },
 
@@ -80,7 +91,13 @@ export const vtuService = {
   getCablePlans: async (billerName: string): Promise<ApiResponse<DataPlan[]>> => {
     const res = await cipApiClient<any[]>(`tv?biller=${billerName.toUpperCase()}`, { method: 'GET' });
     if (res.status && res.data) {
-      const mappedPlans: DataPlan[] = res.data.map(p => ({ id: p.code, name: p.name, amount: p.price / 100, validity: 'Varies' }));
+      // Automatically add N10 profit margin to the price fetched from provider
+      const mappedPlans: DataPlan[] = res.data.map(p => ({ 
+        id: p.code, 
+        name: p.name, 
+        amount: (p.price / 100) + PROFIT_MARGIN, 
+        validity: 'Varies' 
+      }));
       return { ...res, data: mappedPlans };
     }
     return { ...res, data: undefined };
@@ -114,7 +131,8 @@ export const vtuService = {
       const txs = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as TransactionResponse));
       return { status: true, data: txs };
     } catch (error: any) {
-      // Fallback query if indexing is not complete
+      // Fallback query if indexing is not complete to ensure history ALWAYS shows something
+      console.warn("Index not ready, using fallback query");
       const txQueryFallback = query(collection(db, "transactions"), where("userId", "==", user.uid), limit(20));
       const snapshot = await getDocs(txQueryFallback);
       const txs = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as TransactionResponse));
