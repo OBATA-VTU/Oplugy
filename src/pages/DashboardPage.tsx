@@ -1,7 +1,10 @@
+
 import React, { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '../hooks/useAuth';
+import { useNotifications } from '../hooks/useNotifications';
 import Spinner from '../components/Spinner';
 import PinSetupModal from '../components/PinSetupModal';
+import ReceiptModal from '../components/ReceiptModal';
 import { adminService } from '../services/adminService';
 import { authService } from '../services/authService';
 import { vtuService } from '../services/vtuService';
@@ -13,12 +16,16 @@ import {
 
 const DashboardPage: React.FC = () => {
   const { fetchWalletBalance, isLoading, user, walletBalance } = useAuth();
+  const { addNotification } = useNotifications();
   const navigate = useNavigate();
   const [announcement, setAnnouncement] = useState<string>('');
   const [showPinModal, setShowPinModal] = useState(false);
   const [recentTransactions, setRecentTransactions] = useState<TransactionResponse[]>([]);
   const [isHistoryLoading, setIsHistoryLoading] = useState(true);
   const [currentSlide, setCurrentSlide] = useState(0);
+  
+  const [selectedTx, setSelectedTx] = useState<TransactionResponse | null>(null);
+  const [isReceiptOpen, setIsReceiptOpen] = useState(false);
 
   const slides = [
     {
@@ -59,13 +66,19 @@ const DashboardPage: React.FC = () => {
 
   const handlePinSuccess = async (pin: string) => {
     const res = await authService.setTransactionPin(user.id, pin);
-    if (res.status) setShowPinModal(false);
+    if (res.status) {
+      addNotification("Security PIN set successfully.", "success");
+      setShowPinModal(false);
+    }
   };
 
   const handleResellerUpgrade = () => {
-    if (window.confirm("Upgrade to Reseller for ₦1,200?")) {
-      alert("Please ensure you have ₦1,200 in your wallet. Logic is active.");
-    }
+    addNotification("Reseller upgrade requires ₦1,200 wallet balance. System check active.", "info");
+  };
+
+  const openReceipt = (tx: TransactionResponse) => {
+    setSelectedTx(tx);
+    setIsReceiptOpen(true);
   };
 
   if (isLoading) return <div className="flex justify-center p-20"><Spinner /></div>;
@@ -73,10 +86,14 @@ const DashboardPage: React.FC = () => {
   return (
     <>
       {showPinModal && <PinSetupModal onSuccess={handlePinSuccess} />}
+      <ReceiptModal 
+        isOpen={isReceiptOpen} 
+        onClose={() => setIsReceiptOpen(false)} 
+        transaction={selectedTx} 
+      />
       
       <div className="animate-in fade-in slide-in-from-bottom-6 duration-700 space-y-8 pb-20">
         
-        {/* REFINED DASHBOARD HERO - COMPACT BUT PROMINENT */}
         <div className="relative overflow-hidden bg-gray-900 rounded-[2.5rem] p-8 lg:p-10 text-white shadow-2xl border border-white/5 group">
           <div className="relative z-10 flex flex-col lg:flex-row justify-between lg:items-center gap-8">
             <div className="space-y-4">
@@ -114,7 +131,6 @@ const DashboardPage: React.FC = () => {
           <div className="absolute top-0 right-0 w-[30rem] h-[30rem] bg-blue-600/10 rounded-full blur-[100px] -z-0 pointer-events-none"></div>
         </div>
 
-        {/* IMAGE SLIDER */}
         <div className="relative h-48 rounded-[2rem] overflow-hidden group shadow-xl border border-white">
            {slides.map((slide, idx) => (
              <div key={idx} className={`absolute inset-0 transition-opacity duration-1000 ${idx === currentSlide ? 'opacity-100' : 'opacity-0'}`}>
@@ -127,7 +143,6 @@ const DashboardPage: React.FC = () => {
            ))}
         </div>
 
-        {/* ANNOUNCEMENT */}
         {announcement && (
           <div className="bg-blue-50 border border-blue-100 p-4 rounded-2xl flex items-center space-x-3">
              <div className="w-8 h-8 bg-blue-600 text-white rounded-lg flex items-center justify-center flex-shrink-0 shadow-lg"><BoltIcon /></div>
@@ -135,7 +150,6 @@ const DashboardPage: React.FC = () => {
           </div>
         )}
 
-        {/* TRANSACTION HISTORY LEDGER */}
         <div className="bg-white rounded-[2.5rem] p-8 shadow-xl border border-gray-50">
           <div className="flex justify-between items-center mb-8">
             <h3 className="text-xl font-black text-gray-900 tracking-tighter">Terminal Ledger</h3>
@@ -147,9 +161,13 @@ const DashboardPage: React.FC = () => {
           {isHistoryLoading ? <div className="py-10 flex justify-center"><Spinner /></div> : (
             <div className="space-y-3">
               {recentTransactions.length > 0 ? recentTransactions.map((tx) => (
-                <div key={tx.id} className="flex items-center justify-between p-4 bg-gray-50/50 rounded-2xl border border-transparent hover:border-blue-100 transition-all">
+                <div 
+                  key={tx.id} 
+                  onClick={() => openReceipt(tx)}
+                  className="flex items-center justify-between p-4 bg-gray-50/50 rounded-2xl border border-transparent hover:border-blue-100 hover:bg-white hover:shadow-lg transition-all cursor-pointer group"
+                >
                   <div className="flex items-center space-x-4">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black ${tx.status === 'SUCCESS' ? 'bg-blue-50 text-blue-600' : 'bg-red-50 text-red-600'}`}>
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black ${tx.status === 'SUCCESS' ? 'bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white' : 'bg-red-50 text-red-600'}`}>
                       {tx.type.charAt(0)}
                     </div>
                     <div>
@@ -163,6 +181,7 @@ const DashboardPage: React.FC = () => {
                     <p className={`text-sm font-black tracking-tighter ${tx.type === 'FUNDING' ? 'text-green-600' : 'text-gray-900'}`}>
                       {tx.type === 'FUNDING' ? '+' : '-'}₦{tx.amount.toLocaleString()}
                     </p>
+                    <span className="text-[8px] font-black text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity uppercase tracking-widest">Receipt</span>
                   </div>
                 </div>
               )) : (

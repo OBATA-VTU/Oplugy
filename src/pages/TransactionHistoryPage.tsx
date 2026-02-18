@@ -1,34 +1,42 @@
+
 import React, { useState, useEffect } from 'react';
 import { vtuService } from '../services/vtuService';
 import { TransactionResponse } from '../types';
 import Spinner from '../components/Spinner';
+import ReceiptModal from '../components/ReceiptModal';
 import { HistoryIcon } from '../components/Icons';
 
 const TransactionHistoryPage: React.FC = () => {
   const [transactions, setTransactions] = useState<TransactionResponse[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  const [selectedTx, setSelectedTx] = useState<TransactionResponse | null>(null);
+  const [isReceiptOpen, setIsReceiptOpen] = useState(false);
 
   useEffect(() => {
     const fetchHistory = async () => {
       setLoading(true);
-      // In a real production app, this will fetch from your actual database
       const res = await vtuService.getTransactionHistory();
       if (res.status && res.data) {
         setTransactions(res.data);
       } else {
-        setTransactions([]); // Ensure no fake data is shown if fetch fails
+        setTransactions([]);
       }
       setLoading(false);
     };
     fetchHistory();
   }, []);
 
+  const openReceipt = (tx: TransactionResponse) => {
+    setSelectedTx(tx);
+    setIsReceiptOpen(true);
+  };
+
   const downloadCSV = () => {
     if (transactions.length === 0) return;
-
     const headers = ['Transaction ID', 'Type', 'Source', 'Amount (Naira)', 'Status', 'Date', 'Time'];
     const rows = transactions.map(txn => {
-      const dateObj = new Date(txn.date_created);
+      const dateObj = new Date(txn.date_created?.seconds ? txn.date_created.seconds * 1000 : txn.date_created);
       return [
         txn.id,
         txn.type,
@@ -69,6 +77,12 @@ const TransactionHistoryPage: React.FC = () => {
 
   return (
     <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <ReceiptModal 
+        isOpen={isReceiptOpen} 
+        onClose={() => setIsReceiptOpen(false)} 
+        transaction={selectedTx} 
+      />
+
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
         <div>
           <h2 className="text-4xl font-black text-gray-900 tracking-tighter">Activity Logs</h2>
@@ -99,7 +113,7 @@ const TransactionHistoryPage: React.FC = () => {
                 <th className="px-10 py-6 text-center">Type</th>
                 <th className="px-10 py-6 text-right">Amount</th>
                 <th className="px-10 py-6 text-center">Status</th>
-                <th className="px-10 py-6 text-right">Date</th>
+                <th className="px-10 py-6 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
@@ -112,7 +126,11 @@ const TransactionHistoryPage: React.FC = () => {
                       </div>
                       <div>
                         <div className="font-black text-gray-900 tracking-tight">{txn.source}</div>
-                        <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{txn.id}</div>
+                        <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                          {txn.date_created?.seconds 
+                            ? new Date(txn.date_created.seconds * 1000).toLocaleDateString() 
+                            : new Date(txn.date_created).toLocaleDateString()}
+                        </div>
                       </div>
                     </div>
                   </td>
@@ -130,8 +148,12 @@ const TransactionHistoryPage: React.FC = () => {
                     </span>
                   </td>
                   <td className="px-10 py-7 text-right">
-                    <div className="font-black text-gray-800 text-sm tracking-tight">{new Date(txn.date_created).toLocaleDateString()}</div>
-                    <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{new Date(txn.date_created).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                    <button 
+                      onClick={() => openReceipt(txn)}
+                      className="text-[10px] font-black uppercase tracking-widest text-blue-600 hover:text-white hover:bg-blue-600 px-4 py-2 rounded-xl transition-all border border-blue-600"
+                    >
+                      View Receipt
+                    </button>
                   </td>
                 </tr>
               )) : (

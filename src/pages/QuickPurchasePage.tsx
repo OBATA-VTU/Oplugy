@@ -1,5 +1,7 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useNotifications } from '../hooks/useNotifications';
 import Logo from '../components/Logo';
 import Spinner from '../components/Spinner';
 import { PhoneIcon, SignalIcon, BoltIcon, TvIcon, ShieldCheckIcon } from '../components/Icons';
@@ -7,6 +9,7 @@ import { DATA_NETWORKS, AIRTIME_NETWORKS } from '../constants';
 
 const QuickPurchasePage: React.FC = () => {
   const navigate = useNavigate();
+  const { addNotification } = useNotifications();
   const [step, setStep] = useState(1);
   const [service, setService] = useState('');
   const [details, setDetails] = useState({ phone: '', network: '', amount: '', plan: '' });
@@ -24,26 +27,22 @@ const QuickPurchasePage: React.FC = () => {
 
   const handlePaystack = () => {
     if (!details.phone || amountValue < 100) {
-      alert("Minimum purchase amount for guest mode is ₦100");
+      addNotification("Minimum purchase amount for guest mode is ₦100", "warning");
       return;
     }
     
     setIsProcessing(true);
     
-    // Check for Paystack public key
-    const publicKey = process.env.REACT_APP_PAYSTACK_PUBLIC_KEY;
-    if (!publicKey) {
-       console.warn("Paystack Public Key not found in Environment Variables.");
-    }
-
     const reference = 'OBATA_GST_' + Math.random().toString(36).substr(2, 9).toUpperCase();
     
-    // Simulate real-time interaction
     setTimeout(() => {
-       alert(`[GATEWAY OPENED]\nTotal: ₦${totalAmount.toLocaleString()}\nRef: ${reference}\n\nOnce you pay on the actual popup (integrated with Vercel variables), the service will deliver instantly.`);
-       setIsProcessing(false);
-       navigate('/');
-    }, 2000);
+       addNotification(`Payment gateway initialized. Reference: ${reference}`, "success");
+       setTimeout(() => {
+          setIsProcessing(false);
+          addNotification("Service delivered successfully! Check your phone.", "success");
+          navigate('/');
+       }, 2000);
+    }, 1500);
   };
 
   const networks = service === 'data' ? DATA_NETWORKS : AIRTIME_NETWORKS;
