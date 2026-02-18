@@ -14,6 +14,13 @@ import {
   SignalIcon
 } from '../components/Icons';
 
+interface RoleButtonProps {
+  label: string;
+  icon: React.ReactNode;
+  active: boolean;
+  onClick: () => void;
+}
+
 const AdminUsersPage: React.FC = () => {
   const { addNotification } = useNotifications();
   const [users, setUsers] = useState<User[]>([]);
@@ -113,7 +120,7 @@ const AdminUsersPage: React.FC = () => {
               placeholder="Search by identity..." 
               className="w-full p-4 bg-white border border-gray-100 rounded-2xl shadow-sm focus:ring-4 focus:ring-blue-50 transition-all font-medium text-sm"
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
             />
           </div>
           <button 
@@ -239,7 +246,7 @@ const AdminUsersPage: React.FC = () => {
               className="w-full p-6 bg-gray-50 border border-gray-100 rounded-3xl text-2xl font-black tracking-tighter focus:ring-4 focus:ring-blue-50 transition-all outline-none"
               placeholder="0.00"
               value={finAmount}
-              onChange={(e) => setFinAmount(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFinAmount(e.target.value)}
             />
             <p className="mt-4 text-[11px] text-gray-500 font-medium italic">Target Identity: {selectedUser?.fullName} ({selectedUser?.email})</p>
           </div>
@@ -289,7 +296,7 @@ const AdminUsersPage: React.FC = () => {
   );
 };
 
-const RoleButton = ({ label, icon, active, onClick }: any) => (
+const RoleButton: React.FC<RoleButtonProps> = ({ label, icon, active, onClick }) => (
   <button 
     onClick={onClick}
     className={`p-6 border-2 rounded-3xl flex flex-col items-center gap-3 transition-all ${

@@ -1,7 +1,21 @@
+
 import React, { useEffect, useState, useCallback } from 'react';
 import { adminService } from '../services/adminService';
 import Spinner from '../components/Spinner';
 import { UsersIcon, CurrencyDollarIcon, ShieldCheckIcon, BoltIcon } from '../components/Icons';
+
+interface StatCardProps {
+  icon: React.ReactNode;
+  label: string;
+  value: string | number;
+  color: 'blue' | 'green' | 'indigo' | 'gray';
+}
+
+interface AlertItemProps {
+  type: 'info' | 'warning' | 'success';
+  message: string;
+  time: string;
+}
 
 const AdminDashboardPage: React.FC = () => {
   const [stats, setStats] = useState<any>(null);
@@ -82,8 +96,8 @@ const AdminDashboardPage: React.FC = () => {
   );
 };
 
-const StatCard = ({ icon, label, value, color }: any) => {
-  const colors: any = {
+const StatCard: React.FC<StatCardProps> = ({ icon, label, value, color }) => {
+  const colors: Record<string, string> = {
     blue: 'bg-blue-600',
     green: 'bg-green-600',
     indigo: 'bg-indigo-600',
@@ -100,8 +114,8 @@ const StatCard = ({ icon, label, value, color }: any) => {
   );
 };
 
-const AlertItem = ({ type, message, time }: any) => {
-  const dots: any = {
+const AlertItem: React.FC<AlertItemProps> = ({ type, message, time }) => {
+  const dots: Record<string, string> = {
     info: 'bg-blue-500',
     warning: 'bg-yellow-500',
     success: 'bg-green-500'

@@ -4,6 +4,12 @@ import { adminService } from '../services/adminService';
 import { useNotifications } from '../hooks/useNotifications';
 import Spinner from '../components/Spinner';
 
+interface MarginInputProps {
+  label: string;
+  value: number;
+  onChange: (val: number) => void;
+}
+
 const AdminSettingsPage: React.FC = () => {
   const { addNotification } = useNotifications();
   const [loading, setLoading] = useState(true);
@@ -89,9 +95,9 @@ const AdminSettingsPage: React.FC = () => {
                <h3 className="text-2xl font-black text-gray-900 mb-8 tracking-tight">Tier Margins (₦)</h3>
                <p className="text-gray-400 text-xs font-medium mb-8">Profit added automatically to every transaction based on account level.</p>
                <div className="space-y-6">
-                  <MarginInput label="Standard User Profit" value={pricing.user_margin} onChange={(val) => setPricing({...pricing, user_margin: val})} />
-                  <MarginInput label="Reseller Profit" value={pricing.reseller_margin} onChange={(val) => setPricing({...pricing, reseller_margin: val})} />
-                  <MarginInput label="API Merchant Profit" value={pricing.api_margin} onChange={(val) => setPricing({...pricing, api_margin: val})} />
+                  <MarginInput label="Standard User Profit" value={pricing.user_margin} onChange={(val: number) => setPricing({...pricing, user_margin: val})} />
+                  <MarginInput label="Reseller Profit" value={pricing.reseller_margin} onChange={(val: number) => setPricing({...pricing, reseller_margin: val})} />
+                  <MarginInput label="API Merchant Profit" value={pricing.api_margin} onChange={(val: number) => setPricing({...pricing, api_margin: val})} />
                </div>
             </div>
          </div>
@@ -105,7 +111,7 @@ const AdminSettingsPage: React.FC = () => {
                     className="w-full p-6 bg-gray-50 border border-gray-100 rounded-3xl font-bold min-h-[200px] focus:ring-4 focus:ring-blue-50 transition-all outline-none" 
                     placeholder="Enter message for the main terminal..."
                     value={announcement}
-                    onChange={(e) => setAnnouncement(e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setAnnouncement(e.target.value)}
                   />
                </div>
                <button 
@@ -122,14 +128,14 @@ const AdminSettingsPage: React.FC = () => {
   );
 };
 
-const MarginInput = ({ label, value, onChange }: any) => (
+const MarginInput: React.FC<MarginInputProps> = ({ label, value, onChange }) => (
   <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl">
     <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{label}</span>
     <input 
       type="number" 
       className="w-24 p-3 bg-white border border-gray-100 rounded-xl text-center font-black text-gray-900 outline-none focus:border-blue-600 transition-all"
       value={value}
-      onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
+      onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(parseFloat(e.target.value) || 0)}
     />
   </div>
 );
