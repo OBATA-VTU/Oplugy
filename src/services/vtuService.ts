@@ -1,7 +1,6 @@
-
 import { ApiResponse, Operator, DataPlan, TransactionResponse, VerificationResponse } from '../types';
 import { cipApiClient } from './cipApiClient';
-import { AIRTIME_NETWORKS, DATA_NETWORKS, CABLE_BILLERS } from '../constants';
+import { CABLE_BILLERS } from '../constants';
 import { collection, query, where, getDocs, orderBy, limit, addDoc, serverTimestamp, doc, updateDoc, increment } from 'firebase/firestore';
 import { db, auth } from '../firebase/config';
 
@@ -115,7 +114,6 @@ export const vtuService = {
       const txs = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as TransactionResponse));
       return { status: true, data: txs };
     } catch (error: any) {
-      console.error("History fetch error:", error);
       // Fallback query if indexing is not complete
       const txQueryFallback = query(collection(db, "transactions"), where("userId", "==", user.uid), limit(20));
       const snapshot = await getDocs(txQueryFallback);
