@@ -61,21 +61,21 @@ export const SERVICE_CATEGORIES = [
 export const AIRTIME_NETWORKS = [
   { id: 'MTN', name: 'MTN', image: 'https://upload.wikimedia.org/wikipedia/commons/a/af/MTN_Logo.svg' },
   { id: 'AIRTEL', name: 'Airtel', image: 'https://upload.wikimedia.org/wikipedia/commons/e/e0/Airtel_logo.png' },
-  { id: 'GLO', name: 'Glo', image: 'https://upload.wikimedia.org/wikipedia/en/b/ba/Glo_logo.png' },
-  { id: '9MOBILE', name: '9mobile', image: 'https://upload.wikimedia.org/wikipedia/commons/0/09/9mobile_Logo.svg' },
+  { id: 'GLO', name: 'Glo', image: 'https://cdn-icons-png.flaticon.com/512/8112/8112396.png' },
+  { id: '9MOBILE', name: '9mobile', image: 'https://seeklogo.com/images/1/9mobile-logo-4E386762C9-seeklogo.com.png' },
 ];
 
 export const DATA_NETWORKS = [
   { id: 'MTN', name: 'MTN', image: 'https://upload.wikimedia.org/wikipedia/commons/a/af/MTN_Logo.svg' },
   { id: 'AIRTEL', name: 'Airtel', image: 'https://upload.wikimedia.org/wikipedia/commons/e/e0/Airtel_logo.png' },
-  { id: 'GLO', name: 'Glo', image: 'https://upload.wikimedia.org/wikipedia/en/b/ba/Glo_logo.png' },
-  { id: '9MOBILE', name: '9mobile', image: 'https://upload.wikimedia.org/wikipedia/commons/0/09/9mobile_Logo.svg' },
+  { id: 'GLO', name: 'Glo', image: 'https://cdn-icons-png.flaticon.com/512/8112/8112396.png' },
+  { id: '9MOBILE', name: '9mobile', image: 'https://seeklogo.com/images/1/9mobile-logo-4E386762C9-seeklogo.com.png' },
 ];
 
 export const CABLE_BILLERS = [
   { id: 'DSTV', name: 'DStv', image: 'https://upload.wikimedia.org/wikipedia/commons/d/d1/DStv_logo.svg' },
   { id: 'GOTV', name: 'GOtv', image: 'https://upload.wikimedia.org/wikipedia/commons/7/7b/GOtv_logo.png' },
-  { id: 'STARTIMES', name: 'Startimes', image: 'https://upload.wikimedia.org/wikipedia/commons/9/90/StarTimes_logo.png' },
+  { id: 'STARTIMES', name: 'Startimes', image: 'https://seeklogo.com/images/S/startimes-logo-A27618D237-seeklogo.com.png' },
 ];
 
 export const DATA_PLAN_TYPES = [

@@ -14,10 +14,10 @@ const Footer: React.FC = () => {
               OBATA v2 is an independent high-velocity digital utility gateway. Built for speed, engineered for reliability.
             </p>
             <div className="flex space-x-6 mt-10">
-              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-blue-600 transition-colors">
+              <a href="https://twitter.com/obata_v2" target="_blank" rel="noopener noreferrer" className="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-blue-600 transition-colors">
                 Twitter
               </a>
-              <a href="https://t.me" target="_blank" rel="noopener noreferrer" className="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-blue-600 transition-colors">
+              <a href="https://t.me/obata_v2" target="_blank" rel="noopener noreferrer" className="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-blue-600 transition-colors">
                 Telegram
               </a>
               <Link to="/support" className="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-blue-600 transition-colors">
@@ -29,7 +29,7 @@ const Footer: React.FC = () => {
           <div>
             <h4 className="text-xs font-black uppercase tracking-[0.3em] text-gray-900 mb-8">Navigation</h4>
             <ul className="space-y-4">
-              <li><a href="#services" className="text-sm font-medium text-gray-400 hover:text-blue-600 transition-colors">Core Ecosystem</a></li>
+              <li><Link to="/" className="text-sm font-medium text-gray-400 hover:text-blue-600 transition-colors">Core Ecosystem</Link></li>
               <li><Link to="/pricing" className="text-sm font-medium text-gray-400 hover:text-blue-600 transition-colors">Global Tariffs</Link></li>
               <li><Link to="/login" className="text-sm font-medium text-gray-400 hover:text-blue-600 transition-colors">Secure Portal</Link></li>
             </ul>
@@ -40,7 +40,7 @@ const Footer: React.FC = () => {
             <ul className="space-y-4">
               <li><Link to="/privacy" className="text-sm font-medium text-gray-400 hover:text-blue-600 transition-colors">Privacy Policy</Link></li>
               <li><Link to="/terms" className="text-sm font-medium text-gray-400 hover:text-blue-600 transition-colors">Terms of Service</Link></li>
-              <li><span className="text-sm font-medium text-gray-400">+234 814 245 2729</span></li>
+              <li><a href="tel:+2348142452729" className="text-sm font-medium text-gray-400 hover:text-blue-600 transition-colors">+234 814 245 2729</a></li>
             </ul>
           </div>
         </div>
