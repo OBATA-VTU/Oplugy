@@ -5,8 +5,8 @@ import Logo from '../components/Logo';
 import Footer from '../components/Footer';
 import { 
   PhoneIcon, SignalIcon, BoltIcon, TvIcon, 
-  MenuIcon, GamingIcon, GiftIcon, ExchangeIcon,
-  ArrowIcon, ShieldCheckIcon, WalletIcon, UsersIcon
+  GamingIcon, ExchangeIcon,
+  ArrowIcon, ShieldCheckIcon, WalletIcon
 } from '../components/Icons';
 
 const LandingPage: React.FC = () => {
@@ -21,141 +21,134 @@ const LandingPage: React.FC = () => {
   return (
     <div className="bg-white overflow-hidden selection:bg-blue-100 selection:text-blue-600">
       {/* Navigation */}
-      <nav className={`fixed w-full z-50 transition-all duration-500 ${scrolled ? 'bg-white/95 backdrop-blur-xl shadow-xl border-b border-gray-100 py-4' : 'bg-transparent py-8'}`}>
-        <div className="max-w-7xl mx-auto px-6 lg:px-10 flex justify-between items-center">
+      <nav className={`fixed w-full z-50 transition-all duration-500 ${scrolled ? 'bg-white/90 backdrop-blur-2xl shadow-2xl border-b border-gray-100 py-4' : 'bg-transparent py-8'}`}>
+        <div className="max-w-7xl mx-auto px-6 lg:px-12 flex justify-between items-center">
           <Logo />
           <div className="hidden md:flex items-center space-x-10">
-            <a href="#about" className="text-[11px] font-black uppercase tracking-widest text-gray-500 hover:text-blue-600">About</a>
-            <a href="#services" className="text-[11px] font-black uppercase tracking-widest text-gray-500 hover:text-blue-600">Services</a>
-            <Link to="/quick-purchase" className="text-[11px] font-black uppercase tracking-widest text-blue-600 border-2 border-blue-600 px-5 py-2 rounded-xl hover:bg-blue-600 hover:text-white transition-all">Quick Buy</Link>
-            <Link to="/login" className="bg-gray-900 text-white px-8 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest hover:bg-blue-600 transition-all">Log In</Link>
+            <a href="#about" className="text-[11px] font-black uppercase tracking-widest text-gray-500 hover:text-blue-600">Infrastructure</a>
+            <a href="#services" className="text-[11px] font-black uppercase tracking-widest text-gray-500 hover:text-blue-600">Ecosystem</a>
+            <Link to="/quick-purchase" className="text-[11px] font-black uppercase tracking-widest text-blue-600 bg-blue-50 px-6 py-3 rounded-2xl hover:bg-blue-600 hover:text-white transition-all">Quick Buy</Link>
+            <Link to="/login" className="bg-gray-900 text-white px-8 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest hover:bg-blue-600 transition-all shadow-xl shadow-gray-200">Secure Access</Link>
           </div>
         </div>
       </nav>
 
       {/* Hero Section */}
-      <section className="relative pt-48 pb-32 lg:pt-64 lg:pb-64">
-        <div className="max-w-7xl mx-auto px-6 lg:px-12 relative z-10 flex flex-col lg:flex-row items-center gap-20">
+      <section className="relative pt-48 pb-32 lg:pt-64 lg:pb-72">
+        <div className="max-w-7xl mx-auto px-6 lg:px-12 relative z-10 flex flex-col lg:flex-row items-center gap-24">
           <div className="lg:w-3/5 text-center lg:text-left">
-            <span className="inline-block bg-blue-50 text-blue-600 px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.3em] mb-8 border border-blue-100">
-              ⚡ Instant Digital Infrastructure
-            </span>
-            <h1 className="text-6xl lg:text-[110px] font-black text-gray-900 leading-[0.85] mb-12 tracking-tighter">
-              Digital Services <br />
-              <span className="text-blue-600">Reimagined.</span>
+            <div className="inline-flex items-center space-x-3 bg-blue-50 text-blue-600 px-6 py-2.5 rounded-full text-[10px] font-black uppercase tracking-[0.3em] mb-10 border border-blue-100">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-600"></span>
+              </span>
+              <span>Propelling Digital Utility</span>
+            </div>
+            <h1 className="text-6xl lg:text-[120px] font-black text-gray-900 leading-[0.82] mb-14 tracking-tighter">
+              Instant. <br />
+              Secure. <br />
+              <span className="text-blue-600">Limitless.</span>
             </h1>
             <p className="text-xl lg:text-3xl text-gray-400 mb-16 max-w-2xl font-medium tracking-tight mx-auto lg:mx-0 leading-tight">
-              Cheap Data, Instant Airtime, Automated Bill Payments & Gaming Top-ups. Experience Nigeria's fastest VTU node.
+              Cheap Data, Automated Bills & Global Connectivity. Experience Nigeria's highest-speed VTU node.
             </p>
             <div className="flex flex-col sm:flex-row justify-center lg:justify-start gap-6">
-              <Link to="/signup" className="bg-blue-600 text-white px-12 py-7 rounded-[2rem] text-xl font-black shadow-2xl shadow-blue-200 hover:bg-black transition-all">
-                Join OBATA v2
+              <Link to="/signup" className="bg-blue-600 text-white px-14 py-8 rounded-[2.5rem] text-xl font-black shadow-2xl shadow-blue-300/50 hover:bg-black transition-all transform hover:-translate-y-2">
+                Become a Plug
               </Link>
-              <Link to="/quick-purchase" className="bg-white border-2 border-gray-100 text-gray-900 px-12 py-7 rounded-[2rem] text-xl font-black hover:border-blue-600 transition-all">
-                Buy without Login
+              <Link to="/quick-purchase" className="bg-white border-2 border-gray-100 text-gray-900 px-14 py-8 rounded-[2.5rem] text-xl font-black hover:border-blue-600 hover:shadow-xl transition-all transform hover:-translate-y-2">
+                Guest Purchase
               </Link>
             </div>
           </div>
           <div className="lg:w-2/5">
-             <div className="relative animate-float">
-                <img src="https://images.unsplash.com/photo-1512428559087-560fa5ceab42?auto=format&fit=crop&q=80&w=800" className="rounded-[4rem] shadow-2xl border-8 border-white" alt="Mobile Services" />
-                <div className="absolute -bottom-10 -left-10 bg-white p-8 rounded-[3rem] shadow-2xl border border-gray-50 flex items-center space-x-5">
-                   <div className="w-14 h-14 bg-green-50 text-green-600 rounded-2xl flex items-center justify-center"><WalletIcon /></div>
+             <div className="relative">
+                <div className="absolute inset-0 bg-blue-600 rounded-[5rem] blur-[80px] opacity-20 animate-pulse"></div>
+                <img src="https://images.unsplash.com/photo-1512428559087-560fa5ceab42?auto=format&fit=crop&q=80&w=1000" className="relative rounded-[5rem] shadow-2xl border-8 border-white animate-float" alt="Mobile Services" />
+                <div className="absolute -bottom-12 -left-12 bg-white p-10 rounded-[3.5rem] shadow-2xl border border-gray-50 flex items-center space-x-6">
+                   <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-[1.5rem] flex items-center justify-center"><WalletIcon /></div>
                    <div>
-                      <p className="text-gray-900 font-black tracking-tight">₦2.5M+</p>
-                      <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Processed Today</p>
+                      <p className="text-gray-900 font-black text-2xl tracking-tighter">₦10B+</p>
+                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Global Turnover</p>
                    </div>
                 </div>
              </div>
           </div>
         </div>
-        <div className="absolute top-0 right-0 w-1/2 h-full bg-blue-50/30 -z-10 rounded-l-[10rem]"></div>
+        <div className="absolute top-0 right-0 w-1/2 h-full bg-blue-50/40 -z-10 rounded-l-[15rem]"></div>
       </section>
 
-      {/* Stats Section */}
-      <section className="py-24 bg-white border-y border-gray-50">
-        <div className="max-w-7xl mx-auto px-6 grid grid-cols-2 lg:grid-cols-4 gap-12 text-center">
-          <div>
-             <h4 className="text-5xl font-black text-gray-900 mb-2">99.9%</h4>
-             <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Uptime Guarantee</p>
-          </div>
-          <div>
-             <h4 className="text-5xl font-black text-gray-900 mb-2">2s</h4>
-             <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Average Delivery</p>
-          </div>
-          <div>
-             <h4 className="text-5xl font-black text-gray-900 mb-2">100k+</h4>
-             <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Active Plugs</p>
-          </div>
-          <div>
-             <h4 className="text-5xl font-black text-gray-900 mb-2">24/7</h4>
-             <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Expert Support</p>
-          </div>
+      {/* Trust & Stats */}
+      <section className="py-24 bg-white border-y border-gray-100">
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-2 lg:grid-cols-4 gap-16 text-center">
+          <StatItem value="99.9%" label="Engine Uptime" />
+          <StatItem value="1.5s" label="Avg. Delivery" />
+          <StatItem value="250k+" label="Signed Plugs" />
+          <StatItem value="24/7" label="Support Sync" />
         </div>
       </section>
 
-      {/* Features Grid */}
-      <section id="services" className="py-40 bg-gray-50/50">
+      {/* Ecosystem Grid */}
+      <section id="services" className="py-48 bg-gray-50/40">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="flex flex-col lg:flex-row justify-between items-end mb-24 gap-10">
-            <div className="max-w-2xl">
-              <h2 className="text-blue-600 text-xs font-black uppercase tracking-[0.4em] mb-6">Our Ecosystem</h2>
-              <h3 className="text-5xl lg:text-7xl font-black text-gray-900 tracking-tighter">Everything you need for your digital life.</h3>
+          <div className="flex flex-col lg:flex-row justify-between items-end mb-32 gap-10">
+            <div className="max-w-3xl">
+              <h2 className="text-blue-600 text-[10px] font-black uppercase tracking-[0.4em] mb-8">The Ecosystem</h2>
+              <h3 className="text-5xl lg:text-8xl font-black text-gray-900 tracking-tighter leading-[0.9]">Universal Digital Utility.</h3>
             </div>
-            <Link to="/quick-purchase" className="group flex items-center space-x-4 bg-white px-10 py-6 rounded-3xl shadow-xl hover:bg-blue-600 hover:text-white transition-all font-black uppercase tracking-widest text-xs">
-              <span>Explore All Services</span>
+            <Link to="/quick-purchase" className="group flex items-center space-x-6 bg-white px-12 py-7 rounded-[2rem] shadow-xl hover:bg-blue-600 hover:text-white transition-all font-black uppercase tracking-widest text-xs">
+              <span>Enter Guest Mode</span>
               <ArrowIcon />
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-            <FeatureCard img="https://images.unsplash.com/photo-1534536281715-e28d76689b4d?auto=format&fit=crop&q=80&w=800" icon={<SignalIcon />} title="Data Bundles" desc="Cheap SME, Gifting & Corporate data for all networks. Prices from ₦150/GB." />
-            <FeatureCard img="https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&q=80&w=800" icon={<PhoneIcon />} title="Airtime Recharge" desc="Automated top-up with 3% cashback on every recharge. Instant processing." />
-            <FeatureCard img="https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?auto=format&fit=crop&q=80&w=800" icon={<BoltIcon />} title="Utility Bills" desc="Pay electricity bills and generate tokens instantly. IKEDC, EKEDC, PHED & more." />
-            <FeatureCard img="https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?auto=format&fit=crop&q=80&w=800" icon={<TvIcon />} title="Cable TV" desc="Renew GOtv, DStv & StarTimes without leaving your bed. Zero transaction fee." />
-            <FeatureCard img="https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80&w=800" icon={<GamingIcon />} title="Gaming Hub" desc="Free Fire Diamonds, COD Points & PUBG Credits. Game harder, pay easier." />
-            <FeatureCard img="https://images.unsplash.com/photo-1556742521-9713bf2728be?auto=format&fit=crop&q=80&w=800" icon={<ExchangeIcon />} title="Airtime-to-Cash" desc="Convert excess airtime to bank alert within 5 minutes. Secure & reliable." />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
+            <FeatureCard img="https://images.unsplash.com/photo-1534536281715-e28d76689b4d?auto=format&fit=crop&q=80&w=800" icon={<SignalIcon />} title="Bulk Data Plans" desc="High-speed SME, Gifting & Corporate data. Verified delivery in 2 seconds." />
+            <FeatureCard img="https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&q=80&w=800" icon={<PhoneIcon />} title="VTU Airtime" desc="Recharge any network instantly with 3% cashback on every transaction." />
+            <FeatureCard img="https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?auto=format&fit=crop&q=80&w=800" icon={<BoltIcon />} title="Utility Gateway" desc="Generate electricity tokens for IKEDC, EKEDC, PHED & more. Zero downtime." />
+            <FeatureCard img="https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?auto=format&fit=crop&q=80&w=800" icon={<TvIcon />} title="Cable Renewal" desc="Instant DStv, GOtv & StarTimes subscriptions. Keep the entertainment alive." />
+            <FeatureCard img="https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80&w=800" icon={<GamingIcon />} title="Gaming Credits" desc="Top-up Free Fire, COD Mobile, and PUBG Mobile directly from your wallet." />
+            <FeatureCard img="https://images.unsplash.com/photo-1556742521-9713bf2728be?auto=format&fit=crop&q=80&w=800" icon={<ExchangeIcon />} title="Liquidity Bridge" desc="Convert excess airtime into real cash in your bank account. Secure & Fast." />
           </div>
         </div>
       </section>
 
-      {/* Trust Section */}
+      {/* Infrastructure Section */}
       <section id="about" className="py-48 bg-gray-900 text-white relative overflow-hidden">
          <div className="max-w-7xl mx-auto px-6 relative z-10 flex flex-col lg:flex-row items-center gap-24">
             <div className="lg:w-1/2">
-               <h3 className="text-6xl font-black tracking-tighter leading-none mb-12">Built for the <br /> <span className="text-blue-500">Fast Generation.</span></h3>
-               <p className="text-xl text-white/40 font-medium mb-12 leading-relaxed">
-                  We understand that in the digital world, speed is everything. OBATA v2 uses advanced API routing to ensure your data arrives before your screen finishes loading.
+               <h3 className="text-6xl lg:text-[80px] font-black tracking-tighter leading-[0.85] mb-12">Built for <br /> <span className="text-blue-500">Scale.</span></h3>
+               <p className="text-xl text-white/40 font-medium mb-14 leading-relaxed max-w-xl">
+                  We use advanced API routing and distributed cloud clusters to ensure your digital needs are met before your screen refreshes. Security is baked into every packet.
                </p>
-               <div className="space-y-6">
-                  <div className="flex items-center space-x-6 p-6 bg-white/5 rounded-3xl border border-white/10">
-                     <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center"><ShieldCheckIcon /></div>
-                     <p className="font-bold text-sm tracking-widest uppercase">SSL Encrypted Transactions</p>
-                  </div>
-                  <div className="flex items-center space-x-6 p-6 bg-white/5 rounded-3xl border border-white/10">
-                     <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center"><BoltIcon /></div>
-                     <p className="font-bold text-sm tracking-widest uppercase">Automated API Fulfillment</p>
-                  </div>
+               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <InfrastructurePoint icon={<ShieldCheckIcon />} label="ISO 27001 Security" />
+                  <InfrastructurePoint icon={<BoltIcon />} label="Real-time Synchronization" />
                </div>
             </div>
-            <div className="lg:w-1/2 grid grid-cols-2 gap-6">
-               <img src="https://images.unsplash.com/photo-1531297484001-80022131f5a1?auto=format&fit=crop&q=80&w=800" className="rounded-3xl h-64 w-full object-cover" alt="Tech 1" />
-               <img src="https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&q=80&w=800" className="rounded-3xl h-64 w-full object-cover mt-12" alt="Tech 2" />
-               <img src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80&w=800" className="rounded-3xl h-64 w-full object-cover" alt="Tech 3" />
-               <img src="https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?auto=format&fit=crop&q=80&w=800" className="rounded-3xl h-64 w-full object-cover mt-12" alt="Tech 4" />
+            <div className="lg:w-1/2 grid grid-cols-2 gap-8">
+               <div className="space-y-8">
+                  <img src="https://images.unsplash.com/photo-1531297484001-80022131f5a1?auto=format&fit=crop&q=80&w=800" className="rounded-[3rem] h-80 w-full object-cover shadow-2xl" alt="Tech" />
+                  <img src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80&w=800" className="rounded-[3rem] h-64 w-full object-cover shadow-2xl" alt="Server" />
+               </div>
+               <div className="space-y-8 mt-16">
+                  <img src="https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&q=80&w=800" className="rounded-[3rem] h-64 w-full object-cover shadow-2xl" alt="Team" />
+                  <img src="https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?auto=format&fit=crop&q=80&w=800" className="rounded-[3rem] h-80 w-full object-cover shadow-2xl" alt="Hardware" />
+               </div>
             </div>
          </div>
-         <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600/20 rounded-full blur-[120px]"></div>
+         <div className="absolute top-0 right-0 w-[50rem] h-[50rem] bg-blue-600/10 rounded-full blur-[150px] -z-0"></div>
       </section>
 
-      {/* Quick Purchase CTA */}
-      <section className="py-32 bg-blue-600">
-         <div className="max-w-5xl mx-auto px-6 text-center">
-            <h2 className="text-4xl lg:text-7xl font-black text-white tracking-tighter mb-12">Need a quick top-up? <br /> No login required.</h2>
-            <Link to="/quick-purchase" className="inline-block bg-white text-blue-600 px-16 py-8 rounded-[2.5rem] text-2xl font-black shadow-2xl hover:bg-gray-900 hover:text-white transition-all transform hover:-translate-y-2">
-               Quick Buy Now
+      {/* Quick Buy CTA */}
+      <section className="py-40 bg-blue-600 relative overflow-hidden">
+         <div className="max-w-5xl mx-auto px-6 text-center relative z-10">
+            <h2 className="text-5xl lg:text-[100px] font-black text-white tracking-tighter leading-none mb-16">In a rush? <br /> Use Guest Mode.</h2>
+            <Link to="/quick-purchase" className="inline-block bg-white text-blue-600 px-20 py-10 rounded-[3rem] text-2xl font-black shadow-2xl hover:bg-gray-900 hover:text-white transition-all transform hover:-translate-y-3">
+               Quick Purchase Now
             </Link>
          </div>
+         <div className="absolute -bottom-20 -left-20 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
       </section>
 
       <Footer />
@@ -163,17 +156,31 @@ const LandingPage: React.FC = () => {
   );
 };
 
+const StatItem = ({ value, label }: any) => (
+  <div>
+     <h4 className="text-6xl font-black text-gray-900 mb-3 tracking-tighter">{value}</h4>
+     <p className="text-[11px] font-black text-blue-600 uppercase tracking-[0.3em]">{label}</p>
+  </div>
+);
+
 const FeatureCard = ({ img, icon, title, desc }: any) => (
-  <div className="bg-white rounded-[3rem] overflow-hidden shadow-xl border border-gray-100 hover:shadow-2xl transition-all group h-full flex flex-col">
-    <div className="h-48 relative overflow-hidden">
-      <img src={img} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={title} />
-      <div className="absolute inset-0 bg-blue-600/20"></div>
+  <div className="bg-white rounded-[4rem] overflow-hidden shadow-2xl border border-gray-100 hover:shadow-blue-100 transition-all group h-full flex flex-col">
+    <div className="h-56 relative overflow-hidden">
+      <img src={img} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" alt={title} />
+      <div className="absolute inset-0 bg-blue-600/10"></div>
     </div>
-    <div className="p-10 flex-grow flex flex-col">
-       <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mb-8 group-hover:bg-blue-600 group-hover:text-white transition-all">{icon}</div>
-       <h4 className="text-2xl font-black text-gray-900 mb-4 tracking-tight">{title}</h4>
-       <p className="text-gray-400 font-medium leading-relaxed flex-grow">{desc}</p>
+    <div className="p-12 flex-grow flex flex-col">
+       <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-[1.5rem] flex items-center justify-center mb-10 group-hover:bg-blue-600 group-hover:text-white transition-all">{icon}</div>
+       <h4 className="text-3xl font-black text-gray-900 mb-5 tracking-tight">{title}</h4>
+       <p className="text-gray-400 font-medium leading-relaxed flex-grow text-lg">{desc}</p>
     </div>
+  </div>
+);
+
+const InfrastructurePoint = ({ icon, label }: any) => (
+  <div className="flex items-center space-x-6 p-8 bg-white/5 rounded-[2rem] border border-white/10 hover:bg-white/10 transition-colors">
+     <div className="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-600/30">{icon}</div>
+     <p className="font-black text-xs tracking-widest uppercase">{label}</p>
   </div>
 );
 

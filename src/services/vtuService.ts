@@ -20,7 +20,7 @@ async function logTransaction(userId: string, type: TransactionResponse['type'],
       date_updated: serverTimestamp()
     });
     
-    if (status === 'SUCCESS' && type !== 'FUNDING') {
+    if (status === 'SUCCESS' && type !== 'FUNDING' && type !== 'REFERRAL') {
       await updateDoc(doc(db, "users", userId), {
         walletBalance: increment(-amount)
       });

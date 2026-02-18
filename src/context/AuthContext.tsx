@@ -13,7 +13,8 @@ interface AuthContextType {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   loginWithGoogle: () => Promise<boolean>;
-  signup: (email: string, password: string) => Promise<boolean>;
+  // Updated signup signature to match authService.signup requirements
+  signup: (email: string, password: string, fullName: string, username: string, referralCode?: string) => Promise<boolean>;
   logout: () => void;
   fetchWalletBalance: () => Promise<void>;
   updateWalletBalance: (newBalance: number) => Promise<void>;
@@ -89,9 +90,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, [addNotification]);
 
-  const signup = useCallback(async (email: string, password: string): Promise<boolean> => {
+  // Updated signup to pass required fullName and username fields
+  const signup = useCallback(async (email: string, password: string, fullName: string, username: string, referralCode?: string): Promise<boolean> => {
     setIsLoading(true);
-    const result = await authService.signup({ email, password });
+    const result = await authService.signup({ email, password, fullName, username, referralCode });
     setIsLoading(false);
     
     if (result.status) {

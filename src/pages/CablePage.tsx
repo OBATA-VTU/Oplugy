@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNotifications } from '../hooks/useNotifications';
@@ -57,12 +56,15 @@ const CablePage: React.FC = () => {
       return;
     }
     setIsPurchasing(true);
+    // Added missing amount and plan_name fields from the selected plan to fix type mismatch
     const response = await vtuService.purchaseCable({
       biller: selectedOperator!.id,
       smartCardNumber: smartcardNo,
       planCode: selectedPlan.id,
       subscriptionType: subscriptionType,
       phoneNumber: phoneNumber,
+      amount: selectedPlan.amount,
+      plan_name: selectedPlan.name,
     });
     if (response.status && response.data) {
       addNotification(`Subscription for ${smartcardNo} was successful.`, 'success');
@@ -121,6 +123,4 @@ const CablePage: React.FC = () => {
       </div>
     </div>
   );
-};
-
-export default CablePage;
+}; export default CablePage;

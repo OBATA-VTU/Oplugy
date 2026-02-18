@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNotifications } from '../hooks/useNotifications';
@@ -62,12 +61,14 @@ const BillsPage: React.FC = () => {
       return;
     }
     setIsPurchasing(true);
+    // Added required provider_name from the selected operator to fix type mismatch
     const response = await vtuService.purchaseElectricity({
       provider_id: selectedOperator!.id,
       meter_number: meterNumber,
       meter_type: meterType,
       amount: numericAmount,
       phone: phoneNumber,
+      provider_name: selectedOperator!.name,
     });
     if (response.status && response.data) {
       addNotification(`Payment of ₦${numericAmount} for ${meterNumber} was successful. Token: ${response.data.token || 'N/A'}.`, 'success');

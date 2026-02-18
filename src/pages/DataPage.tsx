@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNotifications } from '../hooks/useNotifications';
@@ -50,7 +49,14 @@ const DataPage: React.FC = () => {
     }
     setIsPurchasing(true);
     setShowConfirmModal(false);
-    const response = await vtuService.purchaseData({ phone_number: phoneNumber, plan_id: selectedPlan.id });
+    // Added missing amount, network, and plan_name fields to match vtuService.purchaseData requirements
+    const response = await vtuService.purchaseData({ 
+      phone_number: phoneNumber, 
+      plan_id: selectedPlan.id,
+      amount: selectedPlan.amount,
+      network: selectedOperator!.id,
+      plan_name: selectedPlan.name
+    });
     if (response.status && response.data) {
       addNotification(`Data purchase successful for ${phoneNumber}.`, 'success');
       setPhoneNumber('');

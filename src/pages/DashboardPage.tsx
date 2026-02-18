@@ -9,8 +9,8 @@ import { vtuService } from '../services/vtuService';
 import { TransactionResponse } from '../types';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
-  PhoneIcon, SignalIcon, WalletIcon, HistoryIcon, ArrowIcon,
-  ShieldCheckIcon, UsersIcon, BoltIcon
+  PhoneIcon, SignalIcon, WalletIcon, HistoryIcon,
+  ShieldCheckIcon, BoltIcon
 } from '../components/Icons';
 
 const DashboardPage: React.FC = () => {
@@ -51,7 +51,7 @@ const DashboardPage: React.FC = () => {
         vtuService.getTransactionHistory()
       ]);
       if (settingsRes.status && settingsRes.data?.announcement) setAnnouncement(settingsRes.data.announcement);
-      if (historyRes.status && historyRes.data) setRecentTransactions(historyRes.data);
+      if (historyRes.status && historyRes.data) setRecentTransactions(historyRes.data.slice(0, 10));
       setIsHistoryLoading(false);
     }
   }, [user, fetchWalletBalance]);
@@ -75,102 +75,114 @@ const DashboardPage: React.FC = () => {
       <div className="animate-in fade-in slide-in-from-bottom-6 duration-700 space-y-12 pb-20">
         
         {/* HERO CARD */}
-        <div className="relative overflow-hidden bg-gradient-to-br from-gray-900 to-blue-900 rounded-[3rem] p-10 lg:p-14 text-white shadow-2xl shadow-blue-900/20">
+        <div className="relative overflow-hidden bg-gradient-to-br from-gray-900 to-blue-900 rounded-[3.5rem] p-10 lg:p-14 text-white shadow-2xl shadow-blue-900/20">
           <div className="relative z-10">
             <div className="flex flex-col lg:flex-row justify-between lg:items-end gap-10">
               <div className="space-y-6">
                 <div className="flex items-center space-x-3">
-                  <span className={`px-4 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${user?.role === 'admin' ? 'bg-red-500' : 'bg-blue-600'}`}>
-                    {user?.role === 'admin' ? 'Administrator' : user?.role === 'reseller' ? 'Reseller Node' : 'Standard Account'}
+                  <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${user?.role === 'admin' ? 'bg-red-500' : 'bg-blue-600'}`}>
+                    {user?.role === 'admin' ? 'Administrator' : user?.role === 'reseller' ? 'Reseller Node' : 'Standard Plug'}
                   </span>
                   <span className="text-white/40 font-black text-[10px] uppercase tracking-widest">@{user?.username}</span>
                 </div>
-                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Total Wallet Assets</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Portfolio Balance</p>
                 <div className="text-6xl lg:text-8xl font-black tracking-tighter leading-none">
                   ₦{walletBalance !== null ? walletBalance.toLocaleString('en-US', { minimumFractionDigits: 2 }) : '0.00'}
                 </div>
                 <div className="flex items-center space-x-6">
-                   <div>
-                      <p className="text-[9px] font-black text-white/30 uppercase tracking-widest">Referral Code</p>
+                   <div className="bg-white/5 border border-white/10 px-4 py-2 rounded-xl">
+                      <p className="text-[9px] font-black text-white/30 uppercase tracking-widest">Invite Code</p>
                       <p className="font-black text-blue-400 tracking-tight">{user?.referralCode || 'N/A'}</p>
                    </div>
-                   <div className="w-px h-8 bg-white/10"></div>
-                   <div>
-                      <p className="text-[9px] font-black text-white/30 uppercase tracking-widest">Earnings</p>
+                   <div className="bg-white/5 border border-white/10 px-4 py-2 rounded-xl">
+                      <p className="text-[9px] font-black text-white/30 uppercase tracking-widest">Invite Earnings</p>
                       <p className="font-black text-green-400 tracking-tight">₦{(user?.referralEarnings || 0).toLocaleString()}</p>
                    </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-row gap-4">
-                 <button onClick={() => navigate('/dashboard')} className="flex items-center justify-center space-x-3 bg-white text-gray-900 p-6 rounded-[2.5rem] font-black text-[11px] uppercase tracking-widest shadow-xl transition-all hover:scale-[1.05]">
-                    <WalletIcon /><span>Fund Account</span>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full lg:w-auto">
+                 <button onClick={() => navigate('/dashboard')} className="flex flex-col items-center justify-center space-y-3 bg-white text-gray-900 p-8 rounded-[2.5rem] font-black text-[11px] uppercase tracking-widest shadow-xl transition-all hover:scale-[1.05]">
+                    <WalletIcon /><span>Fund Wallet</span>
                  </button>
-                 <button onClick={() => navigate('/airtime')} className="flex items-center justify-center space-x-3 bg-blue-600 text-white p-6 rounded-[2.5rem] font-black text-[11px] uppercase tracking-widest transition-all hover:bg-white hover:text-gray-900">
+                 <button onClick={() => navigate('/airtime')} className="flex flex-col items-center justify-center space-y-3 bg-blue-600/50 backdrop-blur-md text-white p-8 rounded-[2.5rem] font-black text-[11px] uppercase tracking-widest transition-all hover:bg-white hover:text-gray-900 border border-white/10">
                     <PhoneIcon /><span>Airtime</span>
                  </button>
-                 <button onClick={() => navigate('/data')} className="flex items-center justify-center space-x-3 bg-blue-600 text-white p-6 rounded-[2.5rem] font-black text-[11px] uppercase tracking-widest transition-all hover:bg-white hover:text-gray-900">
-                    <SignalIcon /><span>Data Plans</span>
+                 <button onClick={() => navigate('/data')} className="flex flex-col items-center justify-center space-y-3 bg-blue-600/50 backdrop-blur-md text-white p-8 rounded-[2.5rem] font-black text-[11px] uppercase tracking-widest transition-all hover:bg-white hover:text-gray-900 border border-white/10">
+                    <SignalIcon /><span>Data Bundle</span>
                  </button>
               </div>
             </div>
           </div>
           <div className="absolute top-0 right-0 w-[50rem] h-[50rem] bg-blue-500/10 rounded-full blur-[120px] -z-0"></div>
+          <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-blue-400/10 rounded-full blur-[80px] -z-0"></div>
         </div>
 
-        {/* SLIDESHOW */}
-        <div className="relative h-64 rounded-[3rem] overflow-hidden group shadow-xl">
-           <img src={slides[slideIndex].img} className="absolute inset-0 w-full h-full object-cover transition-opacity duration-1000" alt="slide" />
-           <div className="absolute inset-0 bg-black/40 p-12 flex flex-col justify-end">
-              <h3 className="text-3xl font-black text-white tracking-tight">{slides[slideIndex].title}</h3>
-              <p className="text-white/70 font-medium">{slides[slideIndex].desc}</p>
-           </div>
-           <div className="absolute bottom-6 right-10 flex space-x-2">
+        {/* ANNOUNCEMENT STRIP */}
+        {announcement && (
+          <div className="bg-blue-50 border border-blue-100 p-6 rounded-[2rem] flex items-center space-x-4 animate-in slide-in-from-left duration-700">
+             <div className="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center flex-shrink-0"><BoltIcon /></div>
+             <p className="text-sm font-black text-blue-800 tracking-tight">{announcement}</p>
+          </div>
+        )}
+
+        {/* IMAGE SLIDESHOW */}
+        <div className="relative h-72 rounded-[3.5rem] overflow-hidden group shadow-2xl border border-white">
+           {slides.map((slide, idx) => (
+             <div key={idx} className={`absolute inset-0 transition-opacity duration-1000 ${idx === slideIndex ? 'opacity-100' : 'opacity-0'}`}>
+                <img src={slide.img} className="w-full h-full object-cover" alt="slide" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent p-12 flex flex-col justify-end">
+                   <h3 className="text-3xl font-black text-white tracking-tight leading-none mb-2">{slide.title}</h3>
+                   <p className="text-white/60 font-medium text-lg">{slide.desc}</p>
+                </div>
+             </div>
+           ))}
+           <div className="absolute bottom-10 right-12 flex space-x-3">
               {slides.map((_, i) => (
-                <div key={i} className={`w-2 h-2 rounded-full transition-all ${i === slideIndex ? 'bg-blue-600 w-6' : 'bg-white/50'}`}></div>
+                <div key={i} className={`h-1.5 rounded-full transition-all duration-500 ${i === slideIndex ? 'bg-blue-600 w-10' : 'bg-white/50 w-3'}`}></div>
               ))}
            </div>
         </div>
 
-        {/* TRANSACTION HISTORY */}
-        <div className="bg-white rounded-[3rem] p-10 lg:p-14 shadow-xl border border-gray-50">
+        {/* TRANSACTION HISTORY STREAM */}
+        <div className="bg-white rounded-[3.5rem] p-10 lg:p-14 shadow-2xl shadow-gray-100 border border-gray-50">
           <div className="flex justify-between items-center mb-12">
             <div>
-               <h3 className="text-3xl font-black text-gray-900 tracking-tighter">Activity Stream</h3>
-               <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Live ledger of your account operations</p>
+               <h3 className="text-3xl font-black text-gray-900 tracking-tighter">Activity Ledger</h3>
+               <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Live stream of your account operations</p>
             </div>
-            <Link to="/history" className="text-blue-600 font-black text-[11px] uppercase tracking-widest bg-blue-50 px-6 py-3 rounded-2xl hover:bg-blue-600 hover:text-white transition-all flex items-center space-x-2">
-               <span>View All Logs</span><HistoryIcon />
+            <Link to="/history" className="text-blue-600 font-black text-[11px] uppercase tracking-widest bg-blue-50 px-8 py-4 rounded-[1.5rem] hover:bg-blue-600 hover:text-white transition-all flex items-center space-x-2">
+               <span>Open Full Ledger</span><HistoryIcon />
             </Link>
           </div>
 
           {isHistoryLoading ? <div className="py-20 flex justify-center"><Spinner /></div> : (
             <div className="space-y-4">
               {recentTransactions.length > 0 ? recentTransactions.map((tx) => (
-                <div key={tx.id} className="flex items-center justify-between p-6 bg-gray-50/50 rounded-3xl hover:bg-white hover:shadow-xl transition-all border border-transparent hover:border-gray-100 group">
-                  <div className="flex items-center space-x-5">
-                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-xl font-black shadow-sm ${tx.status === 'SUCCESS' ? 'bg-blue-50 text-blue-600' : 'bg-red-50 text-red-600'}`}>
+                <div key={tx.id} className="flex items-center justify-between p-7 bg-gray-50/50 rounded-[2.5rem] hover:bg-white hover:shadow-2xl transition-all border border-transparent hover:border-gray-100 group">
+                  <div className="flex items-center space-x-6">
+                    <div className={`w-16 h-16 rounded-[1.5rem] flex items-center justify-center text-2xl font-black shadow-sm ${tx.status === 'SUCCESS' ? 'bg-blue-50 text-blue-600' : 'bg-red-50 text-red-600'}`}>
                       {tx.type.charAt(0)}
                     </div>
                     <div>
-                      <p className="font-black text-gray-900 tracking-tight text-lg">{tx.source}</p>
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                        {tx.date_created?.seconds ? new Date(tx.date_created.seconds * 1000).toLocaleString() : 'Just now'}
+                      <p className="font-black text-gray-900 tracking-tight text-xl">{tx.source}</p>
+                      <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">
+                        {tx.date_created?.seconds ? new Date(tx.date_created.seconds * 1000).toLocaleString() : 'Processing...'}
                       </p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className={`text-xl font-black tracking-tighter ${tx.type === 'FUNDING' ? 'text-green-600' : 'text-gray-900'}`}>
-                      {tx.type === 'FUNDING' ? '+' : '-'}₦{tx.amount.toLocaleString()}
+                    <p className={`text-2xl font-black tracking-tighter ${tx.type === 'FUNDING' || tx.type === 'REFERRAL' ? 'text-green-600' : 'text-gray-900'}`}>
+                      {tx.type === 'FUNDING' || tx.type === 'REFERRAL' ? '+' : '-'}₦{tx.amount.toLocaleString()}
                     </p>
-                    <span className={`inline-block px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${tx.status === 'SUCCESS' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>{tx.status}</span>
+                    <span className={`inline-block mt-1 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${tx.status === 'SUCCESS' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>{tx.status}</span>
                   </div>
                 </div>
               )) : (
-                <div className="py-24 text-center">
-                   <div className="w-20 h-20 bg-gray-50 rounded-[2rem] flex items-center justify-center mx-auto mb-6 text-gray-200"><HistoryIcon /></div>
-                   <p className="font-black text-gray-900 text-xl tracking-tighter">No transactions yet.</p>
-                   <p className="text-gray-400 text-sm mt-2">Fund your wallet to start plugging.</p>
+                <div className="py-32 text-center">
+                   <div className="w-24 h-24 bg-gray-50 rounded-[3rem] flex items-center justify-center mx-auto mb-8 text-gray-200"><HistoryIcon /></div>
+                   <h4 className="font-black text-gray-900 text-2xl tracking-tighter">No transactions yet</h4>
+                   <p className="text-gray-400 font-medium max-w-xs mx-auto mt-2">Fund your wallet or refer friends to see your financial activity here.</p>
                 </div>
               )}
             </div>
