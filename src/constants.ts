@@ -72,16 +72,20 @@ export const DATA_NETWORKS = [
   { id: '9MOBILE', name: '9mobile', image: 'https://seeklogo.com/images/1/9mobile-logo-4E386762C9-seeklogo.com.png' },
 ];
 
+// Fixed Data Plan Types to match provider requirements (SME, GIFTING, DATASHARE, etc.)
+export const DATA_PLAN_TYPES = [
+  { id: 'SME', name: 'SME Data' },
+  { id: 'GIFTING', name: 'Gifting' },
+  { id: 'CORPORATE', name: 'Corporate Gifting' }, // Fallback for general
+  { id: 'AWOOF', name: 'Awoof / Special' },
+  { id: 'DATASHARE', name: 'Data Share' },
+  { id: 'SMEPLUS', name: 'SME Plus' },
+];
+
 export const CABLE_BILLERS = [
   { id: 'DSTV', name: 'DStv', image: 'https://upload.wikimedia.org/wikipedia/commons/d/d1/DStv_logo.svg' },
   { id: 'GOTV', name: 'GOtv', image: 'https://upload.wikimedia.org/wikipedia/commons/7/7b/GOtv_logo.png' },
   { id: 'STARTIMES', name: 'Startimes', image: 'https://seeklogo.com/images/S/startimes-logo-A27618D237-seeklogo.com.png' },
-];
-
-export const DATA_PLAN_TYPES = [
-  { id: 'SME', name: 'SME Data' },
-  { id: 'GIFTING', name: 'Data Gifting' },
-  { id: 'CORPORATE', name: 'Corporate Gifting' },
 ];
 
 export const SUBSCRIPTION_TYPES = [
@@ -97,17 +101,4 @@ export const PRICING_DATA = [
   { network: 'AIRTEL', type: 'CG', size: '1GB', price: '290', validity: '30 DAYS' },
   { network: 'GLO', type: 'GIFTING', size: '1GB', price: '300', validity: '30 DAYS' },
   { network: '9MOBILE', type: 'CORPORATE', size: '1GB', price: '320', validity: '30 DAYS' },
-];
-
-export const DASHBOARD_SLIDES = [
-  {
-    image: 'https://images.unsplash.com/photo-1556742044-3c52d6e88c62?auto=format&fit=crop&q=80&w=1200',
-    title: 'Automated Delivery',
-    description: 'Instant recharge within seconds of payment.'
-  },
-  {
-    image: 'https://images.unsplash.com/photo-1563013544-824ae1b704d3?auto=format&fit=crop&q=80&w=1200',
-    title: 'Secure Wallet',
-    description: 'Bank-level encryption for all your transactions.'
-  }
 ];

@@ -5,6 +5,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useNotifications } from '../hooks/useNotifications';
 import Logo from './Logo';
 import Modal from './Modal';
+import ChatBubble from './ChatBubble';
 import { 
   HomeIcon, PhoneIcon, SignalIcon, BoltIcon, TvIcon, 
   LogoutIcon, MenuIcon, HistoryIcon, WalletIcon,
@@ -21,14 +22,14 @@ const NavItem: React.FC<{ to: string; icon: ReactNode; children: ReactNode; onCl
     onClick={onClick}
     end={to === '/'}
     className={({ isActive }) =>
-      `flex items-center space-x-3.5 p-4 rounded-2xl transition-all duration-300 ${
+      `flex items-center space-x-4 p-4 rounded-2xl transition-all duration-300 group ${
         isActive
-          ? 'bg-blue-600 text-white shadow-xl shadow-blue-100'
+          ? 'bg-blue-600 text-white shadow-2xl shadow-blue-200 scale-[1.02]'
           : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
       }`
     }
   >
-    <span className="shrink-0">{icon}</span>
+    <span className="shrink-0 transition-transform group-hover:scale-110">{icon}</span>
     <span className="font-black text-[10px] uppercase tracking-[0.2em]">{children}</span>
   </NavLink>
 );
@@ -43,20 +44,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [fundMethod, setFundMethod] = useState<'AUTO' | 'MANUAL'>('AUTO');
   const [fundAmount, setFundAmount] = useState('');
 
-  const pageTitles: { [key: string]: string } = {
-    '/': 'Dashboard',
-    '/dashboard': 'Dashboard',
-    '/airtime': 'Airtime Recharge',
-    '/data': 'Data Bundle',
-    '/bills': 'Utility Bills',
-    '/cable': 'Cable TV',
-    '/history': 'Transactions',
-    '/pricing': 'Service Rates',
-    '/admin': 'Master Terminal',
-    '/referral': 'Referral Program',
-    '/support': 'Support',
-  };
-
   const handleLogout = () => {
     logout();
     navigate('/login');
@@ -65,103 +52,117 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const closeSidebar = () => setIsSidebarOpen(false);
 
   const sidebarContent = (
-    <div className="h-full flex flex-col bg-white">
-      <div className="p-8 mb-4">
+    <div className="h-full flex flex-col bg-white overflow-hidden">
+      <div className="p-10 mb-6">
         <Logo />
       </div>
-      <nav className="flex-grow px-6 space-y-1.5 overflow-y-auto custom-scrollbar">
+      <nav className="flex-grow px-6 space-y-2 overflow-y-auto custom-scrollbar">
+        <div className="px-4 mb-3 text-[8px] font-black uppercase tracking-[0.3em] text-gray-400">Core Engine</div>
+        <NavItem to="/dashboard" icon={<HomeIcon />} onClick={closeSidebar}>Terminal</NavItem>
+        <NavItem to="/history" icon={<HistoryIcon />} onClick={closeSidebar}>History</NavItem>
+        <NavItem to="/pricing" icon={<CurrencyDollarIcon />} onClick={closeSidebar}>Tariffs</NavItem>
+        
+        <div className="px-4 mt-8 mb-3 text-[8px] font-black uppercase tracking-[0.3em] text-gray-400">Digital Assets</div>
+        <NavItem to="/airtime" icon={<PhoneIcon />} onClick={closeSidebar}>Airtime</NavItem>
+        <NavItem to="/data" icon={<SignalIcon />} onClick={closeSidebar}>Data Bundles</NavItem>
+        <NavItem to="/bills" icon={<BoltIcon />} onClick={closeSidebar}>Electricity</NavItem>
+        <NavItem to="/cable" icon={<TvIcon />} onClick={closeSidebar}>Cable TV</NavItem>
+
+        <div className="px-4 mt-8 mb-3 text-[8px] font-black uppercase tracking-[0.3em] text-gray-400">Governance</div>
+        <NavItem to="/referral" icon={<UsersIcon />} onClick={closeSidebar}>Refer and Earn</NavItem>
+        <NavItem to="/support" icon={<ShieldCheckIcon />} onClick={closeSidebar}>Help Center</NavItem>
+
         {user?.role === 'admin' && (
-          <div className="mb-6">
-            <div className="px-4 mb-2 text-[8px] font-black uppercase tracking-[0.3em] text-blue-600">Matrix Control</div>
-            <NavItem to="/admin" icon={<ShieldCheckIcon />} onClick={closeSidebar}>Master Hub</NavItem>
+          <div className="pt-8 mt-8 border-t border-gray-100">
+            <div className="px-4 mb-2 text-[8px] font-black uppercase tracking-[0.3em] text-red-500">Master Control</div>
+            <NavItem to="/admin" icon={<ShieldCheckIcon />} onClick={closeSidebar}>Admin Hub</NavItem>
           </div>
         )}
-
-        <div className="px-4 mb-3 text-[8px] font-black uppercase tracking-[0.3em] text-gray-400">Main</div>
-        <NavItem to="/dashboard" icon={<HomeIcon />} onClick={closeSidebar}>Overview</NavItem>
-        <NavItem to="/pricing" icon={<CurrencyDollarIcon />} onClick={closeSidebar}>Live Tariffs</NavItem>
-        
-        <div className="px-4 mt-8 mb-3 text-[8px] font-black uppercase tracking-[0.3em] text-gray-400">Digital Goods</div>
-        <NavItem to="/airtime" icon={<PhoneIcon />} onClick={closeSidebar}>Airtime</NavItem>
-        <NavItem to="/data" icon={<SignalIcon />} onClick={closeSidebar}>Data Plans</NavItem>
-        <NavItem to="/bills" icon={<BoltIcon />} onClick={closeSidebar}>Utility Bills</NavItem>
-        <NavItem to="/cable" icon={<TvIcon />} onClick={closeSidebar}>TV Renewals</NavItem>
-
-        <div className="px-4 mt-8 mb-3 text-[8px] font-black uppercase tracking-[0.3em] text-gray-400">Account</div>
-        <NavItem to="/referral" icon={<UsersIcon />} onClick={closeSidebar}>Affiliates</NavItem>
-        <NavItem to="/history" icon={<HistoryIcon />} onClick={closeSidebar}>Ledger</NavItem>
-        <NavItem to="/support" icon={<ShieldCheckIcon />} onClick={closeSidebar}>Help Center</NavItem>
       </nav>
-      <div className="p-6">
+      <div className="p-8">
         <button
           onClick={handleLogout}
-          className="w-full flex items-center space-x-4 p-4 rounded-2xl text-red-500 hover:bg-red-50 transition-all font-black text-[10px] uppercase tracking-widest"
+          className="w-full flex items-center space-x-4 p-4 rounded-2xl text-red-500 bg-red-50/50 hover:bg-red-500 hover:text-white transition-all font-black text-[10px] uppercase tracking-widest shadow-sm"
         >
           <LogoutIcon />
-          <span>Secure Sign Out</span>
+          <span>Exit Session</span>
         </button>
       </div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      <aside className="hidden lg:flex lg:flex-col lg:w-72 bg-white border-r border-gray-100 flex-shrink-0 sticky top-0 h-screen">
+    <div className="min-h-screen bg-gray-50/50 flex flex-col lg:flex-row">
+      <aside className="hidden lg:flex lg:flex-col lg:w-80 bg-white border-r border-gray-100 flex-shrink-0 sticky top-0 h-screen shadow-sm z-50">
         {sidebarContent}
       </aside>
       
-      <div className={`fixed inset-0 z-40 transition-opacity lg:hidden ${isSidebarOpen ? 'bg-black/60 backdrop-blur-sm' : 'pointer-events-none opacity-0'}`} onClick={closeSidebar} />
-      <aside className={`fixed top-0 left-0 h-full w-72 z-50 transform transition-transform duration-300 ease-out lg:hidden ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <div className={`fixed inset-0 z-[100] transition-opacity lg:hidden ${isSidebarOpen ? 'bg-black/60 backdrop-blur-sm' : 'pointer-events-none opacity-0'}`} onClick={closeSidebar} />
+      <aside className={`fixed top-0 left-0 h-full w-80 z-[101] transform transition-transform duration-500 cubic-bezier(0.4, 0, 0.2, 1) lg:hidden ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full shadow-none'}`}>
         {sidebarContent}
       </aside>
 
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="bg-white/90 backdrop-blur-xl sticky top-0 z-30 flex items-center justify-between p-4 lg:p-6 px-6 lg:px-10 border-b border-gray-100">
-          <div className="flex items-center space-x-4">
-            <button className="lg:hidden text-gray-500 p-2 bg-gray-50 rounded-xl" onClick={() => setIsSidebarOpen(true)}>
+        <header className="bg-white/80 backdrop-blur-2xl sticky top-0 z-40 flex items-center justify-between px-6 lg:px-12 py-5 lg:py-6 border-b border-gray-100">
+          <div className="flex items-center space-x-6">
+            <button className="lg:hidden text-gray-900 p-3 bg-gray-100 rounded-xl active:scale-95 transition-all" onClick={() => setIsSidebarOpen(true)}>
               <MenuIcon />
             </button>
-            <h1 className="text-xl font-black text-gray-900 tracking-tighter hidden sm:block">{pageTitles[location.pathname] || 'OBATA'}</h1>
+            <div className="hidden sm:block">
+               <h1 className="text-sm font-black text-gray-400 uppercase tracking-widest leading-none">Identity: <span className="text-gray-900">{user?.fullName || 'User Node'}</span></h1>
+            </div>
           </div>
           
-          <div className="flex items-center space-x-4 lg:space-x-8">
-            <div className="hidden sm:block text-right">
-              <span className="block text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">Portfolio Balance</span>
-              <div className="text-gray-900 font-black text-lg tracking-tighter leading-none">
-                ₦{walletBalance !== null ? walletBalance.toLocaleString('en-US', { minimumFractionDigits: 2 }) : '...'}
-              </div>
+          <div className="flex items-center space-x-3 lg:space-x-6">
+             {/* Notif & Dark Mode Placeholders as requested */}
+             <div className="flex items-center space-x-2 mr-2">
+                <button className="p-3 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all">
+                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                </button>
+                <button className="p-3 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all relative">
+                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                   <span className="absolute top-2 right-2 w-2 h-2 bg-blue-600 rounded-full border-2 border-white"></span>
+                </button>
+             </div>
+
+            <div className="flex items-center space-x-4 pl-4 border-l border-gray-100">
+               <div className="text-right hidden sm:block">
+                  <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">Portfolio</p>
+                  <p className="text-gray-900 font-black text-sm tracking-tighter">₦{walletBalance?.toLocaleString() || '0.00'}</p>
+               </div>
+               <button 
+                onClick={() => navigate('/profile')}
+                className="w-10 h-10 lg:w-12 lg:h-12 rounded-2xl bg-gray-100 border-2 border-white shadow-sm overflow-hidden flex items-center justify-center text-blue-600 font-black text-xs hover:scale-105 transition-all active:scale-95"
+               >
+                  {user?.fullName?.charAt(0) || 'U'}
+               </button>
             </div>
-            <button 
-              onClick={() => setIsFundModalOpen(true)}
-              className="bg-blue-600 hover:bg-black text-white px-5 lg:px-7 py-3 rounded-2xl font-black text-[9px] uppercase tracking-[0.2em] transition-all shadow-xl shadow-blue-100 flex items-center space-x-2"
-            >
-              <WalletIcon />
-              <span>Fund</span>
-            </button>
           </div>
         </header>
 
-        <main className="flex-1 p-5 lg:p-12 overflow-y-auto w-full max-w-7xl mx-auto custom-scrollbar">
+        <main className="flex-1 p-6 lg:p-14 overflow-y-auto w-full max-w-7xl mx-auto custom-scrollbar relative">
           {children}
+          {location.pathname !== '/admin' && <ChatBubble />}
         </main>
       </div>
 
       <Modal 
         isOpen={isFundModalOpen} 
         onClose={() => setIsFundModalOpen(false)} 
-        title="Fund Portfolio"
+        title="Liquidate Node"
         footer={
           <div className="flex space-x-4 w-full">
-            <button className="flex-1 bg-gray-100 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest text-gray-500" onClick={() => setIsFundModalOpen(false)}>Close</button>
+            <button className="flex-1 bg-gray-100 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest text-gray-500" onClick={() => setIsFundModalOpen(false)}>Abort</button>
             {fundMethod === 'AUTO' && (
               <button 
                 className="flex-2 bg-blue-600 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest text-white shadow-xl shadow-blue-100"
                 onClick={() => { 
-                  addNotification("Initializing payment node...", "info");
+                   // Logic for Paystack will be handled in a dedicated component or service
+                  addNotification("Initializing secure Paystack node...", "info");
                   setIsFundModalOpen(false); 
                 }}
               >
-                Proceed to Gateway
+                Start Verification
               </button>
             )}
           </div>
@@ -169,8 +170,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       >
         <div className="space-y-8">
           <div className="flex p-1.5 bg-gray-100 rounded-2xl">
-            <button className={`flex-1 py-3 rounded-xl font-black text-[9px] uppercase tracking-widest transition-all ${fundMethod === 'AUTO' ? 'bg-white text-blue-600 shadow-md' : 'text-gray-400'}`} onClick={() => setFundMethod('AUTO')}>Paystack (Auto)</button>
-            <button className={`flex-1 py-3 rounded-xl font-black text-[9px] uppercase tracking-widest transition-all ${fundMethod === 'MANUAL' ? 'bg-white text-blue-600 shadow-md' : 'text-gray-400'}`} onClick={() => setFundMethod('MANUAL')}>Transfer</button>
+            <button className={`flex-1 py-3 rounded-xl font-black text-[9px] uppercase tracking-widest transition-all ${fundMethod === 'AUTO' ? 'bg-white text-blue-600 shadow-md' : 'text-gray-400'}`} onClick={() => setFundMethod('AUTO')}>Paystack Auto</button>
+            <button className={`flex-1 py-3 rounded-xl font-black text-[9px] uppercase tracking-widest transition-all ${fundMethod === 'MANUAL' ? 'bg-white text-blue-600 shadow-md' : 'text-gray-400'}`} onClick={() => setFundMethod('MANUAL')}>Bank Transfer</button>
           </div>
 
           {fundMethod === 'AUTO' ? (
@@ -180,11 +181,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               <p className="mt-4 text-[10px] font-bold text-gray-400 italic">Credits reflect instantly on the OBATA Master Ledger.</p>
             </div>
           ) : (
-            <div className="bg-gray-900 text-white p-8 lg:p-10 rounded-[2.5rem] space-y-6 text-center animate-in fade-in slide-in-from-bottom-2">
-              <p className="text-white/40 text-[9px] font-black uppercase tracking-widest">Bank Details</p>
+            <div className="bg-gray-900 text-white p-10 rounded-[2.5rem] space-y-6 text-center animate-in fade-in slide-in-from-bottom-2">
+              <p className="text-white/40 text-[9px] font-black uppercase tracking-widest">Master Node Bank</p>
               <h3 className="text-3xl font-black tracking-tighter">8142452729</h3>
               <div className="bg-white/5 p-5 rounded-2xl border border-white/5">
-                <p className="text-blue-500 font-black text-sm mb-1 uppercase tracking-widest">OBATA Palmpay Node</p>
+                <p className="text-blue-500 font-black text-sm mb-1 uppercase tracking-widest">OBATA Palmpay Terminal</p>
                 <p className="text-xs font-bold text-white/80">Boluwatife Oluwapelumi Ayuba</p>
               </div>
               <p className="text-[10px] text-white/30 italic leading-relaxed">Send screenshot to OBATA Support for manual node verification.</p>
