@@ -7,6 +7,7 @@ export interface User {
   id: string;
   email: string;
   fullName: string;
+  username: string; // Added username
   walletBalance: number;
   role: UserRole;
   status: UserStatus;
@@ -16,7 +17,7 @@ export interface User {
   referralCount: number;
   createdAt?: any;
   isPinSet: boolean;
-  transactionPin?: string; // Stored as a string (hashed or plain based on preference)
+  transactionPin?: string;
 }
 
 export interface AuthResponse {
@@ -36,9 +37,9 @@ export interface Operator {
 }
 
 export interface DataPlan {
-  id: string; // plan_id or code
+  id: string; 
   name: string;
-  amount: number; // Stored in Naira
+  amount: number; 
   validity: string;
   type?: string;
   size?: string;
@@ -54,8 +55,8 @@ export interface TransactionResponse {
   type: 'AIRTIME' | 'DATA' | 'CABLE' | 'ELECTRICITY' | 'FUNDING' | 'REFERRAL';
   source: string;
   remarks: string;
-  date_created: string;
-  date_updated: string;
+  date_created: any; // Firestore Timestamp
+  date_updated: any;
   token?: string; 
 }
 

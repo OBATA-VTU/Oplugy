@@ -16,7 +16,12 @@ import {
   getDoc, 
   setDoc, 
   updateDoc,
-  serverTimestamp 
+  serverTimestamp,
+  collection,
+  query,
+  where,
+  getDocs,
+  increment
 } from 'firebase/firestore';
 
 const generateReferralCode = () => {
@@ -40,12 +45,6 @@ export const authService = {
       
       if (userDoc.exists()) {
         const userData = userDoc.data();
-        if (!userData.referralCode || userData.referralCode.length > 8) {
-          const newCode = generateReferralCode();
-          await updateDoc(userDocRef, { referralCode: newCode });
-          userData.referralCode = newCode;
-        }
-
         return { 
           status: true, 
           data: { user: { ...userData, id: user.uid }, token: await user.getIdToken() },
@@ -55,8 +54,7 @@ export const authService = {
       
       return { status: true, data: { user, token: await user.getIdToken() } };
     } catch (error: any) {
-      console.error("Login Error:", error.code);
-      return { status: false, message: 'Invalid email or password. Please try again.' };
+      return { status: false, message: 'Invalid credentials.' };
     }
   },
 
@@ -64,7 +62,6 @@ export const authService = {
     try {
       await setPersistence(auth, browserLocalPersistence);
       const provider = new GoogleAuthProvider();
-      // FIX: Added 'auth' as the first argument to signInWithPopup
       const userCredential = await signInWithPopup(auth, provider);
       const user = userCredential.user;
 
@@ -76,6 +73,7 @@ export const authService = {
         userData = {
           id: user.uid,
           email: user.email,
+          username: (user.email?.split('@')[0] || 'user') + Math.floor(Math.random() * 1000),
           fullName: user.displayName || 'OBATA User',
           walletBalance: 0,
           role: 'user',
@@ -89,12 +87,6 @@ export const authService = {
         await setDoc(userDocRef, userData);
       } else {
         userData = userDoc.data();
-        // Ensure referral code is the correct format for existing users
-        if (!userData.referralCode || userData.referralCode.length > 8) {
-          const newCode = generateReferralCode();
-          await updateDoc(userDocRef, { referralCode: newCode });
-          userData.referralCode = newCode;
-        }
       }
 
       return { 
@@ -103,32 +95,50 @@ export const authService = {
         message: 'Successfully signed in to OBATA v2' 
       };
     } catch (error: any) {
-      console.error("Google login error:", error);
-      return { status: false, message: 'Auth interrupted or failed.' };
+      return { status: false, message: 'Auth interrupted.' };
     }
   },
 
-  async signup(payload: { email: string, password: string, fullName?: string }): Promise<ApiResponse<any>> {
+  async signup(payload: { email: string, password: string, fullName: string, username: string, referralCode?: string }): Promise<ApiResponse<any>> {
     try {
-      const { email, password, fullName } = payload;
-      await setPersistence(auth, browserLocalPersistence);
+      const { email, password, fullName, username, referralCode } = payload;
+      
+      // Check if username is taken
+      const q = query(collection(db, "users"), where("username", "==", username));
+      const querySnapshot = await getDocs(q);
+      if (!querySnapshot.empty) {
+        return { status: false, message: "Username already taken." };
+      }
+
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
+      await updateProfile(user, { displayName: fullName });
 
-      if (fullName) {
-        await updateProfile(user, { displayName: fullName });
+      let referredBy = null;
+      if (referralCode) {
+        const refQ = query(collection(db, "users"), where("referralCode", "==", referralCode.toUpperCase()));
+        const refSnap = await getDocs(refQ);
+        if (!refSnap.empty) {
+          referredBy = refSnap.docs[0].id;
+          // Increment referral count for the referrer
+          await updateDoc(doc(db, "users", referredBy), {
+            referralCount: increment(1)
+          });
+        }
       }
 
       const userData = {
         id: user.uid,
-        email: email,
-        fullName: fullName || 'New OBATA User',
+        email,
+        fullName,
+        username,
         walletBalance: 0,
         role: 'user',
         status: 'active',
         referralCode: generateReferralCode(),
         referralEarnings: 0,
         referralCount: 0,
+        referredBy,
         isPinSet: false,
         createdAt: serverTimestamp()
       };
@@ -146,7 +156,7 @@ export const authService = {
         transactionPin: pin,
         isPinSet: true
       });
-      return { status: true, message: "Transaction PIN configured." };
+      return { status: true, message: "PIN configured." };
     } catch (error: any) {
       return { status: false, message: error.message };
     }
