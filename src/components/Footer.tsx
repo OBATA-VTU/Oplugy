@@ -14,11 +14,15 @@ const Footer: React.FC = () => {
               OBATA v2 is an independent high-velocity digital utility gateway. Built for speed, engineered for reliability.
             </p>
             <div className="flex space-x-6 mt-10">
-              {['Twitter', 'Telegram', 'Support'].map(platform => (
-                <a key={platform} href="#" className="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-blue-600 transition-colors">
-                  {platform}
-                </a>
-              ))}
+              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-blue-600 transition-colors">
+                Twitter
+              </a>
+              <a href="https://t.me" target="_blank" rel="noopener noreferrer" className="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-blue-600 transition-colors">
+                Telegram
+              </a>
+              <Link to="/support" className="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-blue-600 transition-colors">
+                Support
+              </Link>
             </div>
           </div>
           

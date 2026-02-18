@@ -3,7 +3,6 @@ import React, { useState, ReactNode } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useNotifications } from '../hooks/useNotifications';
-import Spinner from './Spinner';
 import Logo from './Logo';
 import Modal from './Modal';
 import { 

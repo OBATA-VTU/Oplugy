@@ -5,7 +5,7 @@ import Logo from '../components/Logo';
 import Footer from '../components/Footer';
 import { 
   PhoneIcon, SignalIcon, BoltIcon, TvIcon, 
-  ShieldCheckIcon, WalletIcon, UsersIcon, ArrowIcon
+  ShieldCheckIcon, WalletIcon, UsersIcon
 } from '../components/Icons';
 
 const LandingPage: React.FC = () => {
