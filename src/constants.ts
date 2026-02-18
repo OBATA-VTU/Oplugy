@@ -98,3 +98,16 @@ export const PRICING_DATA = [
   { network: 'GLO', type: 'GIFTING', size: '1GB', price: '300', validity: '30 DAYS' },
   { network: '9MOBILE', type: 'CORPORATE', size: '1GB', price: '320', validity: '30 DAYS' },
 ];
+
+export const DASHBOARD_SLIDES = [
+  {
+    image: 'https://images.unsplash.com/photo-1556742044-3c52d6e88c62?auto=format&fit=crop&q=80&w=1200',
+    title: 'Automated Delivery',
+    description: 'Instant recharge within seconds of payment.'
+  },
+  {
+    image: 'https://images.unsplash.com/photo-1563013544-824ae1b704d3?auto=format&fit=crop&q=80&w=1200',
+    title: 'Secure Wallet',
+    description: 'Bank-level encryption for all your transactions.'
+  }
+];

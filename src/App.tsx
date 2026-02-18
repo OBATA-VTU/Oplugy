@@ -86,6 +86,11 @@ const App: React.FC = () => {
             <Route path="/quick-purchase" element={<QuickPurchasePage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignUpPage />} />
+            <Route path="/terms" element={<TermsPage />} />
+            <Route path="/privacy" element={<PrivacyPage />} />
+            <Route path="/gaming" element={<ProtectedRoute><ComingSoonPage title="Gaming Hub" description="Gaming top-ups are coming soon!" /></ProtectedRoute>} />
+            <Route path="/giftcards" element={<ProtectedRoute><ComingSoonPage title="Gift Cards" description="Global gift cards are coming soon!" /></ProtectedRoute>} />
+            <Route path="/airtime-to-cash" element={<ProtectedRoute><ComingSoonPage title="Airtime to Cash" description="Convert airtime to cash soon!" /></ProtectedRoute>} />
             <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
             <Route path="/airtime" element={<ProtectedRoute><AirtimePage /></ProtectedRoute>} />
             <Route path="/data" element={<ProtectedRoute><DataPage /></ProtectedRoute>} />

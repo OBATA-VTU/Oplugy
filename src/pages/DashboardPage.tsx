@@ -10,8 +10,9 @@ import { TransactionResponse } from '../types';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
   PhoneIcon, SignalIcon, WalletIcon, HistoryIcon,
-  ShieldCheckIcon, BoltIcon
+  BoltIcon
 } from '../components/Icons';
+import { DASHBOARD_SLIDES } from '../constants';
 
 const DashboardPage: React.FC = () => {
   const { fetchWalletBalance, isLoading, user, walletBalance } = useAuth();
@@ -20,27 +21,14 @@ const DashboardPage: React.FC = () => {
   const [showPinModal, setShowPinModal] = useState(false);
   const [recentTransactions, setRecentTransactions] = useState<TransactionResponse[]>([]);
   const [isHistoryLoading, setIsHistoryLoading] = useState(true);
-  const [slideIndex, setSlideIndex] = useState(0);
-
-  const slides = [
-    {
-      img: "https://images.unsplash.com/photo-1563013544-824ae1b704d3?auto=format&fit=crop&q=80&w=1200",
-      title: "Lowest Data Rates in Nigeria",
-      desc: "Buy 1GB for as low as ₦280."
-    },
-    {
-      img: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&q=80&w=1200",
-      title: "Instant Wallet Funding",
-      desc: "Get funded automatically via Paystack."
-    }
-  ];
+  const [currentSlide, setCurrentSlide] = useState(0);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setSlideIndex((prev) => (prev + 1) % slides.length);
+    const slideInterval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % DASHBOARD_SLIDES.length);
     }, 5000);
-    return () => clearInterval(timer);
-  }, [slides.length]);
+    return () => clearInterval(slideInterval);
+  }, []);
 
   const fetchDashboardData = useCallback(async () => {
     if (user) {
@@ -126,22 +114,28 @@ const DashboardPage: React.FC = () => {
           </div>
         )}
 
-        {/* IMAGE SLIDESHOW */}
-        <div className="relative h-72 rounded-[3.5rem] overflow-hidden group shadow-2xl border border-white">
-           {slides.map((slide, idx) => (
-             <div key={idx} className={`absolute inset-0 transition-opacity duration-1000 ${idx === slideIndex ? 'opacity-100' : 'opacity-0'}`}>
-                <img src={slide.img} className="w-full h-full object-cover" alt="slide" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent p-12 flex flex-col justify-end">
-                   <h3 className="text-3xl font-black text-white tracking-tight leading-none mb-2">{slide.title}</h3>
-                   <p className="text-white/60 font-medium text-lg">{slide.desc}</p>
-                </div>
-             </div>
-           ))}
-           <div className="absolute bottom-10 right-12 flex space-x-3">
-              {slides.map((_, i) => (
-                <div key={i} className={`h-1.5 rounded-full transition-all duration-500 ${i === slideIndex ? 'bg-blue-600 w-10' : 'bg-white/50 w-3'}`}></div>
-              ))}
-           </div>
+        {/* IMAGE SLIDER */}
+        <div className="relative h-64 lg:h-80 rounded-[3rem] overflow-hidden group shadow-2xl">
+          {DASHBOARD_SLIDES.map((slide, idx) => (
+            <div 
+              key={idx} 
+              className={`absolute inset-0 transition-opacity duration-1000 ${currentSlide === idx ? 'opacity-100' : 'opacity-0'}`}
+            >
+              <img src={slide.image} className="w-full h-full object-cover" alt={slide.title} />
+              <div className="absolute inset-0 bg-black/40 flex flex-col justify-end p-10 lg:p-14">
+                <h3 className="text-white text-3xl font-black tracking-tighter mb-2">{slide.title}</h3>
+                <p className="text-white/80 font-medium text-lg">{slide.description}</p>
+              </div>
+            </div>
+          ))}
+          <div className="absolute bottom-8 right-10 flex space-x-2">
+            {DASHBOARD_SLIDES.map((_, idx) => (
+              <div 
+                key={idx} 
+                className={`w-10 h-1.5 rounded-full transition-all duration-300 ${currentSlide === idx ? 'bg-blue-600' : 'bg-white/30'}`}
+              />
+            ))}
+          </div>
         </div>
 
         {/* TRANSACTION HISTORY STREAM */}

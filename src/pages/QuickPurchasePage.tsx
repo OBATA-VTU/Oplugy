@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import Logo from '../components/Logo';
 import Spinner from '../components/Spinner';
 import { PhoneIcon, SignalIcon, BoltIcon, TvIcon, ArrowIcon } from '../components/Icons';
+import { DATA_NETWORKS, AIRTIME_NETWORKS } from '../constants';
 
 const QuickPurchasePage: React.FC = () => {
   const navigate = useNavigate();
@@ -13,23 +14,38 @@ const QuickPurchasePage: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(false);
 
   const calculateCharges = (amount: number) => {
+    if (!amount) return 0;
     if (amount < 2500) return amount * 0.02; // 2% charge
     return amount * 0.10; // 10% charge
   };
 
-  const totalAmount = parseFloat(details.amount || '0') + calculateCharges(parseFloat(details.amount || '0'));
+  const amountValue = parseFloat(details.amount || '0');
+  const feeValue = calculateCharges(amountValue);
+  const totalAmount = amountValue + feeValue;
 
   const handlePaystack = async () => {
+    if (!details.phone || amountValue < 50) {
+      alert("Please enter a valid phone number and amount (min ₦50)");
+      return;
+    }
     setIsProcessing(true);
-    // In a production environment, you'd call a backend to initialize a Paystack transaction.
-    // For this prototype, we simulate the redirect to the funding gateway.
-    alert(`Redirecting to Paystack Gateway...\nAmount: ₦${totalAmount.toLocaleString()}\n(Fees included)`);
-    // Simulated success redirect after 2s
+    // Simulation of Paystack hand-off
+    // In a real environment, you'd initialize with a backend secret or public key
+    console.log("Initializing Paystack for amount:", totalAmount);
+    
+    // Create a unique reference
+    const ref = 'GUEST_' + Math.random().toString(36).substring(7).toUpperCase();
+    
+    alert(`Redirecting to Paystack Secure Gateway...\n\nTransaction: ${service.toUpperCase()}\nTotal: ₦${totalAmount.toLocaleString()}\nReference: ${ref}`);
+    
+    // After 2 seconds, simulate success
     setTimeout(() => {
-       alert("Simulated: Payment Confirmed. Transaction sent to Provider API.");
+       alert("Success! Your payment was verified.\nTransaction is now processing with our provider.");
        navigate('/');
-    }, 2000);
+    }, 3000);
   };
+
+  const networks = service === 'data' ? DATA_NETWORKS : AIRTIME_NETWORKS;
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -46,7 +62,7 @@ const QuickPurchasePage: React.FC = () => {
          <div className="w-full max-w-2xl bg-white rounded-[3rem] p-10 lg:p-16 shadow-2xl animate-in zoom-in-95">
             <div className="text-center mb-12">
                <h2 className="text-4xl lg:text-5xl font-black text-gray-900 tracking-tighter">Quick Purchase</h2>
-               <p className="text-gray-400 font-medium mt-2">Buy digital services instantly without an account.</p>
+               <p className="text-gray-400 font-medium mt-2 text-lg">Instant digital utility for guests.</p>
             </div>
 
             {step === 1 && (
@@ -61,6 +77,17 @@ const QuickPurchasePage: React.FC = () => {
             {step === 2 && (
                <div className="space-y-8 animate-in slide-in-from-bottom-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                     <div className="col-span-1 md:col-span-2">
+                        <label className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-3">Network/Provider</label>
+                        <select 
+                           className="w-full p-5 bg-gray-50 rounded-2xl font-black text-lg"
+                           value={details.network}
+                           onChange={(e) => setDetails({...details, network: e.target.value})}
+                        >
+                           <option value="">Select Provider</option>
+                           {networks.map(n => <option key={n.id} value={n.id}>{n.name}</option>)}
+                        </select>
+                     </div>
                      <div>
                         <label className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-3">Recipient Identity</label>
                         <input type="text" className="w-full p-5 bg-gray-50 rounded-2xl font-black text-xl tracking-tight" placeholder="Phone or Meter No" value={details.phone} onChange={(e) => setDetails({...details, phone: e.target.value})} />
@@ -70,16 +97,25 @@ const QuickPurchasePage: React.FC = () => {
                         <input type="number" className="w-full p-5 bg-gray-50 rounded-2xl font-black text-xl tracking-tight" placeholder="0.00" value={details.amount} onChange={(e) => setDetails({...details, amount: e.target.value})} />
                      </div>
                   </div>
+                  
                   <div className="bg-blue-50 p-8 rounded-3xl space-y-4">
-                     <div className="flex justify-between font-bold text-sm"><span>Subtotal:</span><span>₦{parseFloat(details.amount || '0').toLocaleString()}</span></div>
-                     <div className="flex justify-between font-bold text-sm text-blue-600"><span>Convenience Fee:</span><span>₦{calculateCharges(parseFloat(details.amount || '0')).toLocaleString()}</span></div>
+                     <div className="flex justify-between font-bold text-sm text-gray-600"><span>Subtotal:</span><span>₦{amountValue.toLocaleString()}</span></div>
+                     <div className="flex justify-between font-bold text-sm text-blue-600">
+                        <span>Convenience Fee ({amountValue < 2500 ? '2%' : '10%'}):</span>
+                        <span>₦{feeValue.toLocaleString()}</span>
+                     </div>
                      <div className="h-px bg-blue-100"></div>
-                     <div className="flex justify-between font-black text-xl tracking-tighter"><span>Total to Pay:</span><span>₦{totalAmount.toLocaleString()}</span></div>
+                     <div className="flex justify-between font-black text-2xl tracking-tighter text-gray-900">
+                        <span>Total Payable:</span>
+                        <span>₦{totalAmount.toLocaleString()}</span>
+                     </div>
+                     <p className="text-[10px] text-blue-400 italic">Funding for guests includes automated payment processing fees.</p>
                   </div>
+                  
                   <div className="flex gap-4">
-                     <button onClick={() => setStep(1)} className="flex-1 py-5 rounded-2xl font-black text-[11px] uppercase tracking-widest text-gray-400 bg-gray-50">Back</button>
-                     <button onClick={handlePaystack} className="flex-[2] py-5 rounded-2xl font-black text-[11px] uppercase tracking-widest text-white bg-blue-600 shadow-xl shadow-blue-100" disabled={!details.amount || !details.phone || isProcessing}>
-                        {isProcessing ? <Spinner /> : 'Pay with Paystack'}
+                     <button onClick={() => setStep(1)} className="flex-1 py-5 rounded-2xl font-black text-[11px] uppercase tracking-widest text-gray-400 bg-gray-50 transition-all hover:bg-gray-100">Back</button>
+                     <button onClick={handlePaystack} className="flex-[2] py-5 rounded-2xl font-black text-[11px] uppercase tracking-widest text-white bg-blue-600 shadow-xl shadow-blue-100 transition-all hover:bg-black disabled:opacity-50" disabled={!details.amount || !details.phone || !details.network || isProcessing}>
+                        {isProcessing ? <Spinner /> : 'Proceed to Paystack'}
                      </button>
                   </div>
                </div>
