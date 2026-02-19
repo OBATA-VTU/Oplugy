@@ -11,9 +11,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const payload = req.method === 'POST' ? req.body : req.query;
   const { endpoint, method: targetMethod = 'GET', data, server = 'server2' } = payload || {};
 
-  // Clear logging for console troubleshooting
-  console.log(`[System Info] Attempting to connect to ${server}...`);
-  console.log(`[System Info] Request: ${targetMethod} ${endpoint}`);
+  console.log(`[Proxy] Connecting to ${server} @ ${targetMethod} ${endpoint}`);
 
   const providers = {
     server1: {
@@ -31,8 +29,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const selectedProvider = providers[server as keyof typeof providers] || providers.server2;
 
   if (!selectedProvider.apiKey) {
-    console.error(`[System Error] Missing API Key for ${server}. Check your environment variables.`);
-    return res.status(500).json({ status: 'error', message: `The system for ${server} is not configured yet.` });
+    console.error(`[Proxy Error] Missing API Key for ${server}`);
+    return res.status(500).json({ status: 'error', message: `Server ${server} is not configured in environment.` });
   }
 
   try {
@@ -54,10 +52,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (targetMethod !== 'GET' && data) {
       const requestData = { ...data };
       if (server === 'server1') {
+        // Map fields for Server 1 if necessary, but keep requestData clean
         if (requestData.phone_number) requestData.mobileNumber = requestData.phone_number;
         if (requestData.phone) requestData.mobileNumber = requestData.phone;
         if (requestData.plan_id) requestData.serviceID = requestData.plan_id;
         
+        // Remove internal-only fields
         delete requestData.server;
         delete requestData.plan_name;
         delete requestData.network;
@@ -69,21 +69,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       fetchOptions.body = JSON.stringify(requestData);
     }
 
-    const apiResponse = await fetch(fullUrl, fetchOptions);
-    const responseText = await apiResponse.text();
+    // Set a fetch timeout
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 55000);
+    fetchOptions.signal = controller.signal;
 
-    console.log(`[System Info] ${server} responded with status: ${apiResponse.status}`);
+    const apiResponse = await fetch(fullUrl, fetchOptions);
+    clearTimeout(timeout);
+    
+    const responseText = await apiResponse.text();
+    console.log(`[Proxy] ${server} responded with status: ${apiResponse.status}`);
 
     try {
       const responseData = JSON.parse(responseText);
       return res.status(apiResponse.status).json(responseData);
     } catch {
-      // Handle non-JSON errors (like the 404 HTML errors you saw)
-      console.error(`[System Error] ${server} returned an invalid response (Not JSON).`);
+      // If not JSON, it might be a text error from the server (e.g. 404 HTML)
+      console.error(`[Proxy Error] ${server} returned non-JSON: ${responseText.substring(0, 100)}`);
       return res.status(apiResponse.status).send(responseText);
     }
   } catch (error: any) {
-    console.error(`[System Error] Connection failed:`, error.message);
-    return res.status(504).json({ status: 'error', message: 'The connection is taking too long. Please try again.', detail: error.message });
+    console.error(`[Proxy Fatal] Connection failed:`, error.message);
+    return res.status(504).json({ status: 'error', message: 'The gateway connection timed out.', detail: error.message });
   }
 }

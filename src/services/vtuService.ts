@@ -47,6 +47,7 @@ export const vtuService = {
 
     let serviceID = payload.network;
     if (server === 'server1') {
+      // Documentation mapping for Inlomax
       if (payload.network.toUpperCase() === 'MTN') serviceID = '1';
       if (payload.network.toUpperCase() === 'AIRTEL') serviceID = '2';
     }
@@ -69,7 +70,7 @@ export const vtuService = {
     const config = await getSystemConfig();
     const server = payload.server || config.routing?.data || 'server1';
     
-    // CRITICAL FIX: Ensure margin is treated as a Number to prevent text joining (e.g. 2000 + 10 = 2010, not 200010)
+    // CRITICAL: Force margin to be a number to prevent string concatenation (200 + 10 = 210, not 20010)
     const margin = Number(config.pricing?.[`${role}_margin`] || 10);
     const extraServer1Margin = (server === 'server1') ? 10 : 0; 
 
@@ -78,21 +79,22 @@ export const vtuService = {
     if (res.status && res.data) {
       let plans: any[] = [];
       if (server === 'server1') {
-        plans = (res.data.dataPlans || [])
+        const rawPlans = res.data.dataPlans || [];
+        plans = rawPlans
           .filter((p: any) => p.network.toUpperCase() === payload.network.toUpperCase())
           .map((p: any) => ({
-            id: p.serviceID,
+            id: String(p.serviceID),
             name: `${p.dataPlan} ${p.dataType}`,
-            // FIX: Use Number() to ensure math is done correctly
-            amount: Number(p.amount) + margin + extraServer1Margin,
+            // FIX: Ensure all parts of the addition are forced into Number
+            amount: Number(p.amount.toString().replace(/,/g, '')) + Number(margin) + Number(extraServer1Margin),
             validity: p.validity
           }));
       } else {
-        // FIX: Also ensure server 2 prices are numbers
+        // FIX: Also force Server 2 prices to be numbers
         plans = res.data.map((p: any) => ({
-          id: p.id || p.code,
+          id: String(p.id || p.code),
           name: p.name,
-          amount: Number(p.price) + margin,
+          amount: Number(p.price.toString().replace(/,/g, '')) + Number(margin),
           validity: p.validity || '30 Days'
         }));
       }
@@ -140,7 +142,8 @@ export const vtuService = {
     const res = await cipApiClient<any>(server === 'server1' ? 'services' : 'electricity/providers', { method: 'GET', data: { server } });
     if (res.status && res.data) {
         if (server === 'server1') {
-            const operators = (res.data.electricity || []).map((e: any) => ({ id: e.serviceID, name: e.disco }));
+            const rawElect = res.data.electricity || [];
+            const operators = rawElect.map((e: any) => ({ id: String(e.serviceID), name: e.disco }));
             return { status: true, data: operators };
         }
         return res;
@@ -179,12 +182,13 @@ export const vtuService = {
     const res = await cipApiClient<any>(server === 'server1' ? 'services' : `cable/plans?biller=${billerName}`, { method: 'GET', data: { server } });
     if (res.status && res.data) {
         if (server === 'server1') {
-            const plans = (res.data.cablePlans || [])
+            const rawCable = res.data.cablePlans || [];
+            const plans = rawCable
                 .filter((p: any) => p.cable.toUpperCase() === billerName.toUpperCase())
                 .map((p: any) => ({
-                    id: p.serviceID,
+                    id: String(p.serviceID),
                     name: p.cablePlan,
-                    amount: Number(p.amount.replace(',', '')),
+                    amount: Number(p.amount.toString().replace(/,/g, '')),
                     validity: 'Monthly'
                 }));
             return { status: true, data: plans };

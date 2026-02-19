@@ -1,4 +1,3 @@
-
 import { ApiResponse } from '../types';
 
 interface RequestOptions extends RequestInit {
@@ -11,7 +10,7 @@ interface RequestOptions extends RequestInit {
 export async function apiClient<T>(
   baseUrl: string,
   endpoint: string,
-  { data, headers: customHeaders, token, xApiKey, timeout = 20000, ...customConfig }: RequestOptions = {}
+  { data, headers: customHeaders, token, xApiKey, timeout = 60000, ...customConfig }: RequestOptions = {}
 ): Promise<ApiResponse<T>> {
   const headers = new Headers({
     'Content-Type': 'application/json',
@@ -77,6 +76,9 @@ export async function apiClient<T>(
 
   } catch (error: any) {
     clearTimeout(timeoutId);
+    if (error.name === 'AbortError') {
+      return { data: undefined, message: 'Request took too long (Timeout)', status: false };
+    }
     return { data: undefined, message: error.message || 'Network error', status: false };
   }
 }
