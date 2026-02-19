@@ -99,20 +99,20 @@ const BillsPage: React.FC = () => {
         isOpen={showPinModal} 
         onClose={() => setShowPinModal(false)} 
         onSuccess={handlePurchase}
-        title="Authorize Payment"
+        title="Confirm Payment"
         description={`Paying ₦${numericAmount.toLocaleString()} for Electricity Bill`}
       />
 
       <div className="text-center">
-        <h2 className="text-4xl font-black text-gray-900 tracking-tighter mb-2">Pay Bills</h2>
-        <p className="text-gray-400 font-medium">Pay your electricity bills across all DISCOs instantly.</p>
+        <h2 className="text-4xl font-black text-gray-900 tracking-tighter mb-2">Pay Electricity Bill</h2>
+        <p className="text-gray-400 font-medium">Pay your light bill for any Disco instantly.</p>
       </div>
 
       <div className="bg-white p-8 lg:p-12 rounded-[2.5rem] lg:rounded-[3rem] shadow-xl border border-gray-50">
         <div className="space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
-              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-2">Service Provider</label>
+              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-2">Your Electricity Company (Disco)</label>
               <select 
                 className="w-full p-5 bg-gray-50 rounded-2xl font-black text-lg border-2 border-transparent focus:border-blue-600 outline-none transition-all appearance-none" 
                 value={selectedOperator?.id || ''} 
@@ -149,7 +149,7 @@ const BillsPage: React.FC = () => {
                 disabled={isVerifying || meterNumber.length < 5 || !selectedOperator}
                 className="px-8 bg-gray-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-black transition-all disabled:opacity-50"
               >
-                {isVerifying ? <Spinner /> : 'Verify'}
+                {isVerifying ? <Spinner /> : 'Check Meter'}
               </button>
             </div>
           </div>
@@ -194,7 +194,7 @@ const BillsPage: React.FC = () => {
               className="w-full bg-blue-600 hover:bg-black text-white font-black py-6 rounded-[2rem] shadow-2xl shadow-blue-200 transition-all duration-300 uppercase tracking-[0.2em] text-sm"
               disabled={!customerName || !amount || !phoneNumber || isPurchasing}
              >
-                {isPurchasing ? <Spinner /> : 'Pay Now'}
+                {isPurchasing ? <Spinner /> : 'Pay Bill'}
              </button>
           </div>
         </div>

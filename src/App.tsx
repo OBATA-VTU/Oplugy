@@ -31,6 +31,7 @@ import ApiDocsPage from './pages/ApiDocsPage';
 import FundingPage from './pages/FundingPage';
 import ProfilePage from './pages/ProfilePage';
 import Spinner from './components/Spinner';
+import ScrollToTop from './components/ScrollToTop';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -92,6 +93,7 @@ const App: React.FC = () => {
     <NotificationProvider>
       <AuthProvider>
         <Router>
+          <ScrollToTop />
           <NotificationContainer />
           <Routes>
             <Route path="/" element={<LandingPage />} />

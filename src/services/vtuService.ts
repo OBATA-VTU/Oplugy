@@ -55,6 +55,7 @@ export const vtuService = {
     if (!user) return { status: false, message: 'Please login to continue.' };
     const config = await getSystemConfig();
     const server = config.routing?.airtime || 'server1';
+    const serverName = server === 'server1' ? 'Omega Server' : 'Boom Server';
 
     let serviceID = payload.network;
     if (server === 'server1') {
@@ -68,7 +69,7 @@ export const vtuService = {
     });
     
     if (res.status) {
-      await logTransaction(user.uid, 'AIRTIME', payload.amount, `${payload.network} Airtime`, `Recharge for ${payload.phone}`, 'SUCCESS', server.toUpperCase());
+      await logTransaction(user.uid, 'AIRTIME', payload.amount, `${payload.network} Airtime`, `Recharge for ${payload.phone}`, 'SUCCESS', serverName);
       return { status: true, message: res.message, data: res.data };
     }
     return res;
@@ -94,6 +95,7 @@ export const vtuService = {
     const userDoc = auth.currentUser ? await getDoc(doc(db, "users", auth.currentUser.uid)) : null;
     const role = (userDoc?.data()?.role as UserRole) || 'user';
     const server = payload.server || 'server1';
+    const config = await getSystemConfig();
     
     const res = await cipApiClient<any>(server === 'server1' ? 'services' : `data/plans?network=${payload.network}&type=${payload.type}`, { 
       method: 'GET', 
@@ -116,19 +118,19 @@ export const vtuService = {
           plans.push({
             id: planId,
             name: `${p.dataPlan} ${p.dataType}`,
-            amount: manual || (rawBase + 10), 
+            amount: manual || (rawBase + (config.pricing?.server1?.data_margin ?? 10)), 
             validity: p.validity
           });
         }
       } else {
-        // SERVER 2 LOGIC: Base API + 10 Fixed Profit for display and charge
+        const margin = config.pricing?.server2?.data_margin ?? 10;
         const rawPlans = (res.data || []) as any[];
         plans = rawPlans.map((p: any) => {
           const rawBase = Number(String(p.price || p.amount || 0).replace(/,/g, ''));
           return {
             id: String(p.id || p.code),
             name: p.name,
-            amount: rawBase + 10,
+            amount: rawBase + margin,
             validity: p.validity || '30 Days'
           };
         });
@@ -141,6 +143,7 @@ export const vtuService = {
   purchaseData: async (payload: { plan_id: string; phone_number: string; amount: number; network: string; plan_name: string; server: 'server1' | 'server2' }): Promise<ApiResponse<TransactionResponse>> => {
     const user = auth.currentUser;
     if (!user) return { status: false, message: 'Please login to continue.' };
+    const serverName = payload.server === 'server1' ? 'Omega Server' : 'Boom Server';
     
     const endpoint = payload.server === 'server1' ? 'data' : 'data/purchase';
     const res = await cipApiClient<any>(endpoint, { 
@@ -149,7 +152,7 @@ export const vtuService = {
     });
 
     if (res.status) {
-      await logTransaction(user.uid, 'DATA', payload.amount, `${payload.network} Data`, `Bundle ${payload.plan_name} for ${payload.phone_number}`, 'SUCCESS', payload.server.toUpperCase());
+      await logTransaction(user.uid, 'DATA', payload.amount, `${payload.network} Data`, `Bundle ${payload.plan_name} for ${payload.phone_number}`, 'SUCCESS', serverName);
     }
     return res;
   },
@@ -181,6 +184,7 @@ export const vtuService = {
     if (!user) return { status: false, message: 'Please login to continue.' };
     const config = await getSystemConfig();
     const server = config.routing?.bills || 'server2';
+    const serverName = server === 'server1' ? 'Omega Server' : 'Boom Server';
     const endpoint = server === 'server1' ? 'payelectric' : 'electricity/purchase';
     
     const res = await cipApiClient<any>(endpoint, { 
@@ -188,24 +192,24 @@ export const vtuService = {
       method: 'POST' 
     });
     if (res.status) {
-      await logTransaction(user.uid, 'ELECTRICITY', payload.amount, `${payload.provider_name} Power`, `Meter ${payload.meter_number}`, 'SUCCESS', server.toUpperCase());
+      await logTransaction(user.uid, 'ELECTRICITY', payload.amount, `${payload.provider_name} Power`, `Meter ${payload.meter_number}`, 'SUCCESS', serverName);
     }
     return res;
   },
 
   getCablePlans: async (billerName: string): Promise<ApiResponse<DataPlan[]>> => {
-    // Force Cable to Server 2 (CIP Topup) as requested
     const server = 'server2';
+    const config = await getSystemConfig();
+    const margin = config.pricing?.server2?.cable_margin ?? 100;
     const res = await cipApiClient<any>(`cable/plans?biller=${billerName}`, { method: 'GET', data: { server } });
     if (res.status && res.data) {
         const rawPlans = (res.data || []) as any[];
-        // Always apply fixed 10 Naira profit for Server 2
         return { 
           status: true, 
           data: rawPlans.map((p: any) => ({
             id: String(p.id || p.code),
             name: p.name,
-            amount: Number(String(p.price || p.amount || 0).replace(/,/g, '')) + 10,
+            amount: Number(String(p.price || p.amount || 0).replace(/,/g, '')) + margin,
             validity: 'Monthly'
           }))
         };
@@ -223,13 +227,12 @@ export const vtuService = {
     const user = auth.currentUser;
     if (!user) return { status: false, message: 'Please login to continue.' };
     // Force Cable to Server 2 (CIP Topup)
-    const server = 'server2';
     const res = await cipApiClient<any>('cable/purchase', { 
-      data: { ...payload, iucNum: payload.smartCardNumber, serviceID: payload.planCode, server }, 
+      data: { ...payload, iucNum: payload.smartCardNumber, serviceID: payload.planCode, server: 'server2' }, 
       method: 'POST' 
     });
     if (res.status) {
-      await logTransaction(user.uid, 'CABLE', payload.amount, `${payload.biller} TV`, `${payload.plan_name} for ${payload.smartCardNumber}`, 'SUCCESS', 'SERVER 2');
+      await logTransaction(user.uid, 'CABLE', payload.amount, `${payload.biller} TV`, `${payload.plan_name} for ${payload.smartCardNumber}`, 'SUCCESS', 'Boom Server');
     }
     return res;
   },
@@ -239,6 +242,7 @@ export const vtuService = {
     if (!user) return { status: false, message: 'Please login to continue.' };
     const config = await getSystemConfig();
     const server = config.routing?.education || 'server1';
+    const serverName = server === 'server1' ? 'Omega Server' : 'Boom Server';
     
     const res = await cipApiClient<any>('education', { 
       data: { serviceID: payload.type, quantity: payload.quantity, server }, 
@@ -246,7 +250,7 @@ export const vtuService = {
     });
 
     if (res.status) {
-      await logTransaction(user.uid, 'EDUCATION', payload.amount, `${payload.type} PIN`, `Quantity: ${payload.quantity}`, 'SUCCESS', server.toUpperCase());
+      await logTransaction(user.uid, 'EDUCATION', payload.amount, `${payload.type} PIN`, `Quantity: ${payload.quantity}`, 'SUCCESS', serverName);
     }
     return res;
   },

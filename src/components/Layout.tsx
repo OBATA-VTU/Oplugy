@@ -129,13 +129,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           {location.pathname !== '/admin' && <ChatBubble />}
         </main>
       </div>
-
-      <button 
-        onClick={() => navigate('/funding')}
-        className="fixed bottom-24 right-8 lg:hidden w-16 h-16 bg-blue-600 text-white rounded-full shadow-[0_20px_50px_rgba(37,99,235,0.4)] flex items-center justify-center z-50 hover:scale-110 active:scale-95 transition-all"
-      >
-        <WalletIcon />
-      </button>
     </div>
   );
 };

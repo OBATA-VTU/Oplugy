@@ -64,13 +64,13 @@ const EducationPage: React.FC = () => {
         isOpen={showPinModal} 
         onClose={() => setShowPinModal(false)} 
         onSuccess={handlePurchase}
-        title="Authorize Delivery"
+        title="Confirm Payment"
         description={`Authorizing ₦${totalAmount.toLocaleString()} for ${quantity}x ${selectedExam?.name}`}
       />
 
       <div className="text-center">
-        <h2 className="text-4xl font-black text-gray-900 tracking-tighter mb-2 uppercase">Exam Hub</h2>
-        <p className="text-gray-400 font-medium">Generate WAEC, NECO, and NABTEB result pins instantly.</p>
+        <h2 className="text-4xl font-black text-gray-900 tracking-tighter mb-2 uppercase">Buy Exam Pin</h2>
+        <p className="text-gray-400 font-medium">Get pins to check WAEC, NECO, and NABTEB results.</p>
       </div>
 
       <div className="bg-white p-8 lg:p-12 rounded-[3.5rem] shadow-2xl border border-gray-50">
@@ -112,7 +112,7 @@ const EducationPage: React.FC = () => {
                   />
                </div>
                <div className="bg-gray-900 p-6 rounded-3xl flex flex-col justify-center border-t-4 border-blue-600 shadow-2xl shadow-blue-50">
-                  <p className="text-[10px] font-black text-white/30 uppercase tracking-widest mb-1">Payload Cost</p>
+                  <p className="text-[10px] font-black text-white/30 uppercase tracking-widest mb-1">Total Amount</p>
                   <p className="text-4xl font-black text-white tracking-tighter">₦{totalAmount.toLocaleString()}</p>
                </div>
             </div>
@@ -122,14 +122,14 @@ const EducationPage: React.FC = () => {
               disabled={!selectedExam || isPurchasing}
               className="w-full bg-blue-600 hover:bg-black text-white py-8 rounded-[2.5rem] font-black uppercase tracking-[0.3em] text-sm shadow-2xl shadow-blue-100 transition-all transform active:scale-95 disabled:opacity-50"
             >
-               {isPurchasing ? <Spinner /> : 'Generate Secure Pins'}
+               {isPurchasing ? <Spinner /> : 'Buy Pins'}
             </button>
          </div>
       </div>
 
       <div className="p-8 bg-blue-50/50 rounded-[3rem] border-2 border-blue-100 flex items-start space-x-6">
          <div className="text-blue-600 shrink-0 mt-1"><ShieldCheckIcon /></div>
-         <p className="text-[11px] font-bold text-blue-900 uppercase tracking-widest leading-relaxed">Generated pins will be displayed in your ledger immediately after successful node synchronization.</p>
+         <p className="text-[11px] font-bold text-blue-900 uppercase tracking-widest leading-relaxed">After payment, you will find your pin(s) in your Transaction History.</p>
       </div>
     </div>
   );

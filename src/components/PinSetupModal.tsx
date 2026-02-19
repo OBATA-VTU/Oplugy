@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Spinner from './Spinner';
 import { ShieldCheckIcon } from './Icons';
@@ -22,7 +21,7 @@ const PinSetupModal: React.FC<PinSetupModalProps> = ({ onSuccess }) => {
       return;
     }
     if (pin !== confirmPin) {
-      setError('PINs do not match.');
+      setError('The two PINs do not match.');
       return;
     }
 
@@ -43,8 +42,8 @@ const PinSetupModal: React.FC<PinSetupModalProps> = ({ onSuccess }) => {
           <div className="w-20 h-20 bg-blue-50 text-blue-600 rounded-[2rem] flex items-center justify-center mx-auto mb-8">
             <ShieldCheckIcon />
           </div>
-          <h2 className="text-3xl font-black text-gray-900 tracking-tighter">Security Protocol</h2>
-          <p className="text-gray-400 font-medium mt-3 text-sm">Configure your 5-digit Transaction PIN to authenticate all wallet operations.</p>
+          <h2 className="text-3xl font-black text-gray-900 tracking-tighter">Set Your Security PIN</h2>
+          <p className="text-gray-400 font-medium mt-3 text-sm">Create a 5-digit PIN. You will use this to approve all payments from your wallet.</p>
         </div>
 
         {error && (
@@ -56,7 +55,7 @@ const PinSetupModal: React.FC<PinSetupModalProps> = ({ onSuccess }) => {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-4">
             <div>
-              <label className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-2">New PIN</label>
+              <label className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-2">Enter 5-Digit PIN</label>
               <input 
                 type="password" 
                 inputMode="numeric"
@@ -86,7 +85,7 @@ const PinSetupModal: React.FC<PinSetupModalProps> = ({ onSuccess }) => {
             disabled={loading || pin.length !== 5}
             className="w-full bg-blue-600 hover:bg-black text-white py-6 rounded-3xl font-black uppercase tracking-widest text-[11px] shadow-xl shadow-blue-100 transition-all disabled:opacity-50"
           >
-            {loading ? <Spinner /> : 'Secure My Account'}
+            {loading ? <Spinner /> : 'Save and Secure My Account'}
           </button>
         </form>
       </div>

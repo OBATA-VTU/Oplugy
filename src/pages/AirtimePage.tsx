@@ -23,7 +23,7 @@ const AirtimePage: React.FC = () => {
 
   const handlePrePurchaseCheck = () => {
     if (!selectedOperator || !phoneNumber || !numericAmount) {
-      addNotification('Please fill all required fields.', 'warning');
+      addNotification('Please fill all fields.', 'warning');
       return;
     }
     if (!/^\d{11}$/.test(phoneNumber)) {
@@ -31,11 +31,11 @@ const AirtimePage: React.FC = () => {
       return;
     }
     if (numericAmount < 50) {
-      addNotification('Minimum purchase is ₦50.', 'warning');
+      addNotification('The minimum airtime amount is ₦50.', 'warning');
       return;
     }
     if (walletBalance !== null && numericAmount > walletBalance) {
-      addNotification('Insufficient wallet balance.', 'error');
+      addNotification('You do not have enough money in your wallet.', 'error');
       return;
     }
     setShowConfirmModal(true);
@@ -61,7 +61,7 @@ const AirtimePage: React.FC = () => {
     const response = await vtuService.purchaseAirtime(payload);
 
     if (response.status && response.data) {
-      addNotification(`Airtime sent successfully to ${phoneNumber}.`, 'success');
+      addNotification(`Airtime sent to ${phoneNumber}.`, 'success');
       if (walletBalance !== null) {
         updateWalletBalance(walletBalance - numericAmount);
       }
@@ -82,19 +82,19 @@ const AirtimePage: React.FC = () => {
         isOpen={showPinModal} 
         onClose={() => setShowPinModal(false)} 
         onSuccess={handlePurchase}
-        title="Verify Purchase"
-        description={`Paying ₦${numericAmount.toLocaleString()} for ${selectedOperator?.name} Airtime`}
+        title="Enter PIN to Purchase"
+        description={`You are paying ₦${numericAmount.toLocaleString()} for ${selectedOperator?.name} Airtime.`}
       />
 
       <div className="text-center">
         <h2 className="text-4xl font-black text-gray-900 tracking-tighter mb-2">Buy Airtime</h2>
-        <p className="text-gray-400 font-medium">Get instant recharge on all mobile networks.</p>
+        <p className="text-gray-400 font-medium">Instantly top-up airtime for any network.</p>
       </div>
 
       <div className="bg-white p-10 rounded-[3rem] shadow-xl border border-gray-50">
         <div className="space-y-10">
           <div>
-            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 text-center">Select Network</label>
+            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 text-center">1. Choose Network</label>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {operators.map(op => (
                 <button
@@ -111,7 +111,7 @@ const AirtimePage: React.FC = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
-              <label htmlFor="phoneNumber" className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-2">Phone Number</label>
+              <label htmlFor="phoneNumber" className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-2">2. Phone Number</label>
               <input
                 type="tel"
                 id="phoneNumber"
@@ -126,14 +126,14 @@ const AirtimePage: React.FC = () => {
             </div>
 
             <div>
-              <label htmlFor="amount" className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-2">Amount (₦)</label>
+              <label htmlFor="amount" className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-2">3. Amount (₦)</label>
               <div className="relative">
                 <span className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 font-bold">₦</span>
                 <input
                   type="number"
                   id="amount"
                   className="w-full p-5 pl-10 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-blue-50 focus:bg-white focus:border-blue-200 transition-all text-xl font-black tracking-tight"
-                  placeholder="0.00"
+                  placeholder="50"
                   min="50"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
@@ -149,7 +149,7 @@ const AirtimePage: React.FC = () => {
             className="w-full bg-blue-600 hover:bg-black text-white font-black py-6 rounded-[2rem] shadow-2xl shadow-blue-200 transition-all duration-300 transform hover:-translate-y-1 disabled:opacity-50 flex items-center justify-center uppercase tracking-[0.2em] text-sm"
             disabled={!isFormValid || isPurchasing}
           >
-            {isPurchasing ? <Spinner /> : 'Buy Now'}
+            {isPurchasing ? <Spinner /> : 'Buy Airtime'}
           </button>
         </div>
       </div>
@@ -157,12 +157,12 @@ const AirtimePage: React.FC = () => {
       <Modal
         isOpen={showConfirmModal}
         onClose={() => setShowConfirmModal(false)}
-        title="Confirm Airtime"
+        title="Confirm Top-up"
         footer={
           <div className="flex gap-4 w-full">
             <button className="flex-1 bg-gray-100 text-gray-500 font-black py-4 rounded-2xl uppercase tracking-widest text-[10px]" onClick={() => setShowConfirmModal(false)}>Cancel</button>
             <button className="flex-2 bg-blue-600 hover:bg-black text-white font-black py-4 rounded-2xl uppercase tracking-widest text-[10px] flex items-center justify-center min-w-[150px]" onClick={startPinVerification} disabled={isPurchasing}>
-              {isPurchasing ? <Spinner /> : `Authorize`}
+              {isPurchasing ? <Spinner /> : `Yes, Pay`}
             </button>
           </div>
         }
@@ -171,7 +171,7 @@ const AirtimePage: React.FC = () => {
            <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
               <img src={selectedOperator?.image} alt={selectedOperator?.name} className="w-8 h-8 object-contain" />
            </div>
-           <p className="text-gray-500 font-medium">You are about to buy <span className="text-gray-900 font-black tracking-tight">₦{numericAmount.toLocaleString()}</span> airtime for:</p>
+           <p className="text-gray-500 font-medium">You are about to send <span className="text-gray-900 font-black tracking-tight">₦{numericAmount.toLocaleString()}</span> airtime to:</p>
            <h3 className="text-3xl font-black text-gray-900 tracking-tighter">{phoneNumber}</h3>
            <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Network: {selectedOperator?.name}</p>
         </div>

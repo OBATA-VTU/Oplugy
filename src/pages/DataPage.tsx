@@ -12,7 +12,7 @@ type PageStep = 'selection' | 'form';
 
 const DataPage: React.FC = () => {
   const { addNotification } = useNotifications();
-  const { fetchWalletBalance, walletBalance } = useAuth();
+  const { walletBalance, updateWalletBalance } = useAuth();
   
   const [step, setStep] = useState<PageStep>('selection');
   const [server, setServer] = useState<'server1' | 'server2'>('server1');
@@ -20,72 +20,70 @@ const DataPage: React.FC = () => {
   const [dataTypes, setDataTypes] = useState<{id: string, name: string}[]>(DATA_PLAN_TYPES);
   const [dataPlans, setDataPlans] = useState<DataPlan[]>([]);
   const [selectedOperator, setSelectedOperator] = useState<Operator | null>(null);
-  const [selectedDataType, setSelectedDataType] = useState<string>('');
+  const [selectedType, setSelectedType] = useState<string | null>(null);
   const [selectedPlan, setSelectedPlan] = useState<DataPlan | null>(null);
   const [phoneNumber, setPhoneNumber] = useState('');
   
-  const [isFetchingPlans, setIsFetchingPlans] = useState(false);
   const [isFetchingTypes, setIsFetchingTypes] = useState(false);
+  const [isFetchingPlans, setIsFetchingPlans] = useState(false);
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [showPinModal, setShowPinModal] = useState(false);
 
-  // Deep reset on transition to prevent state pollution between servers
-  const handleServerTransition = (selected: 'server1' | 'server2') => {
-    setServer(selected);
-    setSelectedOperator(null);
-    setSelectedDataType('');
-    setSelectedPlan(null);
+  const resetSelections = () => {
+    setSelectedType(null);
     setDataPlans([]);
-    setStep('form');
+    setSelectedPlan(null);
   };
 
-  useEffect(() => {
-    const loadTypes = async () => {
-      if (step === 'form' && server === 'server1' && selectedOperator) {
-        setIsFetchingTypes(true);
-        setSelectedDataType('');
-        setDataPlans([]);
-        const res = await vtuService.getDataCategories(selectedOperator.id, 'server1');
-        if (res.status && res.data) {
-          setDataTypes(res.data.map(t => ({ id: t, name: t })));
-        } else {
-          setDataTypes(DATA_PLAN_TYPES);
-        }
-        setIsFetchingTypes(false);
-      } else {
-        setDataTypes(DATA_PLAN_TYPES);
-      }
-    };
-    loadTypes();
-  }, [server, selectedOperator, step]);
-
-  const fetchPlans = useCallback(async (network: string, type: string, targetServer: 'server1' | 'server2') => {
-    setIsFetchingPlans(true);
-    setDataPlans([]);
-    setSelectedPlan(null);
-    const response = await vtuService.getDataPlans({ network, type, server: targetServer });
-    if (response.status && response.data) {
-      setDataPlans(response.data);
+  const fetchTypes = useCallback(async () => {
+    if (!selectedOperator || server !== 'server1') return;
+    setIsFetchingTypes(true);
+    resetSelections();
+    const res = await vtuService.getDataCategories(selectedOperator.id, 'server1');
+    if (res.status && res.data) {
+      setDataTypes(res.data.map(d => ({ id: d, name: d })));
     } else {
-      addNotification(response.message || 'Error loading bundles from this node.', 'error');
+      setDataTypes(DATA_PLAN_TYPES);
+    }
+    setIsFetchingTypes(false);
+  }, [selectedOperator, server]);
+
+  const fetchPlans = useCallback(async () => {
+    if (!selectedOperator || (server === 'server1' && !selectedType)) return;
+    setIsFetchingPlans(true);
+    setSelectedPlan(null);
+    const payload = { network: selectedOperator.id, type: selectedType || '', server };
+    const res = await vtuService.getDataPlans(payload);
+    if (res.status && res.data) {
+      setDataPlans(res.data);
+    } else {
+      addNotification(res.message || 'Error loading plans.', 'error');
+      setDataPlans([]);
     }
     setIsFetchingPlans(false);
-  }, [addNotification]);
+  }, [selectedOperator, selectedType, server, addNotification]);
 
   useEffect(() => {
-    if (step === 'form' && selectedOperator && selectedDataType) {
-      fetchPlans(selectedOperator.id, selectedDataType, server);
+    if (server === 'server1') {
+      fetchTypes();
+    } else {
+      resetSelections();
+      setDataTypes([]);
+      if (selectedOperator) fetchPlans();
     }
-  }, [selectedOperator, selectedDataType, server, step, fetchPlans]);
+  }, [selectedOperator, server, fetchTypes, fetchPlans]);
+  
+  useEffect(() => {
+    if (selectedType && server === 'server1') fetchPlans();
+  }, [selectedType, server, fetchPlans]);
 
-  const handlePrePurchaseCheck = () => {
-    if (!selectedPlan || !phoneNumber) return;
-    if (phoneNumber.length !== 11) {
-      addNotification('Invalid phone number format.', 'warning');
+  const handlePrePurchase = () => {
+    if (!selectedPlan || !/^\d{11}$/.test(phoneNumber)) {
+      addNotification('Please enter a valid 11-digit phone number.', 'warning');
       return;
     }
     if (walletBalance !== null && selectedPlan.amount > walletBalance) {
-      addNotification('Insufficient wallet balance.', 'error');
+      addNotification('Insufficient funds.', 'error');
       return;
     }
     setShowPinModal(true);
@@ -93,161 +91,133 @@ const DataPage: React.FC = () => {
 
   const handlePurchase = async () => {
     if (!selectedPlan || !phoneNumber || isPurchasing) return;
+    
     setIsPurchasing(true);
     setShowPinModal(false);
-    
-    const response = await vtuService.purchaseData({ 
-      phone_number: phoneNumber, 
+
+    const payload = {
       plan_id: selectedPlan.id,
+      phone_number: phoneNumber,
       amount: selectedPlan.amount,
       network: selectedOperator!.id,
       plan_name: selectedPlan.name,
-      server: server
-    });
+      server,
+    };
 
-    if (response.status) {
-      addNotification(`Success! ${selectedPlan.name} sent to ${phoneNumber}.`, 'success');
+    const res = await vtuService.purchaseData(payload);
+    
+    if (res.status) {
+      addNotification(`Data sent to ${phoneNumber}.`, 'success');
+      updateWalletBalance((walletBalance || 0) - selectedPlan.amount);
       setPhoneNumber('');
       setSelectedPlan(null);
-      await fetchWalletBalance();
     } else {
-      addNotification(response.message || 'Node transaction failed.', 'error');
+      addNotification(res.message || 'Purchase failed.', 'error');
     }
     setIsPurchasing(false);
   };
-
-  if (step === 'selection') {
-    return (
-      <div className="max-w-6xl mx-auto space-y-16 animate-in fade-in slide-in-from-bottom-8 duration-1000 pb-24">
-        <div className="text-center space-y-6">
-          <h2 className="text-[11px] font-black text-blue-600 uppercase tracking-[0.6em] mb-4">Traffic Control</h2>
-          <h1 className="text-6xl lg:text-[110px] font-black text-gray-900 tracking-tighter leading-[0.8] mb-4">Choose <br /><span className="text-blue-600">Your Engine.</span></h1>
-          <p className="text-gray-400 font-medium text-xl max-w-xl mx-auto leading-relaxed italic">Different nodes offer unique bundles and pricing tiers. Select one to proceed.</p>
-        </div>
-
-        {/* PROMINENT PRICE NOTICE */}
-        <div className="relative overflow-hidden">
-           <div className="absolute inset-0 bg-blue-600 rounded-[3rem] blur-[100px] opacity-5"></div>
-           <div className="relative bg-white border border-gray-100 p-10 lg:p-14 rounded-[3.5rem] flex flex-col lg:flex-row items-center gap-10 shadow-2xl">
-              <div className="w-20 h-20 bg-blue-50 text-blue-600 rounded-3xl flex items-center justify-center shrink-0 shadow-inner">
-                 <ShieldCheckIcon />
-              </div>
-              <div className="text-center lg:text-left flex-1">
-                 <h3 className="text-gray-900 font-black text-2xl tracking-tighter mb-2">Multi-Node Pricing Protocol</h3>
-                 <p className="text-gray-400 font-bold text-lg leading-snug">Prices on <span className="text-blue-600">Node 1</span> are manually managed, while <span className="text-gray-900">Node 2</span> follows automatic API rates. We recommend checking both nodes to ensure you get the absolute best rate for your bundle.</p>
-              </div>
-              <div className="flex flex-col items-center border-l border-gray-100 pl-10 hidden lg:flex">
-                 <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest mb-2">Encryption</span>
-                 <span className="bg-gray-950 text-white px-6 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest">SSL SECURE</span>
-              </div>
-           </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-           <ServerCard 
-             title="Classic Fulfillment"
-             id="Node 01"
-             desc="Best for SME Plus, Corporate Gifting, and specialty bundles. Manual rates applied."
-             color="blue"
-             onClick={() => handleServerTransition('server1')}
-           />
-           <ServerCard 
-             title="Hyper-Velocity"
-             id="Node 02"
-             desc="Ultra-fast synchronization with automatic market rates. Fixed profit margins applied."
-             color="black"
-             onClick={() => handleServerTransition('server2')}
-           />
-        </div>
-      </div>
-    );
-  }
+  
+  const handleStartPurchase = (op: Operator) => {
+    setSelectedOperator(op);
+    setStep('form');
+  };
 
   return (
-    <div className="max-w-2xl mx-auto space-y-10 animate-in fade-in slide-in-from-right-8 duration-700 pb-20">
+    <div className="max-w-4xl mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <PinPromptModal 
         isOpen={showPinModal} 
         onClose={() => setShowPinModal(false)} 
         onSuccess={handlePurchase}
-        title="Authorize Data Transfer"
-        description={`Approving ₦${selectedPlan?.amount?.toLocaleString()} for ${phoneNumber} on ${server.toUpperCase()}`}
+        title="Confirm Your PIN"
+        description={`You are paying ₦${selectedPlan?.amount.toLocaleString()} for ${selectedPlan?.name}`}
       />
 
-      <div className="flex justify-between items-center bg-white p-4 rounded-[2.5rem] border border-gray-100 shadow-xl">
-         <button onClick={() => setStep('selection')} className="px-8 py-4 bg-gray-50 rounded-2xl text-[10px] font-black uppercase tracking-widest text-gray-400 hover:bg-gray-900 hover:text-white transition-all flex items-center gap-2 group">
-            <span className="rotate-180 group-hover:-translate-x-1 transition-transform"><ArrowIcon /></span> Change Engine
-         </button>
-         <div className={`px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-2xl ${server === 'server1' ? 'bg-blue-600 text-white' : 'bg-gray-900 text-white'}`}>
-            {server === 'server1' ? 'Active: Node 01' : 'Active: Node 02'}
-         </div>
+      <div className="text-center">
+        <h2 className="text-4xl font-black text-gray-900 tracking-tighter mb-2">Buy Data</h2>
+        <p className="text-gray-400 font-medium">Enjoy cheap and fast data for all networks.</p>
       </div>
 
-      <div className="bg-white p-10 lg:p-16 rounded-[4rem] shadow-2xl border border-gray-50 space-y-12">
-        <div className="space-y-10">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div>
-              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-4">Network Node</label>
-              <select className="w-full p-7 bg-gray-50 rounded-3xl font-black text-xl border-4 border-transparent focus:border-blue-600 outline-none transition-all appearance-none shadow-sm" value={selectedOperator?.id || ''} onChange={(e) => {
-                setSelectedOperator(operators.find(o => o.id === e.target.value) || null);
-                setSelectedDataType('');
-                setDataPlans([]);
-              }}>
-                <option value="">Select Network</option>
-                {operators.map(op => <option key={op.id} value={op.id}>{op.name}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-4">Payload Type</label>
-              <select className="w-full p-7 bg-gray-50 rounded-3xl font-black text-xl border-4 border-transparent focus:border-blue-600 outline-none transition-all appearance-none shadow-sm disabled:opacity-50" value={selectedDataType} onChange={(e) => setSelectedDataType(e.target.value)} disabled={!selectedOperator || isFetchingTypes}>
-                <option value="">{isFetchingTypes ? 'Synchronizing...' : 'Select Type'}</option>
-                {dataTypes.map(type => <option key={type.id} value={type.id}>{type.name}</option>)}
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-4">Bundle Configuration</label>
-            <select className="w-full p-7 bg-gray-50 rounded-3xl font-black text-xl border-4 border-transparent focus:border-blue-600 outline-none appearance-none shadow-sm disabled:opacity-50" value={selectedPlan?.id || ''} onChange={(e) => setSelectedPlan(dataPlans.find(p => p.id === e.target.value) || null)} disabled={isFetchingPlans || dataPlans.length === 0}>
-              <option value="">{isFetchingPlans ? 'Retrieving Manifest...' : dataPlans.length === 0 ? 'Awaiting Selection' : 'Choose Configuration'}</option>
-              {dataPlans.map(plan => (
-                <option key={plan.id} value={plan.id}>
-                  {`${plan.name} - ₦${plan.amount.toLocaleString()} (${plan.validity})`}
-                </option>
+      {step === 'selection' && (
+        <div className="space-y-12">
+           <div className="flex p-2 bg-white rounded-3xl border border-gray-100 shadow-xl w-full max-w-lg mx-auto">
+              <ServerBtn label="Omega Server" desc="Faster & Cheaper" active={server === 'server1'} onClick={() => setServer('server1')} />
+              <ServerBtn label="Boom Server" desc="More Reliable" active={server === 'server2'} onClick={() => setServer('server2')} />
+           </div>
+           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+              {operators.map(op => (
+                <button 
+                  key={op.id} 
+                  onClick={() => handleStartPurchase(op)}
+                  className="p-8 border-4 border-transparent rounded-[3rem] flex flex-col items-center gap-6 bg-white shadow-xl hover:border-blue-600 transition-all group"
+                >
+                   <img src={op.image} alt={op.name} className="h-20 w-20 object-contain transition-transform group-hover:scale-110" />
+                   <span className="text-sm font-black text-gray-900 uppercase tracking-widest">{op.name}</span>
+                </button>
               ))}
-            </select>
-            {isFetchingPlans && <div className="mt-6 flex justify-center"><Spinner /></div>}
-          </div>
-
-          <div>
-            <label htmlFor="phoneNumber" className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-4">Terminal Address (Phone)</label>
-            <input type="tel" id="phoneNumber" className="w-full p-8 bg-gray-50 border-4 border-gray-100 rounded-[2.5rem] focus:ring-8 focus:ring-blue-50 focus:bg-white focus:border-blue-200 transition-all text-4xl font-black tracking-tight outline-none shadow-inner" placeholder="08..." value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))} maxLength={11} required disabled={isPurchasing} />
-          </div>
-
-          <button onClick={handlePrePurchaseCheck} className="w-full bg-blue-600 hover:bg-black text-white font-black py-10 rounded-[3rem] shadow-2xl shadow-blue-200 transition-all duration-300 disabled:opacity-50 uppercase tracking-[0.4em] text-sm transform active:scale-95" disabled={!selectedPlan || phoneNumber.length !== 11 || isPurchasing}>
-            {isPurchasing ? <Spinner /> : 'Initiate Dispatch'}
-          </button>
+           </div>
         </div>
-      </div>
+      )}
+
+      {step === 'form' && selectedOperator && (
+         <div className="space-y-10">
+            <button onClick={() => setStep('selection')} className="flex items-center space-x-3 text-sm font-black text-gray-400 hover:text-blue-600 transition-all group">
+               <span className="p-2 bg-gray-100 rounded-full group-hover:bg-blue-50 transition-all"><ArrowIcon /></span>
+               <span>Go Back & Choose Network</span>
+            </button>
+            <div className="bg-white p-12 rounded-[4rem] shadow-2xl border border-gray-50 space-y-10">
+               <div className="flex justify-between items-center">
+                  <div className="flex items-center space-x-6">
+                     <img src={selectedOperator.image} alt={selectedOperator.name} className="h-16 w-16" />
+                     <div>
+                        <p className="text-3xl font-black text-gray-900 tracking-tight">{selectedOperator.name}</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-blue-600">{server === 'server1' ? 'Omega Server' : 'Boom Server'}</p>
+                     </div>
+                  </div>
+               </div>
+
+               {server === 'server1' && (
+                 <div className="flex p-1 bg-gray-50 rounded-2xl border border-gray-100 overflow-x-auto no-scrollbar">
+                   {isFetchingTypes ? <Spinner /> : dataTypes.map(dt => (
+                     <button key={dt.id} onClick={() => setSelectedType(dt.id)} className={`flex-1 px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${selectedType === dt.id ? 'bg-white shadow-md text-blue-600' : 'text-gray-400'}`}>
+                       {dt.name}
+                     </button>
+                   ))}
+                 </div>
+               )}
+               
+               {isFetchingPlans ? (
+                 <div className="h-64 flex items-center justify-center"><Spinner /></div>
+               ) : dataPlans.length > 0 ? (
+                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-h-[400px] overflow-y-auto custom-scrollbar p-2">
+                   {dataPlans.map(plan => (
+                     <button key={plan.id} onClick={() => setSelectedPlan(plan)} className={`p-6 border-4 rounded-3xl text-center transition-all ${selectedPlan?.id === plan.id ? 'border-blue-600 bg-blue-50' : 'border-gray-100 bg-white hover:border-gray-200'}`}>
+                       <p className="font-black text-gray-900 text-lg leading-tight">{plan.name}</p>
+                       <p className="font-black text-blue-600 text-2xl tracking-tighter mt-2">₦{plan.amount}</p>
+                       <p className="text-[9px] font-black uppercase tracking-widest text-gray-400 mt-2">{plan.validity}</p>
+                     </button>
+                   ))}
+                 </div>
+               ) : (server === 'server1' && selectedType) || (server === 'server2' && selectedOperator) ? (
+                 <div className="text-center py-12 text-gray-400 font-medium">No plans available for this category.</div>
+               ) : null}
+
+               <div className={`space-y-8 transition-opacity duration-500 ${selectedPlan ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
+                 <input type="tel" className="w-full p-6 bg-gray-50 border-4 border-gray-100 rounded-3xl text-2xl font-black tracking-tighter text-center outline-none focus:border-blue-600 focus:bg-white transition-all" placeholder="Enter Phone Number" value={phoneNumber} onChange={e => setPhoneNumber(e.target.value.replace(/\D/g, ''))} maxLength={11} />
+                 <button onClick={handlePrePurchase} disabled={isPurchasing || !selectedPlan || phoneNumber.length !== 11} className="w-full bg-blue-600 text-white font-black py-8 rounded-[2.5rem] shadow-2xl uppercase tracking-[0.3em] flex items-center justify-center space-x-4 hover:bg-black transition-all transform active:scale-95 disabled:opacity-50">
+                    {isPurchasing ? <Spinner /> : <><ShieldCheckIcon /><span>Buy Data Now</span></>}
+                 </button>
+               </div>
+            </div>
+         </div>
+      )}
     </div>
   );
 };
 
-const ServerCard = ({ title, id, desc, color, onClick }: any) => (
-  <button onClick={onClick} className="bg-white p-12 lg:p-16 rounded-[4rem] border-4 border-gray-50 text-left hover:border-blue-600 hover:shadow-[0_40px_80px_rgba(37,99,235,0.15)] transition-all duration-500 group relative overflow-hidden flex flex-col h-full active:scale-95">
-     <div className="relative z-10">
-        <div className={`w-20 h-20 ${color === 'blue' ? 'bg-blue-50 text-blue-600' : 'bg-gray-100 text-gray-900'} rounded-3xl flex items-center justify-center mb-12 group-hover:scale-110 group-hover:rotate-6 transition-all shadow-sm`}>
-           <BoltIcon />
-        </div>
-        <p className="text-[10px] font-black text-gray-300 uppercase tracking-[0.4em] mb-4">{id}</p>
-        <h3 className="text-4xl lg:text-5xl font-black text-gray-900 tracking-tighter mb-6 group-hover:text-blue-600 transition-colors leading-none">{title}</h3>
-        <p className="text-gray-400 font-medium text-lg leading-relaxed mb-16">{desc}</p>
-        
-        <div className="mt-auto flex items-center gap-4">
-           <span className="text-[11px] font-black uppercase tracking-widest text-blue-600">Enter Terminal</span>
-           <span className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center shadow-2xl group-hover:translate-x-3 transition-transform"><ArrowIcon /></span>
-        </div>
-     </div>
-     <div className="absolute -bottom-20 -right-20 w-80 h-80 bg-blue-50 rounded-full blur-[120px] opacity-0 group-hover:opacity-100 transition-opacity"></div>
+const ServerBtn = ({ label, desc, active, onClick }: any) => (
+  <button onClick={onClick} className={`flex-1 py-5 rounded-[2rem] text-center transition-all duration-300 transform ${active ? 'bg-blue-600 text-white shadow-2xl scale-105' : 'bg-transparent text-gray-400 hover:bg-gray-50 hover:text-gray-900'}`}>
+     <span className="font-black text-sm uppercase tracking-widest">{label}</span>
+     <span className={`block text-[9px] font-bold uppercase tracking-wider transition-all ${active ? 'text-blue-200' : 'text-gray-300'}`}>{desc}</span>
   </button>
 );
 

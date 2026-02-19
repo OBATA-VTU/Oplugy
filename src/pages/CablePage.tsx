@@ -103,20 +103,20 @@ const CablePage: React.FC = () => {
         isOpen={showPinModal} 
         onClose={() => setShowPinModal(false)} 
         onSuccess={handlePurchase}
-        title="Authorize Renewal"
+        title="Confirm Payment"
         description={`Paying for ${selectedPlan?.name} on ${selectedOperator?.name}`}
       />
 
       <div className="text-center">
-        <h2 className="text-4xl font-black text-gray-900 tracking-tighter mb-2">Cable TV</h2>
-        <p className="text-gray-400 font-medium">Renew your DStv, GOtv, and StarTimes subscriptions instantly.</p>
+        <h2 className="text-4xl font-black text-gray-900 tracking-tighter mb-2">Renew TV Subscription</h2>
+        <p className="text-gray-400 font-medium">Pay for DStv, GOtv, and Startimes, sharp sharp.</p>
       </div>
 
       <div className="bg-white p-8 lg:p-12 rounded-[2.5rem] lg:rounded-[3rem] shadow-xl border border-gray-50">
         <div className="space-y-8">
            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div>
-                 <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-2">Provider</label>
+                 <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-2">Select TV</label>
                  <select 
                   className="w-full p-5 bg-gray-50 rounded-2xl font-black text-lg border-2 border-transparent focus:border-blue-600 outline-none transition-all appearance-none" 
                   value={selectedOperator?.id || ''} 
@@ -131,7 +131,7 @@ const CablePage: React.FC = () => {
                  </select>
               </div>
               <div>
-                 <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-2">Smartcard / IUC</label>
+                 <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-2">Smartcard / IUC Number</label>
                  <div className="flex gap-3">
                     <input 
                       type="text" 
@@ -145,7 +145,7 @@ const CablePage: React.FC = () => {
                       disabled={isVerifying || smartcardNo.length < 5 || !selectedOperator}
                       className="px-6 bg-gray-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-black transition-all disabled:opacity-50"
                     >
-                      {isVerifying ? <Spinner /> : 'Verify'}
+                      {isVerifying ? <Spinner /> : 'Check'}
                     </button>
                  </div>
               </div>
@@ -198,17 +198,17 @@ const CablePage: React.FC = () => {
                 className="w-full bg-blue-600 hover:bg-black text-white font-black py-6 rounded-[2rem] shadow-2xl shadow-blue-200 transition-all duration-300 uppercase tracking-[0.2em] text-sm"
                 disabled={!customerName || !selectedPlan || phoneNumber.length !== 11 || isPurchasing}
               >
-                {isPurchasing ? <Spinner /> : 'Subscribe Now'}
+                {isPurchasing ? <Spinner /> : 'Pay Now'}
               </button>
            </div>
         </div>
       </div>
 
-      <Modal isOpen={showConfirmModal} onClose={() => setShowConfirmModal(false)} title="Verify Renewal" footer={
+      <Modal isOpen={showConfirmModal} onClose={() => setShowConfirmModal(false)} title="Confirm Payment" footer={
         <div className="flex gap-4 w-full">
           <button className="flex-1 bg-gray-100 text-gray-500 font-black py-4 rounded-2xl uppercase tracking-widest text-[10px]" onClick={() => setShowConfirmModal(false)}>Cancel</button>
           <button className="flex-2 bg-blue-600 hover:bg-black text-white font-black py-4 rounded-2xl uppercase tracking-widest text-[10px] flex items-center justify-center min-w-[150px]" onClick={startPinVerification} disabled={isPurchasing}>
-            {isPurchasing ? <Spinner /> : `Authorize`}
+            {isPurchasing ? <Spinner /> : `Confirm`}
           </button>
         </div>
       }>

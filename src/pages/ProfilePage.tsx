@@ -45,8 +45,8 @@ const ProfilePage: React.FC = () => {
     <div className="max-w-6xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-1000 pb-24">
       <div className="flex flex-col lg:flex-row justify-between lg:items-end gap-10">
         <div className="space-y-4">
-          <h2 className="text-[11px] font-black text-blue-600 uppercase tracking-[0.5em]">Account Settings</h2>
-          <h1 className="text-5xl lg:text-[80px] font-black text-gray-900 tracking-tighter leading-[0.85]">My <br /><span className="text-blue-600">Profile.</span></h1>
+          <h2 className="text-[11px] font-black text-blue-600 uppercase tracking-[0.5em]">My Account</h2>
+          <h1 className="text-5xl lg:text-[80px] font-black text-gray-900 tracking-tighter leading-[0.85]">Your <br /><span className="text-blue-600">Profile.</span></h1>
         </div>
         <div className="flex p-2 bg-white rounded-[2.5rem] border border-gray-100 shadow-2xl w-full lg:w-auto overflow-x-auto no-scrollbar">
            {(['ACCOUNT', 'SECURITY', 'DEVELOPER'] as const).map((tab) => (
@@ -55,7 +55,7 @@ const ProfilePage: React.FC = () => {
               onClick={() => setActiveTab(tab)}
               className={`flex-1 lg:flex-none px-10 py-5 rounded-[2rem] text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === tab ? 'bg-gray-900 text-white shadow-2xl scale-105' : 'text-gray-400 hover:text-gray-900'}`}
              >
-                {tab === 'DEVELOPER' ? 'API Keys' : tab === 'SECURITY' ? 'Security' : 'My Info'}
+                {tab === 'DEVELOPER' ? 'For Developers (API)' : tab === 'SECURITY' ? 'Security' : 'My Info'}
              </button>
            ))}
         </div>
@@ -94,8 +94,8 @@ const ProfilePage: React.FC = () => {
                {activeTab === 'ACCOUNT' && (
                  <div className="animate-in fade-in duration-700 space-y-16">
                     <div>
-                       <h3 className="text-5xl font-black text-gray-900 tracking-tighter mb-4">My Information</h3>
-                       <p className="text-gray-400 font-medium text-lg">Your basic account details registered on OBATA.</p>
+                       <h3 className="text-5xl font-black text-gray-900 tracking-tighter mb-4">Your Details</h3>
+                       <p className="text-gray-400 font-medium text-lg">This is your information registered with us.</p>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                        <ReadOnlyField label="Full Name" value={user?.fullName || 'Not set'} />
@@ -105,7 +105,7 @@ const ProfilePage: React.FC = () => {
                     </div>
                     <div className="p-10 bg-gray-50/50 rounded-[3rem] border border-gray-100 flex items-center space-x-8 backdrop-blur-sm">
                        <div className="w-16 h-16 bg-white rounded-3xl flex items-center justify-center shadow-lg text-gray-400"><ShieldCheckIcon /></div>
-                       <p className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] leading-relaxed">Profile Lock: Contact support if you need to change your registered email or name.</p>
+                       <p className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] leading-relaxed">To change your name or email, please contact support.</p>
                     </div>
                  </div>
                )}
@@ -113,8 +113,8 @@ const ProfilePage: React.FC = () => {
                {activeTab === 'SECURITY' && (
                  <div className="animate-in slide-in-from-right-8 duration-700 space-y-16">
                     <div>
-                       <h3 className="text-5xl font-black text-gray-900 tracking-tighter mb-4">Transaction PIN</h3>
-                       <p className="text-gray-400 font-medium text-lg">Set your 5-digit PIN to secure your wallet and authorize purchases.</p>
+                       <h3 className="text-5xl font-black text-gray-900 tracking-tighter mb-4">Security PIN</h3>
+                       <p className="text-gray-400 font-medium text-lg">Change your 5-digit PIN used to approve payments.</p>
                     </div>
                     <form onSubmit={handleUpdatePin} className="space-y-10 max-w-lg">
                        <InputGroup 
@@ -143,7 +143,7 @@ const ProfilePage: React.FC = () => {
                         disabled={isUpdating || pinForm.newPin.length !== 5}
                         className="w-full bg-blue-600 text-white py-8 lg:py-10 rounded-3xl font-black text-[12px] uppercase tracking-[0.4em] shadow-2xl shadow-blue-100 hover:bg-black transition-all transform active:scale-95 disabled:opacity-50"
                        >
-                          {isUpdating ? <Spinner /> : 'Save New PIN'}
+                          {isUpdating ? <Spinner /> : 'Save PIN'}
                        </button>
                     </form>
                  </div>
@@ -152,8 +152,8 @@ const ProfilePage: React.FC = () => {
                {activeTab === 'DEVELOPER' && (
                  <div className="animate-in slide-in-from-bottom-8 duration-700 space-y-16">
                     <div>
-                       <h3 className="text-5xl font-black text-gray-900 tracking-tighter mb-4">API Settings</h3>
-                       <p className="text-gray-400 font-medium text-lg leading-relaxed">Integrate our services into your own website or mobile app.</p>
+                       <h3 className="text-5xl font-black text-gray-900 tracking-tighter mb-4">Developer / API</h3>
+                       <p className="text-gray-400 font-medium text-lg leading-relaxed">For developers who want to connect to our services.</p>
                     </div>
                     
                     <div className="space-y-12">

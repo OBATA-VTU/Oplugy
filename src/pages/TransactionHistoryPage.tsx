@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { vtuService } from '../services/vtuService';
 import { TransactionResponse } from '../types';
@@ -71,7 +70,7 @@ const TransactionHistoryPage: React.FC = () => {
   if (loading) return (
     <div className="flex flex-col items-center justify-center p-20 space-y-4">
       <Spinner />
-      <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Accessing secure logs...</p>
+      <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Loading your history...</p>
     </div>
   );
 
@@ -85,8 +84,8 @@ const TransactionHistoryPage: React.FC = () => {
 
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
         <div>
-          <h2 className="text-4xl font-black text-gray-900 tracking-tighter">Activity Logs</h2>
-          <p className="text-gray-400 font-medium">Real-time ledger of your OBATA v2 transactions.</p>
+          <h2 className="text-4xl font-black text-gray-900 tracking-tighter">Transaction History</h2>
+          <p className="text-gray-400 font-medium">A list of all your activities on OBATA v2.</p>
         </div>
         
         <div className="flex items-center space-x-3">
@@ -164,8 +163,8 @@ const TransactionHistoryPage: React.FC = () => {
                         <HistoryIcon />
                       </div>
                       <div className="space-y-1">
-                        <p className="text-gray-900 font-black text-2xl tracking-tighter">No Activity Yet</p>
-                        <p className="text-gray-400 font-medium max-w-xs mx-auto">Perform a transaction from the dashboard to see your logs here.</p>
+                        <p className="text-gray-900 font-black text-2xl tracking-tighter">No History Yet</p>
+                        <p className="text-gray-400 font-medium max-w-xs mx-auto">Your recent transactions will appear here.</p>
                       </div>
                     </div>
                   </td>

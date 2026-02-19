@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Spinner from './Spinner';
 import { ShieldCheckIcon } from './Icons';
@@ -16,8 +15,8 @@ const PinPromptModal: React.FC<PinPromptModalProps> = ({
   isOpen, 
   onClose, 
   onSuccess, 
-  title = "Confirm Transaction", 
-  description = "Enter your 5-digit PIN to authorize this deduction." 
+  title = "Enter PIN to Continue", 
+  description = "Enter your 5-digit PIN to approve this payment." 
 }) => {
   const { user } = useAuth();
   const [pin, setPin] = useState('');
@@ -87,7 +86,7 @@ const PinPromptModal: React.FC<PinPromptModalProps> = ({
               disabled={isVerifying || pin.length !== 5}
               className="flex-2 bg-blue-600 hover:bg-black text-white py-4 px-8 rounded-2xl font-black uppercase tracking-widest text-[11px] shadow-xl shadow-blue-100 transition-all disabled:opacity-50"
              >
-                {isVerifying ? <Spinner /> : 'Confirm'}
+                {isVerifying ? <Spinner /> : 'Approve'}
              </button>
           </div>
         </form>
