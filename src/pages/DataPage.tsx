@@ -6,7 +6,7 @@ import { Operator, DataPlan } from '../types';
 import Spinner from '../components/Spinner';
 import PinPromptModal from '../components/PinPromptModal';
 import { DATA_NETWORKS, DATA_PLAN_TYPES } from '../constants';
-import { BoltIcon, ArrowIcon, ShieldCheckIcon } from '../components/Icons';
+import { ArrowIcon, ShieldCheckIcon } from '../components/Icons';
 
 type PageStep = 'selection' | 'form';
 
