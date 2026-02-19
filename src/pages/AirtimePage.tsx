@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNotifications } from '../hooks/useNotifications';
@@ -6,6 +5,7 @@ import { vtuService } from '../services/vtuService';
 import { Operator } from '../types';
 import Spinner from '../components/Spinner';
 import Modal from '../components/Modal';
+import PinPromptModal from '../components/PinPromptModal';
 import { AIRTIME_NETWORKS } from '../constants';
 
 const AirtimePage: React.FC = () => {
@@ -17,6 +17,7 @@ const AirtimePage: React.FC = () => {
   const [amount, setAmount] = useState('');
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showPinModal, setShowPinModal] = useState(false);
 
   const numericAmount = parseFloat(amount);
 
@@ -30,23 +31,26 @@ const AirtimePage: React.FC = () => {
       return;
     }
     if (numericAmount < 50) {
-      addNotification('Minimum airtime purchase is ₦50.', 'warning');
+      addNotification('Minimum purchase is ₦50.', 'warning');
+      return;
+    }
+    if (walletBalance !== null && numericAmount > walletBalance) {
+      addNotification('Insufficient wallet balance.', 'error');
       return;
     }
     setShowConfirmModal(true);
   };
 
+  const startPinVerification = () => {
+    setShowConfirmModal(false);
+    setShowPinModal(true);
+  };
+
   const handlePurchase = async () => {
     if (!selectedOperator || !phoneNumber || !numericAmount || isPurchasing) return;
 
-    if (walletBalance !== null && numericAmount > walletBalance) {
-      addNotification('Insufficient wallet balance.', 'error');
-      setShowConfirmModal(false);
-      return;
-    }
-
     setIsPurchasing(true);
-    setShowConfirmModal(false);
+    setShowPinModal(false);
 
     const payload = {
       phone: phoneNumber,
@@ -57,7 +61,7 @@ const AirtimePage: React.FC = () => {
     const response = await vtuService.purchaseAirtime(payload);
 
     if (response.status && response.data) {
-      addNotification(`Airtime purchase of ₦${numericAmount} for ${phoneNumber} was successful.`, 'success');
+      addNotification(`Airtime sent successfully to ${phoneNumber}.`, 'success');
       if (walletBalance !== null) {
         updateWalletBalance(walletBalance - numericAmount);
       }
@@ -65,7 +69,7 @@ const AirtimePage: React.FC = () => {
       setAmount('');
       setSelectedOperator(null);
     } else {
-      addNotification(response.message || 'Airtime purchase failed. Please check network status.', 'error');
+      addNotification(response.message || 'Purchase failed. Please try again.', 'error');
     }
     setIsPurchasing(false);
   };
@@ -74,9 +78,17 @@ const AirtimePage: React.FC = () => {
 
   return (
     <div className="max-w-2xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <PinPromptModal 
+        isOpen={showPinModal} 
+        onClose={() => setShowPinModal(false)} 
+        onSuccess={handlePurchase}
+        title="Verify Purchase"
+        description={`Paying ₦${numericAmount.toLocaleString()} for ${selectedOperator?.name} Airtime`}
+      />
+
       <div className="text-center">
-        <h2 className="text-4xl font-black text-gray-900 tracking-tighter mb-2">Airtime Recharge</h2>
-        <p className="text-gray-400 font-medium">Fast and reliable top-up across all networks.</p>
+        <h2 className="text-4xl font-black text-gray-900 tracking-tighter mb-2">Buy Airtime</h2>
+        <p className="text-gray-400 font-medium">Get instant recharge on all mobile networks.</p>
       </div>
 
       <div className="bg-white p-10 rounded-[3rem] shadow-xl border border-gray-50">
@@ -99,7 +111,7 @@ const AirtimePage: React.FC = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
-              <label htmlFor="phoneNumber" className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-2">Recipient Phone</label>
+              <label htmlFor="phoneNumber" className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-2">Phone Number</label>
               <input
                 type="tel"
                 id="phoneNumber"
@@ -137,7 +149,7 @@ const AirtimePage: React.FC = () => {
             className="w-full bg-blue-600 hover:bg-black text-white font-black py-6 rounded-[2rem] shadow-2xl shadow-blue-200 transition-all duration-300 transform hover:-translate-y-1 disabled:opacity-50 flex items-center justify-center uppercase tracking-[0.2em] text-sm"
             disabled={!isFormValid || isPurchasing}
           >
-            {isPurchasing ? <Spinner /> : 'Purchase Now'}
+            {isPurchasing ? <Spinner /> : 'Buy Now'}
           </button>
         </div>
       </div>
@@ -145,12 +157,12 @@ const AirtimePage: React.FC = () => {
       <Modal
         isOpen={showConfirmModal}
         onClose={() => setShowConfirmModal(false)}
-        title="Confirm Recharge"
+        title="Confirm Airtime"
         footer={
           <div className="flex gap-4 w-full">
             <button className="flex-1 bg-gray-100 text-gray-500 font-black py-4 rounded-2xl uppercase tracking-widest text-[10px]" onClick={() => setShowConfirmModal(false)}>Cancel</button>
-            <button className="flex-2 bg-blue-600 hover:bg-black text-white font-black py-4 rounded-2xl uppercase tracking-widest text-[10px] flex items-center justify-center min-w-[150px]" onClick={handlePurchase} disabled={isPurchasing}>
-              {isPurchasing ? <Spinner /> : `Recharge ₦${numericAmount.toLocaleString()}`}
+            <button className="flex-2 bg-blue-600 hover:bg-black text-white font-black py-4 rounded-2xl uppercase tracking-widest text-[10px] flex items-center justify-center min-w-[150px]" onClick={startPinVerification} disabled={isPurchasing}>
+              {isPurchasing ? <Spinner /> : `Authorize`}
             </button>
           </div>
         }
@@ -159,7 +171,7 @@ const AirtimePage: React.FC = () => {
            <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
               <img src={selectedOperator?.image} alt={selectedOperator?.name} className="w-8 h-8 object-contain" />
            </div>
-           <p className="text-gray-500 font-medium">You are about to send <span className="text-gray-900 font-black tracking-tight">₦{numericAmount.toLocaleString()}</span> airtime to:</p>
+           <p className="text-gray-500 font-medium">You are about to buy <span className="text-gray-900 font-black tracking-tight">₦{numericAmount.toLocaleString()}</span> airtime for:</p>
            <h3 className="text-3xl font-black text-gray-900 tracking-tighter">{phoneNumber}</h3>
            <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Network: {selectedOperator?.name}</p>
         </div>

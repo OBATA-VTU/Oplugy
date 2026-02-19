@@ -4,7 +4,10 @@ import { useNotifications } from '../hooks/useNotifications';
 import { vtuService } from '../services/vtuService';
 import { Operator, DataPlan } from '../types';
 import Spinner from '../components/Spinner';
+import PinPromptModal from '../components/PinPromptModal';
+import Modal from '../components/Modal';
 import { CABLE_BILLERS, SUBSCRIPTION_TYPES } from '../constants';
+import { TvIcon } from '../components/Icons';
 
 const CablePage: React.FC = () => {
   const { addNotification } = useNotifications();
@@ -20,6 +23,8 @@ const CablePage: React.FC = () => {
   const [isVerifying, setIsVerifying] = useState(false);
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [customerName, setCustomerName] = useState<string | null>(null);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showPinModal, setShowPinModal] = useState(false);
 
   const fetchPlans = useCallback(async (billerName: string) => {
     setIsFetchingPlans(true);
@@ -29,7 +34,7 @@ const CablePage: React.FC = () => {
     if (response.status && response.data) {
       setCablePlans(response.data);
     } else {
-      addNotification(response.message || 'Failed to fetch cable plans.', 'error');
+      addNotification(response.message || 'Error loading packages.', 'error');
     }
     setIsFetchingPlans(false);
   }, [addNotification]);
@@ -41,22 +46,34 @@ const CablePage: React.FC = () => {
     const response = await vtuService.verifyCableSmartcard({ biller: selectedOperator.id, smartCardNumber: smartcardNo });
     if (response.status && response.data?.customerName) {
       setCustomerName(response.data.customerName);
-      addNotification('Smartcard verified successfully.', 'success');
+      addNotification('Smartcard verified.', 'success');
       fetchPlans(selectedOperator.id);
     } else {
       addNotification(response.message || 'Verification failed.', 'error');
     }
     setIsVerifying(false);
   };
-  
-  const handlePurchase = async () => {
-    if (!selectedPlan || !smartcardNo || !phoneNumber || isPurchasing) return;
+
+  const handlePrePurchase = () => {
+    if (!selectedPlan || !smartcardNo || !phoneNumber) return;
     if (walletBalance !== null && selectedPlan.amount > walletBalance) {
       addNotification('Insufficient wallet balance.', 'error');
       return;
     }
+    setShowConfirmModal(true);
+  };
+
+  const startPinVerification = () => {
+    setShowConfirmModal(false);
+    setShowPinModal(true);
+  };
+  
+  const handlePurchase = async () => {
+    if (!selectedPlan || !smartcardNo || !phoneNumber || isPurchasing) return;
+    
     setIsPurchasing(true);
-    // Added missing amount and plan_name fields from the selected plan to fix type mismatch
+    setShowPinModal(false);
+
     const response = await vtuService.purchaseCable({
       biller: selectedOperator!.id,
       smartCardNumber: smartcardNo,
@@ -66,8 +83,9 @@ const CablePage: React.FC = () => {
       amount: selectedPlan.amount,
       plan_name: selectedPlan.name,
     });
+
     if (response.status && response.data) {
-      addNotification(`Subscription for ${smartcardNo} was successful.`, 'success');
+      addNotification(`Cable TV subscription active for ${smartcardNo}.`, 'success');
       setSmartcardNo('');
       setPhoneNumber('');
       setSelectedPlan(null);
@@ -80,47 +98,131 @@ const CablePage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto bg-white p-8 rounded-xl shadow-lg">
-      <h2 className="text-3xl font-bold text-center text-gray-800 mb-8">Cable TV Subscription</h2>
-      <div className="space-y-6">
-        <div>
-          <label className="block text-sm font-semibold">Provider</label>
-          <select className="w-full p-3 border rounded-md" value={selectedOperator?.id || ''} onChange={e => {
-            setSelectedOperator(operators.find(o => o.id === e.target.value) || null);
-            setCustomerName(null);
-            setCablePlans([]);
-          }}>
-            <option value="">Select Provider</option>
-            {operators.map(op => <option key={op.id} value={op.id}>{op.name}</option>)}
-          </select>
-        </div>
-        <div>
-          <label htmlFor="smartcardNo" className="block text-sm font-semibold">Smartcard/IUC</label>
-          <div className="flex">
-            <input type="text" id="smartcardNo" className="w-full p-3 border rounded-l-md" value={smartcardNo} onChange={e => setSmartcardNo(e.target.value)} />
-            <button onClick={handleVerify} className="bg-gray-200 p-3 rounded-r-md" disabled={isVerifying || !selectedOperator || smartcardNo.length < 5}>{isVerifying ? <Spinner /> : 'Verify'}</button>
-          </div>
-        </div>
-        {customerName && (
-          <div className="bg-green-100 text-green-800 p-3 rounded-md text-center">Verified: <span className="font-bold">{customerName}</span></div>
-        )}
-        <div className={!customerName ? 'opacity-50 pointer-events-none' : ''}>
-          <label className="block text-sm font-semibold">Subscription Type</label>
-          <select className="w-full p-3 border rounded-md" value={subscriptionType} onChange={e => setSubscriptionType(e.target.value as any)}>
-            {SUBSCRIPTION_TYPES.map(type => <option key={type.id} value={type.id}>{type.name}</option>)}
-          </select>
-          <label className="block text-sm font-semibold mt-4">Plan</label>
-          <select className="w-full p-3 border rounded-md" value={selectedPlan?.id || ''} onChange={e => setSelectedPlan(cablePlans.find(p => p.id === e.target.value) || null)} disabled={isFetchingPlans || cablePlans.length === 0}>
-            <option value="">{isFetchingPlans ? 'Loading...' : 'Select Plan'}</option>
-            {cablePlans.map(plan => <option key={plan.id} value={plan.id}>{`${plan.name} - ₦${plan.amount.toLocaleString()}`}</option>)}
-          </select>
-          <label htmlFor="phoneNumber" className="block text-sm font-semibold mt-4">Phone Number</label>
-          <input type="tel" id="phoneNumber" className="w-full p-3 border rounded-md" value={phoneNumber} onChange={e => setPhoneNumber(e.target.value.replace(/\D/g, ''))} maxLength={11} />
-        </div>
-        <button onClick={handlePurchase} className="w-full bg-blue-600 text-white font-bold py-3 rounded-md" disabled={!customerName || !selectedPlan || phoneNumber.length !== 11 || isPurchasing}>
-          {isPurchasing ? <Spinner /> : 'Subscribe'}
-        </button>
+    <div className="max-w-2xl mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <PinPromptModal 
+        isOpen={showPinModal} 
+        onClose={() => setShowPinModal(false)} 
+        onSuccess={handlePurchase}
+        title="Authorize Renewal"
+        description={`Paying for ${selectedPlan?.name} on ${selectedOperator?.name}`}
+      />
+
+      <div className="text-center">
+        <h2 className="text-4xl font-black text-gray-900 tracking-tighter mb-2">Cable TV</h2>
+        <p className="text-gray-400 font-medium">Renew your DStv, GOtv, and StarTimes subscriptions instantly.</p>
       </div>
+
+      <div className="bg-white p-8 lg:p-12 rounded-[2.5rem] lg:rounded-[3rem] shadow-xl border border-gray-50">
+        <div className="space-y-8">
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div>
+                 <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-2">Provider</label>
+                 <select 
+                  className="w-full p-5 bg-gray-50 rounded-2xl font-black text-lg border-2 border-transparent focus:border-blue-600 outline-none transition-all appearance-none" 
+                  value={selectedOperator?.id || ''} 
+                  onChange={e => {
+                    setSelectedOperator(operators.find(o => o.id === e.target.value) || null);
+                    setCustomerName(null);
+                    setCablePlans([]);
+                  }}
+                 >
+                    <option value="">Select Provider</option>
+                    {operators.map(op => <option key={op.id} value={op.id}>{op.name}</option>)}
+                 </select>
+              </div>
+              <div>
+                 <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-2">Smartcard / IUC</label>
+                 <div className="flex gap-3">
+                    <input 
+                      type="text" 
+                      className="flex-1 p-5 bg-gray-50 border border-gray-100 rounded-2xl font-black text-xl tracking-tight outline-none focus:ring-4 focus:ring-blue-50 transition-all" 
+                      placeholder="Enter number" 
+                      value={smartcardNo} 
+                      onChange={e => setSmartcardNo(e.target.value)} 
+                    />
+                    <button 
+                      onClick={handleVerify}
+                      disabled={isVerifying || smartcardNo.length < 5 || !selectedOperator}
+                      className="px-6 bg-gray-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-black transition-all disabled:opacity-50"
+                    >
+                      {isVerifying ? <Spinner /> : 'Verify'}
+                    </button>
+                 </div>
+              </div>
+           </div>
+
+           {customerName && (
+              <div className="p-6 bg-blue-50 rounded-3xl border-2 border-blue-100 flex items-center space-x-5 animate-in zoom-in-95 duration-300">
+                 <div className="w-12 h-12 bg-blue-600 text-white rounded-2xl flex items-center justify-center shrink-0 shadow-lg shadow-blue-200"><TvIcon /></div>
+                 <div>
+                    <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-1">Subscriber Name</p>
+                    <p className="font-black text-gray-900 text-lg uppercase tracking-tight">{customerName}</p>
+                 </div>
+              </div>
+           )}
+
+           <div className={`space-y-8 transition-opacity duration-500 ${customerName ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                 <div>
+                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-2">Renewal Plan</label>
+                    <select 
+                      className="w-full p-5 bg-gray-50 rounded-2xl font-black text-lg border-2 border-transparent focus:border-blue-600 outline-none transition-all appearance-none" 
+                      value={selectedPlan?.id || ''} 
+                      onChange={e => setSelectedPlan(cablePlans.find(p => p.id === e.target.value) || null)}
+                      disabled={isFetchingPlans || cablePlans.length === 0}
+                    >
+                       <option value="">{isFetchingPlans ? 'Loading...' : 'Select Plan'}</option>
+                       {cablePlans.map(plan => <option key={plan.id} value={plan.id}>{`${plan.name} - ₦${plan.amount.toLocaleString()}`}</option>)}
+                    </select>
+                 </div>
+                 <div>
+                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-2">Alert Phone</label>
+                    <input 
+                      type="tel" 
+                      className="w-full p-5 bg-gray-50 border border-gray-100 rounded-2xl text-xl font-black tracking-tight outline-none focus:ring-4 focus:ring-blue-50 transition-all" 
+                      placeholder="080..." 
+                      value={phoneNumber} 
+                      onChange={e => setPhoneNumber(e.target.value.replace(/\D/g, ''))} 
+                      maxLength={11}
+                    />
+                 </div>
+              </div>
+
+              <div className="flex p-1 bg-gray-50 rounded-2xl border border-gray-100">
+                <button onClick={() => setSubscriptionType('RENEW')} className={`flex-1 py-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${subscriptionType === 'RENEW' ? 'bg-white text-blue-600 shadow-md' : 'text-gray-400'}`}>Renew Current</button>
+                <button onClick={() => setSubscriptionType('CHANGE')} className={`flex-1 py-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${subscriptionType === 'CHANGE' ? 'bg-white text-blue-600 shadow-md' : 'text-gray-400'}`}>Change Package</button>
+              </div>
+              
+              <button 
+                onClick={handlePrePurchase}
+                className="w-full bg-blue-600 hover:bg-black text-white font-black py-6 rounded-[2rem] shadow-2xl shadow-blue-200 transition-all duration-300 uppercase tracking-[0.2em] text-sm"
+                disabled={!customerName || !selectedPlan || phoneNumber.length !== 11 || isPurchasing}
+              >
+                {isPurchasing ? <Spinner /> : 'Subscribe Now'}
+              </button>
+           </div>
+        </div>
+      </div>
+
+      <Modal isOpen={showConfirmModal} onClose={() => setShowConfirmModal(false)} title="Verify Renewal" footer={
+        <div className="flex gap-4 w-full">
+          <button className="flex-1 bg-gray-100 text-gray-500 font-black py-4 rounded-2xl uppercase tracking-widest text-[10px]" onClick={() => setShowConfirmModal(false)}>Cancel</button>
+          <button className="flex-2 bg-blue-600 hover:bg-black text-white font-black py-4 rounded-2xl uppercase tracking-widest text-[10px] flex items-center justify-center min-w-[150px]" onClick={startPinVerification} disabled={isPurchasing}>
+            {isPurchasing ? <Spinner /> : `Authorize`}
+          </button>
+        </div>
+      }>
+        <div className="text-center py-6 space-y-4">
+           <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-3xl flex items-center justify-center mx-auto mb-6">
+              <TvIcon />
+           </div>
+           <p className="text-gray-500 font-medium">You are renewing <span className="text-gray-900 font-black tracking-tight">{selectedPlan?.name}</span> for:</p>
+           <h3 className="text-3xl font-black text-gray-900 tracking-tighter">{customerName}</h3>
+           <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Card No: {smartcardNo}</p>
+        </div>
+      </Modal>
     </div>
   );
-}; export default CablePage;
+};
+
+export default CablePage;

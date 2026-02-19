@@ -28,6 +28,8 @@ import PricingPage from './pages/PricingPage';
 import ReferralPage from './pages/ReferralPage';
 import SupportPage from './pages/SupportPage';
 import ApiDocsPage from './pages/ApiDocsPage';
+import FundingPage from './pages/FundingPage';
+import ProfilePage from './pages/ProfilePage';
 import Spinner from './components/Spinner';
 
 interface ProtectedRouteProps {
@@ -61,12 +63,10 @@ const AdminRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
   if (isLoading) return <div className="flex items-center justify-center h-screen bg-white"><Spinner /></div>;
   
-  // Rule: If user is authenticated AND role is admin, bypass password
   if (isAuthenticated && user?.role === 'admin') {
     return <AdminLayout>{children}</AdminLayout>;
   }
 
-  // If not admin role but trying to access /admin, ask for master password
   if (!isAuthorized) return (
     <div className="min-h-screen bg-gray-900 flex items-center justify-center p-6">
        <div className="bg-white p-12 lg:p-16 rounded-[4rem] w-full max-w-md animate-in zoom-in-95 duration-500 shadow-2xl">
@@ -74,8 +74,8 @@ const AdminRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
              <div className="w-20 h-20 bg-blue-50 text-blue-600 rounded-[2rem] flex items-center justify-center mx-auto mb-6">
                 <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
              </div>
-             <h2 className="text-3xl font-black text-gray-900 tracking-tighter">Master Override</h2>
-             <p className="text-gray-400 text-xs font-bold uppercase tracking-widest mt-2">Administrative Clearance Required</p>
+             <h2 className="text-3xl font-black text-gray-900 tracking-tighter">Master Hub</h2>
+             <p className="text-gray-400 text-xs font-bold uppercase tracking-widest mt-2">Administrative Verification Required</p>
           </div>
           <form onSubmit={handlePasswordSubmit} className="space-y-8">
              <input 
@@ -86,7 +86,7 @@ const AdminRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
               onChange={(e) => setPassword(e.target.value)} 
               autoFocus 
              />
-             <button className="w-full bg-gray-900 text-white py-6 rounded-3xl font-black uppercase tracking-widest text-[11px] shadow-2xl hover:bg-blue-600 transition-all transform active:scale-95">Unlock System</button>
+             <button className="w-full bg-gray-900 text-white py-6 rounded-3xl font-black uppercase tracking-widest text-[11px] shadow-2xl hover:bg-blue-600 transition-all transform active:scale-95">Open Node</button>
           </form>
        </div>
     </div>
@@ -108,9 +108,6 @@ const App: React.FC = () => {
             <Route path="/signup" element={<SignUpPage />} />
             <Route path="/terms" element={<TermsPage />} />
             <Route path="/privacy" element={<PrivacyPage />} />
-            <Route path="/gaming" element={<ProtectedRoute><ComingSoonPage title="Gaming Hub" description="Gaming top-ups are coming soon!" /></ProtectedRoute>} />
-            <Route path="/giftcards" element={<ProtectedRoute><ComingSoonPage title="Gift Cards" description="Global gift cards are coming soon!" /></ProtectedRoute>} />
-            <Route path="/airtime-to-cash" element={<ProtectedRoute><ComingSoonPage title="Airtime to Cash" description="Convert airtime to cash soon!" /></ProtectedRoute>} />
             <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
             <Route path="/airtime" element={<ProtectedRoute><AirtimePage /></ProtectedRoute>} />
             <Route path="/data" element={<ProtectedRoute><DataPage /></ProtectedRoute>} />
@@ -121,6 +118,8 @@ const App: React.FC = () => {
             <Route path="/referral" element={<ProtectedRoute><ReferralPage /></ProtectedRoute>} />
             <Route path="/support" element={<ProtectedRoute><SupportPage /></ProtectedRoute>} />
             <Route path="/api-docs" element={<ProtectedRoute><ApiDocsPage /></ProtectedRoute>} />
+            <Route path="/funding" element={<ProtectedRoute><FundingPage /></ProtectedRoute>} />
+            <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
             <Route path="/admin" element={<AdminRoute><AdminDashboardPage /></AdminRoute>} />
             <Route path="/admin/users" element={<AdminRoute><AdminUsersPage /></AdminRoute>} />
             <Route path="/admin/transactions" element={<AdminRoute><AdminTransactionsPage /></AdminRoute>} />

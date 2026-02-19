@@ -17,9 +17,10 @@ const PricingPage: React.FC = () => {
     setLoading(true);
     try {
       if (activeTab === 'DATA') {
+        // Fix: Added the required 'server' parameter to getDataPlans calls to match the expected payload structure.
         const [sme, gifting] = await Promise.all([
-          vtuService.getDataPlans({ network: activeNetwork, type: 'SME' }),
-          vtuService.getDataPlans({ network: activeNetwork, type: 'GIFTING' })
+          vtuService.getDataPlans({ network: activeNetwork, type: 'SME', server: 'server1' }),
+          vtuService.getDataPlans({ network: activeNetwork, type: 'GIFTING', server: 'server1' })
         ]);
         setPlans([...(sme.status && sme.data ? sme.data : []), ...(gifting.status && gifting.data ? gifting.data : [])]);
       } else if (activeTab === 'ELECTRICITY') {

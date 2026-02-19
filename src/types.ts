@@ -18,6 +18,8 @@ export interface User {
   createdAt?: any;
   isPinSet: boolean;
   transactionPin?: string;
+  webhookUrl?: string;
+  apiKey?: string;
 }
 
 export interface TierPricing {
@@ -53,6 +55,7 @@ export interface DataPlan {
   type?: string;
   size?: string;
   network?: string;
+  server?: 'server1' | 'server2';
 }
 
 export interface TransactionResponse {
@@ -67,6 +70,7 @@ export interface TransactionResponse {
   date_created: any; 
   date_updated: any;
   token?: string; 
+  server?: string;
 }
 
 // --- Verification & API Structure ---
