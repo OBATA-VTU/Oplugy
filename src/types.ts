@@ -1,6 +1,5 @@
-
 // --- User & Auth ---
-export type UserRole = 'user' | 'reseller' | 'api' | 'admin';
+export type UserRole = 'user' | 'reseller' | 'admin';
 export type UserStatus = 'active' | 'suspended';
 
 export interface User {
@@ -90,7 +89,6 @@ export interface ApiResponse<T> {
   errors?: string[];
 }
 
-// Fix: Added CipApiResponse interface used by cipApiClient to process proxy responses
 export interface CipApiResponse<T> {
   status: string;
   message: string;

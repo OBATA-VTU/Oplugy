@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useCallback } from 'react';
 import { adminService } from '../services/adminService';
 import { User, UserRole, UserStatus } from '../types';
@@ -164,8 +163,7 @@ const AdminUsersPage: React.FC = () => {
                   <td className="px-10 py-7">
                     <span className={`inline-flex px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest ${
                       u.role === 'admin' ? 'bg-black text-white' : 
-                      u.role === 'reseller' ? 'bg-indigo-100 text-indigo-700' :
-                      u.role === 'api' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500'
+                      u.role === 'reseller' ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-500'
                     }`}>
                       {u.role}
                     </span>
@@ -265,7 +263,6 @@ const AdminUsersPage: React.FC = () => {
               <div className="grid grid-cols-2 gap-4">
                  <RoleButton label="Standard" icon={<UsersIcon />} active={selectedUser?.role === 'user'} onClick={() => handleRoleChange(selectedUser!.id, 'user')} />
                  <RoleButton label="Reseller" icon={<SignalIcon />} active={selectedUser?.role === 'reseller'} onClick={() => handleRoleChange(selectedUser!.id, 'reseller')} />
-                 <RoleButton label="API Merchant" icon={<ExchangeIcon />} active={selectedUser?.role === 'api'} onClick={() => handleRoleChange(selectedUser!.id, 'api')} />
                  <RoleButton label="Admin" icon={<ShieldCheckIcon />} active={selectedUser?.role === 'admin'} onClick={() => handleRoleChange(selectedUser!.id, 'admin')} />
               </div>
            </div>

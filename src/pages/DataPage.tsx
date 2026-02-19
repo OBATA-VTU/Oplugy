@@ -7,12 +7,15 @@ import Spinner from '../components/Spinner';
 import Modal from '../components/Modal';
 import PinPromptModal from '../components/PinPromptModal';
 import { DATA_NETWORKS, DATA_PLAN_TYPES } from '../constants';
-import { SignalIcon } from '../components/Icons';
+import { SignalIcon, BoltIcon, ShieldCheckIcon, ArrowIcon } from '../components/Icons';
+
+type PageStep = 'selection' | 'form';
 
 const DataPage: React.FC = () => {
   const { addNotification } = useNotifications();
   const { fetchWalletBalance, walletBalance } = useAuth();
   
+  const [step, setStep] = useState<PageStep>('selection');
   const [server, setServer] = useState<'server1' | 'server2'>('server1');
   const [operators] = useState<Operator[]>(DATA_NETWORKS);
   const [dataTypes, setDataTypes] = useState<{id: string, name: string}[]>(DATA_PLAN_TYPES);
@@ -28,10 +31,10 @@ const DataPage: React.FC = () => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showPinModal, setShowPinModal] = useState(false);
 
-  // Fetch real categories from Server 1
+  // Fetch real categories from Server 1 when on form step
   useEffect(() => {
     const loadTypes = async () => {
-      if (server === 'server1' && selectedOperator) {
+      if (step === 'form' && server === 'server1' && selectedOperator) {
         setIsFetchingTypes(true);
         setSelectedDataType('');
         setDataPlans([]);
@@ -39,7 +42,6 @@ const DataPage: React.FC = () => {
         if (res.status && res.data) {
           setDataTypes(res.data.map(t => ({ id: t, name: t })));
         } else {
-          // If Server 1 fetch fails, fallback to defaults or show error
           setDataTypes(DATA_PLAN_TYPES);
           addNotification('Using default categories. Server 1 might be offline.', 'info');
         }
@@ -49,7 +51,7 @@ const DataPage: React.FC = () => {
       }
     };
     loadTypes();
-  }, [server, selectedOperator, addNotification]);
+  }, [server, selectedOperator, step, addNotification]);
 
   const fetchPlans = useCallback(async (network: string, type: string, targetServer: 'server1' | 'server2') => {
     setIsFetchingPlans(true);
@@ -65,10 +67,10 @@ const DataPage: React.FC = () => {
   }, [addNotification]);
 
   useEffect(() => {
-    if (selectedOperator && selectedDataType) {
+    if (step === 'form' && selectedOperator && selectedDataType) {
       fetchPlans(selectedOperator.id, selectedDataType, server);
     }
-  }, [selectedOperator, selectedDataType, server, fetchPlans]);
+  }, [selectedOperator, selectedDataType, server, step, fetchPlans]);
 
   const handlePrePurchaseCheck = () => {
     if (!selectedPlan || !phoneNumber) return;
@@ -109,11 +111,58 @@ const DataPage: React.FC = () => {
     }
     setIsPurchasing(false);
   };
+
+  const selectServer = (s: 'server1' | 'server2') => {
+    setServer(s);
+    setStep('form');
+    // Reset selection to prevent conflicts
+    setSelectedOperator(null);
+    setSelectedDataType('');
+    setDataPlans([]);
+  };
   
   const isFormValid = selectedOperator && selectedDataType && selectedPlan && phoneNumber.length === 11;
 
+  if (step === 'selection') {
+    return (
+      <div className="max-w-4xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-1000 pb-20">
+        <div className="text-center">
+          <h2 className="text-[11px] font-black text-blue-600 uppercase tracking-[0.5em] mb-6">Select Data Engine</h2>
+          <h1 className="text-6xl lg:text-8xl font-black text-gray-900 tracking-tighter leading-none mb-6">Pick a <br /><span className="text-blue-600">Server.</span></h1>
+          <p className="text-gray-400 font-medium text-lg max-w-xl mx-auto">Different servers use different providers and have different price tags.</p>
+        </div>
+
+        {/* PRICE NOTICE BANNER */}
+        <div className="bg-red-50 border-2 border-red-100 p-10 rounded-[3rem] text-center shadow-2xl shadow-red-50 animate-pulse relative overflow-hidden">
+           <div className="relative z-10">
+              <h3 className="text-red-600 font-black text-xl uppercase tracking-tighter mb-2">Important Notice</h3>
+              <p className="text-red-500 font-bold text-lg leading-tight">Prices on <span className="underline">Server 1</span> are different from <span className="underline">Server 2</span>. <br /> Ensure you check both servers to pick the best price for your needs.</p>
+           </div>
+           <div className="absolute top-0 right-0 w-24 h-24 bg-red-100/50 rounded-full blur-2xl -mr-10 -mt-10"></div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+           <ServerCard 
+            title="Main Data Route" 
+            desc="Server 1: Primary fulfillment node with exclusive SME plus bundles."
+            server="SRV-1"
+            color="blue"
+            onClick={() => selectServer('server1')}
+           />
+           <ServerCard 
+            title="Backup Data Route" 
+            desc="Server 2: High-speed backup node. Use this if Main Route is slow."
+            server="SRV-2"
+            color="black"
+            onClick={() => selectServer('server2')}
+           />
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="max-w-2xl mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
+    <div className="max-w-2xl mx-auto space-y-10 animate-in fade-in slide-in-from-right-4 duration-700 pb-20">
       <PinPromptModal 
         isOpen={showPinModal} 
         onClose={() => setShowPinModal(false)} 
@@ -122,31 +171,25 @@ const DataPage: React.FC = () => {
         description={`Authorizing ₦${selectedPlan?.amount?.toLocaleString()} for ${phoneNumber}`}
       />
 
+      <div className="flex justify-between items-center mb-6">
+         <button 
+          onClick={() => setStep('selection')}
+          className="p-4 bg-white border border-gray-100 rounded-2xl shadow-sm text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-blue-600 transition-all flex items-center gap-2"
+         >
+            <span className="rotate-180"><ArrowIcon /></span> Back to Selection
+         </button>
+         <div className={`px-5 py-2 rounded-full text-[9px] font-black uppercase tracking-widest ${server === 'server1' ? 'bg-blue-100 text-blue-600' : 'bg-gray-900 text-white'}`}>
+            {server === 'server1' ? 'Main Route' : 'Backup Route'} ACTIVE
+         </div>
+      </div>
+
       <div className="text-center">
-        <h2 className="text-4xl font-black text-gray-900 tracking-tighter mb-2">Buy Data Plans</h2>
-        <p className="text-gray-400 font-medium">Choose your network and preferred data bundle.</p>
+        <h2 className="text-4xl font-black text-gray-900 tracking-tighter mb-2">Purchase Plan</h2>
+        <p className="text-gray-400 font-medium">Fulfillment via {server === 'server1' ? 'Main Engine' : 'Backup Engine'}.</p>
       </div>
 
       <div className="bg-white p-8 lg:p-12 rounded-[3.5rem] shadow-2xl border border-gray-50">
         <div className="space-y-10">
-          <div>
-             <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-2">Provider Route</label>
-             <div className="flex p-2 bg-gray-100 rounded-3xl gap-2">
-                <button 
-                  onClick={() => setServer('server1')}
-                  className={`flex-1 py-5 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${server === 'server1' ? 'bg-blue-600 text-white shadow-xl' : 'text-gray-400 hover:text-gray-600'}`}
-                >
-                   Main Route
-                </button>
-                <button 
-                  onClick={() => setServer('server2')}
-                  className={`flex-1 py-5 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${server === 'server2' ? 'bg-gray-900 text-white shadow-xl' : 'text-gray-400 hover:text-gray-600'}`}
-                >
-                   Backup Route
-                </button>
-             </div>
-          </div>
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
               <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-2">Select Network</label>
@@ -239,5 +282,27 @@ const DataPage: React.FC = () => {
     </div>
   );
 };
+
+const ServerCard = ({ title, desc, server, color, onClick }: any) => (
+  <button 
+    onClick={onClick}
+    className="bg-white p-12 rounded-[4rem] border-4 border-gray-50 text-left hover:border-blue-600 hover:shadow-2xl transition-all duration-500 group relative overflow-hidden"
+  >
+     <div className="relative z-10">
+        <div className={`w-16 h-16 ${color === 'blue' ? 'bg-blue-50 text-blue-600' : 'bg-gray-100 text-gray-900'} rounded-2xl flex items-center justify-center mb-10 group-hover:scale-110 transition-transform`}>
+           <BoltIcon />
+        </div>
+        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">{server}</p>
+        <h3 className="text-3xl font-black text-gray-900 tracking-tighter mb-4 group-hover:text-blue-600 transition-colors">{title}</h3>
+        <p className="text-gray-400 font-medium leading-relaxed">{desc}</p>
+        
+        <div className="mt-12 flex items-center gap-3">
+           <span className="text-[10px] font-black uppercase tracking-widest text-blue-600">Connect to Node</span>
+           <span className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center shadow-lg group-hover:translate-x-2 transition-transform"><ArrowIcon /></span>
+        </div>
+     </div>
+     <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-blue-50 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+  </button>
+);
 
 export default DataPage;
