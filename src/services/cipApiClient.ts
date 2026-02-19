@@ -1,24 +1,26 @@
-
 import { apiClient } from './apiClient';
 import { ApiResponse, CipApiResponse } from '../types';
 
 /**
- * A specialized API client for interacting with our own proxy to the CIP Top Up API.
- * It translates the raw CIP API response into a standardized format for the rest of the app.
+ * A specialized API client for interacting with our Vercel proxy.
+ * It forwards the 'server' flag so the proxy knows which credentials to use.
  */
 export async function cipApiClient<T>(
   endpoint: string,
   { data, headers: customHeaders, method }: { data?: any; headers?: HeadersInit; method?: string } = {}
 ): Promise<ApiResponse<T>> {
+  // Extract server from data if present, default to server2
+  const targetServer = data?.server || 'server2';
+
   const proxyPayload = {
     endpoint: endpoint.startsWith('/') ? endpoint.slice(1) : endpoint,
     method: method || (data ? 'POST' : 'GET'),
     data,
+    server: targetServer
   };
 
-  // We use '/api/proxy' to call our local Vercel function relative to the domain root
   const response = await apiClient<CipApiResponse<T>>(
-    '', // Relative to current domain
+    '', 
     '/api/proxy',
     {
       data: proxyPayload,
@@ -45,7 +47,7 @@ export async function cipApiClient<T>(
       data: cipData.data as T,
     };
   } else {
-    const errorMessages = cipData?.errors?.map(e => `${e.path}: ${e.message}`) || [cipData?.message || 'An unknown API error occurred.'];
+    const errorMessages = cipData?.errors?.map(e => `${e.path}: ${e.message}`) || [cipData?.message || 'The API returned an error.'];
     return {
       status: false,
       message: errorMessages.join(', '),

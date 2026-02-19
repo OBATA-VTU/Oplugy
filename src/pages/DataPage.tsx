@@ -28,16 +28,20 @@ const DataPage: React.FC = () => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showPinModal, setShowPinModal] = useState(false);
 
-  // Fetch dynamic categories for Server 1
+  // Fetch real categories from Server 1
   useEffect(() => {
     const loadTypes = async () => {
       if (server === 'server1' && selectedOperator) {
         setIsFetchingTypes(true);
         setSelectedDataType('');
         setDataPlans([]);
-        const res = await vtuService.getDataCategories(selectedOperator.id);
+        const res = await vtuService.getDataCategories(selectedOperator.id, 'server1');
         if (res.status && res.data) {
           setDataTypes(res.data.map(t => ({ id: t, name: t })));
+        } else {
+          // If Server 1 fetch fails, fallback to defaults or show error
+          setDataTypes(DATA_PLAN_TYPES);
+          addNotification('Using default categories. Server 1 might be offline.', 'info');
         }
         setIsFetchingTypes(false);
       } else {
@@ -45,7 +49,7 @@ const DataPage: React.FC = () => {
       }
     };
     loadTypes();
-  }, [server, selectedOperator]);
+  }, [server, selectedOperator, addNotification]);
 
   const fetchPlans = useCallback(async (network: string, type: string, targetServer: 'server1' | 'server2') => {
     setIsFetchingPlans(true);
@@ -55,7 +59,7 @@ const DataPage: React.FC = () => {
     if (response.status && response.data) {
       setDataPlans(response.data);
     } else {
-      addNotification(response.message || 'Connecting to server...', 'info');
+      addNotification(response.message || 'Error loading bundles.', 'error');
     }
     setIsFetchingPlans(false);
   }, [addNotification]);
@@ -101,7 +105,7 @@ const DataPage: React.FC = () => {
       setSelectedPlan(null);
       await fetchWalletBalance();
     } else {
-      addNotification(response.message || 'Purchase failed. Please try again.', 'error');
+      addNotification(response.message || 'Purchase failed. Try switching servers.', 'error');
     }
     setIsPurchasing(false);
   };
@@ -115,7 +119,7 @@ const DataPage: React.FC = () => {
         onClose={() => setShowPinModal(false)} 
         onSuccess={handlePurchase}
         title="Confirm Purchase"
-        description={`Authorizing ₦${selectedPlan?.amount} for ${phoneNumber}`}
+        description={`Authorizing ₦${selectedPlan?.amount?.toLocaleString()} for ${phoneNumber}`}
       />
 
       <div className="text-center">
@@ -126,19 +130,19 @@ const DataPage: React.FC = () => {
       <div className="bg-white p-8 lg:p-12 rounded-[3.5rem] shadow-2xl border border-gray-50">
         <div className="space-y-10">
           <div>
-             <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-2">Preferred Server</label>
+             <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-2">Provider Route</label>
              <div className="flex p-2 bg-gray-100 rounded-3xl gap-2">
                 <button 
                   onClick={() => setServer('server1')}
                   className={`flex-1 py-5 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${server === 'server1' ? 'bg-blue-600 text-white shadow-xl' : 'text-gray-400 hover:text-gray-600'}`}
                 >
-                   Main Server
+                   Main Route
                 </button>
                 <button 
                   onClick={() => setServer('server2')}
                   className={`flex-1 py-5 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${server === 'server2' ? 'bg-gray-900 text-white shadow-xl' : 'text-gray-400 hover:text-gray-600'}`}
                 >
-                   Backup Server
+                   Backup Route
                 </button>
              </div>
           </div>
@@ -149,7 +153,11 @@ const DataPage: React.FC = () => {
               <select 
                 className="w-full p-5 bg-gray-50 rounded-2xl font-black text-lg border-2 border-transparent focus:border-blue-600 outline-none transition-all appearance-none" 
                 value={selectedOperator?.id || ''} 
-                onChange={(e) => setSelectedOperator(operators.find(o => o.id === e.target.value) || null)}
+                onChange={(e) => {
+                  setSelectedOperator(operators.find(o => o.id === e.target.value) || null);
+                  setSelectedDataType('');
+                  setDataPlans([]);
+                }}
               >
                 <option value="">Select Network</option>
                 {operators.map(op => <option key={op.id} value={op.id}>{op.name}</option>)}
@@ -163,21 +171,21 @@ const DataPage: React.FC = () => {
                 onChange={(e) => setSelectedDataType(e.target.value)} 
                 disabled={!selectedOperator || isFetchingTypes}
               >
-                <option value="">{isFetchingTypes ? 'Loading Types...' : 'Select Type'}</option>
+                <option value="">{isFetchingTypes ? 'Fetching...' : 'Select Type'}</option>
                 {dataTypes.map(type => <option key={type.id} value={type.id}>{type.name}</option>)}
               </select>
             </div>
           </div>
 
           <div>
-            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-2">Available Bundles</label>
+            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-2">Bundles</label>
             <select 
               className="w-full p-5 bg-gray-50 rounded-2xl font-black text-lg border-2 border-transparent focus:border-blue-600 outline-none appearance-none disabled:opacity-50" 
               value={selectedPlan?.id || ''} 
               onChange={(e) => setSelectedPlan(dataPlans.find(p => p.id === e.target.value) || null)} 
               disabled={isFetchingPlans || dataPlans.length === 0}
             >
-              <option value="">{isFetchingPlans ? 'Searching...' : dataPlans.length === 0 ? 'Pick Network & Type first' : 'Select a Plan'}</option>
+              <option value="">{isFetchingPlans ? 'Searching Bundles...' : dataPlans.length === 0 ? 'Choose Type First' : 'Select a Bundle'}</option>
               {dataPlans.map(plan => (
                 <option key={plan.id} value={plan.id}>
                   {`${plan.name} - ₦${plan.amount.toLocaleString()} (${plan.validity})`}
@@ -188,7 +196,7 @@ const DataPage: React.FC = () => {
           </div>
 
           <div>
-            <label htmlFor="phoneNumber" className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-2">Phone Number</label>
+            <label htmlFor="phoneNumber" className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-2">Recipient Phone</label>
             <input 
               type="tel" 
               id="phoneNumber" 
@@ -207,7 +215,7 @@ const DataPage: React.FC = () => {
             className="w-full bg-blue-600 hover:bg-black text-white font-black py-8 rounded-3xl shadow-2xl shadow-blue-100 transition-all duration-300 disabled:opacity-50 uppercase tracking-[0.2em] text-sm transform active:scale-95" 
             disabled={!isFormValid || isPurchasing}
           >
-            {isPurchasing ? <Spinner /> : 'Buy Data Now'}
+            {isPurchasing ? <Spinner /> : 'Complete Transaction'}
           </button>
         </div>
       </div>

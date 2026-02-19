@@ -29,8 +29,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const selectedProvider = providers[server as keyof typeof providers] || providers.server2;
 
   if (!selectedProvider.apiKey) {
-    console.error(`[Proxy Error] Missing credentials for ${server}`);
-    return res.status(500).json({ status: 'error', message: `Server ${server} credentials not found.` });
+    console.error(`[Proxy Error] Missing credentials for ${server}. Ensure ${server === 'server1' ? 'INLOMAX_API_KEY' : 'CIP_API_KEY'} is set.`);
+    return res.status(500).json({ status: 'error', message: `System Error: ${server} credentials not found.` });
   }
 
   try {
@@ -57,7 +57,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         if (requestData.phone) requestData.mobileNumber = requestData.phone;
         if (requestData.plan_id) requestData.serviceID = requestData.plan_id;
         
-        // Remove helper fields
+        // Remove UI-only helper fields before sending to provider
         delete requestData.server;
         delete requestData.plan_name;
         delete requestData.network;
@@ -69,7 +69,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       fetchOptions.body = JSON.stringify(requestData);
     }
 
-    // Increased timeout for slow VTU providers
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 58000);
     fetchOptions.signal = controller.signal;
@@ -78,17 +77,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     clearTimeout(timeout);
     
     const responseText = await apiResponse.text();
-    console.log(`[Proxy] ${server} responded: ${apiResponse.status}`);
+    console.log(`[Proxy] ${server} responded with status ${apiResponse.status}`);
 
     try {
       const responseData = JSON.parse(responseText);
       return res.status(apiResponse.status).json(responseData);
     } catch {
-      console.error(`[Proxy Error] ${server} response was not JSON: ${responseText.substring(0, 150)}`);
+      console.error(`[Proxy Error] ${server} returned non-JSON response.`);
       return res.status(apiResponse.status).send(responseText);
     }
   } catch (error: any) {
-    console.error(`[Proxy Fatal] Connection failed:`, error.message);
-    return res.status(504).json({ status: 'error', message: 'The provider did not respond in time.', detail: error.message });
+    console.error(`[Proxy Fatal] Connection to ${server} failed:`, error.message);
+    return res.status(504).json({ status: 'error', message: 'The gateway connection timed out.', detail: error.message });
   }
 }
