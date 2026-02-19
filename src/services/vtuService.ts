@@ -46,7 +46,7 @@ export const vtuService = {
     if (!user) return { status: false, message: 'Please login to continue.' };
 
     const res = await cipApiClient<any>('airtime', { 
-      data: { mobileNumber: payload.phone, amount: payload.amount }, 
+      data: { serviceID: payload.network, mobileNumber: payload.phone, amount: payload.amount }, 
       method: 'POST' 
     });
     
@@ -93,7 +93,7 @@ export const vtuService = {
           
           plans.push({
             id: planId,
-            name: `${p.dataPlan} ${p.dataType}`,
+            name: `${p.dataPlan} ${p.dataType} (${p.validity})`,
             amount: manual || rawBase, 
             validity: p.validity
           });
@@ -158,6 +158,18 @@ export const vtuService = {
     return res;
   },
 
+  getCableProviders: async (): Promise<ApiResponse<Operator[]>> => {
+    const res = await cipApiClient<any>('services', { method: 'GET' });
+    if (res.status && res.data?.cablePlans) {
+      const providers = Array.from(new Set((res.data.cablePlans as any[]).map(c => c.cable))).map(name => ({
+        id: String(name),
+        name: String(name)
+      }));
+      return { status: true, data: providers };
+    }
+    return { status: false, message: 'Cable node sync failed.' };
+  },
+
   getCablePlans: async (billerName: string): Promise<ApiResponse<DataPlan[]>> => {
     const res = await cipApiClient<any>('services', { method: 'GET' });
     if (res.status && res.data?.cablePlans) {
@@ -208,7 +220,6 @@ export const vtuService = {
     });
 
     if (res.status) {
-      // Inlomax returns pins in res.data.pins
       await logTransaction(user.uid, 'EDUCATION', payload.amount, `${payload.name}`, `Quantity: ${payload.quantity}`, 'SUCCESS', { pins: res.data?.pins });
       return { status: true, message: res.message, data: res.data };
     }

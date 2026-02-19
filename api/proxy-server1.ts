@@ -22,11 +22,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const cleanEndpoint = (endpoint || '').replace(/^\//, '');
     let fullUrl = `${baseUrl}/${cleanEndpoint}`;
     
-    // Some Inlomax endpoints might need a trailing slash for GET
-    if (method.toUpperCase() === 'GET' && !fullUrl.endsWith('/')) {
-        // fullUrl += '/'; 
-    }
-
     if (method.toUpperCase() === 'GET' && data) {
        const params = new URLSearchParams();
        Object.entries(data).forEach(([k, v]) => params.append(k, String(v)));
@@ -40,8 +35,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       'Authorization': `Token ${apiKey}`
     };
 
-    // Documentation specific: some endpoints use Authorization-Token
-    if (['payelectric', 'subcable'].includes(cleanEndpoint)) {
+    if (['payelectric', 'subcable', 'validatemeter', 'validatecable'].includes(cleanEndpoint)) {
       headers['Authorization-Token'] = apiKey;
     }
 
@@ -53,8 +47,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (method.toUpperCase() !== 'GET' && data) {
       const mapped: any = {};
       
-      // Basic mappings from common app fields to Inlomax API fields
-      mapped.serviceID = String(data.serviceID || data.plan_id || data.type || data.provider_id || '');
+      // Inlomax documentation strictly requires lowercase for carrier/biller IDs in some nodes
+      const rawServiceID = String(data.serviceID || data.plan_id || data.type || data.provider_id || data.network || '');
+      mapped.serviceID = (cleanEndpoint === 'airtime' || cleanEndpoint === 'validatecable') 
+        ? rawServiceID.toLowerCase() 
+        : rawServiceID;
       
       if (data.mobileNumber || data.phone || data.phone_number) {
         mapped.mobileNumber = String(data.mobileNumber || data.phone || data.phone_number);
@@ -68,7 +65,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       if (data.meterType !== undefined) {
-        // 1=prepaid, 2=postpaid
         mapped.meterType = (data.meterType === 'prepaid' || data.meterType === 1) ? 1 : 2;
       }
 
@@ -86,17 +82,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const apiResponse = await fetch(fullUrl, fetchOptions);
     clearTimeout(timeout);
     
-    const responseData = await apiResponse.json();
-    
-    // Standardize response for the frontend
-    if (responseData.status === 'success') {
-       return res.status(200).json(responseData);
-    } else {
-       return res.status(200).json({ 
-         status: 'error', 
-         message: responseData.message || 'Provider node error', 
-         data: responseData.data 
-       });
+    const responseText = await apiResponse.text();
+    try {
+      const responseData = JSON.parse(responseText);
+      return res.status(200).json(responseData);
+    } catch {
+      return res.status(apiResponse.status).json({ 
+        status: 'error', 
+        message: `Node returned invalid response (${apiResponse.status})`,
+        raw: responseText.substring(0, 200)
+      });
     }
 
   } catch (error: any) {

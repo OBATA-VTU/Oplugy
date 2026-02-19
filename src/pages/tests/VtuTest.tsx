@@ -2,7 +2,7 @@ import React, { useContext, useState, useEffect, useCallback } from 'react';
 import { TerminalContext } from '../../components/TerminalLayout';
 import { vtuService } from '../../services/vtuService';
 import Spinner from '../../components/Spinner';
-import { DATA_NETWORKS, CABLE_BILLERS } from '../../constants';
+import { DATA_NETWORKS } from '../../constants';
 
 type ServiceType = 'AIRTIME' | 'DATA' | 'CABLE' | 'ELECTRICITY' | 'EDUCATION';
 
@@ -20,8 +20,9 @@ const VtuTest: React.FC = () => {
   const [plans, setPlans] = useState<any[]>([]);
   const [selectedPlanId, setSelectedPlanId] = useState('');
   
-  const [cableBiller, setCableBiller] = useState('DSTV');
-  const [iuc, setIuc] = useState('1234567890');
+  const [cableBiller, setCableBiller] = useState('');
+  const [cableBillers, setCableBillers] = useState<any[]>([]);
+  const [iuc, setIuc] = useState('4622342448');
   const [customerName, setCustomerName] = useState<string | null>(null);
   const [cablePlans, setCablePlans] = useState<any[]>([]);
   const [selectedCablePlan, setSelectedCablePlan] = useState('');
@@ -49,14 +50,25 @@ const VtuTest: React.FC = () => {
     }
   }, [addLog]);
 
+  const fetchCableProviders = useCallback(async () => {
+    addLog("SYNC_CABLE_BILLERS", 'cmd');
+    const res = await vtuService.getCableProviders();
+    if (res.status) {
+      setCableBillers(res.data || []);
+      addLog("BILLER_SYNC_OK", 'success');
+    }
+  }, [addLog]);
+
   // Load dependency data on service switch
   useEffect(() => {
     if (activeService === 'DATA') {
       fetchDataTypes();
     } else if (activeService === 'ELECTRICITY') {
       fetchDiscos();
+    } else if (activeService === 'CABLE') {
+      fetchCableProviders();
     }
-  }, [activeService, fetchDataTypes, fetchDiscos]);
+  }, [activeService, fetchDataTypes, fetchDiscos, fetchCableProviders]);
 
   const fetchPlans = async (type: string) => {
     addLog(`SYNC_PLAN_CATALOG: [${network}] [${type}]`, 'cmd');
@@ -70,6 +82,7 @@ const VtuTest: React.FC = () => {
   };
 
   const handleValidateCable = async () => {
+    if (!cableBiller) return;
     setVerifying(true);
     addLog(`VALIDATE_IUC: [${cableBiller}] [${iuc}]`, 'cmd');
     const res = await vtuService.verifyCableSmartcard({ biller: cableBiller, smartCardNumber: iuc });
@@ -145,6 +158,7 @@ const VtuTest: React.FC = () => {
         else addLog(`TX_ABORTED: ${res.message}`, 'error');
       }
       else if (activeService === 'AIRTIME') {
+        addLog(`AIRTIME_PAYLOAD: [${network}] [${phone}] [100]`);
         const res = await vtuService.purchaseAirtime({ network, phone, amount: 100 });
         if (res.status) addLog("TX_EXECUTION_SUCCESS", 'success', res.data);
         else addLog(`TX_ABORTED: ${res.message}`, 'error');
@@ -227,14 +241,15 @@ const VtuTest: React.FC = () => {
                     <div>
                        <label className="text-[9px] font-black text-zinc-500 uppercase tracking-widest block mb-2">Biller Node</label>
                        <select value={cableBiller} onChange={(e) => { setCableBiller(e.target.value); setCustomerName(null); setCablePlans([]); }} className="w-full bg-black border border-zinc-800 p-4 rounded-xl text-green-500 font-mono outline-none focus:border-green-500 transition-all">
-                          {CABLE_BILLERS.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                          <option value="">Choose Provider</option>
+                          {cableBillers.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
                        </select>
                     </div>
                     <div>
                        <label className="text-[9px] font-black text-zinc-500 uppercase tracking-widest block mb-2">IUC / Smartcard</label>
                        <div className="flex gap-2">
                           <input type="text" value={iuc} onChange={(e) => setIuc(e.target.value)} className="flex-1 bg-black border border-zinc-800 p-4 rounded-xl text-green-500 font-mono outline-none focus:border-green-500 transition-all" />
-                          <button onClick={handleValidateCable} disabled={verifying} className="px-6 bg-zinc-100 text-black font-black text-[9px] uppercase tracking-widest rounded-xl hover:bg-white transition-all disabled:opacity-50">
+                          <button onClick={handleValidateCable} disabled={verifying || !cableBiller} className="px-6 bg-zinc-100 text-black font-black text-[9px] uppercase tracking-widest rounded-xl hover:bg-white transition-all disabled:opacity-50">
                              {verifying ? 'SYNC' : 'VALIDATE'}
                           </button>
                        </div>
