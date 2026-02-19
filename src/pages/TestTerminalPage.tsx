@@ -3,7 +3,7 @@ import { vtuService } from '../services/vtuService';
 import { paystackService } from '../services/paystackService';
 import { imgbbService } from '../services/imgbbService';
 import Spinner from '../components/Spinner';
-import { BoltIcon, ShieldCheckIcon, SignalIcon, WalletIcon, PhoneIcon } from '../components/Icons';
+import { BoltIcon, ShieldCheckIcon, SignalIcon, WalletIcon } from '../components/Icons';
 
 interface Log {
   timestamp: string;
