@@ -37,5 +37,11 @@ service cloud.firestore {
       allow read, write: if isAdmin();
       allow read: if true;
     }
+
+    // Rules for manual pricing
+    match /manual_pricing/{planId} {
+      allow read, write: if isAdmin();
+      allow get: if request.auth != null;
+    }
   }
 }

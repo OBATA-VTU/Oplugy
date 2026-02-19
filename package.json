@@ -1,7 +1,6 @@
-
 {
-  "name": "oplug-vtu-app",
-  "version": "0.1.0",
+  "name": "obata-vtu-app",
+  "version": "2.0.0",
   "private": true,
   "dependencies": {
     "react": "^18.2.0",
