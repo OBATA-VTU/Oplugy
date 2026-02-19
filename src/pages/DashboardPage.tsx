@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNotifications } from '../hooks/useNotifications';
@@ -35,13 +34,13 @@ const DashboardPage: React.FC = () => {
   const slides = [
     {
       img: "https://images.unsplash.com/photo-1611974714608-35602417562c?auto=format&fit=crop&q=80&w=1200",
-      title: "Business Velocity",
-      desc: "Earn commission on every recharge. Upgrade to Reseller for just ₦1,200."
+      title: "Sell and Earn",
+      desc: "Earn commission on every recharge. Upgrade your account for just ₦1,200."
     },
     {
       img: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&q=80&w=1200",
-      title: "Global Data Terminals",
-      desc: "Instant delivery across all Nigerian networks. Zero delay guaranteed."
+      title: "Fastest Delivery",
+      desc: "Instant delivery across all Nigerian networks. No delays, guaranteed."
     }
   ];
 
@@ -52,6 +51,7 @@ const DashboardPage: React.FC = () => {
 
   const fetchDashboardData = useCallback(async () => {
     if (user) {
+      console.log("[Dashboard] Refreshing user data...");
       fetchWalletBalance();
       setIsHistoryLoading(true);
       const [settingsRes, historyRes] = await Promise.all([
@@ -70,14 +70,14 @@ const DashboardPage: React.FC = () => {
   }, [fetchDashboardData, user]);
 
   const handlePaystackUpgrade = () => {
-    addNotification("Opening payment node...", "info");
+    addNotification("Opening payment page...", "info");
     const handler = PaystackPop.setup({
       key: process.env.REACT_APP_PAYSTACK_PUBLIC_KEY || 'pk_test_placeholder',
       email: user.email,
       amount: 1200 * 100, 
       currency: 'NGN',
       callback: (response: any) => {
-        addNotification("Payment Success! Synchronizing tier upgrade...", "success");
+        addNotification("Payment Successful! Upgrading your account...", "success");
         executeUpgrade(true);
       },
       onClose: () => {
@@ -96,13 +96,13 @@ const DashboardPage: React.FC = () => {
           const currentBalance = walletBalance || 0;
           await updateWalletBalance(currentBalance - 1200);
         }
-        addNotification("Success! Reseller privileges activated.", "success");
+        addNotification("Success! Account upgraded.", "success");
         fetchDashboardData();
       } else {
-        addNotification("Tier upgrade failed.", "error");
+        addNotification("Upgrade failed.", "error");
       }
     } catch (error) {
-      addNotification("Infrastructure timeout.", "error");
+      addNotification("System error. Please try again.", "error");
     }
     setIsUpgrading(false);
   };
@@ -122,7 +122,7 @@ const DashboardPage: React.FC = () => {
   const handlePinSuccess = async (pin: string) => {
     const res = await authService.setTransactionPin(user.id, pin);
     if (res.status) {
-      addNotification("Security PIN synchronized.", "success");
+      addNotification("Security PIN saved.", "success");
       setShowPinModal(false);
     }
   };
@@ -141,8 +141,8 @@ const DashboardPage: React.FC = () => {
         isOpen={showPinPrompt} 
         onClose={() => setShowPinPrompt(false)} 
         onSuccess={() => executeUpgrade(false)}
-        title="Authorize Upgrade"
-        description="Verify 5-digit PIN to deduct ₦1,200 for Reseller access."
+        title="Upgrade Account"
+        description="Enter your 5-digit PIN to pay ₦1,200 for Reseller access."
       />
       <ReceiptModal 
         isOpen={isReceiptOpen} 
@@ -163,7 +163,7 @@ const DashboardPage: React.FC = () => {
                  <div className="text-white/40 font-black text-[10px] uppercase tracking-widest bg-white/5 px-4 py-1.5 rounded-full border border-white/10">@{user?.username}</div>
               </div>
               <div>
-                 <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/30 mb-2">Liquidity Node</p>
+                 <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/30 mb-2">Wallet Balance</p>
                  <div className="text-6xl lg:text-8xl font-black tracking-tighter leading-none flex items-baseline">
                     <span className="text-3xl mr-1 text-white/40">₦</span>
                     {walletBalance !== null ? walletBalance.toLocaleString('en-US', { minimumFractionDigits: 2 }) : '0.00'}
@@ -171,7 +171,7 @@ const DashboardPage: React.FC = () => {
               </div>
               <div className="flex flex-wrap items-center gap-4">
                  <div className="bg-white/5 px-5 py-3 rounded-2xl border border-white/10">
-                    <p className="text-[8px] font-black text-white/20 uppercase tracking-widest mb-1">Affiliate Key</p>
+                    <p className="text-[8px] font-black text-white/20 uppercase tracking-widest mb-1">My Referral Code</p>
                     <p className="font-black text-blue-400 tracking-tight text-lg uppercase">{user?.referralCode || 'N/A'}</p>
                  </div>
                  {user?.role === 'user' && (
@@ -180,7 +180,7 @@ const DashboardPage: React.FC = () => {
                     disabled={isUpgrading}
                     className="bg-white text-gray-900 px-6 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all hover:bg-blue-600 hover:text-white shadow-xl flex items-center gap-2 active:scale-95 disabled:opacity-50"
                    >
-                      {isUpgrading ? <Spinner /> : <><ShieldCheckIcon /> Level Up Tier (₦1,200)</>}
+                      {isUpgrading ? <Spinner /> : <><ShieldCheckIcon /> Upgrade Account (₦1,200)</>}
                    </button>
                  )}
               </div>
@@ -190,7 +190,7 @@ const DashboardPage: React.FC = () => {
                <ActionBtn onClick={() => navigate('/airtime')} icon={<PhoneIcon />} label="Airtime" />
                <ActionBtn onClick={() => navigate('/data')} icon={<SignalIcon />} label="Data" />
                <ActionBtn onClick={() => navigate('/bills')} icon={<BoltIcon />} label="Electricity" />
-               <ActionBtn onClick={() => navigate('/funding')} icon={<WalletIcon />} label="Fund Now" primary />
+               <ActionBtn onClick={() => navigate('/funding')} icon={<WalletIcon />} label="Add Funds" primary />
             </div>
           </div>
           <div className="absolute top-0 right-0 w-[40rem] h-[40rem] bg-blue-600/10 rounded-full blur-[120px] -z-0 group-hover:bg-blue-600/20 transition-all duration-1000"></div>
@@ -219,9 +219,9 @@ const DashboardPage: React.FC = () => {
         {/* History Section */}
         <div className="bg-white rounded-[3rem] p-10 lg:p-16 shadow-2xl border border-gray-100">
           <div className="flex justify-between items-center mb-12">
-            <h3 className="text-3xl font-black text-gray-900 tracking-tighter">Recent Traffic</h3>
+            <h3 className="text-3xl font-black text-gray-900 tracking-tighter">Recent Activity</h3>
             <Link to="/history" className="text-blue-600 font-black text-[10px] uppercase tracking-widest bg-blue-50 px-6 py-3 rounded-2xl hover:bg-blue-600 hover:text-white transition-all shadow-sm">
-               View Repository
+               View All
             </Link>
           </div>
 
@@ -240,7 +240,7 @@ const DashboardPage: React.FC = () => {
                     <div>
                       <p className="font-black text-gray-900 text-xl tracking-tight">{tx.source}</p>
                       <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">
-                        {tx.date_created?.seconds ? new Date(tx.date_created.seconds * 1000).toLocaleTimeString() : 'Recent'}
+                        {tx.date_created?.seconds ? new Date(tx.date_created.seconds * 1000).toLocaleTimeString() : 'Just now'}
                       </p>
                     </div>
                   </div>
@@ -248,14 +248,14 @@ const DashboardPage: React.FC = () => {
                     <p className={`text-2xl font-black tracking-tighter ${tx.type === 'FUNDING' ? 'text-green-600' : 'text-gray-900'}`}>
                       {tx.type === 'FUNDING' ? '+' : '-'}₦{tx.amount.toLocaleString()}
                     </p>
-                    <span className="text-[10px] font-black text-blue-600 opacity-0 group-hover:opacity-100 transition-all uppercase tracking-widest">Receipt</span>
+                    <span className="text-[10px] font-black text-blue-600 opacity-0 group-hover:opacity-100 transition-all uppercase tracking-widest">See Receipt</span>
                   </div>
                 </div>
               )) : (
                 <div className="py-24 text-center">
                    <div className="w-20 h-20 bg-gray-50 rounded-[2.5rem] flex items-center justify-center mx-auto mb-6 text-gray-200"><HistoryIcon /></div>
-                   <h4 className="font-black text-gray-900 text-2xl tracking-tighter">No logs found</h4>
-                   <p className="text-gray-400 font-medium max-w-xs mx-auto mt-2">Transactions will appear here after automated fulfillment.</p>
+                   <h4 className="font-black text-gray-900 text-2xl tracking-tighter">No transactions yet</h4>
+                   <p className="text-gray-400 font-medium max-w-xs mx-auto mt-2">Your purchases will appear here automatically.</p>
                 </div>
               )}
             </div>

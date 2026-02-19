@@ -11,7 +11,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const payload = req.method === 'POST' ? req.body : req.query;
   const { endpoint, method: targetMethod = 'GET', data, server = 'server2' } = payload || {};
 
-  // Provider Configurations
+  console.log(`[Proxy] Request to ${server}: ${targetMethod} ${endpoint}`);
+
   const providers = {
     server1: {
       baseUrl: 'https://inlomax.com/api',
@@ -28,7 +29,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const selectedProvider = providers[server as keyof typeof providers] || providers.server2;
 
   if (!selectedProvider.apiKey) {
-    return res.status(500).json({ status: 'error', message: `Infrastructure key for ${server} is missing.` });
+    console.error(`[Proxy] API Key missing for ${server}`);
+    return res.status(500).json({ status: 'error', message: `System configuration error: Key for ${server} is missing.` });
   }
 
   try {
@@ -49,21 +51,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (targetMethod !== 'GET' && data) {
       const requestData = { ...data };
-      // Server 1 (Inlomax) specific mappings
       if (server === 'server1') {
         if (requestData.phone_number) requestData.mobileNumber = requestData.phone_number;
         if (requestData.phone) requestData.mobileNumber = requestData.phone;
         if (requestData.plan_id) requestData.serviceID = requestData.plan_id;
         if (requestData.type && !requestData.serviceID) requestData.serviceID = requestData.type;
         
-        // Remove unused fields for Inlomax
         delete requestData.server;
         delete requestData.plan_name;
         delete requestData.network;
         delete requestData.phone_number;
         delete requestData.phone;
         delete requestData.plan_id;
-        delete requestData.amount; // Inlomax uses preset amounts for data/education via serviceID/quantity
+        delete requestData.amount; 
       }
       fetchOptions.body = JSON.stringify(requestData);
     }
@@ -71,17 +71,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const apiResponse = await fetch(fullUrl, fetchOptions);
     const responseText = await apiResponse.text();
 
+    console.log(`[Proxy] Response from ${server}: status ${apiResponse.status}`);
+
     try {
       const responseData = JSON.parse(responseText);
-      // Uniform status handling
-      if (server === 'server1' && responseData.status === 'success') {
-        responseData.status = 'success'; // Already matches CIP
-      }
       return res.status(apiResponse.status).json(responseData);
     } catch {
       return res.status(apiResponse.status).send(responseText);
     }
   } catch (error: any) {
-    return res.status(504).json({ status: 'error', message: 'Gateway timeout.', detail: error.message });
+    console.error(`[Proxy] Error:`, error.message);
+    return res.status(504).json({ status: 'error', message: 'The service is taking too long to respond.', detail: error.message });
   }
 }

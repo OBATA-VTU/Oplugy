@@ -50,27 +50,27 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         <Logo />
       </div>
       <nav className="flex-grow px-8 space-y-3 overflow-y-auto custom-scrollbar no-scrollbar">
-        <div className="px-5 mb-5 text-[10px] font-black uppercase tracking-[0.4em] text-gray-300">Command</div>
-        <NavItem to="/dashboard" icon={<HomeIcon />} onClick={closeSidebar}>Terminal</NavItem>
-        <NavItem to="/funding" icon={<WalletIcon />} onClick={closeSidebar}>Inject Capital</NavItem>
-        <NavItem to="/history" icon={<HistoryIcon />} onClick={closeSidebar}>Ledger</NavItem>
-        <NavItem to="/pricing" icon={<CurrencyDollarIcon />} onClick={closeSidebar}>Tariffs</NavItem>
+        <div className="px-5 mb-5 text-[10px] font-black uppercase tracking-[0.4em] text-gray-300">Menu</div>
+        <NavItem to="/dashboard" icon={<HomeIcon />} onClick={closeSidebar}>Dashboard</NavItem>
+        <NavItem to="/funding" icon={<WalletIcon />} onClick={closeSidebar}>Add Funds</NavItem>
+        <NavItem to="/history" icon={<HistoryIcon />} onClick={closeSidebar}>History</NavItem>
+        <NavItem to="/pricing" icon={<CurrencyDollarIcon />} onClick={closeSidebar}>Prices</NavItem>
         
-        <div className="px-5 mt-10 mb-5 text-[10px] font-black uppercase tracking-[0.4em] text-gray-300">Gateway</div>
+        <div className="px-5 mt-10 mb-5 text-[10px] font-black uppercase tracking-[0.4em] text-gray-300">Services</div>
         <NavItem to="/airtime" icon={<PhoneIcon />} onClick={closeSidebar}>Airtime</NavItem>
-        <NavItem to="/data" icon={<SignalIcon />} onClick={closeSidebar}>Data Nodes</NavItem>
-        <NavItem to="/bills" icon={<BoltIcon />} onClick={closeSidebar}>Utilities</NavItem>
-        <NavItem to="/cable" icon={<TvIcon />} onClick={closeSidebar}>Sat-TV Hub</NavItem>
-        <NavItem to="/education" icon={<GamingIcon />} onClick={closeSidebar}>Exam Pins</NavItem>
+        <NavItem to="/data" icon={<SignalIcon />} onClick={closeSidebar}>Buy Data</NavItem>
+        <NavItem to="/bills" icon={<BoltIcon />} onClick={closeSidebar}>Electricity</NavItem>
+        <NavItem to="/cable" icon={<TvIcon />} onClick={closeSidebar}>Cable TV</NavItem>
+        <NavItem to="/education" icon={<GamingIcon />} onClick={closeSidebar}>Exam PINs</NavItem>
 
-        <div className="px-5 mt-10 mb-5 text-[10px] font-black uppercase tracking-[0.4em] text-gray-300">Matrix</div>
-        <NavItem to="/referral" icon={<UsersIcon />} onClick={closeSidebar}>Nodes (Refer)</NavItem>
-        <NavItem to="/support" icon={<ShieldCheckIcon />} onClick={closeSidebar}>Master Help</NavItem>
+        <div className="px-5 mt-10 mb-5 text-[10px] font-black uppercase tracking-[0.4em] text-gray-300">Account</div>
+        <NavItem to="/referral" icon={<UsersIcon />} onClick={closeSidebar}>Refer & Earn</NavItem>
+        <NavItem to="/support" icon={<ShieldCheckIcon />} onClick={closeSidebar}>Help Center</NavItem>
 
         {user?.role === 'admin' && (
           <div className="pt-10 mt-10 border-t border-gray-100">
             <div className="px-5 mb-4 text-[10px] font-black uppercase tracking-[0.4em] text-red-500">Root Access</div>
-            <NavItem to="/admin" icon={<ShieldCheckIcon />} onClick={closeSidebar}>Master Admin</NavItem>
+            <NavItem to="/admin" icon={<ShieldCheckIcon />} onClick={closeSidebar}>Admin Portal</NavItem>
           </div>
         )}
       </nav>
@@ -80,7 +80,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           className="w-full flex items-center space-x-4 p-5 rounded-[1.5rem] text-red-500 bg-red-50 hover:bg-red-500 hover:text-white transition-all font-black text-[10px] uppercase tracking-widest shadow-sm active:scale-95"
         >
           <LogoutIcon />
-          <span>Exit Secure Session</span>
+          <span>Logout</span>
         </button>
       </div>
     </div>
@@ -104,14 +104,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               <MenuIcon />
             </button>
             <div className="hidden sm:block">
-               <h1 className="text-[11px] font-black text-gray-400 uppercase tracking-[0.4em] leading-none">Node ID: <span className="text-gray-900">@{user?.username || 'GUEST'}</span></h1>
+               <h1 className="text-[11px] font-black text-gray-400 uppercase tracking-[0.4em] leading-none">Username: <span className="text-gray-900">@{user?.username || 'GUEST'}</span></h1>
             </div>
           </div>
           
           <div className="flex items-center space-x-3 lg:space-x-8">
             <div className="flex items-center space-x-5 pl-6 border-l border-gray-100">
                <div className="text-right hidden sm:block">
-                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mb-1">Liquidity</p>
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mb-1">My Balance</p>
                   <p className="text-gray-900 font-black text-2xl tracking-tighter leading-none">₦{walletBalance?.toLocaleString() || '0.00'}</p>
                </div>
                <button 
