@@ -11,7 +11,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const payload = req.method === 'POST' ? req.body : req.query;
   const { endpoint, method: targetMethod = 'GET', data, server = 'server2' } = payload || {};
 
-  console.log(`[Proxy] Connecting to ${server} @ ${targetMethod} ${endpoint}`);
+  console.log(`[Proxy] Routing ${targetMethod} ${endpoint} to ${server}`);
 
   const providers = {
     server1: {
@@ -29,8 +29,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const selectedProvider = providers[server as keyof typeof providers] || providers.server2;
 
   if (!selectedProvider.apiKey) {
-    console.error(`[Proxy Error] Missing API Key for ${server}`);
-    return res.status(500).json({ status: 'error', message: `Server ${server} is not configured in environment.` });
+    console.error(`[Proxy Error] Missing credentials for ${server}`);
+    return res.status(500).json({ status: 'error', message: `Server ${server} credentials not found.` });
   }
 
   try {
@@ -52,12 +52,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (targetMethod !== 'GET' && data) {
       const requestData = { ...data };
       if (server === 'server1') {
-        // Map fields for Server 1 if necessary, but keep requestData clean
+        // Documentation mapping for Inlomax field names
         if (requestData.phone_number) requestData.mobileNumber = requestData.phone_number;
         if (requestData.phone) requestData.mobileNumber = requestData.phone;
         if (requestData.plan_id) requestData.serviceID = requestData.plan_id;
         
-        // Remove internal-only fields
+        // Remove helper fields
         delete requestData.server;
         delete requestData.plan_name;
         delete requestData.network;
@@ -69,27 +69,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       fetchOptions.body = JSON.stringify(requestData);
     }
 
-    // Set a fetch timeout
+    // Increased timeout for slow VTU providers
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 55000);
+    const timeout = setTimeout(() => controller.abort(), 58000);
     fetchOptions.signal = controller.signal;
 
     const apiResponse = await fetch(fullUrl, fetchOptions);
     clearTimeout(timeout);
     
     const responseText = await apiResponse.text();
-    console.log(`[Proxy] ${server} responded with status: ${apiResponse.status}`);
+    console.log(`[Proxy] ${server} responded: ${apiResponse.status}`);
 
     try {
       const responseData = JSON.parse(responseText);
       return res.status(apiResponse.status).json(responseData);
     } catch {
-      // If not JSON, it might be a text error from the server (e.g. 404 HTML)
-      console.error(`[Proxy Error] ${server} returned non-JSON: ${responseText.substring(0, 100)}`);
+      console.error(`[Proxy Error] ${server} response was not JSON: ${responseText.substring(0, 150)}`);
       return res.status(apiResponse.status).send(responseText);
     }
   } catch (error: any) {
     console.error(`[Proxy Fatal] Connection failed:`, error.message);
-    return res.status(504).json({ status: 'error', message: 'The gateway connection timed out.', detail: error.message });
+    return res.status(504).json({ status: 'error', message: 'The provider did not respond in time.', detail: error.message });
   }
 }

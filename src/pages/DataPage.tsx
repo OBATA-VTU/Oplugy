@@ -15,7 +15,7 @@ const DataPage: React.FC = () => {
   
   const [server, setServer] = useState<'server1' | 'server2'>('server1');
   const [operators] = useState<Operator[]>(DATA_NETWORKS);
-  const [dataTypes] = useState(DATA_PLAN_TYPES);
+  const [dataTypes, setDataTypes] = useState<{id: string, name: string}[]>(DATA_PLAN_TYPES);
   const [dataPlans, setDataPlans] = useState<DataPlan[]>([]);
   const [selectedOperator, setSelectedOperator] = useState<Operator | null>(null);
   const [selectedDataType, setSelectedDataType] = useState<string>('');
@@ -23,9 +23,29 @@ const DataPage: React.FC = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
   
   const [isFetchingPlans, setIsFetchingPlans] = useState(false);
+  const [isFetchingTypes, setIsFetchingTypes] = useState(false);
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showPinModal, setShowPinModal] = useState(false);
+
+  // Fetch dynamic categories for Server 1
+  useEffect(() => {
+    const loadTypes = async () => {
+      if (server === 'server1' && selectedOperator) {
+        setIsFetchingTypes(true);
+        setSelectedDataType('');
+        setDataPlans([]);
+        const res = await vtuService.getDataCategories(selectedOperator.id);
+        if (res.status && res.data) {
+          setDataTypes(res.data.map(t => ({ id: t, name: t })));
+        }
+        setIsFetchingTypes(false);
+      } else {
+        setDataTypes(DATA_PLAN_TYPES);
+      }
+    };
+    loadTypes();
+  }, [server, selectedOperator]);
 
   const fetchPlans = useCallback(async (network: string, type: string, targetServer: 'server1' | 'server2') => {
     setIsFetchingPlans(true);
@@ -138,12 +158,12 @@ const DataPage: React.FC = () => {
             <div>
               <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-2">Plan Type</label>
               <select 
-                className="w-full p-5 bg-gray-50 rounded-2xl font-black text-lg border-2 border-transparent focus:border-blue-600 outline-none transition-all appearance-none" 
+                className="w-full p-5 bg-gray-50 rounded-2xl font-black text-lg border-2 border-transparent focus:border-blue-600 outline-none transition-all appearance-none disabled:opacity-50" 
                 value={selectedDataType} 
                 onChange={(e) => setSelectedDataType(e.target.value)} 
-                disabled={!selectedOperator}
+                disabled={!selectedOperator || isFetchingTypes}
               >
-                <option value="">Select Type</option>
+                <option value="">{isFetchingTypes ? 'Loading Types...' : 'Select Type'}</option>
                 {dataTypes.map(type => <option key={type.id} value={type.id}>{type.name}</option>)}
               </select>
             </div>

@@ -35,7 +35,7 @@ async function logTransaction(userId: string, type: TransactionResponse['type'],
     if (status === 'SUCCESS' && type !== 'FUNDING' && type !== 'REFERRAL') {
       await updateDoc(doc(db, "users", user.uid), { walletBalance: increment(-Number(amount)) });
     }
-  } catch (e) { console.error("Database error while saving history:", e); }
+  } catch (e) { console.error("History logging failed:", e); }
 }
 
 export const vtuService = {
@@ -47,7 +47,6 @@ export const vtuService = {
 
     let serviceID = payload.network;
     if (server === 'server1') {
-      // Documentation mapping for Inlomax
       if (payload.network.toUpperCase() === 'MTN') serviceID = '1';
       if (payload.network.toUpperCase() === 'AIRTEL') serviceID = '2';
     }
@@ -64,13 +63,28 @@ export const vtuService = {
     return res;
   },
 
+  // New method to get dynamic categories for Server 1
+  getDataCategories: async (network: string): Promise<ApiResponse<string[]>> => {
+    const res = await cipApiClient<any>('services', { method: 'GET', data: { server: 'server1' } });
+    if (res.status && res.data?.dataPlans) {
+      const plans = res.data.dataPlans as any[];
+      const categories = Array.from(new Set(
+        plans
+          .filter(p => p.network.toUpperCase() === network.toUpperCase())
+          .map(p => p.dataType)
+      ));
+      return { status: true, data: categories };
+    }
+    return { status: false, message: 'Could not load network categories.' };
+  },
+
   getDataPlans: async (payload: { network: string; type: string; server?: 'server1' | 'server2' }): Promise<ApiResponse<DataPlan[]>> => {
     const userDoc = auth.currentUser ? await getDoc(doc(db, "users", auth.currentUser.uid)) : null;
     const role = (userDoc?.data()?.role as UserRole) || 'user';
     const config = await getSystemConfig();
     const server = payload.server || config.routing?.data || 'server1';
     
-    // CRITICAL: Force margin to be a number to prevent string concatenation (200 + 10 = 210, not 20010)
+    // CRITICAL FIX: Ensure margin is strictly a number to prevent "2000" + "10" = "200010"
     const margin = Number(config.pricing?.[`${role}_margin`] || 10);
     const extraServer1Margin = (server === 'server1') ? 10 : 0; 
 
@@ -79,24 +93,33 @@ export const vtuService = {
     if (res.status && res.data) {
       let plans: any[] = [];
       if (server === 'server1') {
-        const rawPlans = res.data.dataPlans || [];
+        const rawPlans = (res.data.dataPlans || []) as any[];
         plans = rawPlans
-          .filter((p: any) => p.network.toUpperCase() === payload.network.toUpperCase())
-          .map((p: any) => ({
-            id: String(p.serviceID),
-            name: `${p.dataPlan} ${p.dataType}`,
-            // FIX: Ensure all parts of the addition are forced into Number
-            amount: Number(p.amount.toString().replace(/,/g, '')) + Number(margin) + Number(extraServer1Margin),
-            validity: p.validity
-          }));
+          .filter((p: any) => 
+            p.network.toUpperCase() === payload.network.toUpperCase() && 
+            p.dataType.toUpperCase() === payload.type.toUpperCase()
+          )
+          .map((p: any) => {
+            const rawAmount = String(p.amount).replace(/,/g, '');
+            return {
+              id: String(p.serviceID),
+              name: `${p.dataPlan} ${p.dataType}`,
+              // Ensure mathematical addition, not string joining
+              amount: Number(rawAmount) + Number(margin) + Number(extraServer1Margin),
+              validity: p.validity
+            };
+          });
       } else {
-        // FIX: Also force Server 2 prices to be numbers
-        plans = res.data.map((p: any) => ({
-          id: String(p.id || p.code),
-          name: p.name,
-          amount: Number(p.price.toString().replace(/,/g, '')) + Number(margin),
-          validity: p.validity || '30 Days'
-        }));
+        const rawPlans = (res.data || []) as any[];
+        plans = rawPlans.map((p: any) => {
+          const rawPrice = String(p.price || p.amount).replace(/,/g, '');
+          return {
+            id: String(p.id || p.code),
+            name: p.name,
+            amount: Number(rawPrice) + Number(margin),
+            validity: p.validity || '30 Days'
+          };
+        });
       }
       return { status: true, data: plans };
     }
@@ -142,8 +165,7 @@ export const vtuService = {
     const res = await cipApiClient<any>(server === 'server1' ? 'services' : 'electricity/providers', { method: 'GET', data: { server } });
     if (res.status && res.data) {
         if (server === 'server1') {
-            const rawElect = res.data.electricity || [];
-            const operators = rawElect.map((e: any) => ({ id: String(e.serviceID), name: e.disco }));
+            const operators = (res.data.electricity || []).map((e: any) => ({ id: String(e.serviceID), name: e.disco }));
             return { status: true, data: operators };
         }
         return res;
@@ -182,15 +204,17 @@ export const vtuService = {
     const res = await cipApiClient<any>(server === 'server1' ? 'services' : `cable/plans?biller=${billerName}`, { method: 'GET', data: { server } });
     if (res.status && res.data) {
         if (server === 'server1') {
-            const rawCable = res.data.cablePlans || [];
-            const plans = rawCable
+            const plans = (res.data.cablePlans || [])
                 .filter((p: any) => p.cable.toUpperCase() === billerName.toUpperCase())
-                .map((p: any) => ({
+                .map((p: any) => {
+                  const rawAmount = String(p.amount).replace(/,/g, '');
+                  return {
                     id: String(p.serviceID),
                     name: p.cablePlan,
-                    amount: Number(p.amount.toString().replace(/,/g, '')),
+                    amount: Number(rawAmount),
                     validity: 'Monthly'
-                }));
+                  };
+                });
             return { status: true, data: plans };
         }
         return res;
