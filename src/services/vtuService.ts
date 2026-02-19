@@ -49,18 +49,21 @@ async function logTransaction(userId: string, type: TransactionResponse['type'],
 }
 
 export const vtuService = {
-  // Airtime: Strictly Server 1 (Inlomax)
-  purchaseAirtime: async (payload: { network: string; phone: string; amount: number }): Promise<ApiResponse<TransactionResponse>> => {
+  // Airtime Integration
+  purchaseAirtime: async (payload: { network: string; phone: string; amount: number; server?: 'server1' | 'server2' }): Promise<ApiResponse<TransactionResponse>> => {
     const user = auth.currentUser;
     if (!user) return { status: false, message: 'Please login to continue.' };
 
+    const server = payload.server || 'server1';
+    const serverName = server === 'server1' ? 'Inlomax Node' : 'CIP Node';
+    
     const res = await cipApiClient<any>('airtime', { 
-      data: { ...payload, mobileNumber: payload.phone, server: 'server1' }, 
+      data: { ...payload, mobileNumber: payload.phone, server }, 
       method: 'POST' 
     });
     
     if (res.status) {
-      await logTransaction(user.uid, 'AIRTIME', payload.amount, `${payload.network} Airtime`, `Recharge for ${payload.phone}`, 'SUCCESS', 'Inlomax Node');
+      await logTransaction(user.uid, 'AIRTIME', payload.amount, `${payload.network} Airtime`, `Recharge for ${payload.phone}`, 'SUCCESS', serverName);
       return { status: true, message: res.message, data: res.data };
     }
     return res;
@@ -80,11 +83,10 @@ export const vtuService = {
           return { status: true, data: categories };
         }
       } else {
-        const res = await cipApiClient<any[]>(`data/categories?network=${network}`, { method: 'GET', data: { server: 'server2' } });
-        if (res.status && Array.isArray(res.data)) {
-          const categories = res.data.map((cat: any) => typeof cat === 'object' ? cat.name : String(cat));
-          return { status: true, data: categories };
-        }
+        // CIP Step 1 identifies plans directly via query, but we can infer categories if needed.
+        // For consistency, we'll return fixed categories or fetch if CIP adds an endpoint.
+        // Mocking for now based on common Nigerian data types if CIP doesn't have a distinct category endpoint
+        return { status: true, data: ['SME', 'GIFTING', 'AWOOF', 'DATASHARE'] };
       }
     } catch (e) { console.error("Category fetch error:", e); }
     return { status: false, message: 'Node synchronization failed.' };
@@ -122,6 +124,7 @@ export const vtuService = {
           return { status: true, data: plans };
         }
       } else {
+        // CIP Step 1: GET /api/data/plans?network={Network}&type={DataType}
         const res = await cipApiClient<any[]>(`data/plans`, { 
           method: 'GET', 
           data: { network: payload.network, type: payload.type, server: 'server2' } 
@@ -148,9 +151,16 @@ export const vtuService = {
     if (!user) return { status: false, message: 'Please login to continue.' };
     const serverName = payload.server === 'server1' ? 'Inlomax Node' : 'CIP Node';
     
-    const endpoint = payload.server === 'server1' ? 'data' : 'data/purchase';
+    // Server 1 uses 'data', Server 2 uses 'data/plans' per docs
+    const endpoint = payload.server === 'server1' ? 'data' : 'data/plans';
     const res = await cipApiClient<any>(endpoint, { 
-      data: { ...payload, mobileNumber: payload.phone_number, serviceID: payload.plan_id, server: payload.server }, 
+      data: { 
+        plan_id: payload.plan_id, 
+        phone_number: payload.phone_number, 
+        serviceID: payload.plan_id, // Backward compat for server1
+        mobileNumber: payload.phone_number, // Backward compat for server1
+        server: payload.server 
+      }, 
       method: 'POST' 
     });
 
@@ -160,79 +170,165 @@ export const vtuService = {
     return res;
   },
 
-  // Electricity: Strictly Server 1 (Inlomax)
-  getElectricityOperators: async (): Promise<ApiResponse<Operator[]>> => {
-    const res = await cipApiClient<any>('services', { method: 'GET', data: { server: 'server1' } });
-    if (res.status && res.data?.electricity) {
-        const operators = (res.data.electricity || []).map((e: any) => ({ 
-          id: String(e.serviceID), 
-          name: e.disco 
-        }));
-        return { status: true, data: operators };
+  // Electricity Integration
+  getElectricityOperators: async (server: 'server1' | 'server2' = 'server1'): Promise<ApiResponse<Operator[]>> => {
+    if (server === 'server1') {
+      const res = await cipApiClient<any>('services', { method: 'GET', data: { server: 'server1' } });
+      if (res.status && res.data?.electricity) {
+          const operators = (res.data.electricity || []).map((e: any) => ({ 
+            id: String(e.serviceID), 
+            name: e.disco 
+          }));
+          return { status: true, data: operators };
+      }
+    } else {
+      // CIP: GET /api/electricity
+      const res = await cipApiClient<any[]>('electricity', { method: 'GET', data: { server: 'server2' } });
+      if (res.status && Array.isArray(res.data)) {
+        return { status: true, data: res.data.map((e: any) => ({ id: e.id, name: e.name })) };
+      }
     }
     return { status: false, message: 'Electricity providers node offline.' };
   },
 
-  verifyElectricityMeter: async (payload: { meter_number: string; provider_id: string; meter_type: 'prepaid' | 'postpaid' }): Promise<ApiResponse<VerificationResponse>> => {
-    return await cipApiClient<any>('validatemeter', { 
-      data: { serviceID: payload.provider_id, meterNum: payload.meter_number, meterType: payload.meter_type === 'prepaid' ? 1 : 2, server: 'server1' }, 
-      method: 'POST' 
-    });
+  verifyElectricityMeter: async (payload: { meter_number: string; provider_id: string; meter_type: 'prepaid' | 'postpaid'; server?: 'server1' | 'server2' }): Promise<ApiResponse<VerificationResponse>> => {
+    const server = payload.server || 'server1';
+    if (server === 'server1') {
+      return await cipApiClient<any>('validatemeter', { 
+        data: { serviceID: payload.provider_id, meterNum: payload.meter_number, meterType: payload.meter_type === 'prepaid' ? 1 : 2, server: 'server1' }, 
+        method: 'POST' 
+      });
+    } else {
+      // CIP: POST /api/electricity/validate
+      return await cipApiClient<any>('electricity/validate', {
+        data: { 
+          meter_number: payload.meter_number, 
+          provider_id: payload.provider_id, 
+          meter_type: payload.meter_type,
+          server: 'server2' 
+        },
+        method: 'POST'
+      });
+    }
   },
 
-  purchaseElectricity: async (payload: { meter_number: string; provider_id: string; meter_type: 'prepaid' | 'postpaid'; phone: string; amount: number; provider_name: string }): Promise<ApiResponse<TransactionResponse>> => {
+  purchaseElectricity: async (payload: { meter_number: string; provider_id: string; meter_type: 'prepaid' | 'postpaid'; phone: string; amount: number; provider_name: string; server?: 'server1' | 'server2' }): Promise<ApiResponse<TransactionResponse>> => {
     const user = auth.currentUser;
     if (!user) return { status: false, message: 'Auth required.' };
+    const server = payload.server || 'server1';
+    const serverName = server === 'server1' ? 'Inlomax Node' : 'CIP Node';
     
-    const res = await cipApiClient<any>('payelectric', { 
-      data: { serviceID: payload.provider_id, meterNum: payload.meter_number, meterType: payload.meter_type === 'prepaid' ? 1 : 2, amount: payload.amount, server: 'server1' }, 
-      method: 'POST' 
-    });
+    let res;
+    if (server === 'server1') {
+      res = await cipApiClient<any>('payelectric', { 
+        data: { serviceID: payload.provider_id, meterNum: payload.meter_number, meterType: payload.meter_type === 'prepaid' ? 1 : 2, amount: payload.amount, server: 'server1' }, 
+        method: 'POST' 
+      });
+    } else {
+      // CIP: POST /api/electricity
+      res = await cipApiClient<any>('electricity', {
+        data: {
+          meter_number: payload.meter_number,
+          provider_id: payload.provider_id,
+          meter_type: payload.meter_type,
+          amount: payload.amount,
+          phone: payload.phone,
+          server: 'server2'
+        },
+        method: 'POST'
+      });
+    }
+
     if (res.status) {
-      await logTransaction(user.uid, 'ELECTRICITY', payload.amount, `${payload.provider_name} Power`, `Meter ${payload.meter_number}`, 'SUCCESS', 'Inlomax Node');
+      await logTransaction(user.uid, 'ELECTRICITY', payload.amount, `${payload.provider_name} Power`, `Meter ${payload.meter_number}`, 'SUCCESS', serverName);
     }
     return res;
   },
 
-  // Cable: Strictly Server 1 (Inlomax)
-  getCablePlans: async (billerName: string): Promise<ApiResponse<DataPlan[]>> => {
-    const res = await cipApiClient<any>('services', { method: 'GET', data: { server: 'server1' } });
-    if (res.status && res.data?.cablePlans) {
-        const filtered = (res.data.cablePlans || []).filter((c: any) => c.cable.toUpperCase() === billerName.toUpperCase());
+  // Cable Integration
+  getCablePlans: async (billerName: string, server: 'server1' | 'server2' = 'server1'): Promise<ApiResponse<DataPlan[]>> => {
+    if (server === 'server1') {
+      const res = await cipApiClient<any>('services', { method: 'GET', data: { server: 'server1' } });
+      if (res.status && res.data?.cablePlans) {
+          const filtered = (res.data.cablePlans || []).filter((c: any) => c.cable.toUpperCase() === billerName.toUpperCase());
+          return { 
+            status: true, 
+            data: filtered.map((p: any) => ({
+              id: String(p.serviceID),
+              name: p.cablePlan,
+              amount: Number(String(p.amount).replace(/,/g, '')),
+              validity: 'Monthly'
+            }))
+          };
+      }
+    } else {
+      // CIP: GET /api/tv?biller={biller_name}
+      const res = await cipApiClient<any[]>(`tv?biller=${billerName}`, { method: 'GET', data: { server: 'server2' } });
+      if (res.status && Array.isArray(res.data)) {
         return { 
           status: true, 
-          data: filtered.map((p: any) => ({
-            id: String(p.serviceID),
-            name: p.cablePlan,
-            amount: Number(String(p.amount).replace(/,/g, '')),
+          data: res.data.map((p: any) => ({
+            id: String(p.code),
+            name: p.name,
+            amount: Number(String(p.price).replace(/,/g, '')),
             validity: 'Monthly'
           }))
         };
+      }
     }
     return { status: false, message: 'Cable packages synchronization failed.' };
   },
 
-  verifyCableSmartcard: async (payload: { biller: string; smartCardNumber: string }): Promise<ApiResponse<VerificationResponse>> => {
-    return await cipApiClient<any>('validatecable', { 
-      data: { serviceID: payload.biller, iucNum: payload.smartCardNumber, server: 'server1' }, 
-      method: 'POST' 
-    });
+  verifyCableSmartcard: async (payload: { biller: string; smartCardNumber: string; server?: 'server1' | 'server2' }): Promise<ApiResponse<VerificationResponse>> => {
+    const server = payload.server || 'server1';
+    if (server === 'server1') {
+      return await cipApiClient<any>('validatecable', { 
+        data: { serviceID: payload.biller, iucNum: payload.smartCardNumber, server: 'server1' }, 
+        method: 'POST' 
+      });
+    } else {
+      // CIP: POST /api/tv/verify
+      return await cipApiClient<any>('tv/verify', {
+        data: { biller: payload.biller, smartCardNumber: payload.smartCardNumber, server: 'server2' },
+        method: 'POST'
+      });
+    }
   },
 
-  purchaseCable: async (payload: { biller: string; planCode: string; smartCardNumber: string; subscriptionType: 'RENEW' | 'CHANGE'; phoneNumber: string; amount: number; plan_name: string }): Promise<ApiResponse<TransactionResponse>> => {
+  purchaseCable: async (payload: { biller: string; planCode: string; smartCardNumber: string; subscriptionType: 'RENEW' | 'CHANGE'; phoneNumber: string; amount: number; plan_name: string; server?: 'server1' | 'server2' }): Promise<ApiResponse<TransactionResponse>> => {
     const user = auth.currentUser;
     if (!user) return { status: false, message: 'Auth required.' };
-    const res = await cipApiClient<any>('subcable', { 
-      data: { serviceID: payload.planCode, iucNum: payload.smartCardNumber, server: 'server1' }, 
-      method: 'POST' 
-    });
+    const server = payload.server || 'server1';
+    const serverName = server === 'server1' ? 'Inlomax Node' : 'CIP Node';
+    
+    let res;
+    if (server === 'server1') {
+      res = await cipApiClient<any>('subcable', { 
+        data: { serviceID: payload.planCode, iucNum: payload.smartCardNumber, server: 'server1' }, 
+        method: 'POST' 
+      });
+    } else {
+      // CIP: POST /api/tv
+      res = await cipApiClient<any>('tv', {
+        data: {
+          biller: payload.biller,
+          planCode: payload.planCode,
+          smartCardNumber: payload.smartCardNumber,
+          subscriptionType: payload.subscriptionType,
+          phoneNumber: payload.phoneNumber,
+          server: 'server2'
+        },
+        method: 'POST'
+      });
+    }
+
     if (res.status) {
-      await logTransaction(user.uid, 'CABLE', payload.amount, `${payload.biller} TV`, `${payload.plan_name} for ${payload.smartCardNumber}`, 'SUCCESS', 'Inlomax Node');
+      await logTransaction(user.uid, 'CABLE', payload.amount, `${payload.biller} TV`, `${payload.plan_name} for ${payload.smartCardNumber}`, 'SUCCESS', serverName);
     }
     return res;
   },
 
-  // Education: Strictly Server 1 (Inlomax)
+  // Education: Strictly Server 1 (Inlomax) as no CIP doc provided for this
   purchaseEducation: async (payload: { type: string; quantity: number; amount: number }): Promise<ApiResponse<TransactionResponse>> => {
     const user = auth.currentUser;
     if (!user) return { status: false, message: 'Auth required.' };

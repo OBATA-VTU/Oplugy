@@ -7,12 +7,11 @@ import Spinner from '../components/Spinner';
 import PinPromptModal from '../components/PinPromptModal';
 import { BoltIcon } from '../components/Icons';
 
-let operatorsCache: Operator[] = [];
-
 const BillsPage: React.FC = () => {
   const { addNotification } = useNotifications();
   const { fetchWalletBalance, walletBalance } = useAuth();
-  const [operators, setOperators] = useState<Operator[]>(operatorsCache);
+  const [server, setServer] = useState<'server1' | 'server2'>('server1');
+  const [operators, setOperators] = useState<Operator[]>([]);
   const [selectedOperator, setSelectedOperator] = useState<Operator | null>(null);
   const [meterNumber, setMeterNumber] = useState('');
   const [meterType, setMeterType] = useState<'prepaid' | 'postpaid'>('prepaid');
@@ -26,13 +25,14 @@ const BillsPage: React.FC = () => {
   const numericAmount = parseFloat(amount);
 
   const fetchOperators = useCallback(async () => {
-    if (operatorsCache.length > 0) return;
-    const response = await vtuService.getElectricityOperators();
+    setOperators([]);
+    setSelectedOperator(null);
+    setCustomerName(null);
+    const response = await vtuService.getElectricityOperators(server);
     if (response.status && response.data) {
-      operatorsCache = response.data;
       setOperators(response.data);
     }
-  }, []);
+  }, [server]);
 
   useEffect(() => {
     fetchOperators();
@@ -46,6 +46,7 @@ const BillsPage: React.FC = () => {
       provider_id: selectedOperator.id,
       meter_number: meterNumber,
       meter_type: meterType,
+      server
     });
     if (response.status && response.data?.customerName) {
       setCustomerName(response.data.customerName);
@@ -78,6 +79,7 @@ const BillsPage: React.FC = () => {
       amount: numericAmount,
       phone: phoneNumber,
       provider_name: selectedOperator!.name,
+      server
     });
 
     if (response.status && response.data) {
@@ -110,6 +112,18 @@ const BillsPage: React.FC = () => {
 
       <div className="bg-white p-8 lg:p-12 rounded-[2.5rem] lg:rounded-[3rem] shadow-xl border border-gray-50">
         <div className="space-y-8">
+          <div>
+             <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-4">Select Hub Node</label>
+             <select 
+               value={server} 
+               onChange={(e) => setServer(e.target.value as any)}
+               className="w-full p-5 bg-gray-50 border-2 border-transparent focus:border-blue-600 rounded-2xl font-black text-lg outline-none transition-all appearance-none"
+             >
+                <option value="server1">Node 1 (Inlomax)</option>
+                <option value="server2">Node 2 (CIP)</option>
+             </select>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
               <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-2">Your Electricity Company (Disco)</label>
@@ -117,7 +131,7 @@ const BillsPage: React.FC = () => {
                 className="w-full p-5 bg-gray-50 rounded-2xl font-black text-lg border-2 border-transparent focus:border-blue-600 outline-none transition-all appearance-none" 
                 value={selectedOperator?.id || ''} 
                 onChange={(e) => {
-                  setSelectedOperator(operators.find(o => o.id === e.target.value) || null);
+                  setSelectedOperator(operators.find(o => String(o.id) === String(e.target.value)) || null);
                   setCustomerName(null);
                 }}
               >

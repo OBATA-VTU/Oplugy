@@ -11,6 +11,7 @@ import { AIRTIME_NETWORKS } from '../constants';
 const AirtimePage: React.FC = () => {
   const { addNotification } = useNotifications();
   const { walletBalance, updateWalletBalance } = useAuth();
+  const [server, setServer] = useState<'server1' | 'server2'>('server1');
   const [operators] = useState<Operator[]>(AIRTIME_NETWORKS);
   const [selectedOperator, setSelectedOperator] = useState<Operator | null>(null);
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -56,6 +57,7 @@ const AirtimePage: React.FC = () => {
       phone: phoneNumber,
       network: selectedOperator.id,
       amount: numericAmount,
+      server
     };
 
     const response = await vtuService.purchaseAirtime(payload);
@@ -93,6 +95,18 @@ const AirtimePage: React.FC = () => {
 
       <div className="bg-white p-10 rounded-[3rem] shadow-xl border border-gray-50">
         <div className="space-y-10">
+          <div>
+             <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-4">Select Node</label>
+             <select 
+               value={server} 
+               onChange={(e) => setServer(e.target.value as any)}
+               className="w-full p-5 bg-gray-50 border-2 border-transparent focus:border-blue-600 rounded-2xl font-black text-lg outline-none transition-all appearance-none"
+             >
+                <option value="server1">Inlomax (Recommended)</option>
+                <option value="server2">CIP Terminal</option>
+             </select>
+          </div>
+
           <div>
             <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 text-center">1. Choose Network</label>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">

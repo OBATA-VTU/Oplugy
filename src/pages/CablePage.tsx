@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNotifications } from '../hooks/useNotifications';
 import { vtuService } from '../services/vtuService';
@@ -12,6 +12,7 @@ import { TvIcon } from '../components/Icons';
 const CablePage: React.FC = () => {
   const { addNotification } = useNotifications();
   const { fetchWalletBalance, walletBalance } = useAuth();
+  const [server, setServer] = useState<'server1' | 'server2'>('server1');
   const [operators] = useState<Operator[]>(CABLE_BILLERS);
   const [cablePlans, setCablePlans] = useState<DataPlan[]>([]);
   const [selectedOperator, setSelectedOperator] = useState<Operator | null>(null);
@@ -30,20 +31,30 @@ const CablePage: React.FC = () => {
     setIsFetchingPlans(true);
     setCablePlans([]);
     setSelectedPlan(null);
-    const response = await vtuService.getCablePlans(billerName);
+    const response = await vtuService.getCablePlans(billerName, server);
     if (response.status && response.data) {
       setCablePlans(response.data);
     } else {
       addNotification(response.message || 'Error loading packages.', 'error');
     }
     setIsFetchingPlans(false);
-  }, [addNotification]);
+  }, [addNotification, server]);
+
+  useEffect(() => {
+    if (selectedOperator && customerName) {
+      fetchPlans(selectedOperator.id);
+    }
+  }, [server, selectedOperator, customerName, fetchPlans]);
   
   const handleVerify = async () => {
     if (!selectedOperator || !smartcardNo) return;
     setIsVerifying(true);
     setCustomerName(null);
-    const response = await vtuService.verifyCableSmartcard({ biller: selectedOperator.id, smartCardNumber: smartcardNo });
+    const response = await vtuService.verifyCableSmartcard({ 
+      biller: selectedOperator.id, 
+      smartCardNumber: smartcardNo,
+      server 
+    });
     if (response.status && response.data?.customerName) {
       setCustomerName(response.data.customerName);
       addNotification('Smartcard verified.', 'success');
@@ -82,6 +93,7 @@ const CablePage: React.FC = () => {
       phoneNumber: phoneNumber,
       amount: selectedPlan.amount,
       plan_name: selectedPlan.name,
+      server
     });
 
     if (response.status && response.data) {
@@ -114,6 +126,22 @@ const CablePage: React.FC = () => {
 
       <div className="bg-white p-8 lg:p-12 rounded-[2.5rem] lg:rounded-[3rem] shadow-xl border border-gray-50">
         <div className="space-y-8">
+           <div>
+              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-4">Fulfillment Hub</label>
+              <select 
+                value={server} 
+                onChange={(e) => {
+                  setServer(e.target.value as any);
+                  setCustomerName(null);
+                  setCablePlans([]);
+                }}
+                className="w-full p-5 bg-gray-50 border-2 border-transparent focus:border-blue-600 rounded-2xl font-black text-lg outline-none transition-all appearance-none"
+              >
+                 <option value="server1">Terminal 1 (Inlomax)</option>
+                 <option value="server2">Terminal 2 (CIP)</option>
+              </select>
+           </div>
+
            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div>
                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-2">Select TV</label>
@@ -168,7 +196,7 @@ const CablePage: React.FC = () => {
                     <select 
                       className="w-full p-5 bg-gray-50 rounded-2xl font-black text-lg border-2 border-transparent focus:border-blue-600 outline-none transition-all appearance-none" 
                       value={selectedPlan?.id || ''} 
-                      onChange={e => setSelectedPlan(cablePlans.find(p => p.id === e.target.value) || null)}
+                      onChange={e => setSelectedPlan(cablePlans.find(p => String(p.id) === String(e.target.value)) || null)}
                       disabled={isFetchingPlans || cablePlans.length === 0}
                     >
                        <option value="">{isFetchingPlans ? 'Loading...' : 'Select Plan'}</option>
