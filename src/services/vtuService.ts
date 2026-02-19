@@ -69,26 +69,29 @@ export const vtuService = {
   },
 
   getDataCategories: async (network: string, server: 'server1' | 'server2'): Promise<ApiResponse<string[]>> => {
-    if (server === 'server1') {
-      // Inlomax 'services' endpoint is a GET request
-      const res = await cipApiClient<any>('services', { method: 'GET', data: { server: 'server1' } });
-      if (res.status && res.data?.dataPlans) {
-        const plans = res.data.dataPlans as any[];
-        const categories = Array.from(new Set(
-          plans
-            .filter(p => p.network.toUpperCase() === network.toUpperCase())
-            .map(p => p.dataType)
-        ));
-        return { status: true, data: categories };
+    try {
+      if (server === 'server1') {
+        const res = await cipApiClient<any>('services', { method: 'GET', data: { server: 'server1' } });
+        if (res.status && res.data?.dataPlans) {
+          const plans = res.data.dataPlans as any[];
+          const categories = Array.from(new Set(
+            plans
+              .filter(p => p.network && p.network.toUpperCase() === network.toUpperCase())
+              .map(p => p.dataType)
+          )).filter(c => !!c);
+          return { status: true, data: categories };
+        }
+      } else {
+        const res = await cipApiClient<any[]>(`data/categories?network=${network}`, { method: 'GET', data: { server: 'server2' } });
+        if (res.status && Array.isArray(res.data)) {
+          const categories = res.data.map((cat: any) => typeof cat === 'object' ? cat.name : String(cat));
+          return { status: true, data: categories };
+        }
       }
-    } else {
-      const res = await cipApiClient<any[]>(`data/categories?network=${network}`, { method: 'GET', data: { server: 'server2' } });
-      if (res.status && Array.isArray(res.data)) {
-        const categories = res.data.map((cat: any) => typeof cat === 'object' ? cat.name : String(cat));
-        return { status: true, data: categories };
-      }
+    } catch (e) {
+      console.error("Category fetch error:", e);
     }
-    return { status: false, message: 'Categories not found for this node.' };
+    return { status: false, message: 'Could not synchronize categories from node.' };
   },
 
   getDataPlans: async (payload: { network: string; type: string; server?: 'server1' | 'server2' }): Promise<ApiResponse<DataPlan[]>> => {
@@ -97,46 +100,50 @@ export const vtuService = {
     const server = payload.server || 'server1';
     const config = await getSystemConfig();
     
-    if (server === 'server1') {
-      const res = await cipApiClient<any>('services', { method: 'GET', data: { server: 'server1' } });
-      if (res.status && res.data?.dataPlans) {
-        const rawPlans = (res.data.dataPlans || []) as any[];
-        const filtered = rawPlans.filter((p: any) => 
-          p.network.toUpperCase() === payload.network.toUpperCase() && 
-          p.dataType.toUpperCase() === payload.type.toUpperCase()
-        );
+    try {
+      if (server === 'server1') {
+        const res = await cipApiClient<any>('services', { method: 'GET', data: { server: 'server1' } });
+        if (res.status && res.data?.dataPlans) {
+          const rawPlans = (res.data.dataPlans || []) as any[];
+          const filtered = rawPlans.filter((p: any) => 
+            p.network && p.network.toUpperCase() === payload.network.toUpperCase() && 
+            p.dataType && p.dataType.toUpperCase() === payload.type.toUpperCase()
+          );
 
-        const plans: DataPlan[] = [];
-        for (const p of filtered) {
-          const planId = String(p.serviceID);
-          const manual = await getManualPrice(planId, role);
-          const rawBase = Number(String(p.amount).replace(/,/g, ''));
-          plans.push({
-            id: planId,
-            name: `${p.dataPlan} ${p.dataType}`,
-            amount: manual || (rawBase + (config.pricing?.server1?.data_margin ?? 10)), 
-            validity: p.validity
-          });
+          const plans: DataPlan[] = [];
+          for (const p of filtered) {
+            const planId = String(p.serviceID);
+            const manual = await getManualPrice(planId, role);
+            const rawBase = Number(String(p.amount).replace(/,/g, ''));
+            plans.push({
+              id: planId,
+              name: `${p.dataPlan} ${p.dataType}`,
+              amount: manual || (rawBase + (config.pricing?.server1?.data_margin ?? 10)), 
+              validity: p.validity
+            });
+          }
+          return { status: true, data: plans };
         }
-        return { status: true, data: plans };
+      } else {
+        const res = await cipApiClient<any[]>(`data/plans`, { 
+          method: 'GET', 
+          data: { network: payload.network, type: payload.type, server: 'server2' } 
+        });
+        if (res.status && Array.isArray(res.data)) {
+          const margin = config.pricing?.server2?.data_margin ?? 10;
+          const plans = res.data.map((p: any) => ({
+            id: String(p.id || p.code),
+            name: p.name,
+            amount: Number(String(p.price || p.amount || 0).replace(/,/g, '')) + margin,
+            validity: p.validity || '30 Days'
+          }));
+          return { status: true, data: plans };
+        }
       }
-    } else {
-      const res = await cipApiClient<any[]>(`data/plans?network=${payload.network}&type=${payload.type}`, { 
-        method: 'GET', 
-        data: { server: 'server2' } 
-      });
-      if (res.status && Array.isArray(res.data)) {
-        const margin = config.pricing?.server2?.data_margin ?? 10;
-        const plans = res.data.map((p: any) => ({
-          id: String(p.id || p.code),
-          name: p.name,
-          amount: Number(String(p.price || p.amount || 0).replace(/,/g, '')) + margin,
-          validity: p.validity || '30 Days'
-        }));
-        return { status: true, data: plans };
-      }
+    } catch (e) {
+      console.error("Plan fetch error:", e);
     }
-    return { status: false, message: 'Plans synchronized but currently empty.' };
+    return { status: false, message: 'Node failed to return plan listings.' };
   },
 
   purchaseData: async (payload: { plan_id: string; phone_number: string; amount: number; network: string; plan_name: string; server: 'server1' | 'server2' }): Promise<ApiResponse<TransactionResponse>> => {

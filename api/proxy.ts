@@ -27,19 +27,31 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const selectedProvider = providers[server as keyof typeof providers] || providers.server2;
 
   if (!selectedProvider.apiKey) {
-    return res.status(500).json({ status: 'error', message: `System Error: ${server} API key not configured.` });
+    return res.status(500).json({ status: 'error', message: `Config Error: ${server} API key missing.` });
   }
 
   try {
     let cleanEndpoint = endpoint.replace(/^\//, '');
     
-    // Inlomax (Server 1) often requires trailing slashes for directory-style endpoints
+    // Inlomax (Server 1) requires trailing slashes on many directory endpoints
     if (server === 'server1' && !cleanEndpoint.endsWith('/') && !cleanEndpoint.includes('?')) {
       cleanEndpoint += '/';
     }
 
-    const fullUrl = `${selectedProvider.baseUrl.replace(/\/$/, '')}/${cleanEndpoint}`;
+    let fullUrl = `${selectedProvider.baseUrl.replace(/\/$/, '')}/${cleanEndpoint}`;
     
+    // For GET requests, if there are additional parameters in 'data', append them
+    if (targetMethod.toUpperCase() === 'GET' && data && typeof data === 'object') {
+       const params = new URLSearchParams();
+       Object.entries(data).forEach(([key, val]) => {
+         if (key !== 'server') params.append(key, String(val));
+       });
+       const queryString = params.toString();
+       if (queryString) {
+         fullUrl += (fullUrl.includes('?') ? '&' : '?') + queryString;
+       }
+    }
+
     const headers: any = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
@@ -47,14 +59,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     };
 
     const fetchOptions: any = {
-      method: targetMethod,
+      method: targetMethod.toUpperCase(),
       headers,
     };
 
-    if (targetMethod !== 'GET' && data) {
+    if (targetMethod.toUpperCase() !== 'GET' && data) {
       let requestData = { ...data };
       if (server === 'server1') {
         const mappedData: any = {};
+        // Unified mapping for Inlomax
         if (requestData.serviceID) mappedData.serviceID = String(requestData.serviceID);
         else if (requestData.plan_id) mappedData.serviceID = String(requestData.plan_id);
         
@@ -69,7 +82,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 25000); // 25s timeout for upstream
+    const timeout = setTimeout(() => controller.abort(), 28000);
     fetchOptions.signal = controller.signal;
 
     const apiResponse = await fetch(fullUrl, fetchOptions);
@@ -84,6 +97,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(apiResponse.status).send(responseText);
     }
   } catch (error: any) {
-    return res.status(504).json({ status: 'error', message: 'Gateway timeout or connection refused.' });
+    return res.status(504).json({ status: 'error', message: 'Gateway Timeout or Connectivity Issue.' });
   }
 }
