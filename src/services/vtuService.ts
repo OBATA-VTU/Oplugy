@@ -35,7 +35,7 @@ async function logTransaction(userId: string, type: TransactionResponse['type'],
     if (status === 'SUCCESS' && type !== 'FUNDING' && type !== 'REFERRAL') {
       await updateDoc(doc(db, "users", user.uid), { walletBalance: increment(-Number(amount)) });
     }
-  } catch (e) { console.error("History logging failed:", e); }
+  } catch (e) { console.error("Database error while saving history:", e); }
 }
 
 export const vtuService = {
@@ -69,7 +69,7 @@ export const vtuService = {
     const config = await getSystemConfig();
     const server = payload.server || config.routing?.data || 'server1';
     
-    // CRITICAL: Ensure margin is a number
+    // CRITICAL FIX: Ensure margin is treated as a Number to prevent text joining (e.g. 2000 + 10 = 2010, not 200010)
     const margin = Number(config.pricing?.[`${role}_margin`] || 10);
     const extraServer1Margin = (server === 'server1') ? 10 : 0; 
 
@@ -83,12 +83,12 @@ export const vtuService = {
           .map((p: any) => ({
             id: p.serviceID,
             name: `${p.dataPlan} ${p.dataType}`,
-            // FIX: Use Number() to prevent string concatenation (2000 + 10 = 2010, not 200010)
+            // FIX: Use Number() to ensure math is done correctly
             amount: Number(p.amount) + margin + extraServer1Margin,
             validity: p.validity
           }));
       } else {
-        // FIX: Also enforce Number() for Server 2
+        // FIX: Also ensure server 2 prices are numbers
         plans = res.data.map((p: any) => ({
           id: p.id || p.code,
           name: p.name,

@@ -11,9 +11,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const payload = req.method === 'POST' ? req.body : req.query;
   const { endpoint, method: targetMethod = 'GET', data, server = 'server2' } = payload || {};
 
-  // Console feedback for troubleshooting
-  console.log(`[System Proxy] Connecting to ${server}...`);
-  console.log(`[Request] ${targetMethod} ${endpoint}`);
+  // Clear logging for console troubleshooting
+  console.log(`[System Info] Attempting to connect to ${server}...`);
+  console.log(`[System Info] Request: ${targetMethod} ${endpoint}`);
 
   const providers = {
     server1: {
@@ -31,8 +31,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const selectedProvider = providers[server as keyof typeof providers] || providers.server2;
 
   if (!selectedProvider.apiKey) {
-    console.error(`[Error] API Key for ${server} is not set in environment variables.`);
-    return res.status(500).json({ status: 'error', message: `Server configuration error: Key for ${server} is missing.` });
+    console.error(`[System Error] Missing API Key for ${server}. Check your environment variables.`);
+    return res.status(500).json({ status: 'error', message: `The system for ${server} is not configured yet.` });
   }
 
   try {
@@ -72,16 +72,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const apiResponse = await fetch(fullUrl, fetchOptions);
     const responseText = await apiResponse.text();
 
-    console.log(`[Response] Status: ${apiResponse.status}`);
+    console.log(`[System Info] ${server} responded with status: ${apiResponse.status}`);
 
     try {
       const responseData = JSON.parse(responseText);
       return res.status(apiResponse.status).json(responseData);
     } catch {
+      // Handle non-JSON errors (like the 404 HTML errors you saw)
+      console.error(`[System Error] ${server} returned an invalid response (Not JSON).`);
       return res.status(apiResponse.status).send(responseText);
     }
   } catch (error: any) {
-    console.error(`[Fatal Error]`, error.message);
-    return res.status(504).json({ status: 'error', message: 'Connection timed out. Please try again.', detail: error.message });
+    console.error(`[System Error] Connection failed:`, error.message);
+    return res.status(504).json({ status: 'error', message: 'The connection is taking too long. Please try again.', detail: error.message });
   }
 }
