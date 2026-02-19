@@ -10,7 +10,7 @@ import { ShieldCheckIcon, SignalIcon } from '../components/Icons';
 
 const DataPage: React.FC = () => {
   const { addNotification } = useNotifications();
-  const { walletBalance, updateWalletBalance } = useAuth();
+  const { user, walletBalance, updateWalletBalance } = useAuth();
   
   const [server, setServer] = useState<'server1' | 'server2'>('server1');
   const [selectedOperator, setSelectedOperator] = useState<string>('');
@@ -47,16 +47,23 @@ const DataPage: React.FC = () => {
 
   // Fetch Plans when Category/Type changes
   const fetchPlans = useCallback(async (netId: string, typeId: string, srv: 'server1' | 'server2') => {
+    if (!netId) return;
     setIsFetchingPlans(true);
     resetAfterType();
-    const res = await vtuService.getDataPlans({ network: netId, type: typeId, server: srv });
+    const res = await vtuService.getDataPlans({ 
+      network: netId, 
+      type: typeId, 
+      server: srv,
+      userRole: user?.role || 'user'
+    });
+    
     if (res.status && res.data) {
         setDataPlans(res.data);
     } else {
-        addNotification(res.message || 'Error loading plans.', 'error');
+        addNotification(res.message || 'Error loading plans from node.', 'error');
     }
     setIsFetchingPlans(false);
-  }, [addNotification, resetAfterType]);
+  }, [addNotification, resetAfterType, user?.role]);
 
   // Fetch Categories/Types when Network or Server changes
   useEffect(() => {
@@ -68,12 +75,12 @@ const DataPage: React.FC = () => {
       const res = await vtuService.getDataCategories(selectedOperator, server);
       if (res.status && res.data) {
         setDataTypes(res.data);
-        // If Server 1 (Inlomax) has no sub-categories for this network, attempt to fetch plans directly
+        // Special case: If Server 1 has no categories for this network, try fetching plans directly
         if (res.data.length === 0 && server === 'server1') {
            fetchPlans(selectedOperator, '', server);
         }
       } else {
-        addNotification(res.message || 'Error loading categories.', 'error');
+        addNotification(res.message || 'Categories sync failed.', 'error');
       }
       setIsFetchingTypes(false);
     };

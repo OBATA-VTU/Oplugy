@@ -12,16 +12,24 @@ const DEFAULT_ROUTING: ServiceRouting = {
 };
 
 async function getSystemConfig() {
-  const settingsDoc = await getDoc(doc(db, "settings", "global"));
-  return settingsDoc.exists() ? settingsDoc.data() : { pricing: { user_margin: 10 }, routing: DEFAULT_ROUTING };
+  try {
+    const settingsDoc = await getDoc(doc(db, "settings", "global"));
+    return settingsDoc.exists() ? settingsDoc.data() : { pricing: { user_margin: 10 }, routing: DEFAULT_ROUTING };
+  } catch (e) {
+    return { pricing: { user_margin: 10 }, routing: DEFAULT_ROUTING };
+  }
 }
 
 async function getManualPrice(planId: string, role: UserRole): Promise<number | null> {
-  const priceDoc = await getDoc(doc(db, "manual_pricing", planId));
-  if (priceDoc.exists()) {
-    const prices = priceDoc.data();
-    const priceKey = `${role}_price`;
-    return Number(prices[priceKey] || prices.user_price);
+  try {
+    const priceDoc = await getDoc(doc(db, "manual_pricing", planId));
+    if (priceDoc.exists()) {
+      const prices = priceDoc.data();
+      const priceKey = `${role}_price`;
+      return Number(prices[priceKey] || prices.user_price);
+    }
+  } catch (e) {
+    console.warn(`Could not fetch manual price for ${planId}`);
   }
   return null;
 }
@@ -94,10 +102,9 @@ export const vtuService = {
     return { status: false, message: 'Could not synchronize categories from node.' };
   },
 
-  getDataPlans: async (payload: { network: string; type: string; server?: 'server1' | 'server2' }): Promise<ApiResponse<DataPlan[]>> => {
-    const userDoc = auth.currentUser ? await getDoc(doc(db, "users", auth.currentUser.uid)) : null;
-    const role = (userDoc?.data()?.role as UserRole) || 'user';
+  getDataPlans: async (payload: { network: string; type: string; server?: 'server1' | 'server2'; userRole?: UserRole }): Promise<ApiResponse<DataPlan[]>> => {
     const server = payload.server || 'server1';
+    const role = payload.userRole || 'user';
     const config = await getSystemConfig();
     
     try {
@@ -107,18 +114,21 @@ export const vtuService = {
           const rawPlans = (res.data.dataPlans || []) as any[];
           const filtered = rawPlans.filter((p: any) => 
             p.network && p.network.toUpperCase() === payload.network.toUpperCase() && 
-            p.dataType && p.dataType.toUpperCase() === payload.type.toUpperCase()
+            (payload.type === '' || (p.dataType && p.dataType.toUpperCase() === payload.type.toUpperCase()))
           );
 
           const plans: DataPlan[] = [];
           for (const p of filtered) {
             const planId = String(p.serviceID);
+            // Non-blocking manual price check
             const manual = await getManualPrice(planId, role);
             const rawBase = Number(String(p.amount).replace(/,/g, ''));
+            const margin = config.pricing?.server1?.data_margin ?? 10;
+            
             plans.push({
               id: planId,
               name: `${p.dataPlan} ${p.dataType}`,
-              amount: manual || (rawBase + (config.pricing?.server1?.data_margin ?? 10)), 
+              amount: manual || (rawBase + margin), 
               validity: p.validity
             });
           }
@@ -140,10 +150,11 @@ export const vtuService = {
           return { status: true, data: plans };
         }
       }
-    } catch (e) {
-      console.error("Plan fetch error:", e);
+    } catch (e: any) {
+      console.error("Plan fetch fatal error:", e);
+      return { status: false, message: e.message || 'Node failed to return plan listings.' };
     }
-    return { status: false, message: 'Node failed to return plan listings.' };
+    return { status: false, message: 'Synchronization completed but no valid plans were found.' };
   },
 
   purchaseData: async (payload: { plan_id: string; phone_number: string; amount: number; network: string; plan_name: string; server: 'server1' | 'server2' }): Promise<ApiResponse<TransactionResponse>> => {
