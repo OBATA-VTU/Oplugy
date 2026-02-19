@@ -4,6 +4,9 @@ import { cipApiClient } from './cipApiClient';
 import { collection, query, where, getDocs, orderBy, limit, addDoc, serverTimestamp, doc, updateDoc, increment, getDoc } from 'firebase/firestore';
 import { db, auth } from '../firebase/config';
 
+/**
+ * Fetches the global system pricing margins and routing configuration.
+ */
 async function getSystemConfig() {
   try {
     const settingsDoc = await getDoc(doc(db, "settings", "global"));
@@ -13,6 +16,9 @@ async function getSystemConfig() {
   }
 }
 
+/**
+ * Checks for manual price overrides set by the admin for specific plans.
+ */
 async function getManualPrice(planId: string, role: UserRole): Promise<number | null> {
   try {
     const priceDoc = await getDoc(doc(db, "manual_pricing", planId));
@@ -27,6 +33,9 @@ async function getManualPrice(planId: string, role: UserRole): Promise<number | 
   return null;
 }
 
+/**
+ * Logs a transaction to the database and updates the user's wallet balance.
+ */
 async function logTransaction(userId: string, type: TransactionResponse['type'], amount: number, source: string, remarks: string, status: 'SUCCESS' | 'PENDING' | 'FAILED' = 'SUCCESS', server?: string) {
   try {
     const user = auth.currentUser;
@@ -43,7 +52,8 @@ async function logTransaction(userId: string, type: TransactionResponse['type'],
       date_created: serverTimestamp(),
       date_updated: serverTimestamp()
     });
-    if (status === 'SUCCESS' && type !== 'FUNDING' && type !== 'REFERRAL') {
+    // Deduct from wallet on success/pending (funding is handled separately)
+    if (status !== 'FAILED' && type !== 'FUNDING' && type !== 'REFERRAL') {
       await updateDoc(doc(db, "users", user.uid), { walletBalance: increment(-Number(amount)) });
     }
   } catch (e) { console.error("History log fail:", e); }
@@ -83,6 +93,7 @@ export const vtuService = {
           return { status: true, data: categories };
         }
       } else {
+        // Static categories for Node 2 if endpoint is generic
         return { status: true, data: ['SME', 'GIFTING', 'AWOOF', 'DATASHARE'] };
       }
     } catch (e) { console.error("Category fetch error:", e); }

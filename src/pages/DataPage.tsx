@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNotifications } from '../hooks/useNotifications';
@@ -41,6 +40,25 @@ const DataPage: React.FC = () => {
     resetPlans();
   }, [resetPlans]);
 
+  const fetchPlans = useCallback(async (net: string, type: string, srv: 'server1' | 'server2') => {
+    setIsFetchingPlans(true);
+    setSelectedPlanId('');
+    setDataPlans([]);
+    setSelectedPlan(null);
+    const res = await vtuService.getDataPlans({ 
+      network: net, 
+      type, 
+      server: srv,
+      userRole: user?.role || 'user'
+    });
+    if (res.status && res.data) {
+      setDataPlans(res.data);
+    } else {
+      addNotification(res.message || 'Plan sync failed.', 'error');
+    }
+    setIsFetchingPlans(false);
+  }, [user?.role, addNotification]);
+
   // Fetch Categories/Types based on server
   useEffect(() => {
     const fetchTypes = async () => {
@@ -63,30 +81,13 @@ const DataPage: React.FC = () => {
       setIsFetchingTypes(false);
     };
     fetchTypes();
-  }, [selectedOperator, server]);
-
-  const fetchPlans = async (net: string, type: string, srv: 'server1' | 'server2') => {
-    setIsFetchingPlans(true);
-    resetPlans();
-    const res = await vtuService.getDataPlans({ 
-      network: net, 
-      type, 
-      server: srv,
-      userRole: user?.role || 'user'
-    });
-    if (res.status && res.data) {
-      setDataPlans(res.data);
-    } else {
-      addNotification(res.message || 'Plan sync failed.', 'error');
-    }
-    setIsFetchingPlans(false);
-  };
+  }, [selectedOperator, server, addNotification, fetchPlans, resetPlans]);
 
   useEffect(() => {
     if (selectedType && selectedOperator) {
       fetchPlans(selectedOperator, selectedType, server);
     }
-  }, [selectedType, selectedOperator, server]);
+  }, [selectedType, selectedOperator, server, fetchPlans]);
 
   useEffect(() => {
     setSelectedPlan(dataPlans.find(p => p.id === selectedPlanId) || null);
