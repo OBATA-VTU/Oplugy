@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
@@ -14,12 +13,12 @@ import AirtimePage from './pages/AirtimePage';
 import DataPage from './pages/DataPage';
 import BillsPage from './pages/BillsPage';
 import CablePage from './pages/CablePage';
+import EducationPage from './pages/EducationPage';
 import TransactionHistoryPage from './pages/TransactionHistoryPage';
 import LandingPage from './pages/LandingPage';
 import QuickPurchasePage from './pages/QuickPurchasePage';
 import TermsPage from './pages/TermsPage';
 import PrivacyPage from './pages/PrivacyPage';
-import ComingSoonPage from './pages/ComingSoonPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
 import AdminUsersPage from './pages/AdminUsersPage';
 import AdminTransactionsPage from './pages/AdminTransactionsPage';
@@ -78,14 +77,7 @@ const AdminRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
              <p className="text-gray-400 text-xs font-bold uppercase tracking-widest mt-2">Administrative Verification Required</p>
           </div>
           <form onSubmit={handlePasswordSubmit} className="space-y-8">
-             <input 
-              type="password" 
-              placeholder="Matrix Key" 
-              className={`w-full p-6 bg-gray-50 border-4 rounded-[2rem] text-center text-2xl font-black tracking-widest outline-none transition-all ${error ? 'border-red-500 animate-pulse' : 'border-gray-100 focus:border-blue-600'}`} 
-              value={password} 
-              onChange={(e) => setPassword(e.target.value)} 
-              autoFocus 
-             />
+             <input type="password" placeholder="Matrix Key" className={`w-full p-6 bg-gray-50 border-4 rounded-[2rem] text-center text-2xl font-black tracking-widest outline-none transition-all ${error ? 'border-red-500 animate-pulse' : 'border-gray-100 focus:border-blue-600'}`} value={password} onChange={(e) => setPassword(e.target.value)} autoFocus />
              <button className="w-full bg-gray-900 text-white py-6 rounded-3xl font-black uppercase tracking-widest text-[11px] shadow-2xl hover:bg-blue-600 transition-all transform active:scale-95">Open Node</button>
           </form>
        </div>
@@ -113,6 +105,7 @@ const App: React.FC = () => {
             <Route path="/data" element={<ProtectedRoute><DataPage /></ProtectedRoute>} />
             <Route path="/bills" element={<ProtectedRoute><BillsPage /></ProtectedRoute>} />
             <Route path="/cable" element={<ProtectedRoute><CablePage /></ProtectedRoute>} />
+            <Route path="/education" element={<ProtectedRoute><EducationPage /></ProtectedRoute>} />
             <Route path="/history" element={<ProtectedRoute><TransactionHistoryPage /></ProtectedRoute>} />
             <Route path="/pricing" element={<ProtectedRoute><PricingPage /></ProtectedRoute>} />
             <Route path="/referral" element={<ProtectedRoute><ReferralPage /></ProtectedRoute>} />

@@ -1,41 +1,25 @@
-import { ApiResponse, Operator, DataPlan, TransactionResponse, VerificationResponse, UserRole } from '../types';
+import { ApiResponse, Operator, DataPlan, TransactionResponse, VerificationResponse, UserRole, ServiceRouting } from '../types';
 import { cipApiClient } from './cipApiClient';
 import { collection, query, where, getDocs, orderBy, limit, addDoc, serverTimestamp, doc, updateDoc, increment, getDoc } from 'firebase/firestore';
 import { db, auth } from '../firebase/config';
 
-const DEFAULT_MARGINS = { user: 10, reseller: 5, api: 2 };
+const DEFAULT_ROUTING: ServiceRouting = {
+  airtime: 'server1',
+  data: 'server1',
+  bills: 'server2',
+  cable: 'server2',
+  education: 'server1'
+};
 
-async function getMarginForUser(role: UserRole): Promise<number> {
-  try {
-    const settingsDoc = await getDoc(doc(db, "settings", "global"));
-    if (settingsDoc.exists()) {
-      const pricing = settingsDoc.data().pricing;
-      if (pricing) {
-        if (role === 'reseller') return pricing.reseller_margin ?? DEFAULT_MARGINS.reseller;
-        if (role === 'api') return pricing.api_margin ?? DEFAULT_MARGINS.api;
-        return pricing.user_margin ?? DEFAULT_MARGINS.user;
-      }
-    }
-  } catch (e) {
-    console.error("Pricing fetch error");
-  }
-  return DEFAULT_MARGINS.user;
-}
-
-function maskProviderError(message: string): string {
-  const lowBalanceKeywords = ['insufficient balance', 'balance too low', 'low credit', 'unit exhausted', 'api balance'];
-  const lowerMsg = (message || '').toLowerCase();
-  if (lowBalanceKeywords.some(keyword => lowerMsg.includes(keyword))) {
-    return "Service currently unavailable on this node. Please try an alternative server.";
-  }
-  return message;
+async function getSystemConfig() {
+  const settingsDoc = await getDoc(doc(db, "settings", "global"));
+  return settingsDoc.exists() ? settingsDoc.data() : { pricing: { user_margin: 10 }, routing: DEFAULT_ROUTING };
 }
 
 async function logTransaction(userId: string, type: TransactionResponse['type'], amount: number, source: string, remarks: string, status: 'SUCCESS' | 'FAILED' = 'SUCCESS', server?: string) {
   try {
     const user = auth.currentUser;
     if (!user) return;
-    
     await addDoc(collection(db, "transactions"), {
       userId: user.uid,
       userEmail: user.email,
@@ -48,126 +32,187 @@ async function logTransaction(userId: string, type: TransactionResponse['type'],
       date_created: serverTimestamp(),
       date_updated: serverTimestamp()
     });
-    
     if (status === 'SUCCESS' && type !== 'FUNDING' && type !== 'REFERRAL') {
-      await updateDoc(doc(db, "users", user.uid), {
-        walletBalance: increment(-amount)
-      });
+      await updateDoc(doc(db, "users", user.uid), { walletBalance: increment(-amount) });
     }
-  } catch (e) {
-    console.error("Ledger error:", e);
-  }
+  } catch (e) { console.error("Ledger error:", e); }
 }
 
 export const vtuService = {
-  // Server 1 Exclusive: Airtime
   purchaseAirtime: async (payload: { network: string; phone: string; amount: number }): Promise<ApiResponse<TransactionResponse>> => {
     const user = auth.currentUser;
     if (!user) return { status: false, message: 'Auth required' };
-    
-    const res = await cipApiClient<TransactionResponse>('airtime', { 
-      data: { ...payload, server: 'server1' }, 
+    const config = await getSystemConfig();
+    const server = config.routing?.airtime || 'server1';
+
+    // Inlomax serviceID mapping for Airtime (MTN=1, Airtel=2 from docs sample)
+    let serviceID = payload.network;
+    if (server === 'server1') {
+      if (payload.network.toUpperCase() === 'MTN') serviceID = '1';
+      if (payload.network.toUpperCase() === 'AIRTEL') serviceID = '2';
+    }
+
+    const res = await cipApiClient<any>(server === 'server1' ? 'airtime' : 'airtime/purchase', { 
+      data: { ...payload, mobileNumber: payload.phone, serviceID, server }, 
       method: 'POST' 
     });
     
     if (res.status) {
-      await logTransaction(user.uid, 'AIRTIME', payload.amount, `${payload.network} Airtime`, `Recharge for ${payload.phone}`, 'SUCCESS', 'Server 1');
-    } else {
-      res.message = maskProviderError(res.message || '');
+      await logTransaction(user.uid, 'AIRTIME', payload.amount, `${payload.network} Airtime`, `Recharge for ${payload.phone}`, 'SUCCESS', server.toUpperCase());
+      return { status: true, message: res.message, data: res.data };
     }
     return res;
   },
 
-  // Dual Server: Data
-  getDataPlans: async (payload: { network: string; type: string; server: 'server1' | 'server2' }): Promise<ApiResponse<DataPlan[]>> => {
+  getDataPlans: async (payload: { network: string; type: string; server?: 'server1' | 'server2' }): Promise<ApiResponse<DataPlan[]>> => {
     const userDoc = auth.currentUser ? await getDoc(doc(db, "users", auth.currentUser.uid)) : null;
     const role = (userDoc?.data()?.role as UserRole) || 'user';
-    const margin = await getMarginForUser(role);
+    const config = await getSystemConfig();
+    const server = payload.server || config.routing?.data || 'server1';
+    
+    const margin = config.pricing?.[`${role}_margin`] || 10;
+    const extraServer1Margin = (server === 'server1') ? 10 : 0; 
 
-    const res = await cipApiClient<any[]>(`data/plans?network=${payload.network.toUpperCase()}&type=${payload.type.toUpperCase()}&server=${payload.server}`, { method: 'GET' });
+    const res = await cipApiClient<any>(server === 'server1' ? 'services' : `data/plans?network=${payload.network}&type=${payload.type}`, { method: 'GET', data: { server } });
+    
     if (res.status && res.data) {
-      const mappedPlans: DataPlan[] = res.data.map(p => ({ 
-        id: p.id || p.code, 
-        name: p.name, 
-        amount: Number(p.price) + margin,
-        validity: p.validity || '30 Days',
-        network: payload.network,
-        server: payload.server
-      }));
-      return { ...res, data: mappedPlans };
+      let plans: any[] = [];
+      if (server === 'server1') {
+        plans = (res.data.dataPlans || [])
+          .filter((p: any) => p.network.toUpperCase() === payload.network.toUpperCase())
+          .map((p: any) => ({
+            id: p.serviceID,
+            name: `${p.dataPlan} ${p.dataType}`,
+            amount: parseFloat(p.amount) + margin + extraServer1Margin,
+            validity: p.validity
+          }));
+      } else {
+        plans = res.data.map((p: any) => ({
+          id: p.id || p.code,
+          name: p.name,
+          amount: parseFloat(p.price) + margin,
+          validity: p.validity || '30 Days'
+        }));
+      }
+      return { status: true, data: plans };
     }
-    return { ...res, data: undefined, message: maskProviderError(res.message || '') };
+    return res;
   },
 
   purchaseData: async (payload: { plan_id: string; phone_number: string; amount: number; network: string; plan_name: string; server: 'server1' | 'server2' }): Promise<ApiResponse<TransactionResponse>> => {
     const user = auth.currentUser;
     if (!user) return { status: false, message: 'Auth required' };
     
-    const res = await cipApiClient<TransactionResponse>('data/purchase', { 
-      data: { ...payload }, 
+    const endpoint = payload.server === 'server1' ? 'data' : 'data/purchase';
+    const res = await cipApiClient<any>(endpoint, { 
+      data: { ...payload, mobileNumber: payload.phone_number, serviceID: payload.plan_id, server: payload.server }, 
       method: 'POST' 
     });
 
     if (res.status) {
-      await logTransaction(user.uid, 'DATA', payload.amount, `${payload.network} Data`, `Bundle ${payload.plan_name} for ${payload.phone_number}`, 'SUCCESS', payload.server);
-    } else {
-      res.message = maskProviderError(res.message || '');
+      await logTransaction(user.uid, 'DATA', payload.amount, `${payload.network} Data`, `Bundle ${payload.plan_name} for ${payload.phone_number}`, 'SUCCESS', payload.server.toUpperCase());
     }
     return res;
   },
 
-  // Server 2 Exclusive: Electricity & Cable
+  purchaseEducation: async (payload: { type: string; quantity: number; amount: number }): Promise<ApiResponse<TransactionResponse>> => {
+    const user = auth.currentUser;
+    if (!user) return { status: false, message: 'Auth required' };
+    const config = await getSystemConfig();
+    const server = config.routing?.education || 'server1';
+    
+    const res = await cipApiClient<any>('education', { 
+      data: { serviceID: payload.type, quantity: payload.quantity, server }, 
+      method: 'POST' 
+    });
+
+    if (res.status) {
+      await logTransaction(user.uid, 'EDUCATION', payload.amount, `${payload.type} Pin`, `Quantity: ${payload.quantity}`, 'SUCCESS', server.toUpperCase());
+    }
+    return res;
+  },
+
   getElectricityOperators: async (): Promise<ApiResponse<Operator[]>> => {
-    return cipApiClient<Operator[]>('electricity/providers?server=server2', { method: 'GET' });
+    const config = await getSystemConfig();
+    const server = config.routing?.bills || 'server2';
+    const res = await cipApiClient<any>(server === 'server1' ? 'services' : 'electricity/providers', { method: 'GET', data: { server } });
+    if (res.status && res.data) {
+        if (server === 'server1') {
+            const operators = (res.data.electricity || []).map((e: any) => ({ id: e.serviceID, name: e.disco }));
+            return { status: true, data: operators };
+        }
+        return res;
+    }
+    return res;
   },
 
   verifyElectricityMeter: async (payload: { meter_number: string; provider_id: string; meter_type: 'prepaid' | 'postpaid' }): Promise<ApiResponse<VerificationResponse>> => {
-    return await cipApiClient<any>('electricity/verify?server=server2', { data: payload, method: 'POST' });
+    const config = await getSystemConfig();
+    const server = config.routing?.bills || 'server2';
+    const endpoint = server === 'server1' ? 'validatemeter' : 'electricity/verify';
+    const apiData = server === 'server1' ? { serviceID: payload.provider_id, meterNum: payload.meter_number, meterType: payload.meter_type === 'prepaid' ? 1 : 2 } : payload;
+    return await cipApiClient<any>(endpoint, { data: { ...apiData, server }, method: 'POST' });
   },
 
   purchaseElectricity: async (payload: { meter_number: string; provider_id: string; meter_type: 'prepaid' | 'postpaid'; phone: string; amount: number; provider_name: string }): Promise<ApiResponse<TransactionResponse>> => {
     const user = auth.currentUser;
     if (!user) return { status: false, message: 'Auth required' };
+    const config = await getSystemConfig();
+    const server = config.routing?.bills || 'server2';
+    const endpoint = server === 'server1' ? 'payelectric' : 'electricity/purchase';
     
-    const res = await cipApiClient<TransactionResponse>('electricity/purchase', { data: { ...payload, server: 'server2' }, method: 'POST' });
+    const res = await cipApiClient<any>(endpoint, { 
+      data: { ...payload, mobileNumber: payload.phone, meterNum: payload.meter_number, serviceID: payload.provider_id, server }, 
+      method: 'POST' 
+    });
     if (res.status) {
-      await logTransaction(user.uid, 'ELECTRICITY', payload.amount, `${payload.provider_name} Power`, `Meter ${payload.meter_number}`, 'SUCCESS', 'Server 2');
-    } else {
-      res.message = maskProviderError(res.message || '');
+      await logTransaction(user.uid, 'ELECTRICITY', payload.amount, `${payload.provider_name} Power`, `Meter ${payload.meter_number}`, 'SUCCESS', server.toUpperCase());
     }
     return res;
   },
 
   getCablePlans: async (billerName: string): Promise<ApiResponse<DataPlan[]>> => {
-    const userDoc = auth.currentUser ? await getDoc(doc(db, "users", auth.currentUser.uid)) : null;
-    const role = (userDoc?.data()?.role as UserRole) || 'user';
-    const margin = await getMarginForUser(role);
-
-    const res = await cipApiClient<any[]>(`cable/plans?biller=${billerName.toUpperCase()}&server=server2`, { method: 'GET' });
+    const config = await getSystemConfig();
+    const server = config.routing?.cable || 'server2';
+    const res = await cipApiClient<any>(server === 'server1' ? 'services' : `cable/plans?biller=${billerName}`, { method: 'GET', data: { server } });
     if (res.status && res.data) {
-      const mappedPlans: DataPlan[] = res.data.map(p => ({ 
-        id: p.code, 
-        name: p.name, 
-        amount: Number(p.price) + margin, 
-        validity: 'Monthly' 
-      }));
-      return { ...res, data: mappedPlans };
+        if (server === 'server1') {
+            const plans = (res.data.cablePlans || [])
+                .filter((p: any) => p.cable.toUpperCase() === billerName.toUpperCase())
+                .map((p: any) => ({
+                    id: p.serviceID,
+                    name: p.cablePlan,
+                    amount: parseFloat(p.amount.replace(',', '')),
+                    validity: 'Monthly'
+                }));
+            return { status: true, data: plans };
+        }
+        return res;
     }
-    return { ...res, data: undefined };
+    return res;
   },
 
   verifyCableSmartcard: async (payload: { biller: string; smartCardNumber: string }): Promise<ApiResponse<VerificationResponse>> => {
-    return await cipApiClient<any>('cable/verify?server=server2', { data: payload, method: 'POST' });
+    const config = await getSystemConfig();
+    const server = config.routing?.cable || 'server2';
+    const endpoint = server === 'server1' ? 'validatecable' : 'cable/verify';
+    const apiData = server === 'server1' ? { serviceID: payload.biller, iucNum: payload.smartCardNumber } : payload;
+    return await cipApiClient<any>(endpoint, { data: { ...apiData, server }, method: 'POST' });
   },
 
   purchaseCable: async (payload: { biller: string; planCode: string; smartCardNumber: string; subscriptionType: 'RENEW' | 'CHANGE'; phoneNumber: string; amount: number; plan_name: string }): Promise<ApiResponse<TransactionResponse>> => {
     const user = auth.currentUser;
     if (!user) return { status: false, message: 'Auth required' };
-    const res = await cipApiClient<TransactionResponse>('cable/purchase', { data: { ...payload, server: 'server2' }, method: 'POST' });
+    const config = await getSystemConfig();
+    const server = config.routing?.cable || 'server2';
+    const endpoint = server === 'server1' ? 'subcable' : 'cable/purchase';
+    
+    const res = await cipApiClient<any>(endpoint, { 
+      data: { ...payload, iucNum: payload.smartCardNumber, serviceID: payload.planCode, server }, 
+      method: 'POST' 
+    });
     if (res.status) {
-      await logTransaction(user.uid, 'CABLE', payload.amount, `${payload.biller} TV`, `${payload.plan_name} for ${payload.smartCardNumber}`, 'SUCCESS', 'Server 2');
-    } else {
-      res.message = maskProviderError(res.message || '');
+      await logTransaction(user.uid, 'CABLE', payload.amount, `${payload.biller} TV`, `${payload.plan_name} for ${payload.smartCardNumber}`, 'SUCCESS', server.toUpperCase());
     }
     return res;
   },
@@ -179,8 +224,6 @@ export const vtuService = {
       const txQuery = query(collection(db, "transactions"), where("userId", "==", user.uid), orderBy("date_created", "desc"), limit(50));
       const snapshot = await getDocs(txQuery);
       return { status: true, data: snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as TransactionResponse)) };
-    } catch (error) {
-      return { status: false, message: "Database sync error" };
-    }
+    } catch (error) { return { status: false, message: "Database sync error" }; }
   }
 };

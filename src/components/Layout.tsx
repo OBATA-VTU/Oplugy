@@ -6,7 +6,7 @@ import ChatBubble from './ChatBubble';
 import { 
   HomeIcon, PhoneIcon, SignalIcon, BoltIcon, TvIcon, 
   LogoutIcon, MenuIcon, HistoryIcon, WalletIcon,
-  ShieldCheckIcon, CurrencyDollarIcon, UsersIcon
+  ShieldCheckIcon, CurrencyDollarIcon, UsersIcon, GamingIcon
 } from './Icons';
 
 interface LayoutProps {
@@ -61,6 +61,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         <NavItem to="/data" icon={<SignalIcon />} onClick={closeSidebar}>Data Nodes</NavItem>
         <NavItem to="/bills" icon={<BoltIcon />} onClick={closeSidebar}>Utilities</NavItem>
         <NavItem to="/cable" icon={<TvIcon />} onClick={closeSidebar}>Sat-TV Hub</NavItem>
+        <NavItem to="/education" icon={<GamingIcon />} onClick={closeSidebar}>Exam Pins</NavItem>
 
         <div className="px-5 mt-10 mb-5 text-[10px] font-black uppercase tracking-[0.4em] text-gray-300">Matrix</div>
         <NavItem to="/referral" icon={<UsersIcon />} onClick={closeSidebar}>Nodes (Refer)</NavItem>

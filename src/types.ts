@@ -22,25 +22,26 @@ export interface User {
   apiKey?: string;
 }
 
-export interface TierPricing {
-  user_margin: number;
-  reseller_margin: number;
-  api_margin: number;
+export interface ServiceRouting {
+  airtime: 'server1' | 'server2';
+  data: 'server1' | 'server2';
+  bills: 'server1' | 'server2';
+  cable: 'server1' | 'server2';
+  education: 'server1' | 'server2';
 }
 
 export interface GlobalSettings {
   announcement: string;
   maintenance: boolean;
   apiMode: 'LIVE' | 'TEST';
-  pricing: TierPricing;
+  pricing: {
+    user_margin: number;
+    reseller_margin: number;
+    api_margin: number;
+  };
+  routing: ServiceRouting;
 }
 
-export interface AuthResponse {
-  user: User;
-  token: string;
-}
-
-// --- VTU Services ---
 export interface Operator {
   id: string;
   name: string;
@@ -64,7 +65,7 @@ export interface TransactionResponse {
   userEmail?: string;
   amount: number; 
   status: 'SUCCESS' | 'PENDING' | 'FAILED';
-  type: 'AIRTIME' | 'DATA' | 'CABLE' | 'ELECTRICITY' | 'FUNDING' | 'REFERRAL';
+  type: 'AIRTIME' | 'DATA' | 'CABLE' | 'ELECTRICITY' | 'FUNDING' | 'REFERRAL' | 'EDUCATION';
   source: string;
   remarks: string;
   date_created: any; 
@@ -73,14 +74,12 @@ export interface TransactionResponse {
   server?: string;
 }
 
-// --- Verification & API Structure ---
 export interface VerificationResponse {
   status: boolean;
   message?: string;
   customerName: string;
   meterNumber?: string;
   customerAddress?: string;
-  dueDate?: string;
   smartCardNumber?: string;
 }
 
@@ -91,9 +90,10 @@ export interface ApiResponse<T> {
   errors?: string[];
 }
 
+// Fix: Added CipApiResponse interface used by cipApiClient to process proxy responses
 export interface CipApiResponse<T> {
   status: string;
-  message?: string;
+  message: string;
   data?: T;
   errors?: Array<{ path: string; message: string }>;
 }
