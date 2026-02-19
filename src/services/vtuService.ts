@@ -16,6 +16,17 @@ async function getSystemConfig() {
   return settingsDoc.exists() ? settingsDoc.data() : { pricing: { user_margin: 10 }, routing: DEFAULT_ROUTING };
 }
 
+async function getManualPrice(planId: string, role: UserRole): Promise<number | null> {
+  const priceDoc = await getDoc(doc(db, "manual_pricing", planId));
+  if (priceDoc.exists()) {
+    const prices = priceDoc.data();
+    // Default to 'user' if the role specific price isn't set
+    const priceKey = `${role}_price`;
+    return Number(prices[priceKey] || prices.user_price);
+  }
+  return null;
+}
+
 async function logTransaction(userId: string, type: TransactionResponse['type'], amount: number, source: string, remarks: string, status: 'SUCCESS' | 'FAILED' = 'SUCCESS', server?: string) {
   try {
     const user = auth.currentUser;
@@ -82,47 +93,42 @@ export const vtuService = {
   getDataPlans: async (payload: { network: string; type: string; server?: 'server1' | 'server2' }): Promise<ApiResponse<DataPlan[]>> => {
     const userDoc = auth.currentUser ? await getDoc(doc(db, "users", auth.currentUser.uid)) : null;
     const role = (userDoc?.data()?.role as UserRole) || 'user';
-    const config = await getSystemConfig();
-    const server = payload.server || config.routing?.data || 'server1';
+    const server = payload.server || 'server1';
     
-    // Server-Specific Profit Configuration from Admin
-    const serverPricing = config.pricing?.[server] || {};
-    const baseMargin = Number(config.pricing?.[`${role}_margin`] || 10);
-    const serverSpecificDataMargin = Number(serverPricing.data_margin || 0);
-    const totalMargin = baseMargin + serverSpecificDataMargin;
-
     const res = await cipApiClient<any>(server === 'server1' ? 'services' : `data/plans?network=${payload.network}&type=${payload.type}`, { 
       method: 'GET', 
       data: { server } 
     });
     
     if (res.status && res.data) {
-      let plans: any[] = [];
+      let plans: DataPlan[] = [];
       if (server === 'server1') {
         const rawPlans = (res.data.dataPlans || []) as any[];
-        plans = rawPlans
-          .filter((p: any) => 
-            p.network.toUpperCase() === payload.network.toUpperCase() && 
-            p.dataType.toUpperCase() === payload.type.toUpperCase()
-          )
-          .map((p: any) => {
-            const rawBase = Number(String(p.amount).replace(/,/g, ''));
-            return {
-              id: String(p.serviceID),
-              name: `${p.dataPlan} ${p.dataType}`,
-              amount: rawBase + totalMargin,
-              validity: p.validity
-            };
+        const filtered = rawPlans.filter((p: any) => 
+          p.network.toUpperCase() === payload.network.toUpperCase() && 
+          p.dataType.toUpperCase() === payload.type.toUpperCase()
+        );
+
+        for (const p of filtered) {
+          const planId = String(p.serviceID);
+          const manual = await getManualPrice(planId, role);
+          const rawBase = Number(String(p.amount).replace(/,/g, ''));
+          plans.push({
+            id: planId,
+            name: `${p.dataPlan} ${p.dataType}`,
+            amount: manual || (rawBase + 10), // Use manual or fallback to +10 profit
+            validity: p.validity
           });
+        }
       } else {
-        // SERVER 2 CRITICAL MATH FIX
+        // SERVER 2 LOGIC: Base API + 10 Fixed Profit
         const rawPlans = (res.data || []) as any[];
         plans = rawPlans.map((p: any) => {
-          const rawBase = Number(String(p.price || p.amount).replace(/,/g, ''));
+          const rawBase = Number(String(p.price || p.amount || 0).replace(/,/g, ''));
           return {
             id: String(p.id || p.code),
             name: p.name,
-            amount: rawBase + totalMargin,
+            amount: rawBase + 10,
             validity: p.validity || '30 Days'
           };
         });
@@ -188,62 +194,48 @@ export const vtuService = {
   },
 
   getCablePlans: async (billerName: string): Promise<ApiResponse<DataPlan[]>> => {
-    const config = await getSystemConfig();
-    const server = config.routing?.cable || 'server2';
+    const userDoc = auth.currentUser ? await getDoc(doc(db, "users", auth.currentUser.uid)) : null;
+    const role = (userDoc?.data()?.role as UserRole) || 'user';
     
-    // Profit margin calculation for Cable
-    const serverPricing = config.pricing?.[server] || {};
-    const cableMargin = Number(serverPricing.cable_margin || 0);
-
-    const res = await cipApiClient<any>(server === 'server1' ? 'services' : `cable/plans?biller=${billerName}`, { method: 'GET', data: { server } });
+    // STRICT RULE: Cable strictly uses Server 2 (CIP Topup)
+    const server = 'server2';
+    
+    const res = await cipApiClient<any>(`cable/plans?biller=${billerName}`, { method: 'GET', data: { server } });
     if (res.status && res.data) {
-        if (server === 'server1') {
-            const rawCable = res.data.cablePlans || [];
-            const plans = rawCable
-                .filter((p: any) => p.cable.toUpperCase() === billerName.toUpperCase())
-                .map((p: any) => {
-                  const rawBase = Number(String(p.amount).replace(/,/g, ''));
-                  return {
-                    id: String(p.serviceID),
-                    name: p.cablePlan,
-                    amount: rawBase + cableMargin,
-                    validity: 'Monthly'
-                  };
-                });
-            return { status: true, data: plans };
-        }
-        // Server 2 Cable logic with margins
         const rawPlans = (res.data || []) as any[];
-        const plans = rawPlans.map((p: any) => {
-            const rawBase = Number(String(p.price || p.amount).replace(/,/g, ''));
-            return {
-                id: String(p.id || p.code),
+        const plans: DataPlan[] = [];
+        for (const p of rawPlans) {
+            const planId = String(p.id || p.code);
+            // Manual check still allowed for Server 2 if admin wishes to override, 
+            // but default is Base + 10.
+            const manual = await getManualPrice(planId, role);
+            const rawBase = Number(String(p.price || p.amount || 0).replace(/,/g, ''));
+            plans.push({
+                id: planId,
                 name: p.name,
-                amount: rawBase + cableMargin,
+                amount: manual || (rawBase + 10),
                 validity: 'Monthly'
-            };
-        });
+            });
+        }
         return { status: true, data: plans };
     }
     return res;
   },
 
   verifyCableSmartcard: async (payload: { biller: string; smartCardNumber: string }): Promise<ApiResponse<VerificationResponse>> => {
-    const config = await getSystemConfig();
-    const server = config.routing?.cable || 'server2';
-    const endpoint = server === 'server1' ? 'validatecable' : 'cable/verify';
-    const apiData = server === 'server1' ? { serviceID: payload.biller, iucNum: payload.smartCardNumber } : payload;
-    return await cipApiClient<any>(endpoint, { data: { ...apiData, server }, method: 'POST' });
+    // STRICT RULE: Cable strictly uses Server 2 (CIP Topup)
+    const server = 'server2';
+    return await cipApiClient<any>('cable/verify', { data: { ...payload, server }, method: 'POST' });
   },
 
   purchaseCable: async (payload: { biller: string; planCode: string; smartCardNumber: string; subscriptionType: 'RENEW' | 'CHANGE'; phoneNumber: string; amount: number; plan_name: string }): Promise<ApiResponse<TransactionResponse>> => {
     const user = auth.currentUser;
     if (!user) return { status: false, message: 'Please login to continue.' };
-    const config = await getSystemConfig();
-    const server = config.routing?.cable || 'server2';
-    const endpoint = server === 'server1' ? 'subcable' : 'cable/purchase';
     
-    const res = await cipApiClient<any>(endpoint, { 
+    // STRICT RULE: Cable strictly uses Server 2 (CIP Topup)
+    const server = 'server2';
+    
+    const res = await cipApiClient<any>('cable/purchase', { 
       data: { ...payload, iucNum: payload.smartCardNumber, serviceID: payload.planCode, server }, 
       method: 'POST' 
     });

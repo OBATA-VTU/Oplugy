@@ -21,6 +21,14 @@ export interface User {
   apiKey?: string;
 }
 
+export interface ManualPrice {
+  planId: string;
+  user_price: number;
+  reseller_price: number;
+  api_price: number;
+  updatedAt?: any;
+}
+
 export interface ServiceRouting {
   airtime: 'server1' | 'server2';
   data: 'server1' | 'server2';

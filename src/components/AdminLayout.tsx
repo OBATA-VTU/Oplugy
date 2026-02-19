@@ -1,4 +1,3 @@
-
 import React, { useState, ReactNode } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
@@ -12,7 +11,8 @@ import {
   MenuIcon,
   BoltIcon,
   HistoryIcon,
-  ExchangeIcon
+  ExchangeIcon,
+  CurrencyDollarIcon
 } from './Icons';
 
 interface AdminLayoutProps {
@@ -64,6 +64,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         <AdminNavItem to="/admin" icon={<HomeIcon />} onClick={closeSidebar}>Hub Overview</AdminNavItem>
         <AdminNavItem to="/admin/users" icon={<UsersIcon />} onClick={closeSidebar}>User Repository</AdminNavItem>
         <AdminNavItem to="/admin/transactions" icon={<HistoryIcon />} onClick={closeSidebar}>System Ledger</AdminNavItem>
+        <AdminNavItem to="/admin/pricing" icon={<CurrencyDollarIcon />} onClick={closeSidebar}>Price Engine</AdminNavItem>
         
         <div className="px-4 mt-8 mb-3 text-[9px] font-black uppercase tracking-[0.2em] text-gray-400">Environment</div>
         <AdminNavItem to="/admin/settings" icon={<ExchangeIcon />} onClick={closeSidebar}>Config Center</AdminNavItem>
@@ -108,7 +109,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
             {isLoading && <Spinner />}
             <div className="hidden sm:flex flex-col items-end">
               <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Master Node: Active</span>
-              <span className="text-[8px] font-bold text-gray-400">Ver. 2.0.4-LATEST</span>
+              <span className="text-[8px] font-bold text-gray-400">Ver. 2.1.0-GATEWAY</span>
             </div>
           </div>
         </header>
