@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { adminService } from '../services/adminService';
 import { cipApiClient } from '../services/cipApiClient';
 import { db } from '../firebase/config';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
@@ -25,7 +24,7 @@ const AdminPricingPage: React.FC = () => {
 
   const fetchPlans = useCallback(async () => {
     setLoading(true);
-    // Fetch Server 1 plans from Inlomax API
+    // Fetch Server 1 plans from Inlomax API via Proxy
     const res = await cipApiClient<any>('services', { method: 'GET', data: { server: 'server1' } });
     if (res.status && res.data?.dataPlans) {
       const formatted = (res.data.dataPlans as any[]).map(p => ({
@@ -128,9 +127,9 @@ const AdminPricingPage: React.FC = () => {
               <p className="text-gray-400 font-medium text-sm mb-10">Configure manual prices for <span className="text-blue-600">{editingPlan.name}</span></p>
               
               <div className="space-y-6">
-                 <PriceInput label="User Price (Retail)" value={prices.user} onChange={(v) => setPrices({...prices, user: v})} base={editingPlan.base_price} />
-                 <PriceInput label="Reseller Price" value={prices.reseller} onChange={(v) => setPrices({...prices, reseller: v})} base={editingPlan.base_price} />
-                 <PriceInput label="API Merchant Price" value={prices.api} onChange={(v) => setPrices({...prices, api: v})} base={editingPlan.base_price} />
+                 <PriceInput label="User Price (Retail)" value={prices.user} onChange={(v: string) => setPrices({...prices, user: v})} base={editingPlan.base_price} />
+                 <PriceInput label="Reseller Price" value={prices.reseller} onChange={(v: string) => setPrices({...prices, reseller: v})} base={editingPlan.base_price} />
+                 <PriceInput label="API Merchant Price" value={prices.api} onChange={(v: string) => setPrices({...prices, api: v})} base={editingPlan.base_price} />
                  
                  <div className="pt-8 flex gap-4">
                     <button onClick={() => setEditingPlan(null)} className="flex-1 py-5 rounded-3xl font-black text-[10px] uppercase tracking-widest text-gray-400 bg-gray-50 hover:bg-gray-100 transition-all">Cancel</button>
@@ -150,7 +149,14 @@ const AdminPricingPage: React.FC = () => {
   );
 };
 
-const PriceInput = ({ label, value, onChange, base }: any) => (
+interface PriceInputProps {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  base: number;
+}
+
+const PriceInput: React.FC<PriceInputProps> = ({ label, value, onChange, base }) => (
   <div>
      <div className="flex justify-between items-center mb-3">
         <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2">{label}</label>

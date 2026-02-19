@@ -31,7 +31,7 @@ const DataPage: React.FC = () => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showPinModal, setShowPinModal] = useState(false);
 
-  // CONFLICT PREVENTION: Deep reset when transitioning
+  // Deep reset on transition to prevent conflicts between server-specific data
   const handleServerTransition = (selected: 'server1' | 'server2') => {
     setServer(selected);
     setSelectedOperator(null);

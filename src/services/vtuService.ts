@@ -20,7 +20,7 @@ async function getManualPrice(planId: string, role: UserRole): Promise<number | 
   const priceDoc = await getDoc(doc(db, "manual_pricing", planId));
   if (priceDoc.exists()) {
     const prices = priceDoc.data();
-    // Default to 'user' if the role specific price isn't set
+    // Use role-specific price, fallback to user_price
     const priceKey = `${role}_price`;
     return Number(prices[priceKey] || prices.user_price);
   }
@@ -116,12 +116,12 @@ export const vtuService = {
           plans.push({
             id: planId,
             name: `${p.dataPlan} ${p.dataType}`,
-            amount: manual || (rawBase + 10), // Use manual or fallback to +10 profit
+            amount: manual || (rawBase + 10), 
             validity: p.validity
           });
         }
       } else {
-        // SERVER 2 LOGIC: Base API + 10 Fixed Profit
+        // SERVER 2 LOGIC: Base API + 10 Fixed Profit for display and charge
         const rawPlans = (res.data || []) as any[];
         plans = rawPlans.map((p: any) => {
           const rawBase = Number(String(p.price || p.amount || 0).replace(/,/g, ''));
@@ -194,36 +194,27 @@ export const vtuService = {
   },
 
   getCablePlans: async (billerName: string): Promise<ApiResponse<DataPlan[]>> => {
-    const userDoc = auth.currentUser ? await getDoc(doc(db, "users", auth.currentUser.uid)) : null;
-    const role = (userDoc?.data()?.role as UserRole) || 'user';
-    
-    // STRICT RULE: Cable strictly uses Server 2 (CIP Topup)
+    // Force Cable to Server 2 (CIP Topup) as requested
     const server = 'server2';
-    
     const res = await cipApiClient<any>(`cable/plans?biller=${billerName}`, { method: 'GET', data: { server } });
     if (res.status && res.data) {
         const rawPlans = (res.data || []) as any[];
-        const plans: DataPlan[] = [];
-        for (const p of rawPlans) {
-            const planId = String(p.id || p.code);
-            // Manual check still allowed for Server 2 if admin wishes to override, 
-            // but default is Base + 10.
-            const manual = await getManualPrice(planId, role);
-            const rawBase = Number(String(p.price || p.amount || 0).replace(/,/g, ''));
-            plans.push({
-                id: planId,
-                name: p.name,
-                amount: manual || (rawBase + 10),
-                validity: 'Monthly'
-            });
-        }
-        return { status: true, data: plans };
+        // Always apply fixed 10 Naira profit for Server 2
+        return { 
+          status: true, 
+          data: rawPlans.map((p: any) => ({
+            id: String(p.id || p.code),
+            name: p.name,
+            amount: Number(String(p.price || p.amount || 0).replace(/,/g, '')) + 10,
+            validity: 'Monthly'
+          }))
+        };
     }
     return res;
   },
 
   verifyCableSmartcard: async (payload: { biller: string; smartCardNumber: string }): Promise<ApiResponse<VerificationResponse>> => {
-    // STRICT RULE: Cable strictly uses Server 2 (CIP Topup)
+    // Force Cable to Server 2 (CIP Topup)
     const server = 'server2';
     return await cipApiClient<any>('cable/verify', { data: { ...payload, server }, method: 'POST' });
   },
@@ -231,16 +222,14 @@ export const vtuService = {
   purchaseCable: async (payload: { biller: string; planCode: string; smartCardNumber: string; subscriptionType: 'RENEW' | 'CHANGE'; phoneNumber: string; amount: number; plan_name: string }): Promise<ApiResponse<TransactionResponse>> => {
     const user = auth.currentUser;
     if (!user) return { status: false, message: 'Please login to continue.' };
-    
-    // STRICT RULE: Cable strictly uses Server 2 (CIP Topup)
+    // Force Cable to Server 2 (CIP Topup)
     const server = 'server2';
-    
     const res = await cipApiClient<any>('cable/purchase', { 
       data: { ...payload, iucNum: payload.smartCardNumber, serviceID: payload.planCode, server }, 
       method: 'POST' 
     });
     if (res.status) {
-      await logTransaction(user.uid, 'CABLE', payload.amount, `${payload.biller} TV`, `${payload.plan_name} for ${payload.smartCardNumber}`, 'SUCCESS', server.toUpperCase());
+      await logTransaction(user.uid, 'CABLE', payload.amount, `${payload.biller} TV`, `${payload.plan_name} for ${payload.smartCardNumber}`, 'SUCCESS', 'SERVER 2');
     }
     return res;
   },
