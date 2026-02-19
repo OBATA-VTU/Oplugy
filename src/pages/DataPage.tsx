@@ -5,7 +5,7 @@ import { vtuService } from '../services/vtuService';
 import { Operator, DataPlan } from '../types';
 import Spinner from '../components/Spinner';
 import PinPromptModal from '../components/PinPromptModal';
-import { DATA_NETWORKS, DATA_PLAN_TYPES } from '../constants';
+import { DATA_NETWORKS } from '../constants';
 import { ArrowIcon, ShieldCheckIcon, BoltIcon, SignalIcon } from '../components/Icons';
 
 type PageStep = 'serverSelection' | 'networkSelection' | 'form';
@@ -17,10 +17,11 @@ const DataPage: React.FC = () => {
   const [step, setStep] = useState<PageStep>('serverSelection');
   const [server, setServer] = useState<'server1' | 'server2' | null>(null);
   const [operators] = useState<Operator[]>(DATA_NETWORKS);
-  const [dataTypes, setDataTypes] = useState<{id: string, name: string}[]>(DATA_PLAN_TYPES);
+  const [dataTypes, setDataTypes] = useState<{id: string, name: string}[]>([]);
   const [dataPlans, setDataPlans] = useState<DataPlan[]>([]);
   const [selectedOperator, setSelectedOperator] = useState<Operator | null>(null);
   const [selectedType, setSelectedType] = useState<string | null>(null);
+  const [selectedPlanId, setSelectedPlanId] = useState('');
   const [selectedPlan, setSelectedPlan] = useState<DataPlan | null>(null);
   const [phoneNumber, setPhoneNumber] = useState('');
   
@@ -28,14 +29,20 @@ const DataPage: React.FC = () => {
   const [isFetchingPlans, setIsFetchingPlans] = useState(false);
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [showPinModal, setShowPinModal] = useState(false);
+  const [hasCategories, setHasCategories] = useState(true);
+
+  useEffect(() => {
+    setSelectedPlan(dataPlans.find(p => p.id === selectedPlanId) || null);
+  }, [selectedPlanId, dataPlans]);
 
   const resetSelections = () => {
     setSelectedType(null);
     setDataPlans([]);
+    setSelectedPlanId('');
     setSelectedPlan(null);
     setPhoneNumber('');
   };
-
+  
   const handleServerSelect = (selectedServer: 'server1' | 'server2') => {
     setServer(selectedServer);
     setStep('networkSelection');
@@ -59,47 +66,56 @@ const DataPage: React.FC = () => {
     resetSelections();
   };
 
+  const fetchPlans = useCallback(async () => {
+    if (!selectedOperator || !server) return;
+    if (hasCategories && !selectedType) {
+        setDataPlans([]);
+        return;
+    }
+
+    setIsFetchingPlans(true);
+    setSelectedPlanId('');
+    const payload = { network: selectedOperator.id, type: selectedType || '', server };
+    const res = await vtuService.getDataPlans(payload);
+    if (res.status && res.data) {
+        setDataPlans(res.data);
+    } else {
+        addNotification(res.message || 'Error loading plans.', 'error');
+        setDataPlans([]);
+    }
+    setIsFetchingPlans(false);
+  }, [selectedOperator, selectedType, server, addNotification, hasCategories]);
+
   const fetchTypes = useCallback(async () => {
-    if (!selectedOperator || server !== 'server1') return;
+    if (!selectedOperator || !server) return;
     setIsFetchingTypes(true);
     resetSelections();
-    const res = await vtuService.getDataCategories(selectedOperator.id, 'server1');
-    if (res.status && res.data) {
-      setDataTypes(res.data.map(d => ({ id: d, name: d })));
+    setDataTypes([]);
+
+    const res = await vtuService.getDataCategories(selectedOperator.id, server);
+
+    if (res.status && res.data && res.data.length > 0) {
+        setDataTypes(res.data.map(d => ({ id: d, name: d })));
+        setHasCategories(true);
     } else {
-      setDataTypes(DATA_PLAN_TYPES);
+        setHasCategories(false);
     }
     setIsFetchingTypes(false);
   }, [selectedOperator, server]);
 
-  const fetchPlans = useCallback(async () => {
-    if (!selectedOperator || !server || (server === 'server1' && !selectedType)) return;
-    setIsFetchingPlans(true);
-    setSelectedPlan(null);
-    const payload = { network: selectedOperator.id, type: selectedType || '', server };
-    const res = await vtuService.getDataPlans(payload);
-    if (res.status && res.data) {
-      setDataPlans(res.data);
-    } else {
-      addNotification(res.message || 'Error loading plans.', 'error');
-      setDataPlans([]);
+  useEffect(() => {
+    if (selectedOperator && server) {
+      fetchTypes();
     }
-    setIsFetchingPlans(false);
-  }, [selectedOperator, selectedType, server, addNotification]);
+  }, [selectedOperator, server, fetchTypes]);
 
   useEffect(() => {
-    if (server === 'server1') {
-      fetchTypes();
-    } else {
-      resetSelections();
-      setDataTypes([]);
-      if (selectedOperator) fetchPlans();
+    if (selectedOperator && server) {
+      if (!hasCategories || (hasCategories && selectedType)) {
+        fetchPlans();
+      }
     }
-  }, [selectedOperator, server, fetchTypes, fetchPlans]);
-  
-  useEffect(() => {
-    if (selectedType && server === 'server1') fetchPlans();
-  }, [selectedType, server, fetchPlans]);
+  }, [selectedType, hasCategories, selectedOperator, server, fetchPlans]);
 
   const handlePrePurchase = () => {
     if (!selectedPlan || !/^\d{11}$/.test(phoneNumber)) {
@@ -135,6 +151,7 @@ const DataPage: React.FC = () => {
       updateWalletBalance((walletBalance || 0) - selectedPlan.amount);
       setPhoneNumber('');
       setSelectedPlan(null);
+      setSelectedPlanId('');
     } else {
       addNotification(res.message || 'Purchase failed.', 'error');
     }
@@ -164,7 +181,7 @@ const DataPage: React.FC = () => {
             </div>
             <div>
               <h4 className="font-black text-yellow-900">Please Note</h4>
-              <p className="text-yellow-700 text-sm font-medium mt-1">Data plan prices vary between servers. Once a purchase is made, it is final and non-refundable. Please proceed with your chosen server.</p>
+              <p className="text-yellow-700 text-sm font-medium mt-1">Data plan prices are different for each server. Once a purchase is made, it is final and non-refundable. Please choose your server carefully.</p>
             </div>
           </div>
           
@@ -217,44 +234,54 @@ const DataPage: React.FC = () => {
                <span className="p-2 bg-gray-100 rounded-full group-hover:bg-blue-50 transition-all"><ArrowIcon /></span>
                <span>Go Back & Choose Network</span>
             </button>
-            <div className="bg-white p-12 rounded-[4rem] shadow-2xl border border-gray-50 space-y-10">
-               <div className="flex justify-between items-center">
-                  <div className="flex items-center space-x-6">
-                     <img src={selectedOperator.image} alt={selectedOperator.name} className="h-16 w-16" />
-                     <div>
-                        <p className="text-3xl font-black text-gray-900 tracking-tight">{selectedOperator.name}</p>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-blue-600">{server === 'server1' ? 'Omega Server' : 'Boom Server'}</p>
-                     </div>
+            <div className="bg-white p-12 rounded-[4rem] shadow-2xl border border-gray-50 space-y-8">
+               <div className="flex items-center space-x-6">
+                  <img src={selectedOperator.image} alt={selectedOperator.name} className="h-16 w-16" />
+                  <div>
+                    <p className="text-3xl font-black text-gray-900 tracking-tight">{selectedOperator.name}</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-blue-600">{server === 'server1' ? 'Omega Server' : 'Boom Server'}</p>
                   </div>
                </div>
-
-               {server === 'server1' && (
-                 <div className="flex p-1 bg-gray-50 rounded-2xl border border-gray-100 overflow-x-auto no-scrollbar">
-                   {isFetchingTypes ? <Spinner /> : dataTypes.map(dt => (
-                     <button key={dt.id} onClick={() => setSelectedType(dt.id)} className={`flex-1 px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${selectedType === dt.id ? 'bg-white shadow-md text-blue-600' : 'text-gray-400'}`}>
-                       {dt.name}
-                     </button>
-                   ))}
-                 </div>
-               )}
                
-               {isFetchingPlans ? (
-                 <div className="h-64 flex items-center justify-center"><Spinner /></div>
-               ) : dataPlans.length > 0 ? (
-                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-h-[400px] overflow-y-auto custom-scrollbar p-2">
-                   {dataPlans.map(plan => (
-                     <button key={plan.id} onClick={() => setSelectedPlan(plan)} className={`p-6 border-4 rounded-3xl text-center transition-all ${selectedPlan?.id === plan.id ? 'border-blue-600 bg-blue-50' : 'border-gray-100 bg-white hover:border-gray-200'}`}>
-                       <p className="font-black text-gray-900 text-lg leading-tight">{plan.name}</p>
-                       <p className="font-black text-blue-600 text-2xl tracking-tighter mt-2">₦{plan.amount}</p>
-                       <p className="text-[9px] font-black uppercase tracking-widest text-gray-400 mt-2">{plan.validity}</p>
-                     </button>
-                   ))}
-                 </div>
-               ) : (server === 'server1' && selectedType) || (server === 'server2' && selectedOperator) ? (
-                 <div className="text-center py-12 text-gray-400 font-medium">No plans available for this category.</div>
-               ) : null}
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  {isFetchingTypes ? <Spinner /> : hasCategories && (
+                    <div className="md:col-span-2">
+                       <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-2">Data Category</label>
+                       <select value={selectedType || ''} onChange={(e) => setSelectedType(e.target.value)} className="w-full p-5 bg-gray-50 rounded-2xl font-black text-lg border-2 border-transparent focus:border-blue-600 outline-none transition-all appearance-none">
+                          <option value="">Select Category</option>
+                          {dataTypes.map(dt => <option key={dt.id} value={dt.id}>{dt.name}</option>)}
+                       </select>
+                    </div>
+                  )}
 
+                  {isFetchingPlans ? <div className="h-16 flex items-center justify-center md:col-span-2"><Spinner /></div> : dataPlans.length > 0 && (
+                    <div className="md:col-span-2">
+                       <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-2">Data Plan</label>
+                       <select value={selectedPlanId} onChange={(e) => setSelectedPlanId(e.target.value)} className="w-full p-5 bg-gray-50 rounded-2xl font-black text-lg border-2 border-transparent focus:border-blue-600 outline-none transition-all appearance-none">
+                          <option value="">Select Plan</option>
+                          {dataPlans.map(plan => <option key={plan.id} value={plan.id}>{`${plan.name} (${plan.validity}) - ₦${plan.amount}`}</option>)}
+                       </select>
+                    </div>
+                  )}
+               </div>
+               
                <div className={`space-y-8 transition-opacity duration-500 ${selectedPlan ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
+                 {selectedPlan && (
+                    <div className="bg-gray-50 rounded-3xl p-6 flex justify-between items-center text-center border border-gray-100">
+                      <div className="w-1/3">
+                        <p className="text-[9px] font-black uppercase tracking-widest text-gray-400">Plan</p>
+                        <p className="font-bold text-lg text-gray-900 leading-tight">{selectedPlan.name}</p>
+                      </div>
+                      <div className="w-1/3 border-x border-gray-200">
+                        <p className="text-[9px] font-black uppercase tracking-widest text-gray-400">Validity</p>
+                        <p className="font-bold text-lg text-gray-900">{selectedPlan.validity}</p>
+                      </div>
+                      <div className="w-1/3">
+                        <p className="text-[9px] font-black uppercase tracking-widest text-gray-400">Price</p>
+                        <p className="font-black text-2xl text-blue-600">₦{selectedPlan.amount}</p>
+                      </div>
+                    </div>
+                 )}
                  <input type="tel" className="w-full p-6 bg-gray-50 border-4 border-gray-100 rounded-3xl text-2xl font-black tracking-tighter text-center outline-none focus:border-blue-600 focus:bg-white transition-all" placeholder="Enter Phone Number" value={phoneNumber} onChange={e => setPhoneNumber(e.target.value.replace(/\D/g, ''))} maxLength={11} />
                  <button onClick={handlePrePurchase} disabled={isPurchasing || !selectedPlan || phoneNumber.length !== 11} className="w-full bg-blue-600 text-white font-black py-8 rounded-[2.5rem] shadow-2xl uppercase tracking-[0.3em] flex items-center justify-center space-x-4 hover:bg-black transition-all transform active:scale-95 disabled:opacity-50">
                     {isPurchasing ? <Spinner /> : <><ShieldCheckIcon /><span>Buy Data Now</span></>}

@@ -88,6 +88,13 @@ export const vtuService = {
         return { status: true, data: categories };
       }
     }
+    if (server === 'server2') {
+        const res = await cipApiClient<any[]>(`data/categories?network=${network}`, { method: 'GET', data: { server: 'server2' } });
+        if (res.status && Array.isArray(res.data)) {
+            const categories = res.data.map((cat: any) => typeof cat === 'object' ? cat.name : String(cat));
+            return { status: true, data: categories };
+        }
+    }
     return { status: false, message: 'Categories not available.' };
   },
 
