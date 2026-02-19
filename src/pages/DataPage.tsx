@@ -6,16 +6,16 @@ import { Operator, DataPlan } from '../types';
 import Spinner from '../components/Spinner';
 import PinPromptModal from '../components/PinPromptModal';
 import { DATA_NETWORKS, DATA_PLAN_TYPES } from '../constants';
-import { ArrowIcon, ShieldCheckIcon } from '../components/Icons';
+import { ArrowIcon, ShieldCheckIcon, BoltIcon, SignalIcon } from '../components/Icons';
 
-type PageStep = 'selection' | 'form';
+type PageStep = 'serverSelection' | 'networkSelection' | 'form';
 
 const DataPage: React.FC = () => {
   const { addNotification } = useNotifications();
   const { walletBalance, updateWalletBalance } = useAuth();
   
-  const [step, setStep] = useState<PageStep>('selection');
-  const [server, setServer] = useState<'server1' | 'server2'>('server1');
+  const [step, setStep] = useState<PageStep>('serverSelection');
+  const [server, setServer] = useState<'server1' | 'server2' | null>(null);
   const [operators] = useState<Operator[]>(DATA_NETWORKS);
   const [dataTypes, setDataTypes] = useState<{id: string, name: string}[]>(DATA_PLAN_TYPES);
   const [dataPlans, setDataPlans] = useState<DataPlan[]>([]);
@@ -33,6 +33,30 @@ const DataPage: React.FC = () => {
     setSelectedType(null);
     setDataPlans([]);
     setSelectedPlan(null);
+    setPhoneNumber('');
+  };
+
+  const handleServerSelect = (selectedServer: 'server1' | 'server2') => {
+    setServer(selectedServer);
+    setStep('networkSelection');
+  };
+  
+  const handleNetworkSelect = (op: Operator) => {
+    setSelectedOperator(op);
+    setStep('form');
+  };
+  
+  const goBackToServerSelection = () => {
+    setStep('serverSelection');
+    setServer(null);
+    setSelectedOperator(null);
+    resetSelections();
+  };
+  
+  const goBackToNetworkSelection = () => {
+    setStep('networkSelection');
+    setSelectedOperator(null);
+    resetSelections();
   };
 
   const fetchTypes = useCallback(async () => {
@@ -49,7 +73,7 @@ const DataPage: React.FC = () => {
   }, [selectedOperator, server]);
 
   const fetchPlans = useCallback(async () => {
-    if (!selectedOperator || (server === 'server1' && !selectedType)) return;
+    if (!selectedOperator || !server || (server === 'server1' && !selectedType)) return;
     setIsFetchingPlans(true);
     setSelectedPlan(null);
     const payload = { network: selectedOperator.id, type: selectedType || '', server };
@@ -90,7 +114,7 @@ const DataPage: React.FC = () => {
   };
 
   const handlePurchase = async () => {
-    if (!selectedPlan || !phoneNumber || isPurchasing) return;
+    if (!selectedPlan || !phoneNumber || isPurchasing || !server) return;
     
     setIsPurchasing(true);
     setShowPinModal(false);
@@ -116,11 +140,6 @@ const DataPage: React.FC = () => {
     }
     setIsPurchasing(false);
   };
-  
-  const handleStartPurchase = (op: Operator) => {
-    setSelectedOperator(op);
-    setStep('form');
-  };
 
   return (
     <div className="max-w-4xl mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -137,17 +156,51 @@ const DataPage: React.FC = () => {
         <p className="text-gray-400 font-medium">Enjoy cheap and fast data for all networks.</p>
       </div>
 
-      {step === 'selection' && (
-        <div className="space-y-12">
-           <div className="flex p-2 bg-white rounded-3xl border border-gray-100 shadow-xl w-full max-w-lg mx-auto">
-              <ServerBtn label="Omega Server" desc="Faster & Cheaper" active={server === 'server1'} onClick={() => setServer('server1')} />
-              <ServerBtn label="Boom Server" desc="More Reliable" active={server === 'server2'} onClick={() => setServer('server2')} />
+      {step === 'serverSelection' && (
+        <div className="space-y-12 animate-in fade-in duration-500">
+          <div className="bg-yellow-50 border-2 border-dashed border-yellow-200 p-6 rounded-3xl flex items-start space-x-5">
+            <div className="w-10 h-10 bg-yellow-500 text-white rounded-xl flex items-center justify-center shrink-0">
+              <BoltIcon />
+            </div>
+            <div>
+              <h4 className="font-black text-yellow-900">Please Note</h4>
+              <p className="text-yellow-700 text-sm font-medium mt-1">Data plan prices vary between servers. Once a purchase is made, it is final and non-refundable. Please proceed with your chosen server.</p>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <ServerCard 
+              title="Omega Server" 
+              description="A wide range of data plans available." 
+              onClick={() => handleServerSelect('server1')} 
+            />
+            <ServerCard 
+              title="Boom Server" 
+              description="Alternative data plans for all networks." 
+              onClick={() => handleServerSelect('server2')} 
+            />
+          </div>
+        </div>
+      )}
+
+      {step === 'networkSelection' && server && (
+        <div className="space-y-10 animate-in fade-in duration-500">
+           <button onClick={goBackToServerSelection} className="flex items-center space-x-3 text-sm font-black text-gray-400 hover:text-blue-600 transition-all group">
+               <span className="p-2 bg-gray-100 rounded-full group-hover:bg-blue-50 transition-all"><ArrowIcon /></span>
+               <span>Go Back & Choose Server</span>
+            </button>
+           
+           <div className="text-center">
+              <p className="text-sm font-black text-blue-600 uppercase tracking-widest bg-blue-50 px-5 py-2 rounded-full inline-block shadow-sm">
+                 Using {server === 'server1' ? 'Omega' : 'Boom'} Server
+              </p>
            </div>
+           
            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
               {operators.map(op => (
                 <button 
                   key={op.id} 
-                  onClick={() => handleStartPurchase(op)}
+                  onClick={() => handleNetworkSelect(op)}
                   className="p-8 border-4 border-transparent rounded-[3rem] flex flex-col items-center gap-6 bg-white shadow-xl hover:border-blue-600 transition-all group"
                 >
                    <img src={op.image} alt={op.name} className="h-20 w-20 object-contain transition-transform group-hover:scale-110" />
@@ -158,9 +211,9 @@ const DataPage: React.FC = () => {
         </div>
       )}
 
-      {step === 'form' && selectedOperator && (
-         <div className="space-y-10">
-            <button onClick={() => setStep('selection')} className="flex items-center space-x-3 text-sm font-black text-gray-400 hover:text-blue-600 transition-all group">
+      {step === 'form' && selectedOperator && server && (
+         <div className="space-y-10 animate-in fade-in duration-500">
+            <button onClick={goBackToNetworkSelection} className="flex items-center space-x-3 text-sm font-black text-gray-400 hover:text-blue-600 transition-all group">
                <span className="p-2 bg-gray-100 rounded-full group-hover:bg-blue-50 transition-all"><ArrowIcon /></span>
                <span>Go Back & Choose Network</span>
             </button>
@@ -214,10 +267,26 @@ const DataPage: React.FC = () => {
   );
 };
 
-const ServerBtn = ({ label, desc, active, onClick }: any) => (
-  <button onClick={onClick} className={`flex-1 py-5 rounded-[2rem] text-center transition-all duration-300 transform ${active ? 'bg-blue-600 text-white shadow-2xl scale-105' : 'bg-transparent text-gray-400 hover:bg-gray-50 hover:text-gray-900'}`}>
-     <span className="font-black text-sm uppercase tracking-widest">{label}</span>
-     <span className={`block text-[9px] font-bold uppercase tracking-wider transition-all ${active ? 'text-blue-200' : 'text-gray-300'}`}>{desc}</span>
+interface ServerCardProps {
+  title: string;
+  description: string;
+  onClick: () => void;
+}
+
+const ServerCard: React.FC<ServerCardProps> = ({ title, description, onClick }) => (
+  <button 
+    onClick={onClick} 
+    className="p-10 bg-white rounded-[3rem] border-4 border-transparent hover:border-blue-600 hover:bg-blue-50/50 transition-all group shadow-xl flex flex-col items-center text-center transform active:scale-95"
+  >
+    <div className="w-20 h-20 bg-blue-50 text-blue-600 rounded-3xl flex items-center justify-center mb-8 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-lg group-hover:scale-110">
+      <SignalIcon />
+    </div>
+    <h3 className="text-2xl font-black text-gray-900 tracking-tight">{title}</h3>
+    <p className="text-gray-400 font-medium text-sm mt-2">{description}</p>
+    <div className="mt-8 flex items-center space-x-2 text-[10px] font-black uppercase tracking-widest text-blue-600 opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0">
+       <span>Proceed with Server</span>
+       <ArrowIcon />
+    </div>
   </button>
 );
 
