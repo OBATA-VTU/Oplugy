@@ -1,10 +1,8 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useNotifications } from '../hooks/useNotifications';
 import Logo from '../components/Logo';
 import Spinner from '../components/Spinner';
-// Fixed: Added missing Footer import
 import Footer from '../components/Footer';
 import { PhoneIcon, SignalIcon, BoltIcon, TvIcon, ArrowIcon, ShieldCheckIcon } from '../components/Icons';
 import { DATA_NETWORKS, AIRTIME_NETWORKS, CABLE_BILLERS } from '../constants';
@@ -28,7 +26,7 @@ const QuickPurchasePage: React.FC = () => {
 
   const calculateCharges = (amount: number) => {
     if (!amount || isNaN(amount)) return 0;
-    // Transparent node charges for guests
+    // Transparent processing fee for guests
     return (amount * 0.02) + 20; 
   };
 
@@ -38,7 +36,7 @@ const QuickPurchasePage: React.FC = () => {
 
   const handlePaystack = () => {
     if (!details.amount || (!details.phone && !details.smartcard)) {
-      addNotification("Please complete all identity nodes.", "warning");
+      addNotification("Please fill in the receiver's details.", "warning");
       return;
     }
     
@@ -51,16 +49,16 @@ const QuickPurchasePage: React.FC = () => {
       amount: Math.round(totalAmount * 100),
       currency: 'NGN',
       callback: (response: any) => {
-        addNotification("Payment Verified! Initializing digital fulfillment...", "success");
+        addNotification("Payment Successful! Sending your order now...", "success");
         setTimeout(() => {
           setIsProcessing(false);
-          addNotification("Fulfillment success! Assets dispatched.", "success");
+          addNotification("Successful! Everything has been sent.", "success");
           navigate('/');
         }, 3000);
       },
       onClose: () => {
         setIsProcessing(false);
-        addNotification("Transaction aborted by guest.", "info");
+        addNotification("Payment cancelled.", "info");
       }
     });
 
@@ -86,7 +84,7 @@ const QuickPurchasePage: React.FC = () => {
            <Logo />
            <button onClick={() => navigate(-1)} className="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-blue-600 transition-all flex items-center space-x-2">
               <span className="rotate-180"><ArrowIcon /></span>
-              <span>Back</span>
+              <span>Go Back</span>
            </button>
         </div>
       </nav>
@@ -96,9 +94,9 @@ const QuickPurchasePage: React.FC = () => {
             
             <div className="text-center mb-16">
                <h2 className="text-4xl lg:text-6xl font-black text-gray-900 tracking-tighter">
-                  {step === 1 ? 'Select Service' : `${service?.toUpperCase()} NODE`}
+                  {step === 1 ? 'Choose Service' : `Buy ${service?.toUpperCase()}`}
                </h2>
-               <p className="text-gray-400 font-medium mt-4 text-lg">Independent guest hub for instant reloads.</p>
+               <p className="text-gray-400 font-medium mt-4 text-lg">Quick buy without creating an account.</p>
             </div>
 
             {step === 1 && (
@@ -113,16 +111,15 @@ const QuickPurchasePage: React.FC = () => {
             {step === 2 && (
                <div className="space-y-12 animate-in slide-in-from-bottom-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                     {/* Provider Selection Logic */}
                      {service !== 'power' && (
                        <div>
-                          <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-2">Operator Node</label>
+                          <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-2">Provider</label>
                           <select 
                              className="w-full p-6 bg-gray-50 rounded-[1.5rem] font-black text-xl border-4 border-transparent focus:border-blue-600 outline-none appearance-none transition-all"
                              value={details.network}
                              onChange={(e) => setDetails({...details, network: e.target.value})}
                           >
-                             <option value="">Choose Provider</option>
+                             <option value="">Choose Network</option>
                              {providers.map(n => <option key={n.id} value={n.id}>{n.name}</option>)}
                           </select>
                        </div>
@@ -130,22 +127,21 @@ const QuickPurchasePage: React.FC = () => {
 
                      {service === 'power' && (
                        <div>
-                          <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-2">Meter Category</label>
+                          <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-2">Account Type</label>
                           <select 
                              className="w-full p-6 bg-gray-50 rounded-[1.5rem] font-black text-xl border-4 border-transparent focus:border-blue-600 outline-none appearance-none transition-all"
                              value={details.meterType}
                              onChange={(e) => setDetails({...details, meterType: e.target.value as any})}
                           >
                              <option value="prepaid">Prepaid Meter</option>
-                             <option value="postpaid">Postpaid Meter</option>
+                             <option value="postpaid">Postpaid Account</option>
                           </select>
                        </div>
                      )}
 
-                     {/* Beneficiary Identity Input */}
                      <div>
                         <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-2">
-                          {service === 'power' ? 'Meter Number' : service === 'tv' ? 'IUC / Smartcard' : 'Recipient Phone'}
+                          {service === 'power' ? 'Meter Number' : service === 'tv' ? 'IUC / Smartcard' : 'Phone Number'}
                         </label>
                         <input 
                           type="text" 
@@ -160,7 +156,7 @@ const QuickPurchasePage: React.FC = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                      {service === 'data' ? (
                         <div className="md:col-span-2">
-                           <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-2">Data Plan Choice</label>
+                           <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-2">Choose Data Plan</label>
                            <select 
                              className="w-full p-6 bg-gray-50 rounded-[1.5rem] font-black text-xl border-4 border-transparent focus:border-blue-600 outline-none appearance-none transition-all"
                              value={details.plan}
@@ -170,7 +166,7 @@ const QuickPurchasePage: React.FC = () => {
                              }}
                              disabled={!details.network}
                            >
-                              <option value="">Choose Bundle</option>
+                              <option value="">Select Bundle</option>
                               <option value="1|350">MTN SME 1GB - ₦350</option>
                               <option value="2|700">MTN SME 2GB - ₦700</option>
                               <option value="3|350">Airtel CG 1GB - ₦350</option>
@@ -178,7 +174,7 @@ const QuickPurchasePage: React.FC = () => {
                         </div>
                      ) : (
                        <div className="md:col-span-2">
-                          <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-2">Fulfillment Value (₦)</label>
+                          <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-2">Amount to Pay (₦)</label>
                           <input type="number" className="w-full p-6 bg-gray-50 border-4 border-gray-100 rounded-[1.5rem] font-black text-4xl outline-none focus:border-blue-600 transition-all tracking-tighter" placeholder="0.00" value={details.amount} onChange={(e) => setDetails({...details, amount: e.target.value})} />
                        </div>
                      )}
@@ -187,14 +183,14 @@ const QuickPurchasePage: React.FC = () => {
                   <div className="bg-gray-900 rounded-[3rem] p-10 lg:p-14 text-white relative overflow-hidden shadow-2xl">
                      <div className="relative z-10 space-y-6">
                         <div className="flex justify-between items-center text-sm">
-                           <span className="text-white/40 font-black uppercase tracking-widest">Guest Node Fee</span>
+                           <span className="text-white/40 font-black uppercase tracking-widest">Processing Fee</span>
                            <span className="font-black tracking-tighter text-lg text-white">₦{feeValue.toFixed(2)}</span>
                         </div>
                         <div className="pt-8 border-t border-white/10 flex justify-between items-center">
-                           <p className="text-xs font-black uppercase tracking-[0.3em] text-blue-400">Total Payable</p>
+                           <p className="text-xs font-black uppercase tracking-[0.3em] text-blue-400">Total Amount</p>
                            <div className="text-right">
                               <p className="text-5xl lg:text-7xl font-black tracking-tighter text-white">₦{totalAmount.toLocaleString()}</p>
-                              <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mt-2">Verified Secure Terminal</p>
+                              <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mt-2">Secure Payment Terminal</p>
                            </div>
                         </div>
                      </div>
@@ -205,17 +201,17 @@ const QuickPurchasePage: React.FC = () => {
                      <div className="w-14 h-14 bg-blue-600 text-white rounded-2xl flex items-center justify-center shrink-0 shadow-2xl shadow-blue-200">
                         <ShieldCheckIcon />
                      </div>
-                     <p className="text-xs font-black text-blue-800 uppercase tracking-widest leading-relaxed">Secured by OBATA V2 proprietary gateway. Fulfillment is automated upon payment verification.</p>
+                     <p className="text-xs font-black text-blue-800 uppercase tracking-widest leading-relaxed">Your payment is safe and verified. Delivery starts as soon as you pay.</p>
                   </div>
 
                   <div className="flex flex-col sm:flex-row gap-6 pt-4">
-                     <button onClick={() => {setStep(1); setService('');}} className="flex-1 py-6 rounded-3xl font-black text-[11px] uppercase tracking-widest text-gray-400 bg-gray-100 hover:bg-gray-200 transition-all">Abort</button>
+                     <button onClick={() => {setStep(1); setService('');}} className="flex-1 py-6 rounded-3xl font-black text-[11px] uppercase tracking-widest text-gray-400 bg-gray-100 hover:bg-gray-200 transition-all">Cancel</button>
                      <button 
                         onClick={handlePaystack} 
                         className="flex-[2] py-8 rounded-3xl font-black text-sm uppercase tracking-[0.2em] text-white bg-blue-600 shadow-2xl shadow-blue-200 flex items-center justify-center space-x-4 transition-all hover:bg-black hover:-translate-y-2 active:scale-95" 
                         disabled={isProcessing || !details.amount}
                      >
-                        {isProcessing ? <Spinner /> : <span>Start Fulfillment</span>}
+                        {isProcessing ? <Spinner /> : <span>Pay Now</span>}
                      </button>
                   </div>
                </div>

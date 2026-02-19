@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNotifications } from '../hooks/useNotifications';
@@ -33,13 +32,13 @@ const DashboardPage: React.FC = () => {
   const slides = [
     {
       img: "https://images.unsplash.com/photo-1611974714608-35602417562c?auto=format&fit=crop&q=80&w=1200",
-      title: "Reseller Tier Redefined",
-      desc: "Earn high margins on every transaction. Upgrade for just ₦1,200."
+      title: "Become a Business User",
+      desc: "Earn more money on every transaction. Upgrade for just ₦1,200."
     },
     {
       img: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&q=80&w=1200",
-      title: "Data rates crashed!",
-      desc: "MTN SME 1GB now ₦280 for all users."
+      title: "Data rates just crashed!",
+      desc: "MTN 1GB now only ₦280 for everyone."
     }
   ];
 
@@ -68,19 +67,20 @@ const DashboardPage: React.FC = () => {
   }, [fetchDashboardData, user]);
 
   const handlePaystackUpgrade = () => {
-    addNotification("Insufficient balance. Initializing ₦1,200 upgrade payment node...", "info");
+    addNotification("Opening payment window for ₦1,200 upgrade...", "info");
+    
+    // Create new instance for immediate response
     const handler = PaystackPop.setup({
       key: process.env.REACT_APP_PAYSTACK_PUBLIC_KEY || 'pk_test_placeholder',
       email: user.email,
-      amount: 1200 * 100, // Pre-filled with exactly 1200
+      amount: 1200 * 100, 
       currency: 'NGN',
       callback: (response: any) => {
-        addNotification("Payment Verified! Completing Reseller upgrade...", "success");
-        // We pass true to force the upgrade because payment has been verified
+        addNotification("Payment Successful! Upgrading your account now...", "success");
         executeUpgrade(true);
       },
       onClose: () => {
-        addNotification("Upgrade aborted.", "warning");
+        addNotification("Upgrade cancelled.", "warning");
       }
     });
     handler.openIframe();
@@ -92,17 +92,16 @@ const DashboardPage: React.FC = () => {
       const upgradeRes = await adminService.updateUserRole(user.id, 'reseller');
       if (upgradeRes.status) {
         if (!isPaymentVerified) {
-          // If using wallet balance, deduct the fee
           const currentBalance = walletBalance || 0;
           await updateWalletBalance(currentBalance - 1200);
         }
-        addNotification("Welcome to Reseller Tier! Your margins have been updated.", "success");
+        addNotification("Welcome to the Business Tier! Your discounts are now active.", "success");
         fetchDashboardData();
       } else {
-        addNotification("Upgrade node failed. Contact support.", "error");
+        addNotification("Upgrade failed. Please contact support.", "error");
       }
     } catch (error) {
-      addNotification("Internal system error during upgrade.", "error");
+      addNotification("A system error occurred during upgrade.", "error");
     }
     setIsUpgrading(false);
   };
@@ -122,7 +121,7 @@ const DashboardPage: React.FC = () => {
   const handlePinSuccess = async (pin: string) => {
     const res = await authService.setTransactionPin(user.id, pin);
     if (res.status) {
-      addNotification("Security PIN set successfully.", "success");
+      addNotification("Security PIN saved.", "success");
       setShowPinModal(false);
     }
   };
@@ -145,18 +144,18 @@ const DashboardPage: React.FC = () => {
       
       <div className="animate-in fade-in slide-in-from-bottom-8 duration-1000 space-y-10 pb-20">
         
-        {/* Main Wallet & Welcome Section */}
+        {/* Main Balance Section */}
         <div className="relative overflow-hidden bg-gray-900 rounded-[3rem] p-10 lg:p-14 text-white shadow-2xl border border-white/5 group">
           <div className="relative z-10 flex flex-col lg:flex-row justify-between lg:items-end gap-12">
             <div className="space-y-6">
               <div className="flex items-center space-x-3">
                  <div className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${user?.role === 'admin' ? 'bg-red-500 shadow-lg shadow-red-500/20' : user?.role === 'reseller' ? 'bg-green-600 shadow-lg shadow-green-500/20' : 'bg-blue-600 shadow-lg shadow-blue-500/20'}`}>
-                    {user?.role?.toUpperCase()} NODE
+                    {user?.role === 'reseller' ? 'BUSINESS USER' : user?.role?.toUpperCase() + ' ACCOUNT'}
                  </div>
                  <div className="text-white/40 font-black text-[10px] uppercase tracking-widest bg-white/5 px-4 py-1.5 rounded-full border border-white/10">@{user?.username}</div>
               </div>
               <div>
-                 <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/30 mb-2">Available Liquidity</p>
+                 <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/30 mb-2">Account Balance</p>
                  <div className="text-6xl lg:text-8xl font-black tracking-tighter leading-none flex items-baseline">
                     <span className="text-3xl mr-1 text-white/40">₦</span>
                     {walletBalance !== null ? walletBalance.toLocaleString('en-US', { minimumFractionDigits: 2 }) : '0.00'}
@@ -164,7 +163,7 @@ const DashboardPage: React.FC = () => {
               </div>
               <div className="flex flex-wrap items-center gap-4">
                  <div className="bg-white/5 px-5 py-3 rounded-2xl border border-white/10">
-                    <p className="text-[8px] font-black text-white/20 uppercase tracking-widest mb-1">Affiliate Code</p>
+                    <p className="text-[8px] font-black text-white/20 uppercase tracking-widest mb-1">Referral Code</p>
                     <p className="font-black text-blue-400 tracking-tight text-lg uppercase">{user?.referralCode || 'N/A'}</p>
                  </div>
                  {user?.role === 'user' && (
@@ -173,7 +172,7 @@ const DashboardPage: React.FC = () => {
                     disabled={isUpgrading}
                     className="bg-white text-gray-900 px-6 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all hover:bg-blue-600 hover:text-white shadow-xl flex items-center gap-2 active:scale-95 disabled:opacity-50"
                    >
-                      {isUpgrading ? <Spinner /> : <><ShieldCheckIcon /> Upgrade to Reseller (₦1,200)</>}
+                      {isUpgrading ? <Spinner /> : <><ShieldCheckIcon /> Upgrade Business (₦1,200)</>}
                    </button>
                  )}
               </div>
@@ -183,14 +182,13 @@ const DashboardPage: React.FC = () => {
                <ActionBtn onClick={() => navigate('/airtime')} icon={<PhoneIcon />} label="Airtime" />
                <ActionBtn onClick={() => navigate('/data')} icon={<SignalIcon />} label="Data" />
                <ActionBtn onClick={() => navigate('/bills')} icon={<BoltIcon />} label="Electricity" />
-               <ActionBtn onClick={() => navigate('/dashboard')} icon={<WalletIcon />} label="Fund" primary />
+               <ActionBtn onClick={() => navigate('/dashboard')} icon={<WalletIcon />} label="Fund Wallet" primary />
             </div>
           </div>
           <div className="absolute top-0 right-0 w-[40rem] h-[40rem] bg-blue-600/10 rounded-full blur-[120px] -z-0 pointer-events-none group-hover:bg-blue-600/20 transition-all duration-1000"></div>
-          <div className="absolute -bottom-20 -left-20 w-[20rem] h-[20rem] bg-blue-400/5 rounded-full blur-[80px] -z-0"></div>
         </div>
 
-        {/* Feature Carousel */}
+        {/* Slideshow */}
         <div className="relative h-64 lg:h-96 rounded-[3rem] overflow-hidden group shadow-2xl border-4 border-white animate-in zoom-in-95 duration-700">
            {slides.map((slide, idx) => (
              <div key={idx} className={`absolute inset-0 transition-opacity duration-1000 ${idx === currentSlide ? 'opacity-100' : 'opacity-0'}`}>
@@ -210,12 +208,12 @@ const DashboardPage: React.FC = () => {
           </div>
         )}
 
-        {/* Recent Transactions Section */}
+        {/* History Section */}
         <div className="bg-white rounded-[3rem] p-10 lg:p-16 shadow-2xl border border-gray-100">
           <div className="flex justify-between items-center mb-12">
-            <h3 className="text-3xl font-black text-gray-900 tracking-tighter">Terminal History</h3>
+            <h3 className="text-3xl font-black text-gray-900 tracking-tighter">Recent Transactions</h3>
             <Link to="/history" className="text-blue-600 font-black text-[10px] uppercase tracking-widest bg-blue-50 px-6 py-3 rounded-2xl hover:bg-blue-600 hover:text-white transition-all shadow-sm">
-               View Full Logs
+               View All
             </Link>
           </div>
 
@@ -248,8 +246,8 @@ const DashboardPage: React.FC = () => {
               )) : (
                 <div className="py-24 text-center">
                    <div className="w-20 h-20 bg-gray-50 rounded-[2.5rem] flex items-center justify-center mx-auto mb-6 text-gray-200 shadow-inner"><HistoryIcon /></div>
-                   <h4 className="font-black text-gray-900 text-2xl tracking-tighter">No Activity Logged</h4>
-                   <p className="text-gray-400 font-medium max-w-xs mx-auto mt-2">Your digital footprint will appear here once you initiate a transaction node.</p>
+                   <h4 className="font-black text-gray-900 text-2xl tracking-tighter">No Transactions Yet</h4>
+                   <p className="text-gray-400 font-medium max-w-xs mx-auto mt-2">When you perform a transaction, it will appear here instantly.</p>
                 </div>
               )}
             </div>

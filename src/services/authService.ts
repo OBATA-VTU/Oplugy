@@ -1,4 +1,3 @@
-
 import { ApiResponse } from '../types';
 import { auth, db } from '../firebase/config';
 import { 
@@ -48,13 +47,13 @@ export const authService = {
         return { 
           status: true, 
           data: { user: { ...userData, id: user.uid }, token: await user.getIdToken() },
-          message: 'Welcome back to OBATA v2!' 
+          message: 'Welcome back!' 
         };
       }
       
       return { status: true, data: { user, token: await user.getIdToken() } };
     } catch (error: any) {
-      return { status: false, message: 'Invalid credentials.' };
+      return { status: false, message: 'Invalid email or password.' };
     }
   },
 
@@ -74,7 +73,7 @@ export const authService = {
           id: user.uid,
           email: user.email,
           username: (user.email?.split('@')[0] || 'user') + Math.floor(Math.random() * 1000),
-          fullName: user.displayName || 'OBATA User',
+          fullName: user.displayName || 'User',
           walletBalance: 0,
           role: 'user',
           status: 'active',
@@ -92,35 +91,36 @@ export const authService = {
       return { 
         status: true, 
         data: { user: { ...userData, id: user.uid }, token: await user.getIdToken() },
-        message: 'Successfully signed in to OBATA v2' 
+        message: 'Successfully signed in' 
       };
     } catch (error: any) {
-      return { status: false, message: 'Auth interrupted.' };
+      return { status: false, message: 'Login was interrupted.' };
     }
   },
 
-  async signup(payload: { email: string, password: string, fullName: string, username: string, referralCode?: string }): Promise<ApiResponse<any>> {
+  async signup(payload: { email: string, password: string, username: string, referralCode?: string }): Promise<ApiResponse<any>> {
     try {
-      const { email, password, fullName, username, referralCode } = payload;
+      const { email, password, username, referralCode } = payload;
       
-      // Check if username is taken
-      const q = query(collection(db, "users"), where("username", "==", username));
+      // Strict check for unique username
+      const usernameLower = username.toLowerCase().trim();
+      const q = query(collection(db, "users"), where("username", "==", usernameLower));
       const querySnapshot = await getDocs(q);
+      
       if (!querySnapshot.empty) {
-        return { status: false, message: "Username already taken." };
+        return { status: false, message: "This username is already taken. Please pick another one." };
       }
 
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-      await updateProfile(user, { displayName: fullName });
+      await updateProfile(user, { displayName: usernameLower });
 
       let referredBy = null;
       if (referralCode) {
-        const refQ = query(collection(db, "users"), where("referralCode", "==", referralCode.toUpperCase()));
+        const refQ = query(collection(db, "users"), where("referralCode", "==", referralCode.toUpperCase().trim()));
         const refSnap = await getDocs(refQ);
         if (!refSnap.empty) {
           referredBy = refSnap.docs[0].id;
-          // Increment referral count for the referrer
           await updateDoc(doc(db, "users", referredBy), {
             referralCount: increment(1)
           });
@@ -130,8 +130,8 @@ export const authService = {
       const userData = {
         id: user.uid,
         email,
-        fullName,
-        username,
+        fullName: usernameLower, // We use username as the display name now
+        username: usernameLower,
         walletBalance: 0,
         role: 'user',
         status: 'active',
@@ -144,8 +144,11 @@ export const authService = {
       };
 
       await setDoc(doc(db, "users", user.uid), userData);
-      return { status: true, message: 'Account created!' };
+      return { status: true, message: 'Account created successfully!' };
     } catch (error: any) {
+      if (error.code === 'auth/email-already-in-use') {
+        return { status: false, message: "This email is already registered." };
+      }
       return { status: false, message: error.message };
     }
   },
@@ -156,7 +159,7 @@ export const authService = {
         transactionPin: pin,
         isPinSet: true
       });
-      return { status: true, message: "PIN configured." };
+      return { status: true, message: "PIN saved successfully." };
     } catch (error: any) {
       return { status: false, message: error.message };
     }

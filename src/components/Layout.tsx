@@ -1,4 +1,3 @@
-
 import React, { useState, ReactNode } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
@@ -57,25 +56,25 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         <Logo />
       </div>
       <nav className="flex-grow px-6 space-y-2 overflow-y-auto custom-scrollbar">
-        <div className="px-4 mb-3 text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Main Engine</div>
+        <div className="px-4 mb-3 text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Home</div>
         <NavItem to="/dashboard" icon={<HomeIcon />} onClick={closeSidebar}>Dashboard</NavItem>
-        <NavItem to="/history" icon={<HistoryIcon />} onClick={closeSidebar}>History</NavItem>
-        <NavItem to="/pricing" icon={<CurrencyDollarIcon />} onClick={closeSidebar}>Tariffs</NavItem>
+        <NavItem to="/history" icon={<HistoryIcon />} onClick={closeSidebar}>Transactions</NavItem>
+        <NavItem to="/pricing" icon={<CurrencyDollarIcon />} onClick={closeSidebar}>Prices</NavItem>
         
-        <div className="px-4 mt-8 mb-3 text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Digital Goods</div>
-        <NavItem to="/airtime" icon={<PhoneIcon />} onClick={closeSidebar}>Airtime</NavItem>
-        <NavItem to="/data" icon={<SignalIcon />} onClick={closeSidebar}>Data Bundles</NavItem>
-        <NavItem to="/bills" icon={<BoltIcon />} onClick={closeSidebar}>Electricity</NavItem>
+        <div className="px-4 mt-8 mb-3 text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Buy Services</div>
+        <NavItem to="/airtime" icon={<PhoneIcon />} onClick={closeSidebar}>Buy Airtime</NavItem>
+        <NavItem to="/data" icon={<SignalIcon />} onClick={closeSidebar}>Buy Data</NavItem>
+        <NavItem to="/bills" icon={<BoltIcon />} onClick={closeSidebar}>Pay Light Bills</NavItem>
         <NavItem to="/cable" icon={<TvIcon />} onClick={closeSidebar}>Cable TV</NavItem>
 
-        <div className="px-4 mt-8 mb-3 text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Governance</div>
-        <NavItem to="/referral" icon={<UsersIcon />} onClick={closeSidebar}>Refer and Earn</NavItem>
-        <NavItem to="/support" icon={<ShieldCheckIcon />} onClick={closeSidebar}>Help Center</NavItem>
+        <div className="px-4 mt-8 mb-3 text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Help & Support</div>
+        <NavItem to="/referral" icon={<UsersIcon />} onClick={closeSidebar}>Refer & Earn</NavItem>
+        <NavItem to="/support" icon={<ShieldCheckIcon />} onClick={closeSidebar}>Get Help</NavItem>
 
         {user?.role === 'admin' && (
           <div className="pt-8 mt-8 border-t border-gray-100">
-            <div className="px-4 mb-2 text-[10px] font-black uppercase tracking-[0.3em] text-red-500">Master Control</div>
-            <NavItem to="/admin" icon={<ShieldCheckIcon />} onClick={closeSidebar}>Admin Hub</NavItem>
+            <div className="px-4 mb-2 text-[10px] font-black uppercase tracking-[0.3em] text-red-500">Admin Area</div>
+            <NavItem to="/admin" icon={<ShieldCheckIcon />} onClick={closeSidebar}>Admin Panel</NavItem>
           </div>
         )}
       </nav>
@@ -85,7 +84,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           className="w-full flex items-center space-x-4 p-4 rounded-2xl text-red-500 bg-red-50 hover:bg-red-500 hover:text-white transition-all font-black text-xs uppercase tracking-widest shadow-sm"
         >
           <LogoutIcon />
-          <span>Exit Session</span>
+          <span>Logout</span>
         </button>
       </div>
     </div>
@@ -109,31 +108,21 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               <MenuIcon />
             </button>
             <div className="hidden sm:block">
-               <h1 className="text-sm font-black text-gray-400 uppercase tracking-widest leading-none">Identity: <span className="text-gray-900">{user?.fullName || 'User Node'}</span></h1>
+               <h1 className="text-sm font-black text-gray-400 uppercase tracking-widest leading-none">Welcome, <span className="text-gray-900">{user?.username || 'User'}</span></h1>
             </div>
           </div>
           
           <div className="flex items-center space-x-3 lg:space-x-6">
-             <div className="flex items-center space-x-2 mr-2">
-                <button className="p-3 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all">
-                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
-                </button>
-                <button className="p-3 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all relative">
-                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
-                   <span className="absolute top-2 right-2 w-2 h-2 bg-blue-600 rounded-full border-2 border-white"></span>
-                </button>
-             </div>
-
-            <div className="flex items-center space-x-4 pl-4 border-l border-gray-100">
+            <div className="flex items-center space-x-4 pl-4">
                <div className="text-right hidden sm:block">
-                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Portfolio</p>
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Balance</p>
                   <p className="text-gray-900 font-black text-lg tracking-tighter">₦{walletBalance?.toLocaleString() || '0.00'}</p>
                </div>
                <button 
-                onClick={() => navigate('/profile')}
+                onClick={() => navigate('/dashboard')}
                 className="w-10 h-10 lg:w-12 lg:h-12 rounded-2xl bg-gray-100 border-2 border-white shadow-sm overflow-hidden flex items-center justify-center text-blue-600 font-black text-xs hover:scale-105 transition-all"
                >
-                  {user?.fullName?.charAt(0) || 'U'}
+                  {user?.username?.charAt(0).toUpperCase() || 'U'}
                </button>
             </div>
           </div>
@@ -148,7 +137,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       <Modal 
         isOpen={isFundModalOpen} 
         onClose={() => setIsFundModalOpen(false)} 
-        title="Fund Portfolio"
+        title="Fund My Wallet"
         footer={
           <div className="flex space-x-4 w-full">
             <button className="flex-1 bg-gray-100 py-4 rounded-2xl font-black text-xs uppercase tracking-widest text-gray-500" onClick={() => setIsFundModalOpen(false)}>Close</button>
@@ -156,11 +145,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               <button 
                 className="flex-2 bg-blue-600 py-4 rounded-2xl font-black text-xs uppercase tracking-widest text-white shadow-xl shadow-blue-100"
                 onClick={() => { 
-                  addNotification("Initializing secure Paystack node...", "info");
+                  addNotification("Opening Paystack...", "info");
                   setIsFundModalOpen(false); 
                 }}
               >
-                Proceed to Paystack
+                Pay with Card/Bank
               </button>
             )}
           </div>
@@ -168,25 +157,25 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       >
         <div className="space-y-8">
           <div className="flex p-1.5 bg-gray-100 rounded-2xl">
-            <button className={`flex-1 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all ${fundMethod === 'AUTO' ? 'bg-white text-blue-600 shadow-md' : 'text-gray-400'}`} onClick={() => setFundMethod('AUTO')}>Paystack Auto</button>
+            <button className={`flex-1 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all ${fundMethod === 'AUTO' ? 'bg-white text-blue-600 shadow-md' : 'text-gray-400'}`} onClick={() => setFundMethod('AUTO')}>Card/Bank</button>
             <button className={`flex-1 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all ${fundMethod === 'MANUAL' ? 'bg-white text-blue-600 shadow-md' : 'text-gray-400'}`} onClick={() => setFundMethod('MANUAL')}>Transfer</button>
           </div>
 
           {fundMethod === 'AUTO' ? (
             <div className="animate-in fade-in slide-in-from-bottom-2">
-              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-2">Funding Amount (₦)</label>
+              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-2">How much?</label>
               <input type="number" className="w-full p-6 bg-gray-50 border border-gray-100 rounded-3xl text-3xl font-black tracking-tighter focus:ring-4 focus:ring-blue-50 transition-all outline-none" placeholder="0.00" value={fundAmount} onChange={(e) => setFundAmount(e.target.value)} />
-              <p className="mt-4 text-[10px] font-bold text-gray-400 italic">Credits reflect instantly on the OBATA Master Ledger.</p>
+              <p className="mt-4 text-[10px] font-bold text-gray-400 italic">Money will be added to your balance immediately.</p>
             </div>
           ) : (
             <div className="bg-gray-900 text-white p-10 rounded-[2.5rem] space-y-6 text-center animate-in fade-in slide-in-from-bottom-2">
-              <p className="text-white/40 text-[10px] font-black uppercase tracking-widest">Master Bank</p>
+              <p className="text-white/40 text-[10px] font-black uppercase tracking-widest">Bank Details</p>
               <h3 className="text-4xl font-black tracking-tighter leading-none">8142452729</h3>
               <div className="bg-white/5 p-5 rounded-2xl border border-white/5">
-                <p className="text-blue-500 font-black text-sm mb-1 uppercase tracking-widest">OBATA Palmpay Node</p>
+                <p className="text-blue-500 font-black text-sm mb-1 uppercase tracking-widest">Bank: Palmpay</p>
                 <p className="text-xs font-bold text-white/80">Boluwatife Oluwapelumi Ayuba</p>
               </div>
-              <p className="text-[10px] text-white/30 italic leading-relaxed">Send screenshot to OBATA Support for manual node verification.</p>
+              <p className="text-[10px] text-white/30 italic leading-relaxed">Send a screenshot to support after transfer for verification.</p>
             </div>
           )}
         </div>
