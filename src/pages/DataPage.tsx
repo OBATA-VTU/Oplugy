@@ -31,7 +31,6 @@ const DataPage: React.FC = () => {
   const [showPinModal, setShowPinModal] = useState(false);
   const [hasCategories, setHasCategories] = useState(true);
 
-  // Dynamically filter operators based on selected server
   const availableOperators = server === 'server2' 
     ? operators.filter(op => op.id.toUpperCase() !== 'VITEL') 
     : operators;
@@ -71,17 +70,9 @@ const DataPage: React.FC = () => {
     resetSelections();
   };
 
-  const fetchPlans = useCallback(async () => {
-    if (!selectedOperator || !server) return;
-    if (hasCategories && !selectedType) {
-        setDataPlans([]);
-        return;
-    }
-
+  const fetchPlans = useCallback(async (netId: string, typeId: string, srv: 'server1' | 'server2') => {
     setIsFetchingPlans(true);
-    setSelectedPlanId('');
-    const payload = { network: selectedOperator.id, type: selectedType || '', server };
-    const res = await vtuService.getDataPlans(payload);
+    const res = await vtuService.getDataPlans({ network: netId, type: typeId, server: srv });
     if (res.status && res.data) {
         setDataPlans(res.data);
     } else {
@@ -89,7 +80,7 @@ const DataPage: React.FC = () => {
         setDataPlans([]);
     }
     setIsFetchingPlans(false);
-  }, [selectedOperator, selectedType, server, addNotification, hasCategories]);
+  }, [addNotification]);
 
   const fetchTypes = useCallback(async () => {
     if (!selectedOperator || !server) return;
@@ -104,9 +95,13 @@ const DataPage: React.FC = () => {
         setHasCategories(true);
     } else {
         setHasCategories(false);
+        // If no categories, fetch plans directly for Server 1 if applicable
+        if (server === 'server1') {
+           fetchPlans(selectedOperator.id, '', server);
+        }
     }
     setIsFetchingTypes(false);
-  }, [selectedOperator, server]);
+  }, [selectedOperator, server, fetchPlans]);
 
   useEffect(() => {
     if (selectedOperator && server) {
@@ -115,12 +110,10 @@ const DataPage: React.FC = () => {
   }, [selectedOperator, server, fetchTypes]);
 
   useEffect(() => {
-    if (selectedOperator && server) {
-      if (!hasCategories || (hasCategories && selectedType)) {
-        fetchPlans();
-      }
+    if (selectedOperator && server && selectedType) {
+      fetchPlans(selectedOperator.id, selectedType, server);
     }
-  }, [selectedType, hasCategories, selectedOperator, server, fetchPlans]);
+  }, [selectedType, selectedOperator, server, fetchPlans]);
 
   const handlePrePurchase = () => {
     if (!selectedPlan || !/^\d{11}$/.test(phoneNumber)) {
@@ -186,19 +179,19 @@ const DataPage: React.FC = () => {
             </div>
             <div>
               <h4 className="font-black text-yellow-900">Please Note</h4>
-              <p className="text-yellow-700 text-sm font-medium mt-1">Data plan prices are different for each server. Once a purchase is made, it is final and non-refundable. Please choose your server carefully.</p>
+              <p className="text-yellow-700 text-sm font-medium mt-1">Data plan prices are different for each server. Please choose your preferred server carefully.</p>
             </div>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <ServerCard 
               title="Omega Server" 
-              description="A wide range of data plans available." 
+              description="Standard data plans with high reliability." 
               onClick={() => handleServerSelect('server1')} 
             />
             <ServerCard 
               title="Boom Server" 
-              description="Alternative data plans for all networks." 
+              description="Alternative cheap data bundles." 
               onClick={() => handleServerSelect('server2')} 
             />
           </div>
@@ -259,13 +252,17 @@ const DataPage: React.FC = () => {
                     </div>
                   )}
 
-                  {isFetchingPlans ? <div className="h-16 flex items-center justify-center md:col-span-2"><Spinner /></div> : dataPlans.length > 0 && (
+                  {isFetchingPlans ? <div className="h-16 flex items-center justify-center md:col-span-2"><Spinner /></div> : dataPlans.length > 0 ? (
                     <div className="md:col-span-2">
                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-2">Data Plan</label>
                        <select value={selectedPlanId} onChange={(e) => setSelectedPlanId(e.target.value)} className="w-full p-5 bg-gray-50 rounded-2xl font-black text-lg border-2 border-transparent focus:border-blue-600 outline-none transition-all appearance-none">
                           <option value="">Select Plan</option>
                           {dataPlans.map(plan => <option key={plan.id} value={plan.id}>{`${plan.name} (${plan.validity}) - ₦${plan.amount}`}</option>)}
                        </select>
+                    </div>
+                  ) : selectedType && !isFetchingPlans && (
+                    <div className="md:col-span-2 py-8 text-center bg-red-50 rounded-2xl border border-red-100">
+                       <p className="text-red-500 font-black text-xs uppercase tracking-widest">No plans found for this category.</p>
                     </div>
                   )}
                </div>

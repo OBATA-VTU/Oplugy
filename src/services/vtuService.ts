@@ -20,7 +20,6 @@ async function getManualPrice(planId: string, role: UserRole): Promise<number | 
   const priceDoc = await getDoc(doc(db, "manual_pricing", planId));
   if (priceDoc.exists()) {
     const prices = priceDoc.data();
-    // Use role-specific price, fallback to user_price
     const priceKey = `${role}_price`;
     return Number(prices[priceKey] || prices.user_price);
   }
@@ -57,14 +56,8 @@ export const vtuService = {
     const server = config.routing?.airtime || 'server1';
     const serverName = server === 'server1' ? 'Omega Server' : 'Boom Server';
 
-    let serviceID = payload.network;
-    if (server === 'server1') {
-      if (payload.network.toUpperCase() === 'MTN') serviceID = '1';
-      if (payload.network.toUpperCase() === 'AIRTEL') serviceID = '2';
-    }
-
     const res = await cipApiClient<any>(server === 'server1' ? 'airtime' : 'airtime/purchase', { 
-      data: { ...payload, mobileNumber: payload.phone, serviceID, server }, 
+      data: { ...payload, mobileNumber: payload.phone, server }, 
       method: 'POST' 
     });
     
@@ -87,15 +80,14 @@ export const vtuService = {
         ));
         return { status: true, data: categories };
       }
+    } else {
+      const res = await cipApiClient<any[]>(`data/categories?network=${network}`, { method: 'GET', data: { server: 'server2' } });
+      if (res.status && Array.isArray(res.data)) {
+        const categories = res.data.map((cat: any) => typeof cat === 'object' ? cat.name : String(cat));
+        return { status: true, data: categories };
+      }
     }
-    if (server === 'server2') {
-        const res = await cipApiClient<any[]>(`data/categories?network=${network}`, { method: 'GET', data: { server: 'server2' } });
-        if (res.status && Array.isArray(res.data)) {
-            const categories = res.data.map((cat: any) => typeof cat === 'object' ? cat.name : String(cat));
-            return { status: true, data: categories };
-        }
-    }
-    return { status: false, message: 'Categories not available.' };
+    return { status: false, message: 'Categories not available for this network/server.' };
   },
 
   getDataPlans: async (payload: { network: string; type: string; server?: 'server1' | 'server2' }): Promise<ApiResponse<DataPlan[]>> => {
@@ -104,20 +96,16 @@ export const vtuService = {
     const server = payload.server || 'server1';
     const config = await getSystemConfig();
     
-    const res = await cipApiClient<any>(server === 'server1' ? 'services' : `data/plans?network=${payload.network}&type=${payload.type}`, { 
-      method: 'GET', 
-      data: { server } 
-    });
-    
-    if (res.status && res.data) {
-      let plans: DataPlan[] = [];
-      if (server === 'server1') {
+    if (server === 'server1') {
+      const res = await cipApiClient<any>('services', { method: 'GET', data: { server: 'server1' } });
+      if (res.status && res.data?.dataPlans) {
         const rawPlans = (res.data.dataPlans || []) as any[];
         const filtered = rawPlans.filter((p: any) => 
           p.network.toUpperCase() === payload.network.toUpperCase() && 
           p.dataType.toUpperCase() === payload.type.toUpperCase()
         );
 
+        const plans: DataPlan[] = [];
         for (const p of filtered) {
           const planId = String(p.serviceID);
           const manual = await getManualPrice(planId, role);
@@ -129,22 +117,25 @@ export const vtuService = {
             validity: p.validity
           });
         }
-      } else {
-        const margin = config.pricing?.server2?.data_margin ?? 10;
-        const rawPlans = (res.data || []) as any[];
-        plans = rawPlans.map((p: any) => {
-          const rawBase = Number(String(p.price || p.amount || 0).replace(/,/g, ''));
-          return {
-            id: String(p.id || p.code),
-            name: p.name,
-            amount: rawBase + margin,
-            validity: p.validity || '30 Days'
-          };
-        });
+        return { status: true, data: plans };
       }
-      return { status: true, data: plans };
+    } else {
+      const res = await cipApiClient<any[]>(`data/plans?network=${payload.network}&type=${payload.type}`, { 
+        method: 'GET', 
+        data: { server: 'server2' } 
+      });
+      if (res.status && Array.isArray(res.data)) {
+        const margin = config.pricing?.server2?.data_margin ?? 10;
+        const plans = res.data.map((p: any) => ({
+          id: String(p.id || p.code),
+          name: p.name,
+          amount: Number(String(p.price || p.amount || 0).replace(/,/g, '')) + margin,
+          validity: p.validity || '30 Days'
+        }));
+        return { status: true, data: plans };
+      }
     }
-    return res;
+    return { status: false, message: 'Failed to retrieve plans.' };
   },
 
   purchaseData: async (payload: { plan_id: string; phone_number: string; amount: number; network: string; plan_name: string; server: 'server1' | 'server2' }): Promise<ApiResponse<TransactionResponse>> => {
@@ -225,7 +216,6 @@ export const vtuService = {
   },
 
   verifyCableSmartcard: async (payload: { biller: string; smartCardNumber: string }): Promise<ApiResponse<VerificationResponse>> => {
-    // Force Cable to Server 2 (CIP Topup)
     const server = 'server2';
     return await cipApiClient<any>('cable/verify', { data: { ...payload, server }, method: 'POST' });
   },
@@ -233,7 +223,6 @@ export const vtuService = {
   purchaseCable: async (payload: { biller: string; planCode: string; smartCardNumber: string; subscriptionType: 'RENEW' | 'CHANGE'; phoneNumber: string; amount: number; plan_name: string }): Promise<ApiResponse<TransactionResponse>> => {
     const user = auth.currentUser;
     if (!user) return { status: false, message: 'Please login to continue.' };
-    // Force Cable to Server 2 (CIP Topup)
     const res = await cipApiClient<any>('cable/purchase', { 
       data: { ...payload, iucNum: payload.smartCardNumber, serviceID: payload.planCode, server: 'server2' }, 
       method: 'POST' 

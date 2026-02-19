@@ -29,7 +29,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const selectedProvider = providers[server as keyof typeof providers] || providers.server2;
 
   if (!selectedProvider.apiKey) {
-    console.error(`[Proxy Error] Missing credentials for ${server}. Ensure ${server === 'server1' ? 'INLOMAX_API_KEY' : 'CIP_API_KEY'} is set.`);
+    console.error(`[Proxy Error] Missing credentials for ${server}.`);
     return res.status(500).json({ status: 'error', message: `System Error: ${server} credentials not found.` });
   }
 
@@ -50,22 +50,45 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     };
 
     if (targetMethod !== 'GET' && data) {
-      const requestData = { ...data };
+      let requestData = { ...data };
+      
+      // SERVER 1 (INLOMAX) PAYLOAD MAPPING
       if (server === 'server1') {
-        // Documentation mapping for Inlomax field names
-        if (requestData.phone_number) requestData.mobileNumber = requestData.phone_number;
-        if (requestData.phone) requestData.mobileNumber = requestData.phone;
-        if (requestData.plan_id) requestData.serviceID = requestData.plan_id;
+        // Inlomax strictly requires 'serviceID' and 'mobileNumber' for most POST requests
+        const mappedData: any = {};
         
-        // Remove UI-only helper fields before sending to provider
-        delete requestData.server;
-        delete requestData.plan_name;
-        delete requestData.network;
-        delete requestData.phone_number;
-        delete requestData.phone;
-        delete requestData.plan_id;
-        delete requestData.amount; 
+        // Map Service ID
+        if (requestData.serviceID) mappedData.serviceID = String(requestData.serviceID);
+        else if (requestData.plan_id) mappedData.serviceID = String(requestData.plan_id);
+        else if (requestData.provider_id) mappedData.serviceID = String(requestData.provider_id);
+        else if (requestData.network && endpoint === 'airtime') {
+           // Airtime special mapping for Inlomax based on network strings if IDs aren't provided
+           if (requestData.network.toUpperCase() === 'MTN') mappedData.serviceID = "1";
+           if (requestData.network.toUpperCase() === 'AIRTEL') mappedData.serviceID = "2";
+           if (requestData.network.toUpperCase() === 'GLO') mappedData.serviceID = "3";
+           if (requestData.network.toUpperCase() === '9MOBILE') mappedData.serviceID = "4";
+        }
+
+        // Map Mobile Number
+        if (requestData.mobileNumber) mappedData.mobileNumber = String(requestData.mobileNumber);
+        else if (requestData.phone_number) mappedData.mobileNumber = String(requestData.phone_number);
+        else if (requestData.phone) mappedData.mobileNumber = String(requestData.phone);
+        else if (requestData.meterNum) mappedData.meterNum = String(requestData.meterNum);
+        else if (requestData.meter_number) mappedData.meterNum = String(requestData.meter_number);
+
+        // Map Amount
+        if (requestData.amount) mappedData.amount = Number(requestData.amount);
+
+        // Map Meter Type for Electricity
+        if (requestData.meterType) mappedData.meterType = Number(requestData.meterType);
+        else if (requestData.meter_type) mappedData.meterType = requestData.meter_type === 'prepaid' ? 1 : 2;
+
+        // Map Quantity for Education
+        if (requestData.quantity) mappedData.quantity = Number(requestData.quantity);
+
+        requestData = mappedData;
       }
+      
       fetchOptions.body = JSON.stringify(requestData);
     }
 
@@ -77,17 +100,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     clearTimeout(timeout);
     
     const responseText = await apiResponse.text();
-    console.log(`[Proxy] ${server} responded with status ${apiResponse.status}`);
-
+    
     try {
       const responseData = JSON.parse(responseText);
-      return res.status(apiResponse.status).json(responseData);
+      // Ensure we return a consistent 200 even if the underlying API has a different success code
+      return res.status(200).json(responseData);
     } catch {
-      console.error(`[Proxy Error] ${server} returned non-JSON response.`);
       return res.status(apiResponse.status).send(responseText);
     }
   } catch (error: any) {
     console.error(`[Proxy Fatal] Connection to ${server} failed:`, error.message);
-    return res.status(504).json({ status: 'error', message: 'The gateway connection timed out.', detail: error.message });
+    return res.status(504).json({ status: 'error', message: 'The gateway connection timed out.' });
   }
 }
