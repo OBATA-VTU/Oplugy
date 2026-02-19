@@ -11,7 +11,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const payload = req.method === 'POST' ? req.body : req.query;
   const { endpoint, method: targetMethod = 'GET', data, server = 'server2' } = payload || {};
 
-  console.log(`[Proxy] Request to ${server}: ${targetMethod} ${endpoint}`);
+  // Console feedback for troubleshooting
+  console.log(`[System Proxy] Connecting to ${server}...`);
+  console.log(`[Request] ${targetMethod} ${endpoint}`);
 
   const providers = {
     server1: {
@@ -29,8 +31,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const selectedProvider = providers[server as keyof typeof providers] || providers.server2;
 
   if (!selectedProvider.apiKey) {
-    console.error(`[Proxy] API Key missing for ${server}`);
-    return res.status(500).json({ status: 'error', message: `System configuration error: Key for ${server} is missing.` });
+    console.error(`[Error] API Key for ${server} is not set in environment variables.`);
+    return res.status(500).json({ status: 'error', message: `Server configuration error: Key for ${server} is missing.` });
   }
 
   try {
@@ -55,7 +57,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         if (requestData.phone_number) requestData.mobileNumber = requestData.phone_number;
         if (requestData.phone) requestData.mobileNumber = requestData.phone;
         if (requestData.plan_id) requestData.serviceID = requestData.plan_id;
-        if (requestData.type && !requestData.serviceID) requestData.serviceID = requestData.type;
         
         delete requestData.server;
         delete requestData.plan_name;
@@ -71,7 +72,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const apiResponse = await fetch(fullUrl, fetchOptions);
     const responseText = await apiResponse.text();
 
-    console.log(`[Proxy] Response from ${server}: status ${apiResponse.status}`);
+    console.log(`[Response] Status: ${apiResponse.status}`);
 
     try {
       const responseData = JSON.parse(responseText);
@@ -80,7 +81,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(apiResponse.status).send(responseText);
     }
   } catch (error: any) {
-    console.error(`[Proxy] Error:`, error.message);
-    return res.status(504).json({ status: 'error', message: 'The service is taking too long to respond.', detail: error.message });
+    console.error(`[Fatal Error]`, error.message);
+    return res.status(504).json({ status: 'error', message: 'Connection timed out. Please try again.', detail: error.message });
   }
 }
