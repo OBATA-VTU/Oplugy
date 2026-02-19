@@ -18,7 +18,6 @@ const BillsPage: React.FC = () => {
   const [meterType, setMeterType] = useState<'prepaid' | 'postpaid'>('prepaid');
   const [amount, setAmount] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [isFetchingOperators, setIsFetchingOperators] = useState(operatorsCache.length === 0);
   const [isVerifying, setIsVerifying] = useState(false);
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [customerName, setCustomerName] = useState<string | null>(null);
@@ -28,13 +27,11 @@ const BillsPage: React.FC = () => {
 
   const fetchOperators = useCallback(async () => {
     if (operatorsCache.length > 0) return;
-    setIsFetchingOperators(true);
     const response = await vtuService.getElectricityOperators();
     if (response.status && response.data) {
       operatorsCache = response.data;
       setOperators(response.data);
     }
-    setIsFetchingOperators(false);
   }, []);
 
   useEffect(() => {

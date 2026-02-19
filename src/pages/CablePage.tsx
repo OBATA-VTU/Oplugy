@@ -6,7 +6,7 @@ import { Operator, DataPlan } from '../types';
 import Spinner from '../components/Spinner';
 import PinPromptModal from '../components/PinPromptModal';
 import Modal from '../components/Modal';
-import { CABLE_BILLERS, SUBSCRIPTION_TYPES } from '../constants';
+import { CABLE_BILLERS } from '../constants';
 import { TvIcon } from '../components/Icons';
 
 const CablePage: React.FC = () => {
