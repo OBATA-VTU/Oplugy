@@ -35,7 +35,7 @@ const DataPage: React.FC = () => {
     if (response.status && response.data) {
       setDataPlans(response.data);
     } else {
-      addNotification(response.message || 'Connecting to data node...', 'info');
+      addNotification(response.message || 'Connecting to server...', 'info');
     }
     setIsFetchingPlans(false);
   }, [addNotification]);
@@ -76,12 +76,12 @@ const DataPage: React.FC = () => {
     });
 
     if (response.status && response.data) {
-      addNotification(`Fulfillment successful for ${phoneNumber} via ${server.toUpperCase()}.`, 'success');
+      addNotification(`Success! ${selectedPlan.name} sent to ${phoneNumber}.`, 'success');
       setPhoneNumber('');
       setSelectedPlan(null);
       await fetchWalletBalance();
     } else {
-      addNotification(response.message || 'Transaction failed. Refunding node...', 'error');
+      addNotification(response.message || 'Purchase failed. Please try again.', 'error');
     }
     setIsPurchasing(false);
   };
@@ -94,38 +94,38 @@ const DataPage: React.FC = () => {
         isOpen={showPinModal} 
         onClose={() => setShowPinModal(false)} 
         onSuccess={handlePurchase}
-        title="Authorize Delivery"
-        description={`Authorizing ${selectedPlan?.name} for ${phoneNumber}`}
+        title="Confirm Purchase"
+        description={`Authorizing ₦${selectedPlan?.amount} for ${phoneNumber}`}
       />
 
       <div className="text-center">
-        <h2 className="text-4xl font-black text-gray-900 tracking-tighter mb-2 uppercase">Data Terminals</h2>
-        <p className="text-gray-400 font-medium">Choose your routing node and network preference.</p>
+        <h2 className="text-4xl font-black text-gray-900 tracking-tighter mb-2">Buy Data Plans</h2>
+        <p className="text-gray-400 font-medium">Choose your network and preferred data bundle.</p>
       </div>
 
       <div className="bg-white p-8 lg:p-12 rounded-[3.5rem] shadow-2xl border border-gray-50">
         <div className="space-y-10">
           <div>
-             <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-2">Active Server</label>
+             <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-2">Preferred Server</label>
              <div className="flex p-2 bg-gray-100 rounded-3xl gap-2">
                 <button 
                   onClick={() => setServer('server1')}
                   className={`flex-1 py-5 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${server === 'server1' ? 'bg-blue-600 text-white shadow-xl' : 'text-gray-400 hover:text-gray-600'}`}
                 >
-                   Server 1 (Faster)
+                   Main Server
                 </button>
                 <button 
                   onClick={() => setServer('server2')}
                   className={`flex-1 py-5 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${server === 'server2' ? 'bg-gray-900 text-white shadow-xl' : 'text-gray-400 hover:text-gray-600'}`}
                 >
-                   Server 2 (Corporate)
+                   Backup Server
                 </button>
              </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
-              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-2">Network Operator</label>
+              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-2">Select Network</label>
               <select 
                 className="w-full p-5 bg-gray-50 rounded-2xl font-black text-lg border-2 border-transparent focus:border-blue-600 outline-none transition-all appearance-none" 
                 value={selectedOperator?.id || ''} 
@@ -136,7 +136,7 @@ const DataPage: React.FC = () => {
               </select>
             </div>
             <div>
-              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-2">Category</label>
+              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-2">Plan Type</label>
               <select 
                 className="w-full p-5 bg-gray-50 rounded-2xl font-black text-lg border-2 border-transparent focus:border-blue-600 outline-none transition-all appearance-none" 
                 value={selectedDataType} 
@@ -150,14 +150,14 @@ const DataPage: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-2">Bundle Catalog</label>
+            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-2">Available Bundles</label>
             <select 
               className="w-full p-5 bg-gray-50 rounded-2xl font-black text-lg border-2 border-transparent focus:border-blue-600 outline-none appearance-none disabled:opacity-50" 
               value={selectedPlan?.id || ''} 
               onChange={(e) => setSelectedPlan(dataPlans.find(p => p.id === e.target.value) || null)} 
               disabled={isFetchingPlans || dataPlans.length === 0}
             >
-              <option value="">{isFetchingPlans ? 'Connecting...' : dataPlans.length === 0 ? 'Pick Operator & Type' : 'Select Data Plan'}</option>
+              <option value="">{isFetchingPlans ? 'Searching...' : dataPlans.length === 0 ? 'Pick Network & Type first' : 'Select a Plan'}</option>
               {dataPlans.map(plan => (
                 <option key={plan.id} value={plan.id}>
                   {`${plan.name} - ₦${plan.amount.toLocaleString()} (${plan.validity})`}
@@ -168,7 +168,7 @@ const DataPage: React.FC = () => {
           </div>
 
           <div>
-            <label htmlFor="phoneNumber" className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-2">Recipient Phone</label>
+            <label htmlFor="phoneNumber" className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-2">Phone Number</label>
             <input 
               type="tel" 
               id="phoneNumber" 
@@ -187,16 +187,16 @@ const DataPage: React.FC = () => {
             className="w-full bg-blue-600 hover:bg-black text-white font-black py-8 rounded-3xl shadow-2xl shadow-blue-100 transition-all duration-300 disabled:opacity-50 uppercase tracking-[0.2em] text-sm transform active:scale-95" 
             disabled={!isFormValid || isPurchasing}
           >
-            {isPurchasing ? <Spinner /> : 'Complete Transaction'}
+            {isPurchasing ? <Spinner /> : 'Buy Data Now'}
           </button>
         </div>
       </div>
 
-      <Modal isOpen={showConfirmModal} onClose={() => setShowConfirmModal(false)} title="Order Verification" footer={
+      <Modal isOpen={showConfirmModal} onClose={() => setShowConfirmModal(false)} title="Verify Order" footer={
         <div className="flex gap-4 w-full">
           <button className="flex-1 bg-gray-100 text-gray-500 font-black py-5 rounded-2xl uppercase tracking-widest text-[10px]" onClick={() => setShowConfirmModal(false)}>Cancel</button>
           <button className="flex-2 bg-blue-600 hover:bg-black text-white font-black py-5 rounded-2xl uppercase tracking-widest text-[10px] flex items-center justify-center min-w-[150px] shadow-lg" onClick={startPinVerification} disabled={isPurchasing}>
-            {isPurchasing ? <Spinner /> : `Authorize Now`}
+            {isPurchasing ? <Spinner /> : `Buy Now`}
           </button>
         </div>
       }>
@@ -204,9 +204,8 @@ const DataPage: React.FC = () => {
            <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-3xl flex items-center justify-center mx-auto mb-6">
               <SignalIcon />
            </div>
-           <p className="text-gray-500 font-medium">You are fulfilling <span className="text-gray-900 font-black tracking-tight">{selectedPlan?.name}</span> for:</p>
+           <p className="text-gray-500 font-medium">You are buying <span className="text-gray-900 font-black tracking-tight">{selectedPlan?.name}</span> for:</p>
            <h3 className="text-4xl font-black text-gray-900 tracking-tighter">{phoneNumber}</h3>
-           <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Routing Node: {server.toUpperCase()}</p>
         </div>
       </Modal>
     </div>

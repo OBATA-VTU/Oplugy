@@ -33,14 +33,14 @@ async function logTransaction(userId: string, type: TransactionResponse['type'],
       date_updated: serverTimestamp()
     });
     if (status === 'SUCCESS' && type !== 'FUNDING' && type !== 'REFERRAL') {
-      await updateDoc(doc(db, "users", user.uid), { walletBalance: increment(-amount) });
+      await updateDoc(doc(db, "users", user.uid), { walletBalance: increment(-Number(amount)) });
     }
-  } catch (e) { console.error("Database error during logging:", e); }
+  } catch (e) { console.error("History logging failed:", e); }
 }
 
 export const vtuService = {
   purchaseAirtime: async (payload: { network: string; phone: string; amount: number }): Promise<ApiResponse<TransactionResponse>> => {
-    console.log("[vtuService] Starting Airtime purchase...", payload);
+    console.log("[System] Processing Airtime...", payload);
     const user = auth.currentUser;
     if (!user) return { status: false, message: 'Please login to continue.' };
     const config = await getSystemConfig();
@@ -61,18 +61,18 @@ export const vtuService = {
       await logTransaction(user.uid, 'AIRTIME', payload.amount, `${payload.network} Airtime`, `Recharge for ${payload.phone}`, 'SUCCESS', server.toUpperCase());
       return { status: true, message: res.message, data: res.data };
     }
-    console.error("[vtuService] Airtime purchase failed:", res.message);
+    console.error("[System] Airtime error:", res.message);
     return res;
   },
 
   getDataPlans: async (payload: { network: string; type: string; server?: 'server1' | 'server2' }): Promise<ApiResponse<DataPlan[]>> => {
-    console.log("[vtuService] Fetching data plans...", payload);
+    console.log("[System] Loading data plans...", payload);
     const userDoc = auth.currentUser ? await getDoc(doc(db, "users", auth.currentUser.uid)) : null;
     const role = (userDoc?.data()?.role as UserRole) || 'user';
     const config = await getSystemConfig();
     const server = payload.server || config.routing?.data || 'server1';
     
-    // Ensure all margin values are treated as Numbers to prevent "200010" concatenation errors
+    // Explicitly convert margin to Number to fix the "200010" string concatenation issue
     const margin = Number(config.pricing?.[`${role}_margin`] || 10);
     const extraServer1Margin = (server === 'server1') ? 10 : 0; 
 
@@ -90,7 +90,7 @@ export const vtuService = {
             validity: p.validity
           }));
       } else {
-        // Fix for Server 2 pricing concatenation
+        // Fix for Server 2: ensure p.price is a Number before adding
         plans = res.data.map((p: any) => ({
           id: p.id || p.code,
           name: p.name,
@@ -100,12 +100,12 @@ export const vtuService = {
       }
       return { status: true, data: plans };
     }
-    console.error("[vtuService] Failed to load data plans:", res.message);
+    console.error("[System] Plan fetch failed:", res.message);
     return res;
   },
 
   purchaseData: async (payload: { plan_id: string; phone_number: string; amount: number; network: string; plan_name: string; server: 'server1' | 'server2' }): Promise<ApiResponse<TransactionResponse>> => {
-    console.log("[vtuService] Starting Data purchase...", payload);
+    console.log("[System] Processing Data...", payload);
     const user = auth.currentUser;
     if (!user) return { status: false, message: 'Please login to continue.' };
     
@@ -118,7 +118,7 @@ export const vtuService = {
     if (res.status) {
       await logTransaction(user.uid, 'DATA', payload.amount, `${payload.network} Data`, `Bundle ${payload.plan_name} for ${payload.phone_number}`, 'SUCCESS', payload.server.toUpperCase());
     } else {
-      console.error("[vtuService] Data purchase failed:", res.message);
+      console.error("[System] Data error:", res.message);
     }
     return res;
   },
@@ -232,6 +232,6 @@ export const vtuService = {
       const txQuery = query(collection(db, "transactions"), where("userId", "==", user.uid), orderBy("date_created", "desc"), limit(50));
       const snapshot = await getDocs(txQuery);
       return { status: true, data: snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as TransactionResponse)) };
-    } catch (error) { return { status: false, message: "Could not retrieve history." }; }
+    } catch (error) { return { status: false, message: "Could not load history." }; }
   }
 };

@@ -4,7 +4,7 @@ import Logo from '../components/Logo';
 import Footer from '../components/Footer';
 import { 
   PhoneIcon, SignalIcon, BoltIcon, TvIcon, 
-  ShieldCheckIcon, WalletIcon, UsersIcon, ArrowIcon
+  WalletIcon, UsersIcon, ArrowIcon
 } from '../components/Icons';
 
 const LandingPage: React.FC = () => {
@@ -23,10 +23,10 @@ const LandingPage: React.FC = () => {
         <div className="max-w-7xl mx-auto px-6 lg:px-12 flex justify-between items-center">
           <Logo />
           <div className="hidden md:flex items-center space-x-12">
-            <a href="#services" className="text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-blue-600 transition-colors">What we offer</a>
+            <a href="#services" className="text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-blue-600 transition-colors">Our Services</a>
             <a href="#how-it-works" className="text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-blue-600 transition-colors">How it works</a>
-            <a href="#testimonials" className="text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-blue-600 transition-colors">Reviews</a>
-            <Link to="/quick-purchase" className="text-[10px] font-black uppercase tracking-widest text-blue-600 bg-blue-50 px-8 py-4 rounded-2xl hover:bg-blue-600 hover:text-white transition-all shadow-lg shadow-blue-100">Buy Now</Link>
+            <a href="#testimonials" className="text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-blue-600 transition-colors">Testimonials</a>
+            <Link to="/quick-purchase" className="text-[10px] font-black uppercase tracking-widest text-blue-600 bg-blue-50 px-8 py-4 rounded-2xl hover:bg-blue-600 hover:text-white transition-all shadow-lg shadow-blue-100">Quick Buy</Link>
             <Link to="/login" className="bg-gray-900 text-white px-10 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-600 transition-all shadow-2xl shadow-gray-300">Login</Link>
           </div>
           <Link to="/login" className="md:hidden bg-blue-600 text-white p-4 rounded-2xl shadow-xl">
@@ -47,22 +47,22 @@ const LandingPage: React.FC = () => {
               <span>Fast & Automated Payments</span>
             </div>
             <h1 className="text-6xl lg:text-[110px] font-black text-gray-900 leading-[1] lg:leading-[0.9] mb-12 tracking-tighter">
-              Get Data and Airtime <br />
+              Cheap Data and <br />
               <span className="text-blue-600 relative">
-                Instantly.
+                Airtime.
                 <svg className="absolute -bottom-2 left-0 w-full" height="10" viewBox="0 0 100 10" preserveAspectRatio="none"><path d="M0 5 Q 50 0 100 5" stroke="#2563eb" strokeWidth="4" fill="none" /></svg>
               </span>
             </h1>
             <p className="text-xl lg:text-2xl text-gray-500 mb-16 max-w-2xl font-medium tracking-tight mx-auto lg:mx-0 leading-relaxed">
-              Experience the fastest way to top up your mobile phone and pay bills in Nigeria. No delays, no stress, just instant results.
+              Experience the fastest way to top up your mobile phone and pay bills in Nigeria. Cheap prices, no delays, and instant delivery.
             </p>
             <div className="flex flex-col sm:flex-row justify-center lg:justify-start gap-8">
               <Link to="/signup" className="bg-blue-600 text-white px-12 lg:px-20 py-8 lg:py-10 rounded-[3rem] text-xl lg:text-2xl font-black shadow-2xl shadow-blue-200 hover:bg-black transition-all transform hover:-translate-y-3 flex items-center justify-center space-x-4">
-                <span>Start Today</span>
+                <span>Join Now</span>
                 <ArrowIcon />
               </Link>
               <Link to="/quick-purchase" className="bg-white border-4 border-gray-100 text-gray-900 px-12 lg:px-20 py-8 lg:py-10 rounded-[3rem] text-xl lg:text-2xl font-black hover:border-blue-600 hover:shadow-2xl transition-all transform hover:-translate-y-3">
-                Guest Buy
+                Buy Without Account
               </Link>
             </div>
           </div>
@@ -73,9 +73,9 @@ const LandingPage: React.FC = () => {
                   <img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&q=80&w=1200" className="w-full h-auto transition-transform duration-700 group-hover:scale-110" alt="App Preview" />
                   <div className="absolute inset-0 bg-gradient-to-t from-blue-600/40 to-transparent"></div>
                 </div>
-                <div className="absolute -bottom-10 -left-10 bg-white p-10 rounded-[3rem] shadow-2xl z-20 hidden lg:block border border-gray-50 animate-bounce-slow">
-                   <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Service Status</p>
-                   <p className="text-4xl font-black text-blue-600 tracking-tighter">100% Online</p>
+                <div className="absolute -bottom-10 -left-10 bg-white p-10 rounded-[3rem] shadow-2xl z-20 hidden lg:block border border-gray-50 animate-bounce">
+                   <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">System Status</p>
+                   <p className="text-4xl font-black text-blue-600 tracking-tighter">Always Online</p>
                 </div>
              </div>
           </div>
@@ -92,19 +92,19 @@ const LandingPage: React.FC = () => {
           <StepCard 
             number="01" 
             title="Create Account" 
-            desc="Sign up with your email and username in less than a minute." 
+            desc="Sign up with your basic details in less than a minute." 
             icon={<UsersIcon />}
           />
           <StepCard 
             number="02" 
-            title="Fund Wallet" 
-            desc="Add money to your wallet instantly using bank transfer or card." 
+            title="Fund Your Wallet" 
+            desc="Add money to your account using bank transfer or card." 
             icon={<WalletIcon />}
           />
           <StepCard 
             number="03" 
-            title="Buy Service" 
-            desc="Select data, airtime, or bills and get delivered immediately." 
+            title="Enjoy Services" 
+            desc="Select the data or airtime you want and get it immediately." 
             icon={<BoltIcon />}
           />
         </div>
@@ -115,44 +115,44 @@ const LandingPage: React.FC = () => {
         <div className="max-w-7xl mx-auto px-6 lg:px-12">
            <div className="text-center mb-32 max-w-4xl mx-auto">
               <h2 className="text-blue-600 text-[11px] font-black uppercase tracking-[0.5em] mb-8">Our Services</h2>
-              <h3 className="text-5xl lg:text-8xl font-black text-gray-900 tracking-tighter leading-none">All your bills, <br /> simplified.</h3>
+              <h3 className="text-5xl lg:text-8xl font-black text-gray-900 tracking-tighter leading-none">Everything you need, <br /> simplified.</h3>
            </div>
            
            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 lg:gap-16">
               <ServiceCard 
                 icon={<SignalIcon />} 
-                title="Cheap Data Plans" 
-                desc="Affordable data bundles for MTN, Airtel, Glo, and 9mobile. Get SME or Gifting data instantly." 
+                title="Cheap Data" 
+                desc="Affordable data for MTN, Airtel, Glo, and 9mobile. SME and Gifting available." 
                 img="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80&w=800"
               />
               <ServiceCard 
                 icon={<PhoneIcon />} 
                 title="Airtime Top-up" 
-                desc="Recharge your phone numbers in seconds. We support all major Nigerian networks." 
+                desc="Recharge your line in seconds. We support all major Nigerian networks." 
                 img="https://images.unsplash.com/photo-1534536281715-e28d76689b4d?auto=format&fit=crop&q=80&w=800"
               />
               <ServiceCard 
                 icon={<BoltIcon />} 
                 title="Electricity Bills" 
-                desc="Pay for your prepaid or postpaid meters easily. Supporting Ikeja Electric, Eko, Abuja and more." 
+                desc="Pay for your meter easily. Supporting Ikeja, Eko, Abuja, and other regions." 
                 img="https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?auto=format&fit=crop&q=80&w=800"
               />
               <ServiceCard 
                 icon={<TvIcon />} 
                 title="Cable TV" 
-                desc="Renew your DStv, GOtv, and StarTimes subscriptions instantly from your dashboard." 
+                desc="Renew DStv, GOtv, and StarTimes subscriptions instantly without stress." 
                 img="https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?auto=format&fit=crop&q=80&w=800"
               />
               <ServiceCard 
                 icon={<UsersIcon />} 
-                title="Developer Friendly" 
-                desc="Integrate our services into your own apps and websites using our easy-to-use API." 
+                title="Earn Money" 
+                desc="Upgrade to a reseller account and make profit on every transaction you perform." 
                 img="https://images.unsplash.com/photo-1587620962725-abab7fe55159?auto=format&fit=crop&q=80&w=800"
               />
               <ServiceCard 
                 icon={<WalletIcon />} 
-                title="Wallet System" 
-                desc="Keep funds in your digital wallet for quick and convenient transactions at any time." 
+                title="Secure Wallet" 
+                desc="Keep your money safe and perform transactions at any time of the day." 
                 img="https://images.unsplash.com/photo-1563013544-824ae1b704d3?auto=format&fit=crop&q=80&w=800"
               />
            </div>
@@ -164,26 +164,26 @@ const LandingPage: React.FC = () => {
         <div className="max-w-7xl mx-auto px-6 lg:px-12">
           <div className="flex flex-col lg:flex-row justify-between items-end gap-12 mb-24">
             <div className="max-w-2xl">
-              <h2 className="text-blue-600 text-[11px] font-black uppercase tracking-[0.5em] mb-8">Real Reviews</h2>
-              <h3 className="text-5xl lg:text-7xl font-black text-gray-900 tracking-tighter leading-[0.9]">What our users are saying.</h3>
+              <h2 className="text-blue-600 text-[11px] font-black uppercase tracking-[0.5em] mb-8">What People Say</h2>
+              <h3 className="text-5xl lg:text-7xl font-black text-gray-900 tracking-tighter leading-[0.9]">Trusted by thousands.</h3>
             </div>
-            <p className="text-xl text-gray-400 font-medium max-w-sm">Join thousands of Nigerians who trust us for their daily top-ups.</p>
+            <p className="text-xl text-gray-400 font-medium max-w-sm">Join a community of happy users who rely on us daily.</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
             <TestimonialCard 
               name="Bisi Akindele" 
               role="Reseller" 
-              text="This is the most reliable VTU platform I've used. My customers are happy because delivery is always instant."
+              text="This is the most reliable platform I've used. My customers are happy because delivery is always instant."
             />
             <TestimonialCard 
               name="Emmanuel Obi" 
               role="Student" 
-              text="The data plans are very affordable. I use it for my studies and I never have to worry about data finishing."
+              text="The data plans are very cheap. I use it for my studies and I never have to worry about data finishing."
             />
             <TestimonialCard 
               name="Gift Nwosu" 
               role="Business Owner" 
-              text="The electricity bill payment is a lifesaver. I can recharge my shop meter at 2 AM without any issues."
+              text="The electricity bill payment is a lifesaver. I can recharge my shop meter at midnight without any issues."
             />
           </div>
         </div>
@@ -192,10 +192,10 @@ const LandingPage: React.FC = () => {
       {/* CALL TO ACTION */}
       <section className="py-48 lg:py-80 bg-gray-950 relative overflow-hidden text-center text-white">
         <div className="max-w-5xl mx-auto px-6 relative z-10">
-          <h2 className="text-6xl lg:text-[140px] font-black mb-16 tracking-tighter leading-[0.8]">Start <br /> Today.</h2>
-          <p className="text-xl lg:text-3xl text-white/40 font-medium mb-20 max-w-3xl mx-auto">Create your account and experience the speed of OBATA v2.</p>
+          <h2 className="text-6xl lg:text-[140px] font-black mb-16 tracking-tighter leading-[0.8]">Ready to <br /> Start?</h2>
+          <p className="text-xl lg:text-3xl text-white/40 font-medium mb-20 max-w-3xl mx-auto">Create your free account today and experience the speed of OBATA.</p>
           <div className="flex flex-col sm:flex-row justify-center gap-10">
-             <Link to="/signup" className="bg-blue-600 text-white px-16 lg:px-24 py-10 lg:py-12 rounded-[4rem] text-2xl lg:text-3xl font-black shadow-2xl shadow-blue-200 hover:bg-white hover:text-black transition-all transform hover:-translate-y-4">Register Free</Link>
+             <Link to="/signup" className="bg-blue-600 text-white px-16 lg:px-24 py-10 lg:py-12 rounded-[4rem] text-2xl lg:text-3xl font-black shadow-2xl shadow-blue-200 hover:bg-white hover:text-black transition-all transform hover:-translate-y-4">Create Account</Link>
           </div>
         </div>
         <div className="absolute top-0 left-0 w-[50rem] h-[50rem] bg-blue-600/10 rounded-full blur-[150px]"></div>
