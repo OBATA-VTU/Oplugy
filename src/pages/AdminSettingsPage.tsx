@@ -53,7 +53,7 @@ const AdminSettingsPage: React.FC = () => {
       routing
     });
     if (res.status) {
-      addNotification("System node settings updated.", "success");
+      addNotification("System node prices updated.", "success");
     } else {
       addNotification("Failed to save settings.", "error");
     }
@@ -66,7 +66,7 @@ const AdminSettingsPage: React.FC = () => {
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
       <div className="mb-12">
         <h2 className="text-[10px] font-black text-blue-600 uppercase tracking-[0.4em] mb-4">Infrastructure</h2>
-        <h1 className="text-4xl lg:text-6xl font-black text-gray-900 tracking-tighter leading-none">Global Config</h1>
+        <h1 className="text-4xl lg:text-6xl font-black text-gray-900 tracking-tighter leading-none">System Config</h1>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
@@ -84,11 +84,11 @@ const AdminSettingsPage: React.FC = () => {
             </div>
 
             <div className="bg-white p-10 rounded-[3rem] shadow-xl border border-gray-50">
-               <h3 className="text-2xl font-black text-gray-900 mb-8 tracking-tight">Tier Margins (₦)</h3>
+               <h3 className="text-2xl font-black text-gray-900 mb-8 tracking-tight">Add-on Prices (₦)</h3>
                <div className="space-y-6">
-                  <MarginInput label="Global User Add-on" value={pricing.user_margin} onChange={(val: number) => setPricing({...pricing, user_margin: val})} />
-                  <MarginInput label="Reseller Profit" value={pricing.reseller_margin} onChange={(val: number) => setPricing({...pricing, reseller_margin: val})} />
-                  <MarginInput label="API Merchant Profit" value={pricing.api_margin} onChange={(val: number) => setPricing({...pricing, api_margin: val})} />
+                  <MarginInput label="Normal User Add-on" value={pricing.user_margin} onChange={(val: number) => setPricing({...pricing, user_margin: val})} />
+                  <MarginInput label="Reseller Add-on" value={pricing.reseller_margin} onChange={(val: number) => setPricing({...pricing, reseller_margin: val})} />
+                  <MarginInput label="API Merchant Add-on" value={pricing.api_margin} onChange={(val: number) => setPricing({...pricing, api_margin: val})} />
                </div>
             </div>
          </div>
@@ -96,16 +96,16 @@ const AdminSettingsPage: React.FC = () => {
          <div className="space-y-10">
             {/* Server Specific Pricing */}
             <div className="bg-gray-900 p-10 rounded-[3rem] shadow-xl text-white">
-               <h3 className="text-2xl font-black mb-8 tracking-tight">Pricing Architecture</h3>
+               <h3 className="text-2xl font-black mb-8 tracking-tight">Provider Architecture</h3>
                <div className="space-y-12">
                   <div className="space-y-6">
-                    <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest">Srv 1 (Inlomax) Overrides</p>
+                    <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest">Srv 1 Price Overrides</p>
                     <MarginInput dark label="Data Add-on" value={pricing.server1.data_margin} onChange={(v: number) => setPricing({...pricing, server1: {...pricing.server1, data_margin: v}})} />
                     <MarginInput dark label="Cable Add-on" value={pricing.server1.cable_margin} onChange={(v: number) => setPricing({...pricing, server1: {...pricing.server1, cable_margin: v}})} />
                     <MarginInput dark label="Electricity Add-on" value={pricing.server1.electricity_margin} onChange={(v: number) => setPricing({...pricing, server1: {...pricing.server1, electricity_margin: v}})} />
                   </div>
                   <div className="space-y-6 border-t border-white/10 pt-8">
-                    <p className="text-[10px] font-black text-red-400 uppercase tracking-widest">Srv 2 (CIP) Overrides</p>
+                    <p className="text-[10px] font-black text-red-400 uppercase tracking-widest">Srv 2 Price Overrides</p>
                     <MarginInput dark label="Data Add-on" value={pricing.server2.data_margin} onChange={(v: number) => setPricing({...pricing, server2: {...pricing.server2, data_margin: v}})} />
                     <MarginInput dark label="Cable Add-on" value={pricing.server2.cable_margin} onChange={(v: number) => setPricing({...pricing, server2: {...pricing.server2, cable_margin: v}})} />
                     <MarginInput dark label="Electricity Add-on" value={pricing.server2.electricity_margin} onChange={(v: number) => setPricing({...pricing, server2: {...pricing.server2, electricity_margin: v}})} />
@@ -114,10 +114,10 @@ const AdminSettingsPage: React.FC = () => {
             </div>
 
             <div className="bg-white p-10 rounded-[3rem] shadow-xl border border-gray-50 h-fit">
-               <h3 className="text-2xl font-black text-gray-900 mb-8 tracking-tight">Broadcast Center</h3>
+               <h3 className="text-2xl font-black text-gray-900 mb-8 tracking-tight">Notification Node</h3>
                <textarea className="w-full p-6 bg-gray-50 border border-gray-100 rounded-3xl font-bold min-h-[100px] focus:ring-4 focus:ring-blue-50 transition-all outline-none" placeholder="Announcement..." value={announcement} onChange={(e) => setAnnouncement(e.target.value)} />
                <button onClick={handleUpdate} disabled={isUpdating} className="w-full mt-6 bg-blue-600 text-white py-6 rounded-3xl font-black text-[11px] uppercase tracking-widest hover:bg-black transition-all shadow-xl flex items-center justify-center">
-                  {isUpdating ? <Spinner /> : 'Synchronize Node Settings'}
+                  {isUpdating ? <Spinner /> : 'Synchronize Settings'}
                </button>
             </div>
          </div>

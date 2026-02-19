@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { vtuService } from '../services/vtuService';
 import { DataPlan, Operator } from '../types';
@@ -17,7 +16,6 @@ const PricingPage: React.FC = () => {
     setLoading(true);
     try {
       if (activeTab === 'DATA') {
-        // Fix: Added the required 'server' parameter to getDataPlans calls to match the expected payload structure.
         const [sme, gifting] = await Promise.all([
           vtuService.getDataPlans({ network: activeNetwork, type: 'SME', server: 'server1' }),
           vtuService.getDataPlans({ network: activeNetwork, type: 'GIFTING', server: 'server1' })
@@ -31,7 +29,7 @@ const PricingPage: React.FC = () => {
         if (res.status && res.data) setPlans(res.data);
       }
     } catch (e) {
-      console.error("Tariff fetch error");
+      console.error("Price list fetch error");
     }
     setLoading(false);
   }, [activeTab, activeNetwork, activeCable]);
@@ -46,8 +44,8 @@ const PricingPage: React.FC = () => {
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 space-y-10 pb-20">
       <div>
         <h2 className="text-[10px] font-black text-blue-600 uppercase tracking-[0.4em] mb-4">Service Tariffs</h2>
-        <h1 className="text-4xl lg:text-6xl font-black text-gray-900 tracking-tighter leading-none">Global Rates</h1>
-        <p className="text-gray-400 font-medium text-sm mt-4 italic">*All rates include the OBATA independent node fee.</p>
+        <h1 className="text-4xl lg:text-6xl font-black text-gray-900 tracking-tighter leading-none">Price List</h1>
+        <p className="text-gray-400 font-medium text-sm mt-4 italic">*All listed prices are final and inclusive of all charges.</p>
       </div>
 
       <div className="flex flex-col lg:flex-row gap-8 items-center justify-between">
@@ -81,13 +79,13 @@ const PricingPage: React.FC = () => {
       </div>
 
       <div className="bg-white p-4 rounded-3xl border border-gray-100 shadow-sm">
-        <input type="text" placeholder={`Search ${activeTab.toLowerCase()} rates...`} className="w-full p-4 lg:p-6 bg-gray-50 rounded-2xl focus:ring-4 focus:ring-blue-50 transition-all font-black text-lg outline-none" value={filter} onChange={(e) => setFilter(e.target.value)} />
+        <input type="text" placeholder={`Search ${activeTab.toLowerCase()} prices...`} className="w-full p-4 lg:p-6 bg-gray-50 rounded-2xl focus:ring-4 focus:ring-blue-50 transition-all font-black text-lg outline-none" value={filter} onChange={(e) => setFilter(e.target.value)} />
       </div>
 
       {loading ? (
         <div className="py-20 flex flex-col items-center justify-center space-y-6">
            <Spinner />
-           <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest animate-pulse">Syncing tariffs with OBATA Master Node...</p>
+           <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest animate-pulse">Syncing current prices with Master Node...</p>
         </div>
       ) : (
         <div className="bg-white rounded-[2.5rem] lg:rounded-[3rem] shadow-2xl border border-gray-50 overflow-hidden">
@@ -95,9 +93,9 @@ const PricingPage: React.FC = () => {
              <table className="w-full text-left border-collapse">
                 <thead className="bg-gray-50 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 border-b border-gray-100">
                    <tr>
-                      <th className="px-10 py-6">Description</th>
+                      <th className="px-10 py-6">Service Plan</th>
                       <th className="px-10 py-6 text-right">Price</th>
-                      <th className="px-10 py-6 text-right">Validity</th>
+                      <th className="px-10 py-6 text-right">Duration</th>
                    </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
@@ -113,7 +111,7 @@ const PricingPage: React.FC = () => {
                         <td className="px-10 py-7 text-right text-[10px] font-black uppercase tracking-widest text-gray-400">{item.validity || '30 Days'}</td>
                      </tr>
                    )) : (
-                     <tr><td colSpan={3} className="px-10 py-20 text-center text-gray-400 font-medium">No plans found for this selection.</td></tr>
+                     <tr><td colSpan={3} className="px-10 py-20 text-center text-gray-400 font-medium">No plans found for this criteria.</td></tr>
                    )}
                 </tbody>
              </table>
@@ -125,7 +123,7 @@ const PricingPage: React.FC = () => {
                         <img src={op.image || 'https://via.placeholder.com/100'} alt={op.name} className="h-10 w-10 object-contain" />
                      </div>
                      <h4 className="text-xl font-black text-gray-900 mb-2">{op.name}</h4>
-                     <p className="text-[10px] font-black uppercase tracking-widest text-blue-600">Fulfillment Active</p>
+                     <p className="text-[10px] font-black uppercase tracking-widest text-blue-600">Active Price node</p>
                   </div>
                 ))}
              </div>

@@ -9,7 +9,6 @@ import {
   CurrencyDollarIcon, 
   ShieldCheckIcon, 
   BanIcon,
-  ExchangeIcon,
   SignalIcon
 } from '../components/Icons';
 
@@ -52,11 +51,11 @@ const AdminUsersPage: React.FC = () => {
     setIsProcessing(true);
     const res = await adminService.updateUserRole(userId, newRole);
     if (res.status) {
-      addNotification(res.message || "Role updated", "success");
+      addNotification(res.message || "Account tier updated", "success");
       fetchUsers(true);
       setIsManageModalOpen(false);
     } else {
-      addNotification(res.message || "Failed to update role", "error");
+      addNotification(res.message || "Failed to update tier", "error");
     }
     setIsProcessing(false);
   };
@@ -65,7 +64,7 @@ const AdminUsersPage: React.FC = () => {
     setIsProcessing(true);
     const res = await adminService.updateUserStatus(userId, newStatus);
     if (res.status) {
-      addNotification(res.message || "Status updated", "success");
+      addNotification(res.message || "Account status updated", "success");
       fetchUsers(true);
       setIsManageModalOpen(false);
     } else {
@@ -183,14 +182,14 @@ const AdminUsersPage: React.FC = () => {
                       <button 
                         onClick={() => { setSelectedUser(u); setIsFinModalOpen(true); }}
                         className="p-3 bg-green-50 text-green-600 rounded-xl hover:bg-green-600 hover:text-white transition-all shadow-sm"
-                        title="Finance Adjustment"
+                        title="Wallet Adjustment"
                       >
                         <CurrencyDollarIcon />
                       </button>
                       <button 
                         onClick={() => { setSelectedUser(u); setIsManageModalOpen(true); }}
                         className="p-3 bg-gray-100 text-gray-600 rounded-xl hover:bg-gray-900 hover:text-white transition-all shadow-sm"
-                        title="Governance"
+                        title="Account Management"
                       >
                         <ShieldCheckIcon />
                       </button>
@@ -260,7 +259,7 @@ const AdminUsersPage: React.FC = () => {
         <div className="space-y-10 py-4">
            <div>
               <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">Account Access Tier</label>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-4">
                  <RoleButton label="Standard" icon={<UsersIcon />} active={selectedUser?.role === 'user'} onClick={() => handleRoleChange(selectedUser!.id, 'user')} />
                  <RoleButton label="Reseller" icon={<SignalIcon />} active={selectedUser?.role === 'reseller'} onClick={() => handleRoleChange(selectedUser!.id, 'reseller')} />
                  <RoleButton label="Admin" icon={<ShieldCheckIcon />} active={selectedUser?.role === 'admin'} onClick={() => handleRoleChange(selectedUser!.id, 'admin')} />
