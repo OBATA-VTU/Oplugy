@@ -17,7 +17,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       apiKey: process.env.INLOMAX_API_KEY,
       authHeader: (key: string) => ({ 
         'Authorization': `Token ${key}`,
-        'Authorization-Token': key // Fallback for some Inlomax sub-modules
+        'Authorization-Token': key 
       })
     },
     server2: {
@@ -34,19 +34,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    let cleanEndpoint = endpoint.replace(/^\//, '');
+    let cleanEndpoint = (endpoint || '').replace(/^\//, '');
     
-    // Inlomax endpoints often require a trailing slash for GET requests
-    if (server === 'server1' && targetMethod.toUpperCase() === 'GET' && !cleanEndpoint.endsWith('/') && !cleanEndpoint.includes('?')) {
+    // Server 1 (Inlomax) GET requests often require trailing slash for some endpoints
+    if (server === 'server1' && targetMethod.toUpperCase() === 'GET' && cleanEndpoint && !cleanEndpoint.endsWith('/') && !cleanEndpoint.includes('?')) {
       cleanEndpoint += '/';
     }
 
     let fullUrl = `${selectedProvider.baseUrl.replace(/\/$/, '')}/${cleanEndpoint}`;
     
+    // Append query params for GET requests
     if (targetMethod.toUpperCase() === 'GET' && data && typeof data === 'object') {
        const params = new URLSearchParams();
        Object.entries(data).forEach(([key, val]) => {
-         if (key !== 'server') params.append(key, String(val));
+         if (key !== 'server' && val !== undefined) params.append(key, String(val));
        });
        const queryString = params.toString();
        if (queryString) fullUrl += (fullUrl.includes('?') ? '&' : '?') + queryString;
@@ -66,13 +67,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (targetMethod.toUpperCase() !== 'GET' && data) {
       let requestData = { ...data };
       
-      // Strict Inlomax Data Mapping
+      // Node 1 (Inlomax) specific payload mapping for compatibility
       if (server === 'server1') {
         const mapped: any = {};
-        // Service ID mapping
         mapped.serviceID = String(requestData.serviceID || requestData.plan_id || requestData.provider_id || requestData.type || '');
         
-        // Identity mapping
         if (requestData.phone || requestData.mobileNumber || requestData.phone_number) {
           mapped.mobileNumber = String(requestData.phone || requestData.mobileNumber || requestData.phone_number);
         }
@@ -85,9 +84,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           mapped.meterNum = String(requestData.meterNum || requestData.meter_number);
         }
 
-        // Configuration mapping
         if (requestData.amount) mapped.amount = Number(requestData.amount);
-        if (requestData.quantity) mapped.quantity = Number(requestData.quantity);
         if (requestData.meterType) mapped.meterType = requestData.meterType === 'prepaid' || requestData.meterType === 1 ? 1 : 2;
         
         requestData = mapped;
@@ -111,6 +108,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(apiResponse.status).send(responseText);
     }
   } catch (error: any) {
-    return res.status(504).json({ status: 'error', message: 'Node Connectivity Timeout.' });
+    return res.status(504).json({ status: 'error', message: 'Fulfillment Node Connectivity Timeout.' });
   }
 }

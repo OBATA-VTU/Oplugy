@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNotifications } from '../hooks/useNotifications';
@@ -11,11 +12,11 @@ import { AIRTIME_NETWORKS } from '../constants';
 const AirtimePage: React.FC = () => {
   const { addNotification } = useNotifications();
   const { walletBalance, updateWalletBalance } = useAuth();
-  const [server, setServer] = useState<'server1' | 'server2'>('server1');
   const [operators] = useState<Operator[]>(AIRTIME_NETWORKS);
   const [selectedOperator, setSelectedOperator] = useState<Operator | null>(null);
   const [phoneNumber, setPhoneNumber] = useState('');
   const [amount, setAmount] = useState('');
+  const [server, setServer] = useState<'server1' | 'server2'>('server1');
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showPinModal, setShowPinModal] = useState(false);
@@ -36,7 +37,7 @@ const AirtimePage: React.FC = () => {
       return;
     }
     if (walletBalance !== null && numericAmount > walletBalance) {
-      addNotification('You do not have enough money in your wallet.', 'error');
+      addNotification('Insufficient wallet balance.', 'error');
       return;
     }
     setShowConfirmModal(true);
@@ -60,10 +61,10 @@ const AirtimePage: React.FC = () => {
       server
     };
 
-    const response = await vtuService.purchaseAirtime(payload);
+    const response = await vtuService.purchaseAirtime(payload as any);
 
     if (response.status && response.data) {
-      addNotification(`Airtime sent to ${phoneNumber}.`, 'success');
+      addNotification(`${selectedOperator.name} Airtime recharge successful for ${phoneNumber}.`, 'success');
       if (walletBalance !== null) {
         updateWalletBalance(walletBalance - numericAmount);
       }
@@ -71,7 +72,7 @@ const AirtimePage: React.FC = () => {
       setAmount('');
       setSelectedOperator(null);
     } else {
-      addNotification(response.message || 'Purchase failed. Please try again.', 'error');
+      addNotification(response.message || 'Purchase failed. Try switching Node.', 'error');
     }
     setIsPurchasing(false);
   };
@@ -79,42 +80,51 @@ const AirtimePage: React.FC = () => {
   const isFormValid = selectedOperator && phoneNumber.length === 11 && numericAmount >= 50;
 
   return (
-    <div className="max-w-2xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="max-w-3xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
       <PinPromptModal 
         isOpen={showPinModal} 
         onClose={() => setShowPinModal(false)} 
         onSuccess={handlePurchase}
-        title="Enter PIN to Purchase"
-        description={`You are paying ₦${numericAmount.toLocaleString()} for ${selectedOperator?.name} Airtime.`}
+        title="Approve Transaction"
+        description={`Paying ₦${numericAmount.toLocaleString()} for ${selectedOperator?.name} Airtime.`}
       />
 
       <div className="text-center">
-        <h2 className="text-4xl font-black text-gray-900 tracking-tighter mb-2">Buy Airtime</h2>
-        <p className="text-gray-400 font-medium">Instantly top-up airtime for any network.</p>
+        <h2 className="text-4xl lg:text-6xl font-black text-gray-900 tracking-tighter mb-4">Express Airtime</h2>
+        <p className="text-gray-400 font-medium text-lg">Instant recharges with dual-node redundancy.</p>
       </div>
 
-      <div className="bg-white p-10 rounded-[3rem] shadow-xl border border-gray-50">
+      <div className="bg-white p-10 lg:p-16 rounded-[4rem] shadow-2xl border border-gray-50 space-y-12">
         <div className="space-y-10">
+          {/* Server Selection */}
           <div>
-             <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-4">Select Node</label>
-             <select 
-               value={server} 
-               onChange={(e) => setServer(e.target.value as any)}
-               className="w-full p-5 bg-gray-50 border-2 border-transparent focus:border-blue-600 rounded-2xl font-black text-lg outline-none transition-all appearance-none"
-             >
-                <option value="server1">Inlomax (Recommended)</option>
-                <option value="server2">CIP Terminal</option>
-             </select>
+             <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-4">1. Fulfillment Node</label>
+             <div className="grid grid-cols-2 gap-4">
+                <button 
+                  onClick={() => setServer('server1')}
+                  className={`p-6 rounded-[2rem] border-4 transition-all flex flex-col items-center gap-2 ${server === 'server1' ? 'border-blue-600 bg-blue-50' : 'border-gray-50 bg-gray-50 hover:border-gray-100'}`}
+                >
+                  <span className={`font-black text-lg ${server === 'server1' ? 'text-blue-600' : 'text-gray-400'}`}>Node 1</span>
+                  <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">Stable Hub</span>
+                </button>
+                <button 
+                  onClick={() => setServer('server2')}
+                  className={`p-6 rounded-[2rem] border-4 transition-all flex flex-col items-center gap-2 ${server === 'server2' ? 'border-blue-600 bg-blue-50' : 'border-gray-50 bg-gray-50 hover:border-gray-100'}`}
+                >
+                  <span className={`font-black text-lg ${server === 'server2' ? 'text-blue-600' : 'text-gray-400'}`}>Node 2</span>
+                  <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">CIP Terminal</span>
+                </button>
+             </div>
           </div>
 
           <div>
-            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 text-center">1. Choose Network</label>
+            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-4">2. Select Network</label>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {operators.map(op => (
                 <button
                   key={op.id}
                   onClick={() => setSelectedOperator(op)}
-                  className={`p-6 border-2 rounded-[2rem] transition-all duration-300 flex flex-col items-center gap-3 ${selectedOperator?.id === op.id ? 'border-blue-600 bg-blue-50 shadow-xl shadow-blue-100' : 'border-gray-100 hover:border-gray-200'}`}
+                  className={`p-6 border-4 rounded-[2.5rem] transition-all duration-300 flex flex-col items-center gap-3 ${selectedOperator?.id === op.id ? 'border-blue-600 bg-blue-50 shadow-xl shadow-blue-500/10' : 'border-gray-50 bg-gray-50 hover:border-gray-100'}`}
                 >
                   <img src={op.image} alt={op.name} className="h-12 w-12 object-contain" />
                   <span className={`text-[10px] font-black uppercase tracking-widest ${selectedOperator?.id === op.id ? 'text-blue-600' : 'text-gray-400'}`}>{op.name}</span>
@@ -125,11 +135,11 @@ const AirtimePage: React.FC = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
-              <label htmlFor="phoneNumber" className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-2">2. Phone Number</label>
+              <label htmlFor="phoneNumber" className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-4">3. Destination Phone</label>
               <input
                 type="tel"
                 id="phoneNumber"
-                className="w-full p-5 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-blue-50 focus:bg-white focus:border-blue-200 transition-all text-xl font-black tracking-tight"
+                className="w-full p-6 bg-gray-50 border-4 border-transparent rounded-[2rem] focus:border-blue-600 focus:bg-white transition-all text-2xl font-black tracking-tight text-center outline-none"
                 placeholder="08012345678"
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
@@ -140,14 +150,14 @@ const AirtimePage: React.FC = () => {
             </div>
 
             <div>
-              <label htmlFor="amount" className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-2">3. Amount (₦)</label>
+              <label htmlFor="amount" className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-4">4. Value (₦)</label>
               <div className="relative">
-                <span className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 font-bold">₦</span>
+                <span className="absolute left-8 top-1/2 -translate-y-1/2 text-gray-400 font-black text-xl">₦</span>
                 <input
                   type="number"
                   id="amount"
-                  className="w-full p-5 pl-10 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-blue-50 focus:bg-white focus:border-blue-200 transition-all text-xl font-black tracking-tight"
-                  placeholder="50"
+                  className="w-full p-6 pl-14 bg-gray-50 border-4 border-transparent rounded-[2rem] focus:border-blue-600 focus:bg-white transition-all text-2xl font-black tracking-tight text-center outline-none"
+                  placeholder="0.00"
                   min="50"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
@@ -160,34 +170,47 @@ const AirtimePage: React.FC = () => {
 
           <button
             onClick={handlePrePurchaseCheck}
-            className="w-full bg-blue-600 hover:bg-black text-white font-black py-6 rounded-[2rem] shadow-2xl shadow-blue-200 transition-all duration-300 transform hover:-translate-y-1 disabled:opacity-50 flex items-center justify-center uppercase tracking-[0.2em] text-sm"
+            className="w-full bg-blue-600 hover:bg-black text-white font-black py-10 rounded-[3rem] shadow-2xl shadow-blue-500/20 transition-all duration-300 transform hover:-translate-y-2 active:scale-95 disabled:opacity-50 flex items-center justify-center uppercase tracking-[0.4em] text-sm"
             disabled={!isFormValid || isPurchasing}
           >
-            {isPurchasing ? <Spinner /> : 'Buy Airtime'}
+            {isPurchasing ? <Spinner /> : 'Execute Recharge'}
           </button>
         </div>
+      </div>
+
+      <div className="p-10 bg-gray-900 text-white rounded-[3.5rem] relative overflow-hidden shadow-2xl">
+         <div className="relative z-10 flex items-center space-x-8">
+            <div className="w-16 h-16 bg-blue-600 rounded-3xl flex items-center justify-center shrink-0 shadow-lg shadow-blue-500/40">
+               <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            </div>
+            <div>
+               <h4 className="text-2xl font-black tracking-tight">Instant Node Fulfillment</h4>
+               <p className="text-white/40 text-sm font-medium">Recharges are processed within 2 seconds across our distributed network nodes.</p>
+            </div>
+         </div>
+         <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/10 rounded-full blur-[100px]"></div>
       </div>
 
       <Modal
         isOpen={showConfirmModal}
         onClose={() => setShowConfirmModal(false)}
-        title="Confirm Top-up"
+        title="Confirm Order"
         footer={
           <div className="flex gap-4 w-full">
-            <button className="flex-1 bg-gray-100 text-gray-500 font-black py-4 rounded-2xl uppercase tracking-widest text-[10px]" onClick={() => setShowConfirmModal(false)}>Cancel</button>
-            <button className="flex-2 bg-blue-600 hover:bg-black text-white font-black py-4 rounded-2xl uppercase tracking-widest text-[10px] flex items-center justify-center min-w-[150px]" onClick={startPinVerification} disabled={isPurchasing}>
-              {isPurchasing ? <Spinner /> : `Yes, Pay`}
+            <button className="flex-1 bg-gray-100 text-gray-400 font-black py-5 rounded-2xl uppercase tracking-widest text-[10px]" onClick={() => setShowConfirmModal(false)}>Cancel</button>
+            <button className="flex-[2] bg-blue-600 hover:bg-black text-white font-black py-5 rounded-2xl uppercase tracking-widest text-[10px] flex items-center justify-center min-w-[150px] shadow-xl shadow-blue-500/20" onClick={startPinVerification} disabled={isPurchasing}>
+              {isPurchasing ? <Spinner /> : `Approve & Pay`}
             </button>
           </div>
         }
       >
-        <div className="text-center py-6 space-y-4">
-           <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
-              <img src={selectedOperator?.image} alt={selectedOperator?.name} className="w-8 h-8 object-contain" />
+        <div className="text-center py-6 space-y-6">
+           <div className="w-24 h-24 bg-blue-50 text-blue-600 rounded-[2rem] flex items-center justify-center mx-auto mb-6 shadow-inner border border-blue-100">
+              <img src={selectedOperator?.image} alt={selectedOperator?.name} className="w-14 h-14 object-contain" />
            </div>
-           <p className="text-gray-500 font-medium">You are about to send <span className="text-gray-900 font-black tracking-tight">₦{numericAmount.toLocaleString()}</span> airtime to:</p>
-           <h3 className="text-3xl font-black text-gray-900 tracking-tighter">{phoneNumber}</h3>
-           <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Network: {selectedOperator?.name}</p>
+           <p className="text-gray-400 font-medium text-lg leading-tight">Recharging <span className="text-gray-900 font-black tracking-tight">₦{numericAmount.toLocaleString()}</span> to:</p>
+           <h3 className="text-5xl font-black text-gray-900 tracking-tighter leading-none">{phoneNumber}</h3>
+           <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest bg-blue-50 px-6 py-2 rounded-full inline-block">Carrier: {selectedOperator?.name} ({server === 'server1' ? 'Node 1' : 'Node 2'})</p>
         </div>
       </Modal>
     </div>

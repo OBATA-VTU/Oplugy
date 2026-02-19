@@ -25,7 +25,6 @@ const LandingPage: React.FC = () => {
           <div className="hidden md:flex items-center space-x-12">
             <a href="#services" className="text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-blue-600 transition-colors">Our Services</a>
             <a href="#how-it-works" className="text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-blue-600 transition-colors">How it works</a>
-            <a href="#testimonials" className="text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-blue-600 transition-colors">Testimonials</a>
             <Link to="/quick-purchase" className="text-[10px] font-black uppercase tracking-widest text-blue-600 bg-blue-50 px-8 py-4 rounded-2xl hover:bg-blue-600 hover:text-white transition-all shadow-lg shadow-blue-100">Quick Buy</Link>
             <Link to="/login" className="bg-gray-900 text-white px-10 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-600 transition-all shadow-2xl shadow-gray-300">Login</Link>
           </div>
@@ -35,7 +34,7 @@ const LandingPage: React.FC = () => {
         </div>
       </nav>
 
-      {/* HERO SECTION with Animation */}
+      {/* HERO SECTION */}
       <section className="relative pt-40 pb-24 lg:pt-64 lg:pb-80 bg-gradient-to-b from-blue-50/50 to-white">
         <div className="max-w-7xl mx-auto px-6 lg:px-12 relative z-10 flex flex-col lg:flex-row items-center gap-20 lg:gap-32">
           <div className="w-full lg:w-3/5 text-center lg:text-left animate-in fade-in slide-in-from-bottom-12 duration-1000">
@@ -47,22 +46,22 @@ const LandingPage: React.FC = () => {
               <span>Fast & Automated Payments</span>
             </div>
             <h1 className="text-6xl lg:text-[110px] font-black text-gray-900 leading-[1] lg:leading-[0.9] mb-12 tracking-tighter">
-              Cheap Data and <br />
+              Instant Data <br />
               <span className="text-blue-600 relative">
-                Airtime.
+                Gateway.
                 <svg className="absolute -bottom-2 left-0 w-full" height="10" viewBox="0 0 100 10" preserveAspectRatio="none"><path d="M0 5 Q 50 0 100 5" stroke="#2563eb" strokeWidth="4" fill="none" /></svg>
               </span>
             </h1>
             <p className="text-xl lg:text-2xl text-gray-500 mb-16 max-w-2xl font-medium tracking-tight mx-auto lg:mx-0 leading-relaxed">
-              Experience the fastest way to top up your mobile phone and pay bills in Nigeria. Cheap prices, no delays, and instant delivery.
+              Experience Nigeria's premier VTU destination. Cheap prices, no delays, and instant delivery across all service providers.
             </p>
             <div className="flex flex-col sm:flex-row justify-center lg:justify-start gap-8">
               <Link to="/signup" className="bg-blue-600 text-white px-12 lg:px-20 py-8 lg:py-10 rounded-[3rem] text-xl lg:text-2xl font-black shadow-2xl shadow-blue-200 hover:bg-black transition-all transform hover:-translate-y-3 flex items-center justify-center space-x-4">
-                <span>Join Now</span>
+                <span>Join Oplug</span>
                 <ArrowIcon />
               </Link>
               <Link to="/quick-purchase" className="bg-white border-4 border-gray-100 text-gray-900 px-12 lg:px-20 py-8 lg:py-10 rounded-[3rem] text-xl lg:text-2xl font-black hover:border-blue-600 hover:shadow-2xl transition-all transform hover:-translate-y-3">
-                Buy Without Account
+                Quick Checkout
               </Link>
             </div>
           </div>
@@ -70,12 +69,12 @@ const LandingPage: React.FC = () => {
              <div className="relative w-full max-w-md lg:max-w-none">
                 <div className="absolute inset-0 bg-blue-600 rounded-[4rem] lg:rounded-[6rem] blur-[120px] opacity-20"></div>
                 <div className="relative group overflow-hidden rounded-[4rem] lg:rounded-[6rem] shadow-2xl border-8 border-white">
-                  <img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&q=80&w=1200" className="w-full h-auto transition-transform duration-700 group-hover:scale-110" alt="App Preview" />
+                  <img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&q=80&w=1200" className="w-full h-auto transition-transform duration-700 group-hover:scale-110" alt="Oplug Experience" />
                   <div className="absolute inset-0 bg-gradient-to-t from-blue-600/40 to-transparent"></div>
                 </div>
                 <div className="absolute -bottom-10 -left-10 bg-white p-10 rounded-[3rem] shadow-2xl z-20 hidden lg:block border border-gray-50 animate-bounce">
                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">System Status</p>
-                   <p className="text-4xl font-black text-blue-600 tracking-tighter">Always Online</p>
+                   <p className="text-4xl font-black text-blue-600 tracking-tighter">Live & Optimal</p>
                 </div>
              </div>
           </div>
@@ -85,26 +84,26 @@ const LandingPage: React.FC = () => {
       {/* HOW IT WORKS SECTION */}
       <section id="how-it-works" className="py-32 lg:py-48 bg-white">
         <div className="max-w-7xl mx-auto px-6 lg:px-12 text-center mb-24">
-          <h2 className="text-blue-600 text-[11px] font-black uppercase tracking-[0.5em] mb-8">Process</h2>
-          <h3 className="text-5xl lg:text-7xl font-black text-gray-900 tracking-tighter">Simple 3-Step Process</h3>
+          <h2 className="text-blue-600 text-[11px] font-black uppercase tracking-[0.5em] mb-8">Onboarding</h2>
+          <h3 className="text-5xl lg:text-7xl font-black text-gray-900 tracking-tighter">Seamlessly Connect</h3>
         </div>
         <div className="max-w-7xl mx-auto px-6 lg:px-12 grid grid-cols-1 md:grid-cols-3 gap-16">
           <StepCard 
             number="01" 
-            title="Create Account" 
-            desc="Sign up with your basic details in less than a minute." 
+            title="Create Identity" 
+            desc="Sign up with Oplug in seconds. No complex verification required." 
             icon={<UsersIcon />}
           />
           <StepCard 
             number="02" 
-            title="Fund Your Wallet" 
-            desc="Add money to your account using bank transfer or card." 
+            title="Secure Funding" 
+            desc="Fund your wallet via multiple high-security payment nodes." 
             icon={<WalletIcon />}
           />
           <StepCard 
             number="03" 
-            title="Enjoy Services" 
-            desc="Select the data or airtime you want and get it immediately." 
+            title="Instant Recharge" 
+            desc="Trigger automated delivery for any digital service instantly." 
             icon={<BoltIcon />}
           />
         </div>
@@ -114,88 +113,58 @@ const LandingPage: React.FC = () => {
       <section id="services" className="py-32 lg:py-64 bg-gray-50/50">
         <div className="max-w-7xl mx-auto px-6 lg:px-12">
            <div className="text-center mb-32 max-w-4xl mx-auto">
-              <h2 className="text-blue-600 text-[11px] font-black uppercase tracking-[0.5em] mb-8">Our Services</h2>
-              <h3 className="text-5xl lg:text-8xl font-black text-gray-900 tracking-tighter leading-none">Everything you need, <br /> simplified.</h3>
+              <h2 className="text-blue-600 text-[11px] font-black uppercase tracking-[0.5em] mb-8">Infrastructure</h2>
+              <h3 className="text-5xl lg:text-8xl font-black text-gray-900 tracking-tighter leading-none">Universal Digital <br /> Utility Hub.</h3>
            </div>
            
            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 lg:gap-16">
               <ServiceCard 
                 icon={<SignalIcon />} 
-                title="Cheap Data" 
+                title="Premium Data" 
                 desc="Affordable data for MTN, Airtel, Glo, and 9mobile. SME and Gifting available." 
                 img="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80&w=800"
               />
               <ServiceCard 
                 icon={<PhoneIcon />} 
-                title="Airtime Top-up" 
-                desc="Recharge your line in seconds. We support all major Nigerian networks." 
+                title="Express Airtime" 
+                desc="High-velocity recharges for your line. Support for all Nigerian networks." 
                 img="https://images.unsplash.com/photo-1534536281715-e28d76689b4d?auto=format&fit=crop&q=80&w=800"
               />
               <ServiceCard 
                 icon={<BoltIcon />} 
-                title="Electricity Bills" 
-                desc="Pay for your meter easily. Supporting Ikeja, Eko, Abuja, and other regions." 
+                title="Power & Bills" 
+                desc="Pay electricity bills for all Discos. Verified instantly upon payment." 
                 img="https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?auto=format&fit=crop&q=80&w=800"
               />
               <ServiceCard 
                 icon={<TvIcon />} 
-                title="Cable TV" 
-                desc="Renew DStv, GOtv, and StarTimes subscriptions instantly without stress." 
+                title="Cable TV Hub" 
+                desc="Renew DStv, GOtv, and StarTimes subscriptions via our 24/7 nodes." 
                 img="https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?auto=format&fit=crop&q=80&w=800"
               />
               <ServiceCard 
                 icon={<UsersIcon />} 
-                title="Earn Money" 
-                desc="Upgrade to a reseller account and make profit on every transaction you perform." 
+                title="Earn Passive" 
+                desc="Upgrade to Oplug Reseller and earn massive profit on every transaction." 
                 img="https://images.unsplash.com/photo-1587620962725-abab7fe55159?auto=format&fit=crop&q=80&w=800"
               />
               <ServiceCard 
                 icon={<WalletIcon />} 
-                title="Secure Wallet" 
-                desc="Keep your money safe and perform transactions at any time of the day." 
+                title="Vault Security" 
+                desc="Encrypted wallet storage with automated 2-way verification protocols." 
                 img="https://images.unsplash.com/photo-1563013544-824ae1b704d3?auto=format&fit=crop&q=80&w=800"
               />
            </div>
         </div>
       </section>
 
-      {/* TESTIMONIALS SECTION */}
-      <section id="testimonials" className="py-32 lg:py-48 bg-white">
-        <div className="max-w-7xl mx-auto px-6 lg:px-12">
-          <div className="flex flex-col lg:flex-row justify-between items-end gap-12 mb-24">
-            <div className="max-w-2xl">
-              <h2 className="text-blue-600 text-[11px] font-black uppercase tracking-[0.5em] mb-8">What People Say</h2>
-              <h3 className="text-5xl lg:text-7xl font-black text-gray-900 tracking-tighter leading-[0.9]">Trusted by thousands.</h3>
-            </div>
-            <p className="text-xl text-gray-400 font-medium max-w-sm">Join a community of happy users who rely on us daily.</p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-            <TestimonialCard 
-              name="Bisi Akindele" 
-              role="Reseller" 
-              text="This is the most reliable platform I've used. My customers are happy because delivery is always instant."
-            />
-            <TestimonialCard 
-              name="Emmanuel Obi" 
-              role="Student" 
-              text="The data plans are very cheap. I use it for my studies and I never have to worry about data finishing."
-            />
-            <TestimonialCard 
-              name="Gift Nwosu" 
-              role="Business Owner" 
-              text="The electricity bill payment is a lifesaver. I can recharge my shop meter at midnight without any issues."
-            />
-          </div>
-        </div>
-      </section>
-
       {/* CALL TO ACTION */}
       <section className="py-48 lg:py-80 bg-gray-950 relative overflow-hidden text-center text-white">
         <div className="max-w-5xl mx-auto px-6 relative z-10">
-          <h2 className="text-6xl lg:text-[140px] font-black mb-16 tracking-tighter leading-[0.8]">Ready to <br /> Start?</h2>
-          <p className="text-xl lg:text-3xl text-white/40 font-medium mb-20 max-w-3xl mx-auto">Create your free account today and experience the speed of OBATA.</p>
+          <h2 className="text-6xl lg:text-[140px] font-black mb-16 tracking-tighter leading-[0.8]">Plug In <br /> Now.</h2>
+          <p className="text-xl lg:text-3xl text-white/40 font-medium mb-20 max-w-3xl mx-auto">Create your free Oplug account today and start experiencing zero-latency VTU.</p>
           <div className="flex flex-col sm:flex-row justify-center gap-10">
-             <Link to="/signup" className="bg-blue-600 text-white px-16 lg:px-24 py-10 lg:py-12 rounded-[4rem] text-2xl lg:text-3xl font-black shadow-2xl shadow-blue-200 hover:bg-white hover:text-black transition-all transform hover:-translate-y-4">Create Account</Link>
+             <Link to="/signup" className="bg-blue-600 text-white px-16 lg:px-24 py-10 lg:py-12 rounded-[4rem] text-2xl lg:text-3xl font-black shadow-2xl shadow-blue-200 hover:bg-white hover:text-black transition-all transform hover:-translate-y-4">Join The Hub</Link>
           </div>
         </div>
         <div className="absolute top-0 left-0 w-[50rem] h-[50rem] bg-blue-600/10 rounded-full blur-[150px]"></div>
@@ -230,22 +199,6 @@ const ServiceCard = ({ icon, title, desc, img }: any) => (
         <h4 className="text-3xl font-black text-gray-900 mb-5 tracking-tight">{title}</h4>
         <p className="text-gray-400 text-lg font-medium leading-relaxed">{desc}</p>
      </div>
-  </div>
-);
-
-const TestimonialCard = ({ name, role, text }: any) => (
-  <div className="bg-gray-50 p-12 rounded-[4rem] border border-gray-100 hover:shadow-2xl transition-all">
-    <div className="flex items-center space-x-2 text-yellow-400 mb-8">
-      {[1,2,3,4,5].map(i => <svg key={i} className="w-5 h-5 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>)}
-    </div>
-    <p className="text-xl text-gray-900 font-bold leading-relaxed mb-10">"{text}"</p>
-    <div className="flex items-center space-x-4">
-      <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center text-white font-black">{name.charAt(0)}</div>
-      <div>
-        <h5 className="font-black text-gray-900 tracking-tight">{name}</h5>
-        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{role}</p>
-      </div>
-    </div>
   </div>
 );
 
