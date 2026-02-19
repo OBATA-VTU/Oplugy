@@ -98,9 +98,9 @@ const AdminSettingsPage: React.FC = () => {
             <div className="bg-white p-10 rounded-[3rem] shadow-xl border border-gray-50">
                <h3 className="text-2xl font-black text-gray-900 mb-8 tracking-tight">Tier Margins (₦)</h3>
                <div className="space-y-6">
-                  <MarginInput label="Standard User Profit" value={pricing.user_margin} onChange={(val) => setPricing({...pricing, user_margin: val})} />
-                  <MarginInput label="Reseller Profit" value={pricing.reseller_margin} onChange={(val) => setPricing({...pricing, reseller_margin: val})} />
-                  <MarginInput label="API Merchant Profit" value={pricing.api_margin} onChange={(val) => setPricing({...pricing, api_margin: val})} />
+                  <MarginInput label="Standard User Profit" value={pricing.user_margin} onChange={(val: number) => setPricing({...pricing, user_margin: val})} />
+                  <MarginInput label="Reseller Profit" value={pricing.reseller_margin} onChange={(val: number) => setPricing({...pricing, reseller_margin: val})} />
+                  <MarginInput label="API Merchant Profit" value={pricing.api_margin} onChange={(val: number) => setPricing({...pricing, api_margin: val})} />
                </div>
             </div>
 
@@ -127,7 +127,7 @@ const RoutingToggle = ({ label, value, onChange }: { label: string, value: 'serv
   </div>
 );
 
-const MarginInput = ({ label, value, onChange }: any) => (
+const MarginInput = ({ label, value, onChange }: { label: string; value: number; onChange: (val: number) => void }) => (
   <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl">
     <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{label}</span>
     <input type="number" className="w-24 p-3 bg-white border border-gray-100 rounded-xl text-center font-black text-gray-900 outline-none focus:border-blue-600" value={value} onChange={(e) => onChange(parseFloat(e.target.value) || 0)} />

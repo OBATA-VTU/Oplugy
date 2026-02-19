@@ -3,7 +3,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useNotifications } from '../hooks/useNotifications';
 import { authService } from '../services/authService';
 import Spinner from '../components/Spinner';
-import { ShieldCheckIcon, UsersIcon, ExchangeIcon, BoltIcon, SignalIcon } from '../components/Icons';
+import { ShieldCheckIcon, ExchangeIcon } from '../components/Icons';
 
 const ProfilePage: React.FC = () => {
   const { user } = useAuth();
@@ -49,7 +49,7 @@ const ProfilePage: React.FC = () => {
           <h1 className="text-5xl lg:text-[80px] font-black text-gray-900 tracking-tighter leading-[0.85]">Matrix <br /><span className="text-blue-600">Protocol.</span></h1>
         </div>
         <div className="flex p-2 bg-white rounded-[2.5rem] border border-gray-100 shadow-2xl w-full lg:w-auto overflow-x-auto no-scrollbar">
-           {['ACCOUNT', 'SECURITY', 'DEVELOPER'].map((tab: any) => (
+           {(['ACCOUNT', 'SECURITY', 'DEVELOPER'] as const).map((tab) => (
              <button 
               key={tab} 
               onClick={() => setActiveTab(tab)}
@@ -117,10 +117,27 @@ const ProfilePage: React.FC = () => {
                        <p className="text-gray-400 font-medium text-lg">Configure your 5-digit security key to authorize liquidity deductions.</p>
                     </div>
                     <form onSubmit={handleUpdatePin} className="space-y-10 max-w-lg">
-                       <InputGroup label="Current PIN (Required)" type="password" value={pinForm.oldPin} onChange={(v) => setPinForm({...pinForm, oldPin: v})} />
+                       <InputGroup 
+                         label="Current PIN (Required)" 
+                         type="password" 
+                         value={pinForm.oldPin} 
+                         onChange={(v: string) => setPinForm({...pinForm, oldPin: v})} 
+                       />
                        <div className="grid grid-cols-2 gap-8">
-                          <InputGroup label="New 5-Digit PIN" type="password" maxLength={5} value={pinForm.newPin} onChange={(v) => setPinForm({...pinForm, newPin: v})} />
-                          <InputGroup label="Verify PIN" type="password" maxLength={5} value={pinForm.confirmPin} onChange={(v) => setPinForm({...pinForm, confirmPin: v})} />
+                          <InputGroup 
+                            label="New 5-Digit PIN" 
+                            type="password" 
+                            maxLength={5} 
+                            value={pinForm.newPin} 
+                            onChange={(v: string) => setPinForm({...pinForm, newPin: v})} 
+                          />
+                          <InputGroup 
+                            label="Verify PIN" 
+                            type="password" 
+                            maxLength={5} 
+                            value={pinForm.confirmPin} 
+                            onChange={(v: string) => setPinForm({...pinForm, confirmPin: v})} 
+                          />
                        </div>
                        <button 
                         disabled={isUpdating || pinForm.newPin.length !== 5}
@@ -179,21 +196,21 @@ const ProfileMetric = ({ label, value }: { label: string, value: string }) => (
   </div>
 );
 
-const ReadOnlyField = ({ label, value, isCopyable, onCopy }: any) => (
+const ReadOnlyField = ({ label, value, isCopyable, onCopy }: { label: string; value: string; isCopyable?: boolean; onCopy?: () => void }) => (
   <div className="space-y-4 group">
     <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-4">{label}</label>
     <div className="flex items-center gap-4">
        <div className="flex-1 bg-gray-50 p-6 rounded-2xl font-black text-gray-900 tracking-tight overflow-hidden text-ellipsis border border-transparent group-hover:border-gray-100 transition-all">
          {value}
        </div>
-       {isCopyable && (
+       {isCopyable && onCopy && (
          <button onClick={onCopy} className="p-6 bg-white border border-gray-100 rounded-2xl hover:bg-blue-600 hover:text-white transition-all shadow-xl active:scale-90"><ExchangeIcon /></button>
        )}
     </div>
   </div>
 );
 
-const InputGroup = ({ label, type = "text", value, onChange, maxLength }: any) => (
+const InputGroup = ({ label, type = "text", value, onChange, maxLength }: { label: string; type?: string; value: string; onChange: (v: string) => void; maxLength?: number }) => (
   <div className="space-y-4">
     <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-4">{label}</label>
     <input 
