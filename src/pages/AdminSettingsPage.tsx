@@ -75,11 +75,11 @@ const AdminSettingsPage: React.FC = () => {
             <div className="bg-white p-10 rounded-[3rem] shadow-xl border border-gray-50">
                <h3 className="text-2xl font-black text-gray-900 mb-8 tracking-tight">Routing Node</h3>
                <div className="space-y-4">
-                  <RoutingToggle label="Airtime Terminal" value={routing.airtime} onChange={(v) => setRouting({...routing, airtime: v})} />
-                  <RoutingToggle label="Data Infrastructure" value={routing.data} onChange={(v) => setRouting({...routing, data: v})} />
-                  <RoutingToggle label="Bill Payments" value={routing.bills} onChange={(v) => setRouting({...routing, bills: v})} />
-                  <RoutingToggle label="Cable TV Hub" value={routing.cable} onChange={(v) => setRouting({...routing, cable: v})} />
-                  <RoutingToggle label="Education Node" value={routing.education} onChange={(v) => setRouting({...routing, education: v})} />
+                  <RoutingToggle label="Airtime Terminal" value={routing.airtime} onChange={(v: 'server1' | 'server2') => setRouting({...routing, airtime: v})} />
+                  <RoutingToggle label="Data Infrastructure" value={routing.data} onChange={(v: 'server1' | 'server2') => setRouting({...routing, data: v})} />
+                  <RoutingToggle label="Bill Payments" value={routing.bills} onChange={(v: 'server1' | 'server2') => setRouting({...routing, bills: v})} />
+                  <RoutingToggle label="Cable TV Hub" value={routing.cable} onChange={(v: 'server1' | 'server2') => setRouting({...routing, cable: v})} />
+                  <RoutingToggle label="Education Node" value={routing.education} onChange={(v: 'server1' | 'server2') => setRouting({...routing, education: v})} />
                </div>
             </div>
 
@@ -100,15 +100,15 @@ const AdminSettingsPage: React.FC = () => {
                <div className="space-y-12">
                   <div className="space-y-6">
                     <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest">Srv 1 (Inlomax) Overrides</p>
-                    <MarginInput dark label="Data Add-on" value={pricing.server1.data_margin} onChange={(v) => setPricing({...pricing, server1: {...pricing.server1, data_margin: v}})} />
-                    <MarginInput dark label="Cable Add-on" value={pricing.server1.cable_margin} onChange={(v) => setPricing({...pricing, server1: {...pricing.server1, cable_margin: v}})} />
-                    <MarginInput dark label="Electricity Add-on" value={pricing.server1.electricity_margin} onChange={(v) => setPricing({...pricing, server1: {...pricing.server1, electricity_margin: v}})} />
+                    <MarginInput dark label="Data Add-on" value={pricing.server1.data_margin} onChange={(v: number) => setPricing({...pricing, server1: {...pricing.server1, data_margin: v}})} />
+                    <MarginInput dark label="Cable Add-on" value={pricing.server1.cable_margin} onChange={(v: number) => setPricing({...pricing, server1: {...pricing.server1, cable_margin: v}})} />
+                    <MarginInput dark label="Electricity Add-on" value={pricing.server1.electricity_margin} onChange={(v: number) => setPricing({...pricing, server1: {...pricing.server1, electricity_margin: v}})} />
                   </div>
                   <div className="space-y-6 border-t border-white/10 pt-8">
                     <p className="text-[10px] font-black text-red-400 uppercase tracking-widest">Srv 2 (CIP) Overrides</p>
-                    <MarginInput dark label="Data Add-on" value={pricing.server2.data_margin} onChange={(v) => setPricing({...pricing, server2: {...pricing.server2, data_margin: v}})} />
-                    <MarginInput dark label="Cable Add-on" value={pricing.server2.cable_margin} onChange={(v) => setPricing({...pricing, server2: {...pricing.server2, cable_margin: v}})} />
-                    <MarginInput dark label="Electricity Add-on" value={pricing.server2.electricity_margin} onChange={(v) => setPricing({...pricing, server2: {...pricing.server2, electricity_margin: v}})} />
+                    <MarginInput dark label="Data Add-on" value={pricing.server2.data_margin} onChange={(v: number) => setPricing({...pricing, server2: {...pricing.server2, data_margin: v}})} />
+                    <MarginInput dark label="Cable Add-on" value={pricing.server2.cable_margin} onChange={(v: number) => setPricing({...pricing, server2: {...pricing.server2, cable_margin: v}})} />
+                    <MarginInput dark label="Electricity Add-on" value={pricing.server2.electricity_margin} onChange={(v: number) => setPricing({...pricing, server2: {...pricing.server2, electricity_margin: v}})} />
                   </div>
                </div>
             </div>
@@ -126,7 +126,13 @@ const AdminSettingsPage: React.FC = () => {
   );
 };
 
-const RoutingToggle = ({ label, value, onChange }: any) => (
+interface RoutingToggleProps {
+  label: string;
+  value: 'server1' | 'server2';
+  onChange: (v: 'server1' | 'server2') => void;
+}
+
+const RoutingToggle = ({ label, value, onChange }: RoutingToggleProps) => (
   <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl">
      <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{label}</span>
      <div className="flex p-1 bg-white rounded-xl border border-gray-100">
@@ -136,7 +142,14 @@ const RoutingToggle = ({ label, value, onChange }: any) => (
   </div>
 );
 
-const MarginInput = ({ label, value, onChange, dark }: any) => (
+interface MarginInputProps {
+  label: string;
+  value: number;
+  onChange: (val: number) => void;
+  dark?: boolean;
+}
+
+const MarginInput = ({ label, value, onChange, dark }: MarginInputProps) => (
   <div className={`flex items-center justify-between p-4 rounded-2xl ${dark ? 'bg-white/5 border border-white/10' : 'bg-gray-50 border border-transparent'}`}>
     <span className={`text-[10px] font-black uppercase tracking-widest ${dark ? 'text-white/60' : 'text-gray-500'}`}>{label}</span>
     <div className="flex items-center gap-2">

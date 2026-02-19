@@ -14,7 +14,7 @@ const FundingPage: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(false);
 
   const numAmount = parseFloat(amount) || 0;
-  const serviceFee = numAmount * 0.02;
+  const serviceFee = numAmount * 0.02; // 2% service fee
   const totalCharge = numAmount + serviceFee;
 
   const handlePaystack = () => {
@@ -29,13 +29,13 @@ const FundingPage: React.FC = () => {
     try {
       const handler = PaystackPop.setup({
         key: publicKey,
-        email: user?.email || 'user@oplug.com',
-        amount: Math.round(totalCharge * 100), // Charge amount + 2% fee
+        email: user?.email || 'user@obata.com',
+        amount: Math.round(totalCharge * 100), // Charge amount + 2% fee in kobo
         currency: 'NGN',
         callback: (response: any) => {
           setIsProcessing(false);
           const currentBal = walletBalance || 0;
-          // Credit only the base amount to the wallet
+          // Credit only the base amount to the wallet, keeping the 2% fee
           updateWalletBalance(currentBal + numAmount);
           addNotification(`Wallet funded! ₦${numAmount.toLocaleString()} added to balance.`, "success");
           setAmount('');
