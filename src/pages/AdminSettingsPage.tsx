@@ -10,7 +10,13 @@ const AdminSettingsPage: React.FC = () => {
   const [announcement, setAnnouncement] = useState('');
   const [maintenance, setMaintenance] = useState(false);
   const [apiMode, setApiMode] = useState<'LIVE' | 'TEST'>('LIVE');
-  const [pricing, setPricing] = useState({ user_margin: 10, reseller_margin: 5, api_margin: 2 });
+  const [pricing, setPricing] = useState({ 
+    user_margin: 10, 
+    reseller_margin: 5, 
+    api_margin: 2,
+    server1: { data_margin: 10, cable_margin: 100, electricity_margin: 50 },
+    server2: { data_margin: 10, cable_margin: 100, electricity_margin: 50 }
+  });
   const [routing, setRouting] = useState<ServiceRouting>({
     airtime: 'server1',
     data: 'server1',
@@ -27,7 +33,7 @@ const AdminSettingsPage: React.FC = () => {
       setAnnouncement(res.data.announcement || '');
       setMaintenance(res.data.maintenance || false);
       setApiMode(res.data.apiMode || 'LIVE');
-      if (res.data.pricing) setPricing(res.data.pricing);
+      if (res.data.pricing) setPricing(prev => ({ ...prev, ...res.data.pricing }));
       if (res.data.routing) setRouting(res.data.routing);
     }
     setLoading(false);
@@ -68,7 +74,6 @@ const AdminSettingsPage: React.FC = () => {
             {/* Routing Node */}
             <div className="bg-white p-10 rounded-[3rem] shadow-xl border border-gray-50">
                <h3 className="text-2xl font-black text-gray-900 mb-8 tracking-tight">Routing Node</h3>
-               <p className="text-gray-400 text-xs font-medium mb-8">Set which provider handles specific traffic types.</p>
                <div className="space-y-4">
                   <RoutingToggle label="Airtime Terminal" value={routing.airtime} onChange={(v) => setRouting({...routing, airtime: v})} />
                   <RoutingToggle label="Data Infrastructure" value={routing.data} onChange={(v) => setRouting({...routing, data: v})} />
@@ -79,35 +84,39 @@ const AdminSettingsPage: React.FC = () => {
             </div>
 
             <div className="bg-white p-10 rounded-[3rem] shadow-xl border border-gray-50">
-               <h3 className="text-2xl font-black text-gray-900 mb-8 tracking-tight">System Controls</h3>
+               <h3 className="text-2xl font-black text-gray-900 mb-8 tracking-tight">Tier Margins (₦)</h3>
                <div className="space-y-6">
-                  <div className="flex items-center justify-between p-6 bg-gray-50 rounded-3xl">
-                     <div>
-                        <p className="font-black text-gray-900 tracking-tight">Maintenance Mode</p>
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Global Lock</p>
-                     </div>
-                     <button onClick={() => setMaintenance(!maintenance)} className={`w-14 h-8 rounded-full transition-all flex items-center p-1 ${maintenance ? 'bg-red-500' : 'bg-gray-300'}`}>
-                       <div className={`w-6 h-6 bg-white rounded-full shadow-md transform transition-transform ${maintenance ? 'translate-x-6' : 'translate-x-0'}`}></div>
-                     </button>
-                  </div>
+                  <MarginInput label="Global User Add-on" value={pricing.user_margin} onChange={(val: number) => setPricing({...pricing, user_margin: val})} />
+                  <MarginInput label="Reseller Profit" value={pricing.reseller_margin} onChange={(val: number) => setPricing({...pricing, reseller_margin: val})} />
+                  <MarginInput label="API Merchant Profit" value={pricing.api_margin} onChange={(val: number) => setPricing({...pricing, api_margin: val})} />
                </div>
             </div>
          </div>
 
          <div className="space-y-10">
-            <div className="bg-white p-10 rounded-[3rem] shadow-xl border border-gray-50">
-               <h3 className="text-2xl font-black text-gray-900 mb-8 tracking-tight">Tier Margins (₦)</h3>
-               <div className="space-y-6">
-                  <MarginInput label="Standard User Profit" value={pricing.user_margin} onChange={(val: number) => setPricing({...pricing, user_margin: val})} />
-                  <MarginInput label="Reseller Profit" value={pricing.reseller_margin} onChange={(val: number) => setPricing({...pricing, reseller_margin: val})} />
-                  <MarginInput label="API Merchant Profit" value={pricing.api_margin} onChange={(val: number) => setPricing({...pricing, api_margin: val})} />
+            {/* Server Specific Pricing */}
+            <div className="bg-gray-900 p-10 rounded-[3rem] shadow-xl text-white">
+               <h3 className="text-2xl font-black mb-8 tracking-tight">Pricing Architecture</h3>
+               <div className="space-y-12">
+                  <div className="space-y-6">
+                    <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest">Srv 1 (Inlomax) Overrides</p>
+                    <MarginInput dark label="Data Add-on" value={pricing.server1.data_margin} onChange={(v) => setPricing({...pricing, server1: {...pricing.server1, data_margin: v}})} />
+                    <MarginInput dark label="Cable Add-on" value={pricing.server1.cable_margin} onChange={(v) => setPricing({...pricing, server1: {...pricing.server1, cable_margin: v}})} />
+                    <MarginInput dark label="Electricity Add-on" value={pricing.server1.electricity_margin} onChange={(v) => setPricing({...pricing, server1: {...pricing.server1, electricity_margin: v}})} />
+                  </div>
+                  <div className="space-y-6 border-t border-white/10 pt-8">
+                    <p className="text-[10px] font-black text-red-400 uppercase tracking-widest">Srv 2 (CIP) Overrides</p>
+                    <MarginInput dark label="Data Add-on" value={pricing.server2.data_margin} onChange={(v) => setPricing({...pricing, server2: {...pricing.server2, data_margin: v}})} />
+                    <MarginInput dark label="Cable Add-on" value={pricing.server2.cable_margin} onChange={(v) => setPricing({...pricing, server2: {...pricing.server2, cable_margin: v}})} />
+                    <MarginInput dark label="Electricity Add-on" value={pricing.server2.electricity_margin} onChange={(v) => setPricing({...pricing, server2: {...pricing.server2, electricity_margin: v}})} />
+                  </div>
                </div>
             </div>
 
-            <div className="bg-white p-10 lg:p-12 rounded-[3rem] shadow-xl border border-gray-50 h-fit">
+            <div className="bg-white p-10 rounded-[3rem] shadow-xl border border-gray-50 h-fit">
                <h3 className="text-2xl font-black text-gray-900 mb-8 tracking-tight">Broadcast Center</h3>
-               <textarea className="w-full p-6 bg-gray-50 border border-gray-100 rounded-3xl font-bold min-h-[150px] focus:ring-4 focus:ring-blue-50 transition-all outline-none" placeholder="Announcement..." value={announcement} onChange={(e) => setAnnouncement(e.target.value)} />
-               <button onClick={handleUpdate} disabled={isUpdating} className="w-full mt-6 bg-gray-900 text-white py-6 rounded-3xl font-black text-[11px] uppercase tracking-widest hover:bg-black transition-all shadow-xl flex items-center justify-center">
+               <textarea className="w-full p-6 bg-gray-50 border border-gray-100 rounded-3xl font-bold min-h-[100px] focus:ring-4 focus:ring-blue-50 transition-all outline-none" placeholder="Announcement..." value={announcement} onChange={(e) => setAnnouncement(e.target.value)} />
+               <button onClick={handleUpdate} disabled={isUpdating} className="w-full mt-6 bg-blue-600 text-white py-6 rounded-3xl font-black text-[11px] uppercase tracking-widest hover:bg-black transition-all shadow-xl flex items-center justify-center">
                   {isUpdating ? <Spinner /> : 'Synchronize Node Settings'}
                </button>
             </div>
@@ -117,7 +126,7 @@ const AdminSettingsPage: React.FC = () => {
   );
 };
 
-const RoutingToggle = ({ label, value, onChange }: { label: string, value: 'server1' | 'server2', onChange: (v: 'server1' | 'server2') => void }) => (
+const RoutingToggle = ({ label, value, onChange }: any) => (
   <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl">
      <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{label}</span>
      <div className="flex p-1 bg-white rounded-xl border border-gray-100">
@@ -127,10 +136,13 @@ const RoutingToggle = ({ label, value, onChange }: { label: string, value: 'serv
   </div>
 );
 
-const MarginInput = ({ label, value, onChange }: { label: string; value: number; onChange: (val: number) => void }) => (
-  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl">
-    <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{label}</span>
-    <input type="number" className="w-24 p-3 bg-white border border-gray-100 rounded-xl text-center font-black text-gray-900 outline-none focus:border-blue-600" value={value} onChange={(e) => onChange(parseFloat(e.target.value) || 0)} />
+const MarginInput = ({ label, value, onChange, dark }: any) => (
+  <div className={`flex items-center justify-between p-4 rounded-2xl ${dark ? 'bg-white/5 border border-white/10' : 'bg-gray-50 border border-transparent'}`}>
+    <span className={`text-[10px] font-black uppercase tracking-widest ${dark ? 'text-white/60' : 'text-gray-500'}`}>{label}</span>
+    <div className="flex items-center gap-2">
+       <span className={dark ? 'text-white/40' : 'text-gray-300'}>₦</span>
+       <input type="number" className={`w-24 p-3 rounded-xl text-center font-black outline-none transition-all ${dark ? 'bg-white/10 text-white border-white/20 focus:border-blue-500' : 'bg-white border-gray-100 text-gray-900 focus:border-blue-600'}`} value={value} onChange={(e) => onChange(parseFloat(e.target.value) || 0)} />
+    </div>
   </div>
 );
 

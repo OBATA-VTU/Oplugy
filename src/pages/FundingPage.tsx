@@ -13,10 +13,13 @@ const FundingPage: React.FC = () => {
   const [amount, setAmount] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
 
+  const numAmount = parseFloat(amount) || 0;
+  const serviceFee = numAmount * 0.02;
+  const totalCharge = numAmount + serviceFee;
+
   const handlePaystack = () => {
-    const numAmount = parseFloat(amount);
     if (!amount || isNaN(numAmount) || numAmount < 100) {
-      addNotification("Minimum amount is ₦100.", "warning");
+      addNotification("Minimum funding amount is ₦100.", "warning");
       return;
     }
 
@@ -27,13 +30,14 @@ const FundingPage: React.FC = () => {
       const handler = PaystackPop.setup({
         key: publicKey,
         email: user?.email || 'user@oplug.com',
-        amount: Math.round(numAmount * 100),
+        amount: Math.round(totalCharge * 100), // Charge amount + 2% fee
         currency: 'NGN',
         callback: (response: any) => {
           setIsProcessing(false);
           const currentBal = walletBalance || 0;
+          // Credit only the base amount to the wallet
           updateWalletBalance(currentBal + numAmount);
-          addNotification(`Wallet funded! ₦${numAmount.toLocaleString()} added.`, "success");
+          addNotification(`Wallet funded! ₦${numAmount.toLocaleString()} added to balance.`, "success");
           setAmount('');
         },
         onClose: () => {
@@ -61,7 +65,7 @@ const FundingPage: React.FC = () => {
          <div className="lg:col-span-7 bg-white p-10 lg:p-20 rounded-[4rem] shadow-2xl border border-gray-50 relative overflow-hidden group">
             <div className="relative z-10">
               <div className="flex p-2 bg-gray-100 rounded-[2.5rem] mb-16">
-                 <button onClick={() => setMethod('AUTO')} className={`flex-1 py-6 rounded-[2rem] font-black text-[11px] uppercase tracking-widest transition-all ${method === 'AUTO' ? 'bg-white text-blue-600 shadow-2xl scale-105' : 'text-gray-400 hover:text-gray-900'}`}>Instant Funding</button>
+                 <button onClick={() => setMethod('AUTO')} className={`flex-1 py-6 rounded-[2rem] font-black text-[11px] uppercase tracking-widest transition-all ${method === 'AUTO' ? 'bg-white text-blue-600 shadow-2xl scale-105' : 'text-gray-400 hover:text-gray-600'}`}>Instant Funding</button>
                  <button onClick={() => setMethod('MANUAL')} className={`flex-1 py-6 rounded-[2rem] font-black text-[11px] uppercase tracking-widest transition-all ${method === 'MANUAL' ? 'bg-white text-blue-600 shadow-2xl scale-105' : 'text-gray-400 hover:text-gray-900'}`}>Bank Transfer</button>
               </div>
 
@@ -77,18 +81,35 @@ const FundingPage: React.FC = () => {
                         onChange={(e) => setAmount(e.target.value)}
                       />
                    </div>
+
+                   {numAmount >= 100 && (
+                     <div className="bg-gray-50 p-8 rounded-[2.5rem] space-y-4 border border-gray-100">
+                        <div className="flex justify-between items-center text-sm">
+                           <span className="font-bold text-gray-400 uppercase tracking-widest text-[10px]">Funding Amount</span>
+                           <span className="font-black text-gray-900">₦{numAmount.toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between items-center text-sm">
+                           <span className="font-bold text-gray-400 uppercase tracking-widest text-[10px]">Gateway Fee (2%)</span>
+                           <span className="font-black text-red-500">₦{serviceFee.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                        </div>
+                        <div className="pt-4 border-t border-gray-200 flex justify-between items-center">
+                           <span className="font-black text-gray-900 uppercase tracking-widest text-[11px]">Total Payable</span>
+                           <span className="font-black text-blue-600 text-2xl tracking-tighter">₦{totalCharge.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                        </div>
+                     </div>
+                   )}
                    
                    <div className="p-8 bg-blue-50/50 rounded-[3rem] border border-blue-100 flex items-center space-x-6 backdrop-blur-sm">
                       <div className="w-12 h-12 bg-blue-600 text-white rounded-2xl flex items-center justify-center shrink-0 shadow-xl shadow-blue-200"><ShieldCheckIcon /></div>
-                      <p className="text-[11px] font-black text-blue-800 uppercase tracking-[0.2em] leading-relaxed">Secure payment active. Money is added to your wallet immediately.</p>
+                      <p className="text-[11px] font-black text-blue-800 uppercase tracking-[0.2em] leading-relaxed">Secure payment active. A 2% processing fee is applied to maintain high-velocity gateway nodes.</p>
                    </div>
 
                    <button 
                     onClick={handlePaystack}
-                    disabled={isProcessing || !amount}
-                    className="w-full bg-blue-600 hover:bg-black text-white py-10 lg:py-12 rounded-[3.5rem] font-black uppercase tracking-[0.4em] text-sm shadow-2xl shadow-blue-200 transition-all flex items-center justify-center space-x-6 transform active:scale-95 group"
+                    disabled={isProcessing || !amount || numAmount < 100}
+                    className="w-full bg-blue-600 hover:bg-black text-white py-10 lg:py-12 rounded-[3.5rem] font-black uppercase tracking-[0.4em] text-sm shadow-2xl shadow-blue-200 transition-all flex items-center justify-center space-x-6 transform active:scale-95 group disabled:opacity-50"
                    >
-                      {isProcessing ? <Spinner /> : <><WalletIcon /> <span className="group-hover:translate-x-2 transition-transform">Pay Now</span></>}
+                      {isProcessing ? <Spinner /> : <><WalletIcon /> <span className="group-hover:translate-x-2 transition-transform">Authorize Payment</span></>}
                    </button>
                 </div>
               ) : (
@@ -105,7 +126,7 @@ const FundingPage: React.FC = () => {
                       <div className="absolute -top-10 -right-10 w-40 h-40 bg-blue-600/20 rounded-full blur-3xl"></div>
                    </div>
                    <div className="text-center space-y-10">
-                      <p className="text-lg font-bold text-gray-400 italic leading-relaxed px-10">After transfer, send your receipt to us on WhatsApp for confirmation.</p>
+                      <p className="text-lg font-bold text-gray-400 italic leading-relaxed px-10">After transfer, send your receipt to us on WhatsApp for confirmation. No fee on manual transfers.</p>
                       <a 
                         href="https://wa.me/2348142452729" 
                         target="_blank" 

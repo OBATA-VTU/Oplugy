@@ -35,7 +35,7 @@ async function logTransaction(userId: string, type: TransactionResponse['type'],
     if (status === 'SUCCESS' && type !== 'FUNDING' && type !== 'REFERRAL') {
       await updateDoc(doc(db, "users", user.uid), { walletBalance: increment(-Number(amount)) });
     }
-  } catch (e) { console.error("Database error while saving history:", e); }
+  } catch (e) { console.error("History log fail:", e); }
 }
 
 export const vtuService = {
@@ -65,7 +65,6 @@ export const vtuService = {
 
   getDataCategories: async (network: string, server: 'server1' | 'server2'): Promise<ApiResponse<string[]>> => {
     if (server === 'server1') {
-      // Correctly route to proxy with server flag to prevent 404
       const res = await cipApiClient<any>('services', { method: 'GET', data: { server: 'server1' } });
       if (res.status && res.data?.dataPlans) {
         const plans = res.data.dataPlans as any[];
@@ -77,7 +76,7 @@ export const vtuService = {
         return { status: true, data: categories };
       }
     }
-    return { status: false, message: 'Categories not available for this server.' };
+    return { status: false, message: 'Categories not available.' };
   },
 
   getDataPlans: async (payload: { network: string; type: string; server?: 'server1' | 'server2' }): Promise<ApiResponse<DataPlan[]>> => {
@@ -86,9 +85,11 @@ export const vtuService = {
     const config = await getSystemConfig();
     const server = payload.server || config.routing?.data || 'server1';
     
-    // CRITICAL MATH FIX: Use Number() to ensure math addition, not text joining
-    const margin = Number(config.pricing?.[`${role}_margin`] || 10);
-    const extraServer1Margin = (server === 'server1') ? 10 : 0; 
+    // Server-Specific Profit Configuration from Admin
+    const serverPricing = config.pricing?.[server] || {};
+    const baseMargin = Number(config.pricing?.[`${role}_margin`] || 10);
+    const serverSpecificDataMargin = Number(serverPricing.data_margin || 0);
+    const totalMargin = baseMargin + serverSpecificDataMargin;
 
     const res = await cipApiClient<any>(server === 'server1' ? 'services' : `data/plans?network=${payload.network}&type=${payload.type}`, { 
       method: 'GET', 
@@ -105,23 +106,23 @@ export const vtuService = {
             p.dataType.toUpperCase() === payload.type.toUpperCase()
           )
           .map((p: any) => {
-            const basePrice = Number(String(p.amount).replace(/,/g, ''));
+            const rawBase = Number(String(p.amount).replace(/,/g, ''));
             return {
               id: String(p.serviceID),
               name: `${p.dataPlan} ${p.dataType}`,
-              // Ensure addition
-              amount: basePrice + margin + extraServer1Margin,
+              amount: rawBase + totalMargin,
               validity: p.validity
             };
           });
       } else {
+        // SERVER 2 CRITICAL MATH FIX
         const rawPlans = (res.data || []) as any[];
         plans = rawPlans.map((p: any) => {
-          const basePrice = Number(String(p.price || p.amount).replace(/,/g, ''));
+          const rawBase = Number(String(p.price || p.amount).replace(/,/g, ''));
           return {
             id: String(p.id || p.code),
             name: p.name,
-            amount: basePrice + margin,
+            amount: rawBase + totalMargin,
             validity: p.validity || '30 Days'
           };
         });
@@ -147,31 +148,13 @@ export const vtuService = {
     return res;
   },
 
-  purchaseEducation: async (payload: { type: string; quantity: number; amount: number }): Promise<ApiResponse<TransactionResponse>> => {
-    const user = auth.currentUser;
-    if (!user) return { status: false, message: 'Please login to continue.' };
-    const config = await getSystemConfig();
-    const server = config.routing?.education || 'server1';
-    
-    const res = await cipApiClient<any>('education', { 
-      data: { serviceID: payload.type, quantity: payload.quantity, server }, 
-      method: 'POST' 
-    });
-
-    if (res.status) {
-      await logTransaction(user.uid, 'EDUCATION', payload.amount, `${payload.type} PIN`, `Quantity: ${payload.quantity}`, 'SUCCESS', server.toUpperCase());
-    }
-    return res;
-  },
-
   getElectricityOperators: async (): Promise<ApiResponse<Operator[]>> => {
     const config = await getSystemConfig();
     const server = config.routing?.bills || 'server2';
     const res = await cipApiClient<any>(server === 'server1' ? 'services' : 'electricity/providers', { method: 'GET', data: { server } });
     if (res.status && res.data) {
         if (server === 'server1') {
-            const rawElect = res.data.electricity || [];
-            const operators = rawElect.map((e: any) => ({ id: String(e.serviceID), name: e.disco }));
+            const operators = (res.data.electricity || []).map((e: any) => ({ id: String(e.serviceID), name: e.disco }));
             return { status: true, data: operators };
         }
         return res;
@@ -207,6 +190,11 @@ export const vtuService = {
   getCablePlans: async (billerName: string): Promise<ApiResponse<DataPlan[]>> => {
     const config = await getSystemConfig();
     const server = config.routing?.cable || 'server2';
+    
+    // Profit margin calculation for Cable
+    const serverPricing = config.pricing?.[server] || {};
+    const cableMargin = Number(serverPricing.cable_margin || 0);
+
     const res = await cipApiClient<any>(server === 'server1' ? 'services' : `cable/plans?biller=${billerName}`, { method: 'GET', data: { server } });
     if (res.status && res.data) {
         if (server === 'server1') {
@@ -214,17 +202,28 @@ export const vtuService = {
             const plans = rawCable
                 .filter((p: any) => p.cable.toUpperCase() === billerName.toUpperCase())
                 .map((p: any) => {
-                  const rawAmount = Number(String(p.amount).replace(/,/g, ''));
+                  const rawBase = Number(String(p.amount).replace(/,/g, ''));
                   return {
                     id: String(p.serviceID),
                     name: p.cablePlan,
-                    amount: rawAmount,
+                    amount: rawBase + cableMargin,
                     validity: 'Monthly'
                   };
                 });
             return { status: true, data: plans };
         }
-        return res;
+        // Server 2 Cable logic with margins
+        const rawPlans = (res.data || []) as any[];
+        const plans = rawPlans.map((p: any) => {
+            const rawBase = Number(String(p.price || p.amount).replace(/,/g, ''));
+            return {
+                id: String(p.id || p.code),
+                name: p.name,
+                amount: rawBase + cableMargin,
+                validity: 'Monthly'
+            };
+        });
+        return { status: true, data: plans };
     }
     return res;
   },
@@ -250,6 +249,23 @@ export const vtuService = {
     });
     if (res.status) {
       await logTransaction(user.uid, 'CABLE', payload.amount, `${payload.biller} TV`, `${payload.plan_name} for ${payload.smartCardNumber}`, 'SUCCESS', server.toUpperCase());
+    }
+    return res;
+  },
+
+  purchaseEducation: async (payload: { type: string; quantity: number; amount: number }): Promise<ApiResponse<TransactionResponse>> => {
+    const user = auth.currentUser;
+    if (!user) return { status: false, message: 'Please login to continue.' };
+    const config = await getSystemConfig();
+    const server = config.routing?.education || 'server1';
+    
+    const res = await cipApiClient<any>('education', { 
+      data: { serviceID: payload.type, quantity: payload.quantity, server }, 
+      method: 'POST' 
+    });
+
+    if (res.status) {
+      await logTransaction(user.uid, 'EDUCATION', payload.amount, `${payload.type} PIN`, `Quantity: ${payload.quantity}`, 'SUCCESS', server.toUpperCase());
     }
     return res;
   },

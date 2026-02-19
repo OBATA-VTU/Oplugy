@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useCallback } from 'react';
 import { adminService } from '../services/adminService';
 import Spinner from '../components/Spinner';
@@ -8,28 +7,23 @@ interface StatCardProps {
   icon: React.ReactNode;
   label: string;
   value: string | number;
-  color: 'blue' | 'green' | 'indigo' | 'gray';
-}
-
-interface AlertItemProps {
-  type: 'info' | 'warning' | 'success';
-  message: string;
-  time: string;
+  color: 'blue' | 'green' | 'indigo' | 'gray' | 'red';
 }
 
 const AdminDashboardPage: React.FC = () => {
   const [stats, setStats] = useState<any>(null);
-  const [providerBalance, setProviderBalance] = useState<number | null>(null);
+  const [balances, setBalances] = useState({ srv1: 0, srv2: 0 });
   const [loading, setLoading] = useState(true);
 
-  const fetchData = useCallback(async (silent = false) => {
-    if (!silent) setLoading(true);
-    const resStats = await adminService.getSystemStats();
-    const resProvider = await adminService.getProviderBalance();
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    const [resStats, resBalances] = await Promise.all([
+      adminService.getSystemStats(),
+      adminService.getProviderBalances()
+    ]);
     
     if (resStats.status) setStats(resStats.data);
-    if (resProvider.status) setProviderBalance(resProvider.data || 0);
-    
+    setBalances(resBalances);
     setLoading(false);
   }, []);
 
@@ -59,10 +53,11 @@ const AdminDashboardPage: React.FC = () => {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-8 mb-12">
         <StatCard icon={<UsersIcon />} label="User Repository" value={stats?.totalUsers || 0} color="blue" />
-        <StatCard icon={<CurrencyDollarIcon />} label="System Liquidity" value={`₦${(stats?.totalBalance || 0).toLocaleString()}`} color="green" />
-        <StatCard icon={<BoltIcon />} label="Provider Balance" value={`₦${(providerBalance || 0).toLocaleString()}`} color="indigo" />
+        <StatCard icon={<CurrencyDollarIcon />} label="User Liquidity" value={`₦${(stats?.totalBalance || 0).toLocaleString()}`} color="green" />
+        <StatCard icon={<BoltIcon />} label="Srv 1 (Inlomax)" value={`₦${balances.srv1.toLocaleString()}`} color="indigo" />
+        <StatCard icon={<BoltIcon />} label="Srv 2 (CIP)" value={`₦${balances.srv2.toLocaleString()}`} color="red" />
         <StatCard icon={<ShieldCheckIcon />} label="Governance Layer" value={stats?.admins || 0} color="gray" />
       </div>
 
@@ -70,22 +65,19 @@ const AdminDashboardPage: React.FC = () => {
         <div className="bg-white p-10 rounded-[3rem] shadow-xl border border-gray-50">
           <h3 className="text-2xl font-black text-gray-900 mb-8 tracking-tight">Infrastructure Health</h3>
           <div className="space-y-6">
-            <AlertItem type="success" message="Core payment gateway is active and processing." time="Current" />
-            <AlertItem type="info" message="Firestore cluster indexing is synchronized." time="Synchronized" />
-            <AlertItem type="success" message="Security override password 'OBATAISBACKBYOBA' is active." time="Active" />
+            <AlertItem type="success" message="Srv 1 (Inlomax) Node: Synchronized & Operational." time="Current" />
+            <AlertItem type="success" message="Srv 2 (CIP) Node: Response Time Optimized." time="Current" />
+            <AlertItem type="info" message="Firestore cluster indexing is active." time="Active" />
           </div>
         </div>
 
         <div className="bg-gray-900 p-10 rounded-[3rem] text-white overflow-hidden relative group">
           <div className="relative z-10">
             <h3 className="text-2xl font-black mb-4 tracking-tight">Security Protocol</h3>
-            <p className="text-white/40 mb-10 text-sm leading-relaxed max-w-sm">Global administrative privileges are restricted to Master Accounts. Ensure you log out after sensitive governance operations.</p>
+            <p className="text-white/40 mb-10 text-sm leading-relaxed max-w-sm">Global administrative privileges are restricted. Ensure provider accounts are funded to prevent fulfillment failures.</p>
             <div className="flex flex-col sm:flex-row gap-4">
               <button className="bg-white text-gray-900 px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all shadow-xl shadow-white/5">
                 Audit Logs
-              </button>
-              <button className="bg-white/10 text-white px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-white/20 transition-all border border-white/10">
-                Sync Gateway
               </button>
             </div>
           </div>
@@ -101,6 +93,7 @@ const StatCard: React.FC<StatCardProps> = ({ icon, label, value, color }) => {
     blue: 'bg-blue-600',
     green: 'bg-green-600',
     indigo: 'bg-indigo-600',
+    red: 'bg-red-500',
     gray: 'bg-gray-900'
   };
   return (
@@ -109,26 +102,19 @@ const StatCard: React.FC<StatCardProps> = ({ icon, label, value, color }) => {
         {icon}
       </div>
       <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{label}</p>
-      <div className="text-3xl font-black text-gray-900 tracking-tighter">{value}</div>
+      <div className="text-2xl xl:text-3xl font-black text-gray-900 tracking-tighter truncate">{value}</div>
     </div>
   );
 };
 
-const AlertItem: React.FC<AlertItemProps> = ({ type, message, time }) => {
-  const dots: Record<string, string> = {
-    info: 'bg-blue-500',
-    warning: 'bg-yellow-500',
-    success: 'bg-green-500'
-  };
-  return (
-    <div className="flex items-start space-x-4 p-5 rounded-2xl hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100">
-      <div className={`w-2.5 h-2.5 rounded-full mt-2 flex-shrink-0 animate-pulse ${dots[type]}`}></div>
-      <div className="flex-1">
-        <p className="text-sm font-bold text-gray-800 tracking-tight">{message}</p>
-        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">{time}</p>
-      </div>
+const AlertItem = ({ type, message, time }: any) => (
+  <div className="flex items-start space-x-4 p-5 rounded-2xl hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100">
+    <div className={`w-2.5 h-2.5 rounded-full mt-2 flex-shrink-0 animate-pulse ${type === 'success' ? 'bg-green-500' : 'bg-blue-500'}`}></div>
+    <div className="flex-1">
+      <p className="text-sm font-bold text-gray-800 tracking-tight">{message}</p>
+      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">{time}</p>
     </div>
-  );
-};
+  </div>
+);
 
 export default AdminDashboardPage;

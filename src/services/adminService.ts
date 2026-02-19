@@ -1,4 +1,3 @@
-
 import { db } from '../firebase/config';
 import { 
   collection, 
@@ -77,18 +76,20 @@ export const adminService = {
     }
   },
 
-  // --- External Provider Stats ---
-  async getProviderBalance(): Promise<ApiResponse<number>> {
+  // --- Dual Provider Stats ---
+  async getProviderBalances(): Promise<{ srv1: number; srv2: number }> {
     try {
-      // Endpoint to check CIP provider balance
-      const response = await cipApiClient<any>('user/balance');
-      if (response.status && response.data) {
-        // Return balance (assuming data contains numeric balance in Kobo/Naira)
-        return { status: true, data: response.data.balance / 100 };
-      }
-      return { status: false, message: "Failed to retrieve provider balance" };
+      const [res1, res2] = await Promise.all([
+        cipApiClient<any>('balance', { data: { server: 'server1' }, method: 'GET' }),
+        cipApiClient<any>('user/balance', { data: { server: 'server2' }, method: 'GET' })
+      ]);
+      
+      return {
+        srv1: res1.status ? Number(res1.data?.funds || 0) : 0,
+        srv2: res2.status ? Number(res2.data?.balance || 0) / 100 : 0
+      };
     } catch (error) {
-      return { status: false, message: "API Gateway unreachable" };
+      return { srv1: 0, srv2: 0 };
     }
   },
 
