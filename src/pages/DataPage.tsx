@@ -31,6 +31,11 @@ const DataPage: React.FC = () => {
   const [showPinModal, setShowPinModal] = useState(false);
   const [hasCategories, setHasCategories] = useState(true);
 
+  // Dynamically filter operators based on selected server
+  const availableOperators = server === 'server2' 
+    ? operators.filter(op => op.id.toUpperCase() !== 'VITEL') 
+    : operators;
+
   useEffect(() => {
     setSelectedPlan(dataPlans.find(p => p.id === selectedPlanId) || null);
   }, [selectedPlanId, dataPlans]);
@@ -214,7 +219,7 @@ const DataPage: React.FC = () => {
            </div>
            
            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-              {operators.map(op => (
+              {availableOperators.map(op => (
                 <button 
                   key={op.id} 
                   onClick={() => handleNetworkSelect(op)}
