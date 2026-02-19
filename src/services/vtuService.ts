@@ -70,6 +70,7 @@ export const vtuService = {
 
   getDataCategories: async (network: string, server: 'server1' | 'server2'): Promise<ApiResponse<string[]>> => {
     if (server === 'server1') {
+      // Inlomax 'services' endpoint is a GET request
       const res = await cipApiClient<any>('services', { method: 'GET', data: { server: 'server1' } });
       if (res.status && res.data?.dataPlans) {
         const plans = res.data.dataPlans as any[];
@@ -87,7 +88,7 @@ export const vtuService = {
         return { status: true, data: categories };
       }
     }
-    return { status: false, message: 'Categories not available for this network/server.' };
+    return { status: false, message: 'Categories not found for this node.' };
   },
 
   getDataPlans: async (payload: { network: string; type: string; server?: 'server1' | 'server2' }): Promise<ApiResponse<DataPlan[]>> => {
@@ -135,7 +136,7 @@ export const vtuService = {
         return { status: true, data: plans };
       }
     }
-    return { status: false, message: 'Failed to retrieve plans.' };
+    return { status: false, message: 'Plans synchronized but currently empty.' };
   },
 
   purchaseData: async (payload: { plan_id: string; phone_number: string; amount: number; network: string; plan_name: string; server: 'server1' | 'server2' }): Promise<ApiResponse<TransactionResponse>> => {

@@ -11,8 +11,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const payload = req.method === 'POST' ? req.body : req.query;
   const { endpoint, method: targetMethod = 'GET', data, server = 'server2' } = payload || {};
 
-  console.log(`[Proxy] Routing ${targetMethod} ${endpoint} to ${server}`);
-
   const providers = {
     server1: {
       baseUrl: 'https://inlomax.com/api',
@@ -29,14 +27,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const selectedProvider = providers[server as keyof typeof providers] || providers.server2;
 
   if (!selectedProvider.apiKey) {
-    console.error(`[Proxy Error] Missing credentials for ${server}.`);
-    return res.status(500).json({ status: 'error', message: `System Error: ${server} credentials not found.` });
+    return res.status(500).json({ status: 'error', message: `System Error: ${server} API key not configured.` });
   }
 
   try {
-    const cleanBaseUrl = selectedProvider.baseUrl.replace(/\/$/, '');
-    const cleanEndpoint = endpoint.replace(/^\//, '');
-    const fullUrl = `${cleanBaseUrl}/${cleanEndpoint}`;
+    let cleanEndpoint = endpoint.replace(/^\//, '');
+    
+    // Inlomax (Server 1) often requires trailing slashes for directory-style endpoints
+    if (server === 'server1' && !cleanEndpoint.endsWith('/') && !cleanEndpoint.includes('?')) {
+      cleanEndpoint += '/';
+    }
+
+    const fullUrl = `${selectedProvider.baseUrl.replace(/\/$/, '')}/${cleanEndpoint}`;
     
     const headers: any = {
       'Content-Type': 'application/json',
@@ -51,49 +53,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (targetMethod !== 'GET' && data) {
       let requestData = { ...data };
-      
-      // SERVER 1 (INLOMAX) PAYLOAD MAPPING
       if (server === 'server1') {
-        // Inlomax strictly requires 'serviceID' and 'mobileNumber' for most POST requests
         const mappedData: any = {};
-        
-        // Map Service ID
         if (requestData.serviceID) mappedData.serviceID = String(requestData.serviceID);
         else if (requestData.plan_id) mappedData.serviceID = String(requestData.plan_id);
-        else if (requestData.provider_id) mappedData.serviceID = String(requestData.provider_id);
-        else if (requestData.network && endpoint === 'airtime') {
-           // Airtime special mapping for Inlomax based on network strings if IDs aren't provided
-           if (requestData.network.toUpperCase() === 'MTN') mappedData.serviceID = "1";
-           if (requestData.network.toUpperCase() === 'AIRTEL') mappedData.serviceID = "2";
-           if (requestData.network.toUpperCase() === 'GLO') mappedData.serviceID = "3";
-           if (requestData.network.toUpperCase() === '9MOBILE') mappedData.serviceID = "4";
-        }
-
-        // Map Mobile Number
+        
         if (requestData.mobileNumber) mappedData.mobileNumber = String(requestData.mobileNumber);
         else if (requestData.phone_number) mappedData.mobileNumber = String(requestData.phone_number);
         else if (requestData.phone) mappedData.mobileNumber = String(requestData.phone);
-        else if (requestData.meterNum) mappedData.meterNum = String(requestData.meterNum);
-        else if (requestData.meter_number) mappedData.meterNum = String(requestData.meter_number);
 
-        // Map Amount
         if (requestData.amount) mappedData.amount = Number(requestData.amount);
-
-        // Map Meter Type for Electricity
-        if (requestData.meterType) mappedData.meterType = Number(requestData.meterType);
-        else if (requestData.meter_type) mappedData.meterType = requestData.meter_type === 'prepaid' ? 1 : 2;
-
-        // Map Quantity for Education
-        if (requestData.quantity) mappedData.quantity = Number(requestData.quantity);
-
         requestData = mappedData;
       }
-      
       fetchOptions.body = JSON.stringify(requestData);
     }
 
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 58000);
+    const timeout = setTimeout(() => controller.abort(), 25000); // 25s timeout for upstream
     fetchOptions.signal = controller.signal;
 
     const apiResponse = await fetch(fullUrl, fetchOptions);
@@ -103,13 +79,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     
     try {
       const responseData = JSON.parse(responseText);
-      // Ensure we return a consistent 200 even if the underlying API has a different success code
       return res.status(200).json(responseData);
     } catch {
       return res.status(apiResponse.status).send(responseText);
     }
   } catch (error: any) {
-    console.error(`[Proxy Fatal] Connection to ${server} failed:`, error.message);
-    return res.status(504).json({ status: 'error', message: 'The gateway connection timed out.' });
+    return res.status(504).json({ status: 'error', message: 'Gateway timeout or connection refused.' });
   }
 }

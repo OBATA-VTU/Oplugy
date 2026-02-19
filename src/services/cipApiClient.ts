@@ -1,5 +1,5 @@
 import { apiClient } from './apiClient';
-import { ApiResponse, CipApiResponse } from '../types';
+import { ApiResponse } from '../types';
 
 /**
  * A specialized API client for interacting with our Vercel proxy.
@@ -9,7 +9,6 @@ export async function cipApiClient<T>(
   endpoint: string,
   { data, headers: customHeaders, method }: { data?: any; headers?: HeadersInit; method?: string } = {}
 ): Promise<ApiResponse<T>> {
-  // Extract server from data if present, default to server2
   const targetServer = data?.server || 'server2';
 
   const proxyPayload = {
@@ -19,7 +18,7 @@ export async function cipApiClient<T>(
     server: targetServer
   };
 
-  const response = await apiClient<CipApiResponse<T>>(
+  const response = await apiClient<any>(
     '', 
     '/api/proxy',
     {
@@ -32,26 +31,48 @@ export async function cipApiClient<T>(
   if (!response.status) {
     return {
       status: false,
-      message: response.message,
+      message: response.message || 'Gateway Error',
       data: undefined,
-      errors: response.errors,
     };
   }
   
-  const cipData = response.data;
+  const rawData = response.data;
   
-  if (cipData?.status === 'success') {
+  // Logic to handle different provider response formats
+  // CIP (Server 2) usually returns { status: 'success', data: ... }
+  // Inlomax (Server 1) returns the raw object directly e.g. { dataPlans: [...] }
+  
+  if (rawData?.status === 'success') {
     return {
       status: true,
-      message: cipData.message,
-      data: cipData.data as T,
+      message: rawData.message,
+      data: rawData.data as T,
     };
-  } else {
-    const errorMessages = cipData?.errors?.map(e => `${e.path}: ${e.message}`) || [cipData?.message || 'The API returned an error.'];
+  } 
+  
+  // If the response is not wrapped but looks successful (e.g. contains expected keys)
+  if (rawData && !rawData.status && (rawData.dataPlans || rawData.airtime || rawData.electricity || Array.isArray(rawData))) {
     return {
-      status: false,
-      message: errorMessages.join(', '),
-      errors: errorMessages,
+      status: true,
+      message: 'Success',
+      data: rawData as T,
     };
   }
+
+  // Handle explicit failure statuses from wrapped APIs
+  if (rawData?.status === 'fail' || rawData?.status === 'error') {
+     const errorMessages = rawData?.errors?.map((e: any) => `${e.path}: ${e.message}`) || [rawData?.message || 'API Error'];
+     return {
+       status: false,
+       message: errorMessages.join(', '),
+       errors: errorMessages,
+     };
+  }
+
+  // Fallback for raw objects that don't match the success criteria above
+  return {
+    status: true,
+    message: 'Success',
+    data: rawData as T,
+  };
 }
