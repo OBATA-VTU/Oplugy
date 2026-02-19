@@ -26,7 +26,7 @@ async function getManualPrice(planId: string, role: UserRole): Promise<number | 
   return null;
 }
 
-async function logTransaction(userId: string, type: TransactionResponse['type'], amount: number, source: string, remarks: string, status: 'SUCCESS' | 'PENDING' | 'FAILED' = 'SUCCESS', server?: string) {
+async function logTransaction(userId: string, type: TransactionResponse['type'], amount: number, source: string, remarks: string, status: 'SUCCESS' | 'PENDING' | 'FAILED' = 'SUCCESS', extraData: any = {}) {
   try {
     const user = auth.currentUser;
     if (!user) return;
@@ -38,7 +38,8 @@ async function logTransaction(userId: string, type: TransactionResponse['type'],
       source,
       remarks,
       status,
-      server: server || 'Main Node',
+      server: 'Inlomax Node',
+      ...extraData,
       date_created: serverTimestamp(),
       date_updated: serverTimestamp()
     });
@@ -54,12 +55,12 @@ export const vtuService = {
     if (!user) return { status: false, message: 'Please login to continue.' };
 
     const res = await cipApiClient<any>('airtime', { 
-      data: { ...payload, mobileNumber: payload.phone, server: 'server1' }, 
+      data: { mobileNumber: payload.phone, amount: payload.amount }, 
       method: 'POST' 
     });
     
     if (res.status) {
-      await logTransaction(user.uid, 'AIRTIME', payload.amount, `${payload.network} Airtime`, `Recharge for ${payload.phone}`, 'SUCCESS', 'Main Node');
+      await logTransaction(user.uid, 'AIRTIME', payload.amount, `${payload.network} Airtime`, `Recharge for ${payload.phone}`, 'SUCCESS');
       return { status: true, message: res.message, data: res.data };
     }
     return res;
@@ -67,7 +68,7 @@ export const vtuService = {
 
   getDataCategories: async (network: string): Promise<ApiResponse<string[]>> => {
     try {
-      const res = await cipApiClient<any>('services', { method: 'GET', data: { server: 'server1' } });
+      const res = await cipApiClient<any>('services', { method: 'GET' });
       if (res.status && res.data?.dataPlans) {
         const plans = res.data.dataPlans as any[];
         const categories = Array.from(new Set(
@@ -78,15 +79,14 @@ export const vtuService = {
         return { status: true, data: categories };
       }
     } catch (e) { console.error("Category fetch error:", e); }
-    return { status: false, message: 'Node synchronization failed.' };
+    return { status: false, message: 'Inlomax node sync failed.' };
   },
 
   getDataPlans: async (payload: { network: string; type: string; userRole?: UserRole }): Promise<ApiResponse<DataPlan[]>> => {
     const role = payload.userRole || 'user';
-    const config = await getSystemConfig();
     
     try {
-      const res = await cipApiClient<any>('services', { method: 'GET', data: { server: 'server1' } });
+      const res = await cipApiClient<any>('services', { method: 'GET' });
       if (res.status && res.data?.dataPlans) {
         const rawPlans = (res.data.dataPlans || []) as any[];
         const filtered = rawPlans.filter((p: any) => 
@@ -99,19 +99,18 @@ export const vtuService = {
           const planId = String(p.serviceID);
           const manual = await getManualPrice(planId, role);
           const rawBase = Number(String(p.amount).replace(/,/g, ''));
-          const margin = config.pricing?.server1?.data_margin ?? 10;
           
           plans.push({
             id: planId,
             name: `${p.dataPlan} ${p.dataType}`,
-            amount: manual || (rawBase + margin), 
+            amount: manual || rawBase, 
             validity: p.validity
           });
         }
         return { status: true, data: plans };
       }
     } catch (e: any) {
-      return { status: false, message: 'Main node unreachable.' };
+      return { status: false, message: 'Inlomax node unreachable.' };
     }
     return { status: false, message: 'No valid plans returned by node.' };
   },
@@ -121,24 +120,19 @@ export const vtuService = {
     if (!user) return { status: false, message: 'Please login to continue.' };
     
     const res = await cipApiClient<any>('data', { 
-      data: { 
-        plan_id: payload.plan_id, 
-        phone_number: payload.phone_number,
-        server: 'server1' 
-      }, 
+      data: { serviceID: payload.plan_id, mobileNumber: payload.phone_number }, 
       method: 'POST' 
     });
 
     if (res.status) {
-      const apiStatus = res.data?.status === 'PENDING' ? 'PENDING' : 'SUCCESS';
-      await logTransaction(user.uid, 'DATA', payload.amount, `${payload.network} Data`, `Bundle ${payload.plan_name} for ${payload.phone_number}`, apiStatus, 'Main Node');
+      await logTransaction(user.uid, 'DATA', payload.amount, `${payload.network} Data`, `Bundle ${payload.plan_name} for ${payload.phone_number}`, 'SUCCESS');
       return { status: true, message: res.message, data: res.data };
     }
     return res;
   },
 
   getElectricityOperators: async (): Promise<ApiResponse<Operator[]>> => {
-    const res = await cipApiClient<any>('services', { method: 'GET', data: { server: 'server1' } });
+    const res = await cipApiClient<any>('services', { method: 'GET' });
     if (res.status && res.data?.electricity) {
         const operators = (res.data.electricity || []).map((e: any) => ({ 
           id: String(e.serviceID), 
@@ -151,7 +145,7 @@ export const vtuService = {
 
   verifyElectricityMeter: async (payload: { meter_number: string; provider_id: string; meter_type: 'prepaid' | 'postpaid' }): Promise<ApiResponse<VerificationResponse>> => {
     return await cipApiClient<any>('validatemeter', { 
-      data: { serviceID: payload.provider_id, meterNum: payload.meter_number, meterType: payload.meter_type === 'prepaid' ? 1 : 2, server: 'server1' }, 
+      data: { serviceID: payload.provider_id, meterNum: payload.meter_number, meterType: payload.meter_type === 'prepaid' ? 1 : 2 }, 
       method: 'POST' 
     });
   },
@@ -161,19 +155,19 @@ export const vtuService = {
     if (!user) return { status: false, message: 'Auth required.' };
 
     const res = await cipApiClient<any>('payelectric', { 
-      data: { serviceID: payload.provider_id, meterNum: payload.meter_number, meterType: payload.meter_type === 'prepaid' ? 1 : 2, amount: payload.amount, server: 'server1' }, 
+      data: { serviceID: payload.provider_id, meterNum: payload.meter_number, meterType: payload.meter_type === 'prepaid' ? 1 : 2, amount: payload.amount }, 
       method: 'POST' 
     });
 
     if (res.status) {
-      await logTransaction(user.uid, 'ELECTRICITY', payload.amount, `${payload.provider_name} Power`, `Meter ${payload.meter_number}`, 'SUCCESS', 'Main Node');
+      await logTransaction(user.uid, 'ELECTRICITY', payload.amount, `${payload.provider_name} Power`, `Meter ${payload.meter_number}`, 'SUCCESS', { token: res.data?.token });
       return { status: true, message: res.message, data: res.data };
     }
     return res;
   },
 
   getCablePlans: async (billerName: string): Promise<ApiResponse<DataPlan[]>> => {
-    const res = await cipApiClient<any>('services', { method: 'GET', data: { server: 'server1' } });
+    const res = await cipApiClient<any>('services', { method: 'GET' });
     if (res.status && res.data?.cablePlans) {
         const filtered = (res.data.cablePlans || []).filter((c: any) => c.cable.toUpperCase() === billerName.toUpperCase());
         return { 
@@ -191,7 +185,7 @@ export const vtuService = {
 
   verifyCableSmartcard: async (payload: { biller: string; smartCardNumber: string }): Promise<ApiResponse<VerificationResponse>> => {
     return await cipApiClient<any>('validatecable', { 
-      data: { serviceID: payload.biller, iucNum: payload.smartCardNumber, server: 'server1' }, 
+      data: { serviceID: payload.biller, iucNum: payload.smartCardNumber }, 
       method: 'POST' 
     });
   },
@@ -201,28 +195,29 @@ export const vtuService = {
     if (!user) return { status: false, message: 'Auth required.' };
 
     const res = await cipApiClient<any>('subcable', { 
-      data: { serviceID: payload.planCode, iucNum: payload.smartCardNumber, server: 'server1' }, 
+      data: { serviceID: payload.planCode, iucNum: payload.smartCardNumber }, 
       method: 'POST' 
     });
 
     if (res.status) {
-      await logTransaction(user.uid, 'CABLE', payload.amount, `${payload.biller} TV`, `${payload.plan_name} for ${payload.smartCardNumber}`, 'SUCCESS', 'Main Node');
+      await logTransaction(user.uid, 'CABLE', payload.amount, `${payload.biller} TV`, `${payload.plan_name} for ${payload.smartCardNumber}`, 'SUCCESS');
       return { status: true, message: res.message, data: res.data };
     }
     return res;
   },
 
-  purchaseEducation: async (payload: { type: string; quantity: number; amount: number }): Promise<ApiResponse<TransactionResponse>> => {
+  purchaseEducation: async (payload: { type: string; quantity: number; amount: number, name: string }): Promise<ApiResponse<TransactionResponse>> => {
     const user = auth.currentUser;
     if (!user) return { status: false, message: 'Auth required.' };
     
     const res = await cipApiClient<any>('education', { 
-      data: { serviceID: payload.type, quantity: payload.quantity, server: 'server1' }, 
+      data: { serviceID: payload.type, quantity: payload.quantity }, 
       method: 'POST' 
     });
 
     if (res.status) {
-      await logTransaction(user.uid, 'EDUCATION', payload.amount, `Exam PIN`, `Quantity: ${payload.quantity}`, 'SUCCESS', 'Main Node');
+      // Inlomax returns pins in res.data.pins
+      await logTransaction(user.uid, 'EDUCATION', payload.amount, `${payload.name}`, `Quantity: ${payload.quantity}`, 'SUCCESS', { pins: res.data?.pins });
       return { status: true, message: res.message, data: res.data };
     }
     return res;

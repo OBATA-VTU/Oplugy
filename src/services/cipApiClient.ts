@@ -1,19 +1,16 @@
-
 import { apiClient } from './apiClient';
 import { ApiResponse } from '../types';
 
 /**
- * Enhanced API client that routes requests to independent proxy servers 
- * to ensure high availability and stability during concurrent transactions.
+ * Optimized API client strictly routing all requests to the Inlomax (Server 1) Node.
+ * All Server 2 logic has been decommissioned.
  */
 export async function cipApiClient<T>(
   endpoint: string,
   { data, headers: customHeaders, method }: { data?: any; headers?: HeadersInit; method?: string } = {}
 ): Promise<ApiResponse<T>> {
-  const targetServer = data?.server || 'server1';
   
-  // Isolated Proxy Selection
-  const proxyPath = targetServer === 'server1' ? '/api/proxy-server1' : '/api/proxy-server2';
+  const proxyPath = '/api/proxy-server1';
 
   const proxyPayload = {
     endpoint: endpoint.startsWith('/') ? endpoint.slice(1) : endpoint,
@@ -41,23 +38,15 @@ export async function cipApiClient<T>(
   
   const rawData = response.data;
   
-  // CIP (Server 2) standard format: { status: 'success', message: '...', data: ... }
-  if (targetServer === 'server2') {
-    if (rawData?.status === 'success') {
-      return {
-        status: true,
-        message: rawData.message,
-        data: rawData.data as T,
-      };
-    }
-    const errorMsg = rawData?.message || rawData?.errors?.[0]?.message || 'Server 2 Error';
-    return { status: false, message: errorMsg };
+  // Inlomax documentation returns { status: 'success', data: { ... } } or error
+  if (rawData?.status === 'success') {
+    return {
+      status: true,
+      message: rawData.message || 'Transaction Successful',
+      data: rawData.data as T,
+    };
   }
 
-  // Server 1 Fallback (Legacy Mapping)
-  return {
-    status: true,
-    message: 'Success',
-    data: rawData as T,
-  };
+  const errorMsg = rawData?.message || 'Fulfillment Node Rejected Request';
+  return { status: false, message: errorMsg };
 }

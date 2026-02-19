@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { TransactionResponse } from '../types';
 import Logo from './Logo';
@@ -7,7 +6,7 @@ import Modal from './Modal';
 interface ReceiptModalProps {
   isOpen: boolean;
   onClose: () => void;
-  transaction: TransactionResponse | null;
+  transaction: TransactionResponse | any;
 }
 
 const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, transaction }) => {
@@ -36,6 +35,26 @@ const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, transactio
         <div className="border-t-2 border-dashed border-gray-100 py-8 space-y-5">
           <ReceiptItem label="Service Type" value={transaction.type} highlight />
           <ReceiptItem label="Beneficiary" value={transaction.source} />
+          
+          {transaction.type === 'ELECTRICITY' && transaction.token && (
+            <div className="bg-blue-50 p-6 rounded-2xl border-2 border-dashed border-blue-100 text-center animate-in zoom-in-95">
+               <p className="text-[9px] font-black text-blue-600 uppercase tracking-widest mb-2">Meter Token</p>
+               <p className="text-2xl font-black text-gray-900 tracking-[0.2em]">{transaction.token}</p>
+            </div>
+          )}
+
+          {transaction.type === 'EDUCATION' && transaction.pins && transaction.pins.length > 0 && (
+            <div className="space-y-4">
+               <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Retrieved Pins</p>
+               {transaction.pins.map((pin: any, i: number) => (
+                 <div key={i} className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase">PIN {i+1}: <span className="text-gray-900 font-black tracking-widest ml-2">{pin.pin}</span></p>
+                    {pin.serialNo && <p className="text-[8px] text-gray-400 mt-1 uppercase">S/N: {pin.serialNo}</p>}
+                 </div>
+               ))}
+            </div>
+          )}
+
           <ReceiptItem label="Transaction ID" value={transaction.id} isCode />
           <ReceiptItem label="Timestamp" value={transaction.date_created?.seconds 
             ? new Date(transaction.date_created.seconds * 1000).toLocaleString() 

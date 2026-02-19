@@ -26,7 +26,6 @@ const QuickPurchasePage: React.FC = () => {
 
   const calculateCharges = (amount: number) => {
     if (!amount || isNaN(amount)) return 0;
-    // Transparent processing fee for guests
     return (amount * 0.02) + 20; 
   };
 
@@ -41,8 +40,14 @@ const QuickPurchasePage: React.FC = () => {
     }
     
     setIsProcessing(true);
-    const publicKey = process.env.REACT_APP_PAYSTACK_PUBLIC_KEY || 'pk_test_placeholder';
+    const publicKey = process.env.REACT_APP_PAYSTACK_PUBLIC_KEY;
     
+    if (!publicKey) {
+      addNotification("Gateway config error.", "error");
+      setIsProcessing(false);
+      return;
+    }
+
     const handler = PaystackPop.setup({
       key: publicKey,
       email: 'guest@obata.com',
@@ -195,13 +200,6 @@ const QuickPurchasePage: React.FC = () => {
                         </div>
                      </div>
                      <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/10 rounded-full blur-[100px]"></div>
-                  </div>
-
-                  <div className="flex items-center space-x-6 p-8 bg-blue-50 rounded-[2.5rem] border-2 border-blue-100">
-                     <div className="w-14 h-14 bg-blue-600 text-white rounded-2xl flex items-center justify-center shrink-0 shadow-2xl shadow-blue-200">
-                        <ShieldCheckIcon />
-                     </div>
-                     <p className="text-xs font-black text-blue-800 uppercase tracking-widest leading-relaxed">Your payment is safe and verified. Delivery starts as soon as you pay.</p>
                   </div>
 
                   <div className="flex flex-col sm:flex-row gap-6 pt-4">

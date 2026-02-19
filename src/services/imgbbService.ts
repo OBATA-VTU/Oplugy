@@ -2,7 +2,7 @@ import { ApiResponse } from '../types';
 
 export const imgbbService = {
   async uploadImage(base64Image: string): Promise<ApiResponse<string>> {
-    const apiKey = "eb4819d45e69e06180373df89966144e"; // ImgBB API Key
+    const apiKey = "a4aa97ad337019899bb59b4e94b149e0"; 
     try {
       const formData = new FormData();
       formData.append('image', base64Image.split(',')[1] || base64Image);

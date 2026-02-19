@@ -25,8 +25,15 @@ const FundingPage: React.FC = () => {
 
     addNotification("Connecting to our secure payment partner...", "info");
     setIsProcessing(true);
-    const publicKey = process.env.REACT_APP_PAYSTACK_PUBLIC_KEY || 'pk_test_placeholder';
+    // Explicitly using the user-specified environment variable name
+    const publicKey = process.env.REACT_APP_PAYSTACK_PUBLIC_KEY;
     
+    if (!publicKey) {
+      addNotification("Payment configuration missing. Contact admin.", "error");
+      setIsProcessing(false);
+      return;
+    }
+
     try {
       const handler = PaystackPop.setup({
         key: publicKey,
@@ -36,7 +43,7 @@ const FundingPage: React.FC = () => {
         callback: (response: any) => {
           setIsProcessing(false);
           const currentBal = walletBalance || 0;
-          // Credit only the base amount to the wallet, keeping the 2% fee
+          // Credit only the base amount to the wallet
           updateWalletBalance(currentBal + numAmount);
           addNotification(`Wallet funded! ₦${numAmount.toLocaleString()} added to balance.`, "success");
           setAmount('');
@@ -62,7 +69,6 @@ const FundingPage: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
-         {/* Main Form Area */}
          <div className="lg:col-span-7 bg-white p-10 lg:p-20 rounded-[4rem] shadow-2xl border border-gray-50 relative overflow-hidden group">
             <div className="relative z-10">
               <div className="flex p-2 bg-gray-100 rounded-[2.5rem] mb-16">
@@ -100,18 +106,15 @@ const FundingPage: React.FC = () => {
                      </div>
                    )}
                    
-                   <div className="p-8 bg-blue-50/50 rounded-[3rem] border border-blue-100 flex items-center space-x-6 backdrop-blur-sm">
-                      <div className="w-12 h-12 bg-blue-600 text-white rounded-2xl flex items-center justify-center shrink-0 shadow-xl shadow-blue-200"><ShieldCheckIcon /></div>
-                      <p className="text-[11px] font-black text-blue-800 uppercase tracking-[0.2em] leading-relaxed">Your payment is safe. We add a small 2% charge to keep our service fast and reliable.</p>
+                   <div className="button-group pt-4">
+                     <button 
+                      onClick={handlePaystack}
+                      disabled={isProcessing || !amount || numAmount < 100}
+                      className="w-full bg-blue-600 hover:bg-black text-white py-10 lg:py-12 rounded-[3.5rem] font-black uppercase tracking-[0.4em] text-sm shadow-2xl shadow-blue-200 transition-all flex items-center justify-center space-x-6 transform active:scale-95 group disabled:opacity-50"
+                     >
+                        {isProcessing ? <Spinner /> : <><WalletIcon /> <span className="group-hover:translate-x-2 transition-transform">Pay Now</span></>}
+                     </button>
                    </div>
-
-                   <button 
-                    onClick={handlePaystack}
-                    disabled={isProcessing || !amount || numAmount < 100}
-                    className="w-full bg-blue-600 hover:bg-black text-white py-10 lg:py-12 rounded-[3.5rem] font-black uppercase tracking-[0.4em] text-sm shadow-2xl shadow-blue-200 transition-all flex items-center justify-center space-x-6 transform active:scale-95 group disabled:opacity-50"
-                   >
-                      {isProcessing ? <Spinner /> : <><WalletIcon /> <span className="group-hover:translate-x-2 transition-transform">Pay Now</span></>}
-                   </button>
                 </div>
               ) : (
                 <div className="space-y-12 animate-in slide-in-from-right-4 duration-500">
@@ -144,7 +147,6 @@ const FundingPage: React.FC = () => {
             <div className="absolute bottom-0 right-0 w-80 h-80 bg-blue-50/50 rounded-full blur-[100px] group-hover:bg-blue-100 transition-colors"></div>
          </div>
 
-         {/* Sidebar Stats Area */}
          <div className="lg:col-span-5 space-y-12">
             <div className="bg-blue-600 p-12 lg:p-16 rounded-[4rem] text-white shadow-2xl relative overflow-hidden group">
                <div className="relative z-10">
@@ -157,17 +159,6 @@ const FundingPage: React.FC = () => {
                   </div>
                </div>
                <div className="absolute -bottom-20 -right-20 w-80 h-80 bg-white/10 rounded-full blur-[120px] group-hover:bg-white/20 transition-all duration-1000"></div>
-            </div>
-
-            <div className="bg-white p-12 rounded-[3rem] border border-gray-100 shadow-xl flex items-center justify-between group hover:border-green-500 transition-all">
-               <div className="flex items-center space-x-8">
-                  <div className="w-16 h-16 bg-green-50 text-green-600 rounded-[2rem] flex items-center justify-center group-hover:bg-green-600 group-hover:text-white transition-all shadow-inner"><BoltIcon /></div>
-                  <div>
-                    <h4 className="text-2xl font-black text-gray-900 tracking-tight">System Status</h4>
-                    <p className="text-[10px] font-black uppercase tracking-[0.4em] text-gray-400 mt-1">Payment: Working</p>
-                  </div>
-               </div>
-               <span className="bg-green-100 text-green-700 px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest animate-pulse">Online</span>
             </div>
             
             <div className="bg-gray-50/50 p-12 rounded-[3rem] border-2 border-dashed border-gray-200 text-center">

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNotifications } from '../hooks/useNotifications';
@@ -43,7 +42,8 @@ const EducationPage: React.FC = () => {
     const response = await vtuService.purchaseEducation({
       type: selectedExam.id,
       quantity,
-      amount: totalAmount
+      amount: totalAmount,
+      name: selectedExam.name
     });
 
     if (response.status) {
