@@ -27,7 +27,7 @@ const DataPage: React.FC = () => {
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [showPinModal, setShowPinModal] = useState(false);
 
-  // Memoized reset functions to satisfy ESLint and prevent render loops
+  // Memoized reset functions
   const resetAfterType = useCallback(() => {
     setSelectedPlanId('');
     setDataPlans([]);
@@ -60,12 +60,12 @@ const DataPage: React.FC = () => {
     if (res.status && res.data) {
         setDataPlans(res.data);
     } else {
-        addNotification(res.message || 'Error loading plans from node.', 'error');
+        addNotification(res.message || 'Node synchronization failed.', 'error');
     }
     setIsFetchingPlans(false);
   }, [addNotification, resetAfterType, user?.role]);
 
-  // Fetch Categories/Types when Network or Server changes
+  // Fetch Categories when Network or Server changes
   useEffect(() => {
     const fetchTypes = async () => {
       if (!selectedOperator || !server) return;
@@ -75,12 +75,12 @@ const DataPage: React.FC = () => {
       const res = await vtuService.getDataCategories(selectedOperator, server);
       if (res.status && res.data) {
         setDataTypes(res.data);
-        // Special case: If Server 1 has no categories for this network, try fetching plans directly
+        // Special Case: Inlomax sometimes has raw plans without sub-categories
         if (res.data.length === 0 && server === 'server1') {
            fetchPlans(selectedOperator, '', server);
         }
       } else {
-        addNotification(res.message || 'Categories sync failed.', 'error');
+        addNotification(res.message || 'Category node offline.', 'error');
       }
       setIsFetchingTypes(false);
     };
@@ -93,18 +93,17 @@ const DataPage: React.FC = () => {
     }
   }, [selectedType, selectedOperator, server, fetchPlans]);
 
-  // Update selected plan object when ID changes
   useEffect(() => {
     setSelectedPlan(dataPlans.find(p => p.id === selectedPlanId) || null);
   }, [selectedPlanId, dataPlans]);
 
   const handlePrePurchase = () => {
     if (!selectedPlan || phoneNumber.length !== 11) {
-      addNotification('Check your selection and phone number.', 'warning');
+      addNotification('Check selection and 11-digit number.', 'warning');
       return;
     }
     if (walletBalance !== null && selectedPlan.amount > walletBalance) {
-      addNotification('Insufficient funds in wallet.', 'error');
+      addNotification('Insufficient wallet liquidity.', 'error');
       return;
     }
     setShowPinModal(true);
@@ -112,7 +111,6 @@ const DataPage: React.FC = () => {
 
   const handlePurchase = async () => {
     if (!selectedPlan || !phoneNumber || isPurchasing || !server) return;
-    
     setIsPurchasing(true);
     setShowPinModal(false);
 
@@ -126,13 +124,13 @@ const DataPage: React.FC = () => {
     });
     
     if (res.status) {
-      addNotification(`Data bundle sent to ${phoneNumber}.`, 'success');
+      addNotification(`Data bundle sent successfully.`, 'success');
       updateWalletBalance((walletBalance || 0) - selectedPlan.amount);
       setPhoneNumber('');
       setSelectedPlan(null);
       setSelectedPlanId('');
     } else {
-      addNotification(res.message || 'Purchase failed.', 'error');
+      addNotification(res.message || 'Transaction node error.', 'error');
     }
     setIsPurchasing(false);
   };
@@ -148,13 +146,12 @@ const DataPage: React.FC = () => {
       />
 
       <div className="text-center">
-        <h2 className="text-4xl lg:text-5xl font-black text-gray-900 tracking-tighter mb-4">Buy Mobile Data</h2>
-        <p className="text-gray-400 font-medium text-lg">Top-up high-speed data for any network instantly.</p>
+        <h2 className="text-4xl lg:text-5xl font-black text-gray-900 tracking-tighter mb-4">Mobile Data</h2>
+        <p className="text-gray-400 font-medium text-lg">Instant bundle delivery for all networks.</p>
       </div>
 
       <div className="bg-white p-8 lg:p-16 rounded-[3.5rem] shadow-2xl border border-gray-50 space-y-10">
          <div className="space-y-8">
-            {/* Server Dropdown */}
             <div>
                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-4">1. Select Server Node</label>
                <select 
@@ -162,13 +159,12 @@ const DataPage: React.FC = () => {
                  onChange={(e) => { setServer(e.target.value as any); resetAfterServer(); }}
                  className="w-full p-6 bg-gray-50 border-4 border-transparent focus:border-blue-600 rounded-3xl font-black text-xl outline-none transition-all appearance-none"
                >
-                  <option value="server1">Omega Server (Recommended)</option>
-                  <option value="server2">Boom Server (Cheap & Fast)</option>
+                  <option value="server1">Inlomax Node (All Services)</option>
+                  <option value="server2">CIP Node (Data Only)</option>
                </select>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-               {/* Network Dropdown */}
                <div>
                   <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-4">2. Network</label>
                   <select 
@@ -181,7 +177,6 @@ const DataPage: React.FC = () => {
                   </select>
                </div>
 
-               {/* Category Dropdown */}
                <div className="relative">
                   <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-4">3. Data Category</label>
                   <select 
@@ -197,26 +192,24 @@ const DataPage: React.FC = () => {
                </div>
             </div>
 
-            {/* Plan Dropdown */}
             <div className="relative">
                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-4">4. Choose Plan</label>
                <select 
                  value={selectedPlanId} 
                  onChange={(e) => setSelectedPlanId(e.target.value)}
-                 disabled={(!selectedType && server === 'server2') || isFetchingPlans}
+                 disabled={(!selectedType && server === 'server2') || (!selectedOperator && server === 'server1') || isFetchingPlans}
                  className="w-full p-6 bg-gray-50 border-4 border-transparent focus:border-blue-600 rounded-3xl font-black text-xl outline-none transition-all appearance-none disabled:opacity-40"
                >
-                  <option value="">{isFetchingPlans ? 'Syncing Plans...' : 'Select Bundle'}</option>
+                  <option value="">{isFetchingPlans ? 'Syncing Node...' : 'Select Bundle'}</option>
                   {dataPlans.map(plan => (
                     <option key={plan.id} value={plan.id}>
-                       {`${plan.name} (${plan.validity}) - ₦${plan.amount.toLocaleString()}`}
+                       {`${plan.name} - ₦${plan.amount.toLocaleString()}`}
                     </option>
                   ))}
                </select>
                {isFetchingPlans && <div className="absolute right-10 top-1/2 mt-3"><Spinner /></div>}
             </div>
 
-            {/* Price Preview */}
             {selectedPlan && (
                <div className="bg-blue-50/50 p-8 rounded-[2.5rem] border-2 border-dashed border-blue-100 flex justify-between items-center animate-in zoom-in-95 duration-300">
                   <div>
@@ -230,10 +223,9 @@ const DataPage: React.FC = () => {
                </div>
             )}
 
-            {/* Phone Input */}
             <div className={`space-y-8 transition-opacity duration-500 ${selectedPlan ? 'opacity-100' : 'opacity-30 pointer-events-none'}`}>
                <div>
-                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-4">5. Beneficiary Number</label>
+                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-4">5. Recipient Number</label>
                   <input 
                     type="tel" 
                     className="w-full p-8 bg-gray-50 border-4 border-gray-100 focus:border-blue-600 rounded-[2.5rem] text-3xl font-black tracking-tight text-center outline-none transition-all"
@@ -249,7 +241,7 @@ const DataPage: React.FC = () => {
                  disabled={!selectedPlan || phoneNumber.length !== 11 || isPurchasing}
                  className="w-full bg-blue-600 hover:bg-black text-white py-10 rounded-[3rem] font-black uppercase tracking-[0.4em] text-sm shadow-2xl shadow-blue-200 transition-all flex items-center justify-center space-x-4 transform active:scale-95 disabled:opacity-50"
                >
-                 {isPurchasing ? <Spinner /> : <><ShieldCheckIcon /> <span>Buy Data Now</span></>}
+                 {isPurchasing ? <Spinner /> : <><ShieldCheckIcon /> <span>Confirm Order</span></>}
                </button>
             </div>
          </div>
@@ -259,8 +251,8 @@ const DataPage: React.FC = () => {
          <div className="relative z-10 flex items-center space-x-8">
             <div className="w-16 h-16 bg-blue-600 rounded-3xl flex items-center justify-center shrink-0 shadow-lg"><SignalIcon /></div>
             <div>
-               <h4 className="text-2xl font-black tracking-tight">Need Help?</h4>
-               <p className="text-white/40 text-sm font-medium">If your data isn't delivered within 2 minutes, contact support with your Transaction ID.</p>
+               <h4 className="text-2xl font-black tracking-tight">System Notice</h4>
+               <p className="text-white/40 text-sm font-medium">All data bundles are sent via high-velocity automation nodes. Status is confirmed instantly.</p>
             </div>
          </div>
          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/10 rounded-full blur-[100px]"></div>

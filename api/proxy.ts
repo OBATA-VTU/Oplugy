@@ -9,47 +9,47 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   const payload = req.method === 'POST' ? req.body : req.query;
-  const { endpoint, method: targetMethod = 'GET', data, server = 'server2' } = payload || {};
+  const { endpoint, method: targetMethod = 'GET', data, server = 'server1' } = payload || {};
 
   const providers = {
     server1: {
       baseUrl: 'https://inlomax.com/api',
       apiKey: process.env.INLOMAX_API_KEY,
-      authHeader: (key: string) => ({ 'Authorization': `Token ${key}` })
+      authHeader: (key: string) => ({ 
+        'Authorization': `Token ${key}`,
+        'Authorization-Token': key // Fallback for some Inlomax sub-modules
+      })
     },
     server2: {
-      baseUrl: process.env.CIP_API_BASE_URL || 'https://api.ciptopup.ng/api',
+      baseUrl: 'https://api.ciptopup.ng/api',
       apiKey: process.env.CIP_API_KEY,
       authHeader: (key: string) => ({ 'x-api-key': key })
     }
   };
 
-  const selectedProvider = providers[server as keyof typeof providers] || providers.server2;
+  const selectedProvider = providers[server as keyof typeof providers] || providers.server1;
 
   if (!selectedProvider.apiKey) {
-    return res.status(500).json({ status: 'error', message: `Config Error: ${server} API key missing.` });
+    return res.status(500).json({ status: 'error', message: `System: API key for ${server} is not configured in environment.` });
   }
 
   try {
     let cleanEndpoint = endpoint.replace(/^\//, '');
     
-    // Inlomax (Server 1) requires trailing slashes on many directory endpoints
-    if (server === 'server1' && !cleanEndpoint.endsWith('/') && !cleanEndpoint.includes('?')) {
+    // Inlomax endpoints often require a trailing slash for GET requests
+    if (server === 'server1' && targetMethod.toUpperCase() === 'GET' && !cleanEndpoint.endsWith('/') && !cleanEndpoint.includes('?')) {
       cleanEndpoint += '/';
     }
 
     let fullUrl = `${selectedProvider.baseUrl.replace(/\/$/, '')}/${cleanEndpoint}`;
     
-    // For GET requests, if there are additional parameters in 'data', append them
     if (targetMethod.toUpperCase() === 'GET' && data && typeof data === 'object') {
        const params = new URLSearchParams();
        Object.entries(data).forEach(([key, val]) => {
          if (key !== 'server') params.append(key, String(val));
        });
        const queryString = params.toString();
-       if (queryString) {
-         fullUrl += (fullUrl.includes('?') ? '&' : '?') + queryString;
-       }
+       if (queryString) fullUrl += (fullUrl.includes('?') ? '&' : '?') + queryString;
     }
 
     const headers: any = {
@@ -65,19 +65,34 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (targetMethod.toUpperCase() !== 'GET' && data) {
       let requestData = { ...data };
+      
+      // Strict Inlomax Data Mapping
       if (server === 'server1') {
-        const mappedData: any = {};
-        // Unified mapping for Inlomax
-        if (requestData.serviceID) mappedData.serviceID = String(requestData.serviceID);
-        else if (requestData.plan_id) mappedData.serviceID = String(requestData.plan_id);
+        const mapped: any = {};
+        // Service ID mapping
+        mapped.serviceID = String(requestData.serviceID || requestData.plan_id || requestData.provider_id || requestData.type || '');
         
-        if (requestData.mobileNumber) mappedData.mobileNumber = String(requestData.mobileNumber);
-        else if (requestData.phone_number) mappedData.mobileNumber = String(requestData.phone_number);
-        else if (requestData.phone) mappedData.mobileNumber = String(requestData.phone);
+        // Identity mapping
+        if (requestData.phone || requestData.mobileNumber || requestData.phone_number) {
+          mapped.mobileNumber = String(requestData.phone || requestData.mobileNumber || requestData.phone_number);
+        }
+        
+        if (requestData.smartcard || requestData.smartCardNumber || requestData.iucNum) {
+          mapped.iucNum = String(requestData.smartcard || requestData.smartCardNumber || requestData.iucNum);
+        }
 
-        if (requestData.amount) mappedData.amount = Number(requestData.amount);
-        requestData = mappedData;
+        if (requestData.meterNum || requestData.meter_number) {
+          mapped.meterNum = String(requestData.meterNum || requestData.meter_number);
+        }
+
+        // Configuration mapping
+        if (requestData.amount) mapped.amount = Number(requestData.amount);
+        if (requestData.quantity) mapped.quantity = Number(requestData.quantity);
+        if (requestData.meterType) mapped.meterType = requestData.meterType === 'prepaid' || requestData.meterType === 1 ? 1 : 2;
+        
+        requestData = mapped;
       }
+      
       fetchOptions.body = JSON.stringify(requestData);
     }
 
@@ -89,7 +104,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     clearTimeout(timeout);
     
     const responseText = await apiResponse.text();
-    
     try {
       const responseData = JSON.parse(responseText);
       return res.status(200).json(responseData);
@@ -97,6 +111,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(apiResponse.status).send(responseText);
     }
   } catch (error: any) {
-    return res.status(504).json({ status: 'error', message: 'Gateway Timeout or Connectivity Issue.' });
+    return res.status(504).json({ status: 'error', message: 'Node Connectivity Timeout.' });
   }
 }
