@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState, useCallback } from 'react';
 import { TerminalContext } from '../../components/TerminalLayout';
 import { adminService } from '../../services/adminService';
 import Spinner from '../../components/Spinner';
@@ -8,7 +8,7 @@ const OverviewTest: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState<any>(null);
 
-  const runSystemAudit = async () => {
+  const runSystemAudit = useCallback(async () => {
     setLoading(true);
     addLog("INITIATING GLOBAL SYSTEM AUDIT", 'cmd');
     try {
@@ -26,9 +26,11 @@ const OverviewTest: React.FC = () => {
       addLog(`AUDIT FAILED: ${e.message}`, 'error');
     }
     setLoading(false);
-  };
+  }, [addLog]);
 
-  useEffect(() => { runSystemAudit(); }, []);
+  useEffect(() => { 
+    runSystemAudit(); 
+  }, [runSystemAudit]);
 
   return (
     <div className="space-y-10">
