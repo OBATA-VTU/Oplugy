@@ -3,15 +3,6 @@ import { cipApiClient } from './cipApiClient';
 import { collection, query, where, getDocs, orderBy, limit, addDoc, serverTimestamp, doc, updateDoc, increment, getDoc } from 'firebase/firestore';
 import { db, auth } from '../firebase/config';
 
-async function getSystemConfig() {
-  try {
-    const settingsDoc = await getDoc(doc(db, "settings", "global"));
-    return settingsDoc.exists() ? settingsDoc.data() : { pricing: { user_margin: 10, server1: { data_margin: 10 } } };
-  } catch (e) {
-    return { pricing: { user_margin: 10, server1: { data_margin: 10 } } };
-  }
-}
-
 async function getManualPrice(planId: string, role: UserRole): Promise<number | null> {
   try {
     const priceDoc = await getDoc(doc(db, "manual_pricing", planId));
@@ -125,7 +116,8 @@ export const vtuService = {
     });
 
     if (res.status) {
-      await logTransaction(user.uid, 'DATA', payload.amount, `${payload.network} Data`, `Bundle ${payload.plan_name} for ${payload.phone_number}`, 'SUCCESS');
+      const apiStatus = res.data?.status === 'success' ? 'SUCCESS' : 'PENDING';
+      await logTransaction(user.uid, 'DATA', payload.amount, `${payload.network} Data`, `Bundle ${payload.plan_name} for ${payload.phone_number}`, apiStatus);
       return { status: true, message: res.message, data: res.data };
     }
     return res;
