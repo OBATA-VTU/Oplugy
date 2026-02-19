@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNotifications } from '../hooks/useNotifications';
 import { vtuService } from '../services/vtuService';
-import { Operator, DataPlan } from '../types';
+import { DataPlan } from '../types';
 import Spinner from '../components/Spinner';
 import PinPromptModal from '../components/PinPromptModal';
 import { DATA_NETWORKS } from '../constants';
@@ -27,43 +27,23 @@ const DataPage: React.FC = () => {
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [showPinModal, setShowPinModal] = useState(false);
 
-  // Reset dependent fields when parent fields change
-  const resetAfterServer = () => {
-    setSelectedOperator('');
-    resetAfterNetwork();
-  };
-  const resetAfterNetwork = () => {
-    setSelectedType('');
-    setDataTypes([]);
-    resetAfterType();
-  };
-  const resetAfterType = () => {
+  // Memoized reset functions to satisfy ESLint and prevent render loops
+  const resetAfterType = useCallback(() => {
     setSelectedPlanId('');
     setDataPlans([]);
     setSelectedPlan(null);
-  };
+  }, []);
 
-  // Fetch Categories/Types when Network or Server changes
-  useEffect(() => {
-    const fetchTypes = async () => {
-      if (!selectedOperator || !server) return;
-      setIsFetchingTypes(true);
-      resetAfterNetwork();
-      
-      const res = await vtuService.getDataCategories(selectedOperator, server);
-      if (res.status && res.data) {
-        setDataTypes(res.data);
-        if (res.data.length === 0 && server === 'server1') {
-           // Fallback for S1 if it has no categorical split but has plans
-           fetchPlans(selectedOperator, '', server);
-        }
-      } else {
-        addNotification(res.message || 'Error loading categories.', 'error');
-      }
-      setIsFetchingTypes(false);
-    };
-    fetchTypes();
-  }, [selectedOperator, server]);
+  const resetAfterNetwork = useCallback(() => {
+    setSelectedType('');
+    setDataTypes([]);
+    resetAfterType();
+  }, [resetAfterType]);
+
+  const resetAfterServer = useCallback(() => {
+    setSelectedOperator('');
+    resetAfterNetwork();
+  }, [resetAfterNetwork]);
 
   // Fetch Plans when Category/Type changes
   const fetchPlans = useCallback(async (netId: string, typeId: string, srv: 'server1' | 'server2') => {
@@ -76,7 +56,29 @@ const DataPage: React.FC = () => {
         addNotification(res.message || 'Error loading plans.', 'error');
     }
     setIsFetchingPlans(false);
-  }, [addNotification]);
+  }, [addNotification, resetAfterType]);
+
+  // Fetch Categories/Types when Network or Server changes
+  useEffect(() => {
+    const fetchTypes = async () => {
+      if (!selectedOperator || !server) return;
+      setIsFetchingTypes(true);
+      resetAfterNetwork();
+      
+      const res = await vtuService.getDataCategories(selectedOperator, server);
+      if (res.status && res.data) {
+        setDataTypes(res.data);
+        // If Server 1 (Inlomax) has no sub-categories for this network, attempt to fetch plans directly
+        if (res.data.length === 0 && server === 'server1') {
+           fetchPlans(selectedOperator, '', server);
+        }
+      } else {
+        addNotification(res.message || 'Error loading categories.', 'error');
+      }
+      setIsFetchingTypes(false);
+    };
+    fetchTypes();
+  }, [selectedOperator, server, addNotification, resetAfterNetwork, fetchPlans]);
 
   useEffect(() => {
     if (selectedOperator && selectedType && server) {
@@ -194,7 +196,7 @@ const DataPage: React.FC = () => {
                <select 
                  value={selectedPlanId} 
                  onChange={(e) => setSelectedPlanId(e.target.value)}
-                 disabled={!selectedType || isFetchingPlans}
+                 disabled={(!selectedType && server === 'server2') || isFetchingPlans}
                  className="w-full p-6 bg-gray-50 border-4 border-transparent focus:border-blue-600 rounded-3xl font-black text-xl outline-none transition-all appearance-none disabled:opacity-40"
                >
                   <option value="">{isFetchingPlans ? 'Syncing Plans...' : 'Select Bundle'}</option>
