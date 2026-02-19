@@ -6,7 +6,7 @@ import { db, auth } from '../firebase/config';
 const DEFAULT_ROUTING: ServiceRouting = {
   airtime: 'server1',
   data: 'server1',
-  bills: 'server2',
+  bills: 'server1',
   cable: 'server2',
   education: 'server1'
 };
@@ -166,7 +166,7 @@ export const vtuService = {
 
   getElectricityOperators: async (): Promise<ApiResponse<Operator[]>> => {
     const config = await getSystemConfig();
-    const server = config.routing?.bills || 'server2';
+    const server = config.routing?.bills || 'server1';
     const res = await cipApiClient<any>(server === 'server1' ? 'services' : 'electricity/providers', { method: 'GET', data: { server } });
     if (res.status && res.data) {
         if (server === 'server1') {
@@ -180,7 +180,7 @@ export const vtuService = {
 
   verifyElectricityMeter: async (payload: { meter_number: string; provider_id: string; meter_type: 'prepaid' | 'postpaid' }): Promise<ApiResponse<VerificationResponse>> => {
     const config = await getSystemConfig();
-    const server = config.routing?.bills || 'server2';
+    const server = config.routing?.bills || 'server1';
     const endpoint = server === 'server1' ? 'validatemeter' : 'electricity/verify';
     const apiData = server === 'server1' ? { serviceID: payload.provider_id, meterNum: payload.meter_number, meterType: payload.meter_type === 'prepaid' ? 1 : 2 } : payload;
     return await cipApiClient<any>(endpoint, { data: { ...apiData, server }, method: 'POST' });
@@ -190,7 +190,7 @@ export const vtuService = {
     const user = auth.currentUser;
     if (!user) return { status: false, message: 'Please login to continue.' };
     const config = await getSystemConfig();
-    const server = config.routing?.bills || 'server2';
+    const server = config.routing?.bills || 'server1';
     const serverName = server === 'server1' ? 'Omega Server' : 'Boom Server';
     const endpoint = server === 'server1' ? 'payelectric' : 'electricity/purchase';
     
