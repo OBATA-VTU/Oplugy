@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNotifications } from '../hooks/useNotifications';
@@ -13,7 +12,6 @@ import { TvIcon, ShieldCheckIcon, SignalIcon } from '../components/Icons';
 const CablePage: React.FC = () => {
   const { addNotification } = useNotifications();
   const { fetchWalletBalance, walletBalance } = useAuth();
-  const [server, setServer] = useState<'server1' | 'server2'>('server1');
   const [operators] = useState<Operator[]>(CABLE_BILLERS);
   const [cablePlans, setCablePlans] = useState<DataPlan[]>([]);
   const [selectedOperator, setSelectedOperator] = useState<Operator | null>(null);
@@ -44,7 +42,7 @@ const CablePage: React.FC = () => {
     if (selectedOperator && customerName) {
       fetchPlans(selectedOperator.id);
     }
-  }, [selectedOperator, customerName, fetchPlans, server]);
+  }, [selectedOperator, customerName, fetchPlans]);
   
   const handleVerify = async () => {
     if (!selectedOperator || !smartcardNo) return;
@@ -59,7 +57,7 @@ const CablePage: React.FC = () => {
       addNotification('Decoder verified successfully.', 'success');
       fetchPlans(selectedOperator.id);
     } else {
-      addNotification(response.message || 'Validation failed. Terminal check error.', 'error');
+      addNotification(response.message || 'Validation failed. Please check the IUC number.', 'error');
     }
     setIsVerifying(false);
   };
@@ -89,8 +87,7 @@ const CablePage: React.FC = () => {
       smartCardNumber: smartcardNo,
       planCode: selectedPlan.id,
       amount: selectedPlan.amount,
-      plan_name: selectedPlan.name,
-      server
+      plan_name: selectedPlan.name
     });
 
     if (response.status && response.data) {
@@ -123,30 +120,9 @@ const CablePage: React.FC = () => {
 
       <div className="bg-white p-10 lg:p-16 rounded-[4rem] shadow-2xl border border-gray-50 space-y-12">
         <div className="space-y-10">
-           {/* Server Selection */}
-           <div>
-              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-4">1. Choice Fulfillment Node</label>
-              <div className="grid grid-cols-2 gap-4">
-                 <button 
-                   onClick={() => { setServer('server1'); setCustomerName(null); }}
-                   className={`p-6 rounded-[2rem] border-4 transition-all flex flex-col items-center gap-2 ${server === 'server1' ? 'border-blue-600 bg-blue-50 shadow-xl shadow-blue-100' : 'border-gray-50 bg-gray-50 hover:border-gray-100'}`}
-                 >
-                   <span className={`font-black text-lg ${server === 'server1' ? 'text-blue-600' : 'text-gray-400'}`}>Node 1</span>
-                   <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">Core Network</span>
-                 </button>
-                 <button 
-                   onClick={() => { setServer('server2'); setCustomerName(null); }}
-                   className={`p-6 rounded-[2rem] border-4 transition-all flex flex-col items-center gap-2 ${server === 'server2' ? 'border-blue-600 bg-blue-50 shadow-xl shadow-blue-100' : 'border-gray-50 bg-gray-50 hover:border-gray-100'}`}
-                 >
-                   <span className={`font-black text-lg ${server === 'server2' ? 'text-blue-600' : 'text-gray-400'}`}>Node 2</span>
-                   <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">Secondary Terminal</span>
-                 </button>
-              </div>
-           </div>
-
            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div>
-                 <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-4">2. Service Carrier</label>
+                 <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-4">1. Service Carrier</label>
                  <select 
                   className="w-full p-6 bg-gray-50 rounded-[2rem] font-black text-xl border-4 border-transparent focus:border-blue-600 outline-none transition-all appearance-none" 
                   value={selectedOperator?.id || ''} 
@@ -161,7 +137,7 @@ const CablePage: React.FC = () => {
                  </select>
               </div>
               <div>
-                 <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-4">3. Decoder No / IUC</label>
+                 <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-4">2. Decoder No / IUC</label>
                  <div className="flex gap-3">
                     <input 
                       type="text" 
@@ -194,7 +170,7 @@ const CablePage: React.FC = () => {
            <div className={`space-y-10 transition-opacity duration-500 ${customerName ? 'opacity-100' : 'opacity-30 pointer-events-none'}`}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                  <div>
-                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-4">4. Bouquet Selection</label>
+                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-4">3. Bouquet Selection</label>
                     <div className="relative">
                        <select 
                          className="w-full p-6 bg-gray-50 rounded-[2rem] font-black text-xl border-4 border-transparent focus:border-blue-600 outline-none transition-all appearance-none disabled:opacity-50" 
@@ -209,7 +185,7 @@ const CablePage: React.FC = () => {
                     </div>
                  </div>
                  <div>
-                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-4">5. Delivery Mobile</label>
+                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-4">4. Delivery Mobile</label>
                     <input 
                       type="tel" 
                       className="w-full p-6 bg-gray-50 border-4 border-gray-100 rounded-[2rem] text-3xl font-black tracking-tighter outline-none focus:border-blue-600 transition-all text-center" 
@@ -236,8 +212,8 @@ const CablePage: React.FC = () => {
          <div className="relative z-10 flex items-center space-x-8">
             <div className="w-16 h-16 bg-blue-600 rounded-3xl flex items-center justify-center shrink-0 shadow-lg shadow-blue-500/40"><SignalIcon /></div>
             <div>
-               <h4 className="text-2xl font-black tracking-tight">Zero Latency Sync</h4>
-               <p className="text-white/40 text-sm font-medium">Subscription updates are sent instantly to Multichoice/StarTimes nodes for rapid signal restoration.</p>
+               <h4 className="text-2xl font-black tracking-tight">Rapid Sync Node</h4>
+               <p className="text-white/40 text-sm font-medium">Subscription updates are sent instantly to Multichoice/StarTimes nodes for immediate signal restoration.</p>
             </div>
          </div>
          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/10 rounded-full blur-[100px]"></div>
@@ -261,7 +237,7 @@ const CablePage: React.FC = () => {
            </div>
            <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
               <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest">IUC No: {smartcardNo}</p>
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Carrier: {selectedOperator?.name} ({server === 'server1' ? 'Node 1' : 'Node 2'})</p>
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Carrier: {selectedOperator?.name}</p>
            </div>
         </div>
       </Modal>

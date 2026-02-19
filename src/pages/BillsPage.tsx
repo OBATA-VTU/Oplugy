@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNotifications } from '../hooks/useNotifications';
@@ -11,7 +10,6 @@ import { BoltIcon, ShieldCheckIcon, SignalIcon } from '../components/Icons';
 const BillsPage: React.FC = () => {
   const { addNotification } = useNotifications();
   const { fetchWalletBalance, walletBalance } = useAuth();
-  const [server, setServer] = useState<'server1' | 'server2'>('server1');
   const [operators, setOperators] = useState<Operator[]>([]);
   const [selectedOperator, setSelectedOperator] = useState<Operator | null>(null);
   const [meterNumber, setMeterNumber] = useState('');
@@ -37,7 +35,7 @@ const BillsPage: React.FC = () => {
 
   useEffect(() => {
     fetchOperators();
-  }, [fetchOperators, server]);
+  }, [fetchOperators]);
 
   const handleVerify = async () => {
     if (!selectedOperator || !meterNumber) return;
@@ -52,7 +50,7 @@ const BillsPage: React.FC = () => {
       setCustomerName(response.data.customerName);
       addNotification('Meter verified successfully.', 'success');
     } else {
-      addNotification(response.message || 'Verification failed. Terminal check error.', 'error');
+      addNotification(response.message || 'Verification failed. Please check the meter number.', 'error');
     }
     setIsVerifying(false);
   };
@@ -78,8 +76,7 @@ const BillsPage: React.FC = () => {
       meter_type: meterType,
       amount: numericAmount,
       phone: phoneNumber,
-      provider_name: selectedOperator!.name,
-      server
+      provider_name: selectedOperator!.name
     });
 
     if (response.status && response.data) {
@@ -112,30 +109,9 @@ const BillsPage: React.FC = () => {
 
       <div className="bg-white p-10 lg:p-16 rounded-[4rem] shadow-2xl border border-gray-50 space-y-12">
         <div className="space-y-10">
-          {/* Server Selection */}
-          <div>
-             <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-4">1. Network Gateway</label>
-             <div className="grid grid-cols-2 gap-4">
-                <button 
-                  onClick={() => { setServer('server1'); setCustomerName(null); }}
-                  className={`p-6 rounded-[2rem] border-4 transition-all flex flex-col items-center gap-2 ${server === 'server1' ? 'border-blue-600 bg-blue-50 shadow-xl shadow-blue-100' : 'border-gray-50 bg-gray-50 hover:border-gray-100'}`}
-                >
-                  <span className={`font-black text-lg ${server === 'server1' ? 'text-blue-600' : 'text-gray-400'}`}>Node 1</span>
-                  <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">Main API</span>
-                </button>
-                <button 
-                  onClick={() => { setServer('server2'); setCustomerName(null); }}
-                  className={`p-6 rounded-[2rem] border-4 transition-all flex flex-col items-center gap-2 ${server === 'server2' ? 'border-blue-600 bg-blue-50 shadow-xl shadow-blue-100' : 'border-gray-50 bg-gray-50 hover:border-gray-100'}`}
-                >
-                  <span className={`font-black text-lg ${server === 'server2' ? 'text-blue-600' : 'text-gray-400'}`}>Node 2</span>
-                  <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">Backup Core</span>
-                </button>
-             </div>
-          </div>
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
-              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-4">2. Distribution Company</label>
+              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-4">1. Distribution Company</label>
               <select 
                 className="w-full p-6 bg-gray-50 rounded-[2rem] font-black text-xl border-4 border-transparent focus:border-blue-600 outline-none transition-all appearance-none" 
                 value={selectedOperator?.id || ''} 
@@ -149,7 +125,7 @@ const BillsPage: React.FC = () => {
               </select>
             </div>
             <div>
-              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-4">3. Meter Type</label>
+              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-4">2. Meter Type</label>
               <div className="flex p-2 bg-gray-50 rounded-[2rem] border-4 border-transparent">
                 <button onClick={() => { setMeterType('prepaid'); setCustomerName(null); }} className={`flex-1 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${meterType === 'prepaid' ? 'bg-white text-blue-600 shadow-xl' : 'text-gray-400'}`}>Prepaid</button>
                 <button onClick={() => { setMeterType('postpaid'); setCustomerName(null); }} className={`flex-1 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${meterType === 'postpaid' ? 'bg-white text-blue-600 shadow-xl' : 'text-gray-400'}`}>Postpaid</button>
@@ -158,7 +134,7 @@ const BillsPage: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-4">4. Meter Identification</label>
+            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-4">3. Meter Identification</label>
             <div className="flex gap-4">
               <input 
                 type="text" 
@@ -190,7 +166,7 @@ const BillsPage: React.FC = () => {
           <div className={`space-y-10 transition-opacity duration-500 ${customerName ? 'opacity-100' : 'opacity-30 pointer-events-none'}`}>
              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
-                   <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-4">5. Value (₦)</label>
+                   <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-4">4. Value (₦)</label>
                    <input 
                     type="number" 
                     className="w-full p-6 bg-gray-50 border-4 border-gray-100 rounded-[2rem] text-3xl font-black tracking-tighter outline-none focus:border-blue-600 transition-all text-center" 
@@ -200,7 +176,7 @@ const BillsPage: React.FC = () => {
                    />
                 </div>
                 <div>
-                   <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-4">6. Alert Phone</label>
+                   <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-4">5. Alert Phone</label>
                    <input 
                     type="tel" 
                     className="w-full p-6 bg-gray-50 border-4 border-gray-100 rounded-[2rem] text-3xl font-black tracking-tighter outline-none focus:border-blue-600 transition-all text-center" 

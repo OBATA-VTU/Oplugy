@@ -3,6 +3,10 @@
   "cleanUrls": true,
   "rewrites": [
     {
+      "source": "/api/paystack",
+      "destination": "/api/paystack-proxy.ts"
+    },
+    {
       "source": "/api/:path*",
       "destination": "/api/:path*"
     },

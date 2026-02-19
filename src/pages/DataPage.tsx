@@ -12,7 +12,6 @@ const DataPage: React.FC = () => {
   const { addNotification } = useNotifications();
   const { user, walletBalance, updateWalletBalance } = useAuth();
   
-  const [server, setServer] = useState<'server1' | 'server2'>('server1');
   const [selectedOperator, setSelectedOperator] = useState<string>('');
   const [selectedType, setSelectedType] = useState<string>('');
   const [selectedPlanId, setSelectedPlanId] = useState<string>('');
@@ -40,7 +39,7 @@ const DataPage: React.FC = () => {
     resetPlans();
   }, [resetPlans]);
 
-  const fetchPlans = useCallback(async (net: string, type: string, srv: 'server1' | 'server2') => {
+  const fetchPlans = useCallback(async (net: string, type: string) => {
     setIsFetchingPlans(true);
     setSelectedPlanId('');
     setDataPlans([]);
@@ -48,7 +47,6 @@ const DataPage: React.FC = () => {
     const res = await vtuService.getDataPlans({ 
       network: net, 
       type, 
-      server: srv,
       userRole: user?.role || 'user'
     });
     if (res.status && res.data) {
@@ -59,7 +57,6 @@ const DataPage: React.FC = () => {
     setIsFetchingPlans(false);
   }, [user?.role, addNotification]);
 
-  // Fetch Categories/Types based on server
   useEffect(() => {
     const fetchTypes = async () => {
       if (!selectedOperator) return;
@@ -68,12 +65,11 @@ const DataPage: React.FC = () => {
       setDataTypes([]);
       resetPlans();
 
-      const res = await vtuService.getDataCategories(selectedOperator, server);
+      const res = await vtuService.getDataCategories(selectedOperator);
       if (res.status && res.data) {
         setDataTypes(res.data);
-        // Server 1 might not have sub-categories for all networks
-        if (server === 'server1' && res.data.length === 0) {
-          fetchPlans(selectedOperator, '', 'server1');
+        if (res.data.length === 0) {
+          fetchPlans(selectedOperator, '');
         }
       } else {
         addNotification(res.message || 'Node unreachable.', 'error');
@@ -81,13 +77,13 @@ const DataPage: React.FC = () => {
       setIsFetchingTypes(false);
     };
     fetchTypes();
-  }, [selectedOperator, server, addNotification, fetchPlans, resetPlans]);
+  }, [selectedOperator, addNotification, fetchPlans, resetPlans]);
 
   useEffect(() => {
     if (selectedType && selectedOperator) {
-      fetchPlans(selectedOperator, selectedType, server);
+      fetchPlans(selectedOperator, selectedType);
     }
-  }, [selectedType, selectedOperator, server, fetchPlans]);
+  }, [selectedType, selectedOperator, fetchPlans]);
 
   useEffect(() => {
     setSelectedPlan(dataPlans.find(p => p.id === selectedPlanId) || null);
@@ -115,8 +111,7 @@ const DataPage: React.FC = () => {
       phone_number: phoneNumber,
       amount: selectedPlan.amount,
       network: selectedOperator,
-      plan_name: selectedPlan.name,
-      server,
+      plan_name: selectedPlan.name
     });
     
     if (res.status) {
@@ -147,30 +142,9 @@ const DataPage: React.FC = () => {
 
       <div className="bg-white p-8 lg:p-16 rounded-[3.5rem] shadow-2xl border border-gray-50 space-y-12">
          <div className="space-y-10">
-            {/* Server Selection */}
-            <div>
-               <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-4">1. Choice Node (Redundancy Enabled)</label>
-               <div className="grid grid-cols-2 gap-4">
-                  <button 
-                    onClick={() => { setServer('server1'); resetAll(); }}
-                    className={`p-6 rounded-[2.5rem] border-4 transition-all flex flex-col items-center gap-2 ${server === 'server1' ? 'border-blue-600 bg-blue-50 shadow-xl shadow-blue-100' : 'border-gray-50 bg-gray-50 hover:border-gray-100'}`}
-                  >
-                    <span className={`font-black text-lg ${server === 'server1' ? 'text-blue-600' : 'text-gray-400'}`}>Node 1</span>
-                    <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">Stable Core</span>
-                  </button>
-                  <button 
-                    onClick={() => { setServer('server2'); resetAll(); }}
-                    className={`p-6 rounded-[2.5rem] border-4 transition-all flex flex-col items-center gap-2 ${server === 'server2' ? 'border-blue-600 bg-blue-50 shadow-xl shadow-blue-100' : 'border-gray-50 bg-gray-50 hover:border-gray-100'}`}
-                  >
-                    <span className={`font-black text-lg ${server === 'server2' ? 'text-blue-600' : 'text-gray-400'}`}>Node 2</span>
-                    <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">CIP Terminal</span>
-                  </button>
-               </div>
-            </div>
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                <div>
-                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-4">2. Network Carrier</label>
+                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-4">1. Network Carrier</label>
                   <select 
                     value={selectedOperator} 
                     onChange={(e) => setSelectedOperator(e.target.value)}
@@ -182,7 +156,7 @@ const DataPage: React.FC = () => {
                </div>
 
                <div>
-                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-4">3. Data Tier</label>
+                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-4">2. Data Tier</label>
                   <select 
                     value={selectedType} 
                     onChange={(e) => setSelectedType(e.target.value)}
@@ -196,11 +170,11 @@ const DataPage: React.FC = () => {
             </div>
 
             <div className="relative">
-               <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-4">4. Package Selection</label>
+               <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-4">3. Package Selection</label>
                <select 
                  value={selectedPlanId} 
                  onChange={(e) => setSelectedPlanId(e.target.value)}
-                 disabled={(!selectedType && server === 'server2') || isFetchingPlans}
+                 disabled={isFetchingPlans}
                  className="w-full p-6 bg-gray-50 border-4 border-transparent focus:border-blue-600 rounded-3xl font-black text-xl outline-none transition-all appearance-none disabled:opacity-40"
                >
                   <option value="">{isFetchingPlans ? 'Syncing Catalog...' : 'Select Plan'}</option>
@@ -228,7 +202,7 @@ const DataPage: React.FC = () => {
 
             <div className={`space-y-8 transition-opacity duration-500 ${selectedPlan ? 'opacity-100' : 'opacity-30 pointer-events-none'}`}>
                <div>
-                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-4">5. Delivery Phone Number</label>
+                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-4">4. Delivery Phone Number</label>
                   <input 
                     type="tel" 
                     className="w-full p-8 bg-gray-50 border-4 border-gray-100 focus:border-blue-600 rounded-[2.5rem] text-3xl font-black tracking-tight text-center outline-none transition-all"
@@ -254,8 +228,8 @@ const DataPage: React.FC = () => {
          <div className="relative z-10 flex items-center space-x-8">
             <div className="w-16 h-16 bg-blue-600 rounded-3xl flex items-center justify-center shrink-0 shadow-lg"><SignalIcon /></div>
             <div>
-               <h4 className="text-2xl font-black tracking-tight">Node Load Balancing</h4>
-               <p className="text-white/40 text-sm font-medium">Multiple isolated gateways ensure your transactions never clash or fail during peak hours.</p>
+               <h4 className="text-2xl font-black tracking-tight">Optimized Data Core</h4>
+               <p className="text-white/40 text-sm font-medium">Bundles are provisioned instantly through our primary cloud gateway for zero delays.</p>
             </div>
          </div>
          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/10 rounded-full blur-[100px]"></div>

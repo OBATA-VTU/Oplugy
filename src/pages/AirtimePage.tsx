@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNotifications } from '../hooks/useNotifications';
@@ -16,7 +15,6 @@ const AirtimePage: React.FC = () => {
   const [selectedOperator, setSelectedOperator] = useState<Operator | null>(null);
   const [phoneNumber, setPhoneNumber] = useState('');
   const [amount, setAmount] = useState('');
-  const [server, setServer] = useState<'server1' | 'server2'>('server1');
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showPinModal, setShowPinModal] = useState(false);
@@ -57,8 +55,7 @@ const AirtimePage: React.FC = () => {
     const payload = {
       phone: phoneNumber,
       network: selectedOperator.id,
-      amount: numericAmount,
-      server
+      amount: numericAmount
     };
 
     const response = await vtuService.purchaseAirtime(payload as any);
@@ -72,7 +69,7 @@ const AirtimePage: React.FC = () => {
       setAmount('');
       setSelectedOperator(null);
     } else {
-      addNotification(response.message || 'Purchase failed. Try switching Node.', 'error');
+      addNotification(response.message || 'Purchase failed. Please try again later.', 'error');
     }
     setIsPurchasing(false);
   };
@@ -91,40 +88,19 @@ const AirtimePage: React.FC = () => {
 
       <div className="text-center">
         <h2 className="text-4xl lg:text-6xl font-black text-gray-900 tracking-tighter mb-4">Express Airtime</h2>
-        <p className="text-gray-400 font-medium text-lg">Instant recharges with dual-node redundancy.</p>
+        <p className="text-gray-400 font-medium text-lg">Instant recharges with high-velocity delivery.</p>
       </div>
 
       <div className="bg-white p-10 lg:p-16 rounded-[4rem] shadow-2xl border border-gray-50 space-y-12">
         <div className="space-y-10">
-          {/* Server Selection */}
           <div>
-             <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-4">1. Fulfillment Node</label>
-             <div className="grid grid-cols-2 gap-4">
-                <button 
-                  onClick={() => setServer('server1')}
-                  className={`p-6 rounded-[2rem] border-4 transition-all flex flex-col items-center gap-2 ${server === 'server1' ? 'border-blue-600 bg-blue-50' : 'border-gray-50 bg-gray-50 hover:border-gray-100'}`}
-                >
-                  <span className={`font-black text-lg ${server === 'server1' ? 'text-blue-600' : 'text-gray-400'}`}>Node 1</span>
-                  <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">Stable Hub</span>
-                </button>
-                <button 
-                  onClick={() => setServer('server2')}
-                  className={`p-6 rounded-[2rem] border-4 transition-all flex flex-col items-center gap-2 ${server === 'server2' ? 'border-blue-600 bg-blue-50' : 'border-gray-50 bg-gray-50 hover:border-gray-100'}`}
-                >
-                  <span className={`font-black text-lg ${server === 'server2' ? 'text-blue-600' : 'text-gray-400'}`}>Node 2</span>
-                  <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">CIP Terminal</span>
-                </button>
-             </div>
-          </div>
-
-          <div>
-            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-4">2. Select Network</label>
+            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-4">1. Select Network</label>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {operators.map(op => (
                 <button
                   key={op.id}
                   onClick={() => setSelectedOperator(op)}
-                  className={`p-6 border-4 rounded-[2.5rem] transition-all duration-300 flex flex-col items-center gap-3 ${selectedOperator?.id === op.id ? 'border-blue-600 bg-blue-50 shadow-xl shadow-blue-500/10' : 'border-gray-50 bg-gray-50 hover:border-gray-100'}`}
+                  className={`p-6 border-4 rounded-[2.5rem] transition-all duration-300 flex flex-col items-center gap-3 ${selectedOperator?.id === op.id ? 'border-blue-600 bg-blue-50 shadow-xl shadow-blue-100' : 'border-gray-50 bg-gray-50 hover:border-gray-100'}`}
                 >
                   <img src={op.image} alt={op.name} className="h-12 w-12 object-contain" />
                   <span className={`text-[10px] font-black uppercase tracking-widest ${selectedOperator?.id === op.id ? 'text-blue-600' : 'text-gray-400'}`}>{op.name}</span>
@@ -135,7 +111,7 @@ const AirtimePage: React.FC = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
-              <label htmlFor="phoneNumber" className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-4">3. Destination Phone</label>
+              <label htmlFor="phoneNumber" className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-4">2. Destination Phone</label>
               <input
                 type="tel"
                 id="phoneNumber"
@@ -150,7 +126,7 @@ const AirtimePage: React.FC = () => {
             </div>
 
             <div>
-              <label htmlFor="amount" className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-4">4. Value (₦)</label>
+              <label htmlFor="amount" className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-4">3. Value (₦)</label>
               <div className="relative">
                 <span className="absolute left-8 top-1/2 -translate-y-1/2 text-gray-400 font-black text-xl">₦</span>
                 <input
@@ -185,7 +161,7 @@ const AirtimePage: React.FC = () => {
             </div>
             <div>
                <h4 className="text-2xl font-black tracking-tight">Instant Node Fulfillment</h4>
-               <p className="text-white/40 text-sm font-medium">Recharges are processed within 2 seconds across our distributed network nodes.</p>
+               <p className="text-white/40 text-sm font-medium">Recharges are processed within 2 seconds across our distributed network core.</p>
             </div>
          </div>
          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/10 rounded-full blur-[100px]"></div>
@@ -210,7 +186,7 @@ const AirtimePage: React.FC = () => {
            </div>
            <p className="text-gray-400 font-medium text-lg leading-tight">Recharging <span className="text-gray-900 font-black tracking-tight">₦{numericAmount.toLocaleString()}</span> to:</p>
            <h3 className="text-5xl font-black text-gray-900 tracking-tighter leading-none">{phoneNumber}</h3>
-           <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest bg-blue-50 px-6 py-2 rounded-full inline-block">Carrier: {selectedOperator?.name} ({server === 'server1' ? 'Node 1' : 'Node 2'})</p>
+           <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest bg-blue-50 px-6 py-2 rounded-full inline-block">Carrier: {selectedOperator?.name}</p>
         </div>
       </Modal>
     </div>

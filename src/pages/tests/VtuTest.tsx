@@ -7,19 +7,18 @@ type ServiceType = 'AIRTIME' | 'DATA' | 'CABLE' | 'ELECTRICITY' | 'EDUCATION';
 
 const VtuTest: React.FC = () => {
   const { addLog } = useContext(TerminalContext);
-  const [server, setServer] = useState<'server1' | 'server2'>('server1');
   const [activeService, setActiveService] = useState<ServiceType>('DATA');
   const [loading, setLoading] = useState(false);
 
   const runDiagnostic = async () => {
     setLoading(true);
-    addLog(`INITIATING [${activeService}] PROBE ON [${server.toUpperCase()}]`, 'cmd');
+    addLog(`INITIATING [${activeService}] PROBE ON [MAIN_NODE]`, 'cmd');
     
     try {
       switch (activeService) {
         case 'DATA':
           addLog("Synchronizing Data Catalog (MTN/SME/Node Query)...", 'info');
-          const dataRes = await vtuService.getDataPlans({ network: 'MTN', type: 'SME', server });
+          const dataRes = await vtuService.getDataPlans({ network: 'MTN', type: 'SME' });
           if (dataRes.status) {
             addLog(`SUCCESS: Found ${dataRes.data?.length} plans.`, 'success', dataRes.data);
           } else {
@@ -29,9 +28,8 @@ const VtuTest: React.FC = () => {
 
         case 'AIRTIME':
           addLog("Pinging Airtime Gateway...", 'info');
-          // Since we don't have a "getAirtimePlans" we'll simulate a balance/connectivity check
-          addLog(`Node [${server}] Carrier Logic: ACTIVE`, 'success');
-          addLog(`Redundancy check: Node communication verified.`, 'info');
+          addLog(`Main Node Carrier Logic: ACTIVE`, 'success');
+          addLog(`Communication verified.`, 'info');
           break;
 
         case 'ELECTRICITY':
@@ -56,9 +54,8 @@ const VtuTest: React.FC = () => {
           break;
 
         case 'EDUCATION':
-          addLog("Checking Education Pin Inventory & Status...", 'info');
-          // Testing connectivity for pin generation
-          addLog("Node ready for WAEC/NECO pin pooling.", 'success');
+          addLog("Probing Education Pin Inventory (Server 1 Exclusive)...", 'info');
+          addLog("Main Node ready for WAEC/NECO pin pooling.", 'success');
           break;
       }
     } catch (e: any) {
@@ -69,43 +66,21 @@ const VtuTest: React.FC = () => {
 
   return (
     <div className="space-y-10 animate-in fade-in duration-500">
-      {/* Node & Service Selector */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-zinc-900/50 border border-zinc-800 p-8 rounded-3xl">
-          <label className="block text-[10px] text-zinc-500 font-black uppercase tracking-widest mb-6">Target Fulfillment Node</label>
-          <div className="flex p-1.5 bg-black rounded-2xl border border-zinc-800">
+      <div className="bg-zinc-900/50 border border-zinc-800 p-8 rounded-3xl">
+        <label className="block text-[10px] text-zinc-500 font-black uppercase tracking-widest mb-6">Service Logic Path</label>
+        <div className="flex flex-wrap gap-2">
+          {(['DATA', 'AIRTIME', 'ELECTRICITY', 'CABLE', 'EDUCATION'] as ServiceType[]).map(service => (
             <button 
-              onClick={() => setServer('server1')}
-              className={`flex-1 py-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${server === 'server1' ? 'bg-green-500 text-black shadow-lg shadow-green-900/50' : 'text-zinc-600 hover:text-zinc-300'}`}
+              key={service}
+              onClick={() => setActiveService(service)}
+              className={`px-4 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border ${activeService === service ? 'bg-zinc-100 text-black border-white' : 'bg-black text-zinc-600 border-zinc-800 hover:text-white'}`}
             >
-              NODE_1 (Inlomax)
+              {service}
             </button>
-            <button 
-              onClick={() => setServer('server2')}
-              className={`flex-1 py-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${server === 'server2' ? 'bg-green-500 text-black shadow-lg shadow-green-900/50' : 'text-zinc-600 hover:text-zinc-300'}`}
-            >
-              NODE_2 (CIP)
-            </button>
-          </div>
-        </div>
-
-        <div className="bg-zinc-900/50 border border-zinc-800 p-8 rounded-3xl">
-          <label className="block text-[10px] text-zinc-500 font-black uppercase tracking-widest mb-6">Service Logic Path</label>
-          <div className="flex flex-wrap gap-2">
-            {(['DATA', 'AIRTIME', 'ELECTRICITY', 'CABLE', 'EDUCATION'] as ServiceType[]).map(service => (
-              <button 
-                key={service}
-                onClick={() => setActiveService(service)}
-                className={`px-4 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border ${activeService === service ? 'bg-zinc-100 text-black border-white' : 'bg-black text-zinc-600 border-zinc-800 hover:text-white'}`}
-              >
-                {service}
-              </button>
-            ))}
-          </div>
+          ))}
         </div>
       </div>
 
-      {/* Execution Area */}
       <div className="bg-zinc-900 border border-zinc-800 rounded-[2.5rem] p-12 lg:p-20 text-center relative overflow-hidden group">
         <div className="relative z-10">
           <div className="w-20 h-20 bg-zinc-950 text-green-500 border border-zinc-800 rounded-3xl flex items-center justify-center mx-auto mb-10 group-hover:scale-110 group-hover:rotate-12 transition-all">
@@ -113,7 +88,7 @@ const VtuTest: React.FC = () => {
           </div>
           <h3 className="text-white text-3xl font-black tracking-tighter mb-4 uppercase">Node Logic Debugger</h3>
           <p className="text-zinc-500 text-sm max-w-md mx-auto mb-12 leading-relaxed">
-            Executing diagnostic probe for <span className="text-green-500 font-black">{activeService}</span> on <span className="text-green-500 font-black">{server === 'server1' ? 'INLOMAX' : 'CIP'}</span> gateway.
+            Executing diagnostic probe for <span className="text-green-500 font-black">{activeService}</span> on <span className="text-green-500 font-black">INLOMAX</span> gateway.
           </p>
           <button 
             onClick={runDiagnostic}
@@ -132,7 +107,7 @@ const VtuTest: React.FC = () => {
         </div>
         <div>
            <p className="text-[10px] font-black uppercase text-zinc-400 mb-1 tracking-widest">Protocol Note</p>
-           <p className="text-zinc-600 text-[11px] leading-relaxed italic">Tests are executed in a production-mirror environment. Real API responses will be piped into the buffer below for dissection.</p>
+           <p className="text-zinc-600 text-[11px] leading-relaxed italic">Tests are executed in a production-mirror environment. Server 2 is currently deactivated.</p>
         </div>
       </div>
     </div>
