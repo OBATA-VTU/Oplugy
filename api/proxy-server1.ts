@@ -47,8 +47,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (method.toUpperCase() !== 'GET' && data) {
       const mapped: any = {};
       
-      // Inlomax documentation strictly requires lowercase for carrier/biller IDs in some nodes
       const rawServiceID = String(data.serviceID || data.plan_id || data.type || data.provider_id || data.network || '');
+      // Inlomax strictly requires lowercase for airtime carriers and cable biller tags
       mapped.serviceID = (cleanEndpoint === 'airtime' || cleanEndpoint === 'validatecable') 
         ? rawServiceID.toLowerCase() 
         : rawServiceID;
@@ -89,7 +89,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     } catch {
       return res.status(apiResponse.status).json({ 
         status: 'error', 
-        message: `Node returned invalid response (${apiResponse.status})`,
+        message: `Upstream error (${apiResponse.status})`,
         raw: responseText.substring(0, 200)
       });
     }

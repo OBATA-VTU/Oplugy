@@ -2,7 +2,8 @@ import { ApiResponse } from '../types';
 
 async function safeFetch<T>(body: any): Promise<ApiResponse<T>> {
   try {
-    const response = await fetch('/api/paystack', {
+    // Calling the proxy file directly to avoid Vercel rewrite issues in certain environments
+    const response = await fetch('/api/paystack-proxy', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
@@ -11,6 +12,7 @@ async function safeFetch<T>(body: any): Promise<ApiResponse<T>> {
     const contentType = response.headers.get('content-type');
     if (contentType && contentType.includes('application/json')) {
       const res = await response.json();
+      // Paystack usually returns { status: true, data: ... }
       return res.status ? { status: true, data: res.data } : { status: false, message: res.message || 'Gateway reported error' };
     } else {
       const text = await response.text();
