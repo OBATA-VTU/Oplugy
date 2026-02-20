@@ -58,17 +58,17 @@ const App: React.FC = () => {
             <Route path="/privacy" element={<PrivacyPage />} />
 
             {/* PROTECTED USER ROUTES */}
-            <Route path="/" element={<Layout />}>
-              <Route path="dashboard" element={<DashboardPage />} />
-              <Route path="airtime" element={<AirtimePage />} />
-              <Route path="data" element={<DataPage />} />
-              <Route path="bills" element={<BillsPage />} />
-              <Route path="cable" element={<CablePage />} />
-              <Route path="education" element={<EducationPage />} />
-              <Route path="profile" element={<ProfilePage />} />
-              <Route path="funding" element={<FundingPage />} />
-              <Route path="history" element={<TransactionHistoryPage />} />
-              <Route path="referrals" element={<ReferralPage />} />
+            <Route element={<Layout />}>
+              <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/airtime" element={<AirtimePage />} />
+              <Route path="/data" element={<DataPage />} />
+              <Route path="/bills" element={<BillsPage />} />
+              <Route path="/cable" element={<CablePage />} />
+              <Route path="/education" element={<EducationPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/funding" element={<FundingPage />} />
+              <Route path="/history" element={<TransactionHistoryPage />} />
+              <Route path="/referrals" element={<ReferralPage />} />
             </Route>
 
             {/* ADMIN ROUTES */}

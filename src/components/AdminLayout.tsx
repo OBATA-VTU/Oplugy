@@ -1,5 +1,5 @@
 import React, { useState, ReactNode } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import Spinner from './Spinner';
 import Logo from './Logo';
@@ -14,10 +14,6 @@ import {
   ExchangeIcon,
   CurrencyDollarIcon
 } from './Icons';
-
-interface AdminLayoutProps {
-  children: ReactNode;
-}
 
 const AdminNavItem: React.FC<{ to: string; icon: ReactNode; children: ReactNode; onClick?: () => void }> = ({ to, icon, children, onClick }) => (
   <NavLink
@@ -37,7 +33,7 @@ const AdminNavItem: React.FC<{ to: string; icon: ReactNode; children: ReactNode;
   </NavLink>
 );
 
-const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
+const AdminLayout: React.FC = () => {
   const { logout, isLoading } = useAuth();
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -116,7 +112,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         </header>
 
         <main className="flex-1 p-6 lg:p-10 overflow-y-auto w-full max-w-7xl mx-auto">
-          {children}
+          <Outlet />
         </main>
       </div>
     </div>

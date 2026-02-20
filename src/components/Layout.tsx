@@ -1,6 +1,6 @@
 
 import React, { useState, ReactNode } from 'react';
-import { NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { NavLink, useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import Logo from './Logo';
 import ChatBubble from './ChatBubble';
@@ -9,10 +9,6 @@ import {
   LogoutIcon, MenuIcon, HistoryIcon, WalletIcon,
   ShieldCheckIcon, CurrencyDollarIcon, UsersIcon, GamingIcon
 } from './Icons';
-
-interface LayoutProps {
-  children: ReactNode;
-}
 
 const NavItem: React.FC<{ to: string; icon: ReactNode; children: ReactNode; onClick?: () => void }> = ({ to, icon, children, onClick }) => (
   <NavLink
@@ -33,7 +29,7 @@ const NavItem: React.FC<{ to: string; icon: ReactNode; children: ReactNode; onCl
   </NavLink>
 );
 
-const Layout: React.FC<LayoutProps> = ({ children }) => {
+const Layout: React.FC = () => {
   const { user, walletBalance, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -127,7 +123,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </header>
 
         <main className="flex-1 p-6 lg:p-16 w-full max-w-[1400px] mx-auto relative no-scrollbar">
-          {children}
+          <Outlet />
           {location.pathname !== '/admin' && <ChatBubble />}
         </main>
       </div>
