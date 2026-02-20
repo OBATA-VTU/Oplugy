@@ -17,7 +17,6 @@ async function safeFetch<T>(body: any): Promise<ApiResponse<T>> {
         return { status: false, message: res.message || 'Gateway reported failure' };
       }
     } else {
-      const text = await response.text();
       return { status: false, message: `Gateway error: 404 Node Not Found or Protocol Error.` };
     }
   } catch (e: any) {

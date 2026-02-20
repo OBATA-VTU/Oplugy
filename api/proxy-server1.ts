@@ -49,11 +49,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       
       const rawServiceID = String(data.serviceID || data.plan_id || data.type || data.provider_id || data.network || '');
       
-      // Numeric IDs (1, 2, 3) should be passed as strings. 
-      // We only lowercase alphabetical biller tags (like GOTV) to avoid breaking numeric Airtime/Education IDs.
+      // Strict mapping logic for Inlomax nodes
+      // ONLY lowercase if it's a cable tag (DSTV, GOTV) and NOT a numeric ID.
       if (['validatecable', 'subcable'].includes(cleanEndpoint) && isNaN(Number(rawServiceID))) {
         mapped.serviceID = rawServiceID.toLowerCase();
       } else {
+        // Airtime, Data, and Education IDs must remain exactly as sent (numeric strings)
         mapped.serviceID = rawServiceID;
       }
       
@@ -62,7 +63,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       if (data.amount) mapped.amount = Number(data.amount);
-      if (data.quantity) mapped.quantity = Number(data.quantity);
+      if (data.quantity !== undefined) mapped.quantity = Number(data.quantity);
       
       if (data.meterNum || data.meter_number) {
         mapped.meterNum = String(data.meterNum || data.meter_number);
@@ -93,12 +94,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     } catch {
       return res.status(apiResponse.status).json({ 
         status: 'error', 
-        message: responseText.includes('Fatal error') ? 'Node Fulfillment Failure.' : 'Server Error.',
-        raw: responseText.substring(0, 200)
+        message: responseText.includes('Fatal error') ? 'Node Fulfillment Failure: Check liquidity.' : 'Gateway Protocol Error.',
+        raw: responseText.substring(0, 150)
       });
     }
 
   } catch (error: any) {
-    return res.status(504).json({ status: 'error', message: 'Inlomax Node Connectivity Error.' });
+    return res.status(504).json({ status: 'error', message: 'Fulfillment Node Connectivity Error.' });
   }
 }

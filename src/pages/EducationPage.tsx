@@ -39,9 +39,10 @@ const EducationPage: React.FC = () => {
     setIsPurchasing(true);
     setShowPinModal(false);
     
+    // Payload mapped to Inlomax requirements: serviceID and quantity
     const response = await vtuService.purchaseEducation({
-      type: selectedExam.id,
-      quantity,
+      type: String(selectedExam.id),
+      quantity: Number(quantity),
       amount: totalAmount,
       name: selectedExam.name
     });
