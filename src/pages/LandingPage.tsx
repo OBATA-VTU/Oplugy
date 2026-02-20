@@ -74,7 +74,7 @@ const LandingPage: React.FC = () => {
                 </div>
                 <div className="absolute -bottom-10 -left-10 bg-white p-10 rounded-[3rem] shadow-2xl z-20 hidden lg:block border border-gray-50 animate-bounce">
                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">System Status</p>
-                   <p className="text-4xl font-black text-blue-600 tracking-tighter">Live & Optimal</p>
+                   <p className="text-4xl font-black text-orange-500 tracking-tighter">Server 2 Syncing...</p>
                 </div>
              </div>
           </div>

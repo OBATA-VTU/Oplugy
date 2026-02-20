@@ -16,11 +16,14 @@ const DataPage: React.FC = () => {
   const [selectedType, setSelectedType] = useState<string>('');
   const [selectedPlanId, setSelectedPlanId] = useState<string>('');
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [selectedServer, setSelectedServer] = useState<1 | 2>(1);
 
+  const [networks, setNetworks] = useState<any[]>([]);
   const [dataTypes, setDataTypes] = useState<string[]>([]);
   const [dataPlans, setDataPlans] = useState<DataPlan[]>([]);
   const [selectedPlan, setSelectedPlan] = useState<DataPlan | null>(null);
   
+  const [isFetchingNetworks, setIsFetchingNetworks] = useState(false);
   const [isFetchingTypes, setIsFetchingTypes] = useState(false);
   const [isFetchingPlans, setIsFetchingPlans] = useState(false);
   const [isPurchasing, setIsPurchasing] = useState(false);
@@ -39,6 +42,15 @@ const DataPage: React.FC = () => {
     resetPlans();
   }, [resetPlans]);
 
+  const fetchNetworks = useCallback(async () => {
+    setIsFetchingNetworks(true);
+    const res = await vtuService.getDataNetworks(selectedServer);
+    if (res.status) {
+      setNetworks(res.data || []);
+    }
+    setIsFetchingNetworks(false);
+  }, [selectedServer]);
+
   const fetchPlans = useCallback(async (net: string, type: string) => {
     setIsFetchingPlans(true);
     setSelectedPlanId('');
@@ -47,7 +59,8 @@ const DataPage: React.FC = () => {
     const res = await vtuService.getDataPlans({ 
       network: net, 
       type, 
-      userRole: user?.role || 'user'
+      userRole: user?.role || 'user',
+      server: selectedServer
     });
     if (res.status && res.data) {
       setDataPlans(res.data);
@@ -55,7 +68,12 @@ const DataPage: React.FC = () => {
       addNotification(res.message || 'Plan sync failed.', 'error');
     }
     setIsFetchingPlans(false);
-  }, [user?.role, addNotification]);
+  }, [user?.role, addNotification, selectedServer]);
+
+  useEffect(() => {
+    fetchNetworks();
+    resetAll();
+  }, [selectedServer, fetchNetworks, resetAll]);
 
   useEffect(() => {
     const fetchTypes = async () => {
@@ -65,7 +83,7 @@ const DataPage: React.FC = () => {
       setDataTypes([]);
       resetPlans();
 
-      const res = await vtuService.getDataCategories(selectedOperator);
+      const res = await vtuService.getDataCategories(selectedOperator, selectedServer);
       if (res.status && res.data) {
         setDataTypes(res.data);
         if (res.data.length === 0) {
@@ -77,7 +95,7 @@ const DataPage: React.FC = () => {
       setIsFetchingTypes(false);
     };
     fetchTypes();
-  }, [selectedOperator, addNotification, fetchPlans, resetPlans]);
+  }, [selectedOperator, addNotification, fetchPlans, resetPlans, selectedServer]);
 
   useEffect(() => {
     if (selectedType && selectedOperator) {
@@ -111,7 +129,8 @@ const DataPage: React.FC = () => {
       phone_number: phoneNumber,
       amount: selectedPlan.amount,
       network: selectedOperator,
-      plan_name: selectedPlan.name
+      plan_name: selectedPlan.name,
+      server: selectedServer
     });
     
     if (res.status) {
@@ -142,16 +161,32 @@ const DataPage: React.FC = () => {
 
       <div className="bg-white p-8 lg:p-16 rounded-[3.5rem] shadow-2xl border border-gray-50 space-y-12">
          <div className="space-y-10">
+            <div className="flex gap-4 p-2 bg-gray-100 rounded-3xl">
+               <button 
+                 onClick={() => setSelectedServer(1)} 
+                 className={`flex-1 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${selectedServer === 1 ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+               >
+                 Server 1 (Inlomax)
+               </button>
+               <button 
+                 onClick={() => setSelectedServer(2)} 
+                 className={`flex-1 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${selectedServer === 2 ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+               >
+                 Server 2 (Ciptopup)
+               </button>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                <div>
                   <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-4">1. Network Carrier</label>
                   <select 
                     value={selectedOperator} 
                     onChange={(e) => setSelectedOperator(e.target.value)}
-                    className="w-full p-6 bg-gray-50 border-4 border-transparent focus:border-blue-600 rounded-3xl font-black text-xl outline-none transition-all appearance-none"
+                    disabled={isFetchingNetworks}
+                    className="w-full p-6 bg-gray-50 border-4 border-transparent focus:border-blue-600 rounded-3xl font-black text-xl outline-none transition-all appearance-none disabled:opacity-40"
                   >
-                     <option value="">Select Network</option>
-                     {DATA_NETWORKS.map(op => <option key={op.id} value={op.id}>{op.name}</option>)}
+                     <option value="">{isFetchingNetworks ? 'Syncing Nodes...' : 'Select Network'}</option>
+                     {networks.map(op => <option key={op.id} value={op.id}>{op.name}</option>)}
                   </select>
                </div>
 

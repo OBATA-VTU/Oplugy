@@ -3,6 +3,33 @@ import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { NotificationProvider } from './context/NotificationContext';
 import { AuthProvider } from './context/AuthContext';
 import NotificationContainer from './components/NotificationContainer';
+import Layout from './components/Layout';
+import LandingPage from './pages/LandingPage';
+import LoginPage from './pages/LoginPage';
+import SignUpPage from './pages/SignUpPage';
+import DashboardPage from './pages/DashboardPage';
+import AirtimePage from './pages/AirtimePage';
+import DataPage from './pages/DataPage';
+import BillsPage from './pages/BillsPage';
+import CablePage from './pages/CablePage';
+import EducationPage from './pages/EducationPage';
+import PricingPage from './pages/PricingPage';
+import ProfilePage from './pages/ProfilePage';
+import FundingPage from './pages/FundingPage';
+import TransactionHistoryPage from './pages/TransactionHistoryPage';
+import ReferralPage from './pages/ReferralPage';
+import QuickPurchasePage from './pages/QuickPurchasePage';
+import ApiDocsPage from './pages/ApiDocsPage';
+import SupportPage from './pages/SupportPage';
+import FAQPage from './pages/FAQPage';
+import TermsPage from './pages/TermsPage';
+import PrivacyPage from './pages/PrivacyPage';
+import AdminLayout from './components/AdminLayout';
+import AdminDashboardPage from './pages/AdminDashboardPage';
+import AdminUsersPage from './pages/AdminUsersPage';
+import AdminTransactionsPage from './pages/AdminTransactionsPage';
+import AdminPricingPage from './pages/AdminPricingPage';
+import AdminSettingsPage from './pages/AdminSettingsPage';
 import TerminalLayout from './components/TerminalLayout';
 import OverviewTest from './pages/tests/OverviewTest';
 import VtuTest from './pages/tests/VtuTest';
@@ -18,17 +45,53 @@ const App: React.FC = () => {
           <ScrollToTop />
           <NotificationContainer />
           <Routes>
-            {/* TERMINAL SUITE */}
-            <Route path="/terminal" element={<TerminalLayout />}>
-              <Route index element={<Navigate to="overview" replace />} />
-              <Route path="overview" element={<OverviewTest />} />
-              <Route path="vtu" element={<VtuTest />} />
-              <Route path="payments" element={<PaymentTest />} />
-              <Route path="media" element={<MediaTest />} />
+            {/* PUBLIC ROUTES */}
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/signup" element={<SignUpPage />} />
+            <Route path="/quick-purchase" element={<QuickPurchasePage />} />
+            <Route path="/pricing" element={<PricingPage />} />
+            <Route path="/api-docs" element={<ApiDocsPage />} />
+            <Route path="/support" element={<SupportPage />} />
+            <Route path="/faq" element={<FAQPage />} />
+            <Route path="/terms" element={<TermsPage />} />
+            <Route path="/privacy" element={<PrivacyPage />} />
+
+            {/* PROTECTED USER ROUTES */}
+            <Route path="/" element={<Layout />}>
+              <Route path="dashboard" element={<DashboardPage />} />
+              <Route path="airtime" element={<AirtimePage />} />
+              <Route path="data" element={<DataPage />} />
+              <Route path="bills" element={<BillsPage />} />
+              <Route path="cable" element={<CablePage />} />
+              <Route path="education" element={<EducationPage />} />
+              <Route path="profile" element={<ProfilePage />} />
+              <Route path="funding" element={<FundingPage />} />
+              <Route path="history" element={<TransactionHistoryPage />} />
+              <Route path="referrals" element={<ReferralPage />} />
+            </Route>
+
+            {/* ADMIN ROUTES */}
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<Navigate to="dashboard" replace />} />
+              <Route path="dashboard" element={<AdminDashboardPage />} />
+              <Route path="users" element={<AdminUsersPage />} />
+              <Route path="transactions" element={<AdminTransactionsPage />} />
+              <Route path="pricing" element={<AdminPricingPage />} />
+              <Route path="settings" element={<AdminSettingsPage />} />
+              
+              {/* TERMINAL SUITE (NESTED IN ADMIN) */}
+              <Route path="terminal" element={<TerminalLayout />}>
+                <Route index element={<Navigate to="overview" replace />} />
+                <Route path="overview" element={<OverviewTest />} />
+                <Route path="vtu" element={<VtuTest />} />
+                <Route path="payments" element={<PaymentTest />} />
+                <Route path="media" element={<MediaTest />} />
+              </Route>
             </Route>
             
             {/* GLOBAL REDIRECT */}
-            <Route path="*" element={<Navigate to="/terminal/overview" replace />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Router>
       </AuthProvider>

@@ -17,6 +17,7 @@ const VtuTest: React.FC = () => {
   const [network, setNetwork] = useState('MTN');
   const [dataType, setDataType] = useState('');
   const [dataTypes, setDataTypes] = useState<string[]>([]);
+  const [networks, setNetworks] = useState<any[]>([]);
   const [plans, setPlans] = useState<any[]>([]);
   const [selectedPlanId, setSelectedPlanId] = useState('');
   
@@ -32,17 +33,33 @@ const VtuTest: React.FC = () => {
   const [meterNo, setMeterNo] = useState('7027914329');
   const [meterType, setMeterType] = useState<'prepaid' | 'postpaid'>('prepaid');
 
-  const [eduType, setEduType] = useState('1'); // 1 = WAEC
+  const [eduType, setEduType] = useState('');
+  const [eduPlans, setEduPlans] = useState<any[]>([]);
   const [quantity, setQuantity] = useState(1);
+  const [selectedServer, setSelectedServer] = useState<1 | 2>(1);
+
+  const [airtimeOperators, setAirtimeOperators] = useState<any[]>([]);
+
+  const fetchNetworks = useCallback(async () => {
+    addLog(`SYNC_NETWORKS: [Server: ${selectedServer}]`, 'cmd');
+    const res = await vtuService.getDataNetworks(selectedServer);
+    if (res.status) {
+      setNetworks(res.data || []);
+      if (res.data && res.data.length > 0 && !res.data.find((n: any) => n.id === network)) {
+        setNetwork(res.data[0].id);
+      }
+      addLog("NETWORKS_LOADED", 'success', res.data);
+    }
+  }, [addLog, selectedServer, network]);
 
   const fetchDataTypes = useCallback(async () => {
-    addLog(`FETCH_DATA_TYPES for ${network}`, 'cmd');
-    const res = await vtuService.getDataCategories(network);
+    addLog(`FETCH_DATA_TYPES for ${network} [Server: ${selectedServer}]`, 'cmd');
+    const res = await vtuService.getDataCategories(network, selectedServer);
     if (res.status) {
       setDataTypes(res.data || []);
       addLog("TYPES_LOADED", 'success', res.data);
     }
-  }, [addLog, network]);
+  }, [addLog, network, selectedServer]);
 
   const fetchDiscos = useCallback(async () => {
     addLog("SYNC_DISCO_NODES", 'cmd');
@@ -62,21 +79,44 @@ const VtuTest: React.FC = () => {
     }
   }, [addLog]);
 
+  const fetchAirtimeOperators = useCallback(async () => {
+    addLog("SYNC_AIRTIME_OPERATORS", 'cmd');
+    const res = await vtuService.getAirtimeOperators();
+    if (res.status) {
+      setAirtimeOperators(res.data || []);
+      addLog("AIRTIME_SYNC_OK", 'success');
+    }
+  }, [addLog]);
+
+  const fetchEducationPlans = useCallback(async () => {
+    addLog("SYNC_EDUCATION_PLANS", 'cmd');
+    const res = await vtuService.getEducationPlans();
+    if (res.status) {
+      setEduPlans(res.data || []);
+      addLog("EDUCATION_SYNC_OK", 'success');
+    }
+  }, [addLog]);
+
   // Load dependency data on service switch
   useEffect(() => {
     if (activeService === 'DATA') {
+      fetchNetworks();
       fetchDataTypes();
     } else if (activeService === 'ELECTRICITY') {
       fetchDiscos();
     } else if (activeService === 'CABLE') {
       fetchCableProviders();
+    } else if (activeService === 'AIRTIME') {
+      fetchAirtimeOperators();
+    } else if (activeService === 'EDUCATION') {
+      fetchEducationPlans();
     }
-  }, [activeService, fetchDataTypes, fetchDiscos, fetchCableProviders]);
+  }, [activeService, fetchDataTypes, fetchDiscos, fetchCableProviders, fetchNetworks, fetchAirtimeOperators, fetchEducationPlans]);
 
   const fetchPlans = async (type: string) => {
-    addLog(`SYNC_PLAN_CATALOG: [${network}] [${type}]`, 'cmd');
+    addLog(`SYNC_PLAN_CATALOG: [${network}] [${type}] [Server: ${selectedServer}]`, 'cmd');
     setLoading(true);
-    const res = await vtuService.getDataPlans({ network, type });
+    const res = await vtuService.getDataPlans({ network, type, server: selectedServer });
     if (res.status) {
       setPlans(res.data || []);
       addLog(`CATALOG_SYNC_OK: Found ${res.data?.length} plans`, 'success');
@@ -125,13 +165,14 @@ const VtuTest: React.FC = () => {
     try {
       if (activeService === 'DATA') {
         const plan = plans.find(p => p.id === selectedPlanId);
-        addLog(`DATA_PAYLOAD_READY: ${plan?.name} for ${phone}`);
+        addLog(`DATA_PAYLOAD_READY: ${plan?.name} for ${phone} [Server: ${selectedServer}]`);
         const res = await vtuService.purchaseData({
           plan_id: selectedPlanId,
           phone_number: phone,
           amount: plan?.amount || 0,
           network: network,
-          plan_name: plan?.name || 'Bundle'
+          plan_name: plan?.name || 'Bundle',
+          server: selectedServer
         });
         if (res.status) addLog("TX_EXECUTION_SUCCESS", 'success', res.data);
         else addLog(`TX_ABORTED: ${res.message}`, 'error');
@@ -167,12 +208,13 @@ const VtuTest: React.FC = () => {
         else addLog(`TX_ABORTED: ${res.message}`, 'error');
       }
       else if (activeService === 'EDUCATION') {
+        const plan = eduPlans.find(p => p.id === eduType);
         addLog(`EDU_PIN_INIT: [ID: ${eduType}] [Qty: ${quantity}]`);
         const res = await vtuService.purchaseEducation({
           type: eduType,
           quantity: quantity,
-          amount: 0,
-          name: 'WAEC PIN'
+          amount: (plan?.price || 0) * quantity,
+          name: plan?.name || 'Education PIN'
         });
         if (res.status) addLog("TX_EXECUTION_SUCCESS", 'success', res.data);
         else addLog(`TX_ABORTED: ${res.message}`, 'error');
@@ -222,7 +264,8 @@ const VtuTest: React.FC = () => {
                     <div>
                        <label className="text-[9px] font-black text-zinc-500 uppercase tracking-widest block mb-2">Network Node</label>
                        <select value={network} onChange={(e) => { setNetwork(e.target.value); setDataType(''); setPlans([]); }} className="w-full bg-black border border-zinc-800 p-4 rounded-xl text-green-500 font-mono outline-none focus:border-green-500 transition-all">
-                          {DATA_NETWORKS.map(n => <option key={n.id} value={n.id}>{n.name}</option>)}
+                          <option value="">Select Network</option>
+                          {networks.map(n => <option key={n.id} value={n.id}>{n.name}</option>)}
                        </select>
                     </div>
                     <div>
@@ -233,7 +276,7 @@ const VtuTest: React.FC = () => {
                        </select>
                     </div>
                  </div>
-                 <div className="space-y-6">
+                  <div className="space-y-6">
                     <div>
                        <label className="text-[9px] font-black text-zinc-500 uppercase tracking-widest block mb-2">Plan Catalog</label>
                        <select value={selectedPlanId} onChange={(e) => setSelectedPlanId(e.target.value)} className="w-full bg-black border border-zinc-800 p-4 rounded-xl text-green-500 font-mono outline-none focus:border-green-500 transition-all">
@@ -244,6 +287,13 @@ const VtuTest: React.FC = () => {
                     <div>
                        <label className="text-[9px] font-black text-zinc-500 uppercase tracking-widest block mb-2">Target Address (Phone)</label>
                        <input type="text" value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full bg-black border border-zinc-800 p-4 rounded-xl text-green-500 font-mono outline-none focus:border-green-500 transition-all" />
+                    </div>
+                    <div>
+                       <label className="text-[9px] font-black text-zinc-500 uppercase tracking-widest block mb-2">Fulfillment Node (Server)</label>
+                       <div className="flex gap-2">
+                          <button onClick={() => { setSelectedServer(1); setPlans([]); setSelectedPlanId(''); }} className={`flex-1 py-3 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all border ${selectedServer === 1 ? 'bg-green-500 text-black border-green-400' : 'bg-black text-zinc-500 border-zinc-800'}`}>Server 1 (Inlomax)</button>
+                          <button onClick={() => { setSelectedServer(2); setPlans([]); setSelectedPlanId(''); }} className={`flex-1 py-3 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all border ${selectedServer === 2 ? 'bg-green-500 text-black border-green-400' : 'bg-black text-zinc-500 border-zinc-800'}`}>Server 2 (Ciptopup)</button>
+                       </div>
                     </div>
                  </div>
               </div>
@@ -328,7 +378,8 @@ const VtuTest: React.FC = () => {
                     <div>
                        <label className="text-[9px] font-black text-zinc-500 uppercase tracking-widest block mb-2">Network Node</label>
                        <select value={network} onChange={(e) => setNetwork(e.target.value)} className="w-full bg-black border border-zinc-800 p-4 rounded-xl text-green-500 font-mono outline-none focus:border-green-500 transition-all">
-                          {DATA_NETWORKS.map(n => <option key={n.id} value={n.id}>{n.name}</option>)}
+                          <option value="">Select Operator</option>
+                          {airtimeOperators.map(n => <option key={n.id} value={n.id}>{n.name}</option>)}
                        </select>
                     </div>
                  </div>
@@ -347,9 +398,10 @@ const VtuTest: React.FC = () => {
                     <div>
                        <label className="text-[9px] font-black text-zinc-500 uppercase tracking-widest block mb-2">PIN Node (ServiceID)</label>
                        <select value={eduType} onChange={(e) => setEduType(e.target.value)} className="w-full bg-black border border-zinc-800 p-4 rounded-xl text-green-500 font-mono outline-none focus:border-green-500 transition-all">
-                          <option value="1">WAEC Result Checker (1)</option>
-                          <option value="2">NECO Result Checker (2)</option>
-                          <option value="3">NABTEB Result Checker (3)</option>
+                          <option value="">Select PIN Type</option>
+                          {eduPlans.map(p => (
+                            <option key={p.id} value={p.id}>{p.name} - ₦{p.price}</option>
+                          ))}
                        </select>
                     </div>
                  </div>

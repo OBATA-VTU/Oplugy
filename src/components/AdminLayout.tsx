@@ -67,8 +67,9 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         <AdminNavItem to="/admin/pricing" icon={<CurrencyDollarIcon />} onClick={closeSidebar}>Price Engine</AdminNavItem>
         
         <div className="px-4 mt-8 mb-3 text-[9px] font-black uppercase tracking-[0.2em] text-gray-400">Environment</div>
+        <AdminNavItem to="/admin/terminal" icon={<BoltIcon />} onClick={closeSidebar}>Terminal Suite</AdminNavItem>
         <AdminNavItem to="/admin/settings" icon={<ExchangeIcon />} onClick={closeSidebar}>Config Center</AdminNavItem>
-        <AdminNavItem to="/dashboard" icon={<BoltIcon />} onClick={closeSidebar}>Switch to User App</AdminNavItem>
+        <AdminNavItem to="/dashboard" icon={<HomeIcon />} onClick={closeSidebar}>Switch to User App</AdminNavItem>
       </nav>
 
       <div className="p-6 border-t border-gray-50">

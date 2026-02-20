@@ -115,7 +115,7 @@ const DashboardPage: React.FC = () => {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 px-2">
            <div>
               <h2 className="text-5xl lg:text-7xl font-black text-gray-900 tracking-tighter leading-none">Hello, {user?.username}</h2>
-              <p className="text-gray-400 font-medium text-xl mt-4">Node status: <span className="text-green-500">Connected & Optimized</span></p>
+              <p className="text-gray-400 font-medium text-xl mt-4">Node status: <span className="text-orange-500 animate-pulse">Server 2 Integration in Progress...</span></p>
            </div>
         </div>
 
@@ -259,8 +259,8 @@ const DashboardPage: React.FC = () => {
               <div className="bg-white p-12 rounded-[4rem] shadow-xl border border-gray-50 group hover:shadow-2xl transition-all">
                  <h4 className="text-2xl font-black text-gray-900 tracking-tighter mb-8 leading-none">Node Uptime</h4>
                  <div className="space-y-5">
-                    <StatusItem label="Data Link" status="Optimal" active />
-                    <StatusItem label="Airtime Core" status="Steady" active />
+                    <StatusItem label="Data Link" status="Syncing" active={false} />
+                    <StatusItem label="Airtime Core" status="Syncing" active={false} />
                     <StatusItem label="Liquidity Node" status="Syncing" active={false} />
                  </div>
               </div>

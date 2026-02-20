@@ -2,15 +2,14 @@ import { apiClient } from './apiClient';
 import { ApiResponse } from '../types';
 
 /**
- * Optimized API client strictly routing all requests to the Inlomax (Server 1) Node.
- * All Server 2 logic has been decommissioned.
+ * Multi-node API client routing requests to either Server 1 (Inlomax) or Server 2 (Ciptopup).
  */
 export async function cipApiClient<T>(
   endpoint: string,
-  { data, headers: customHeaders, method }: { data?: any; headers?: HeadersInit; method?: string } = {}
+  { data, headers: customHeaders, method, server = 1 }: { data?: any; headers?: HeadersInit; method?: string; server?: 1 | 2 } = {}
 ): Promise<ApiResponse<T>> {
   
-  const proxyPath = '/api/proxy-server1';
+  const proxyPath = server === 1 ? '/api/proxy-server1' : '/api/proxy-server2';
 
   const proxyPayload = {
     endpoint: endpoint.startsWith('/') ? endpoint.slice(1) : endpoint,
@@ -38,7 +37,7 @@ export async function cipApiClient<T>(
   
   const rawData = response.data;
   
-  // Inlomax documentation returns { status: 'success', data: { ... } } or error
+  // Both Inlomax and Ciptopup return { status: 'success', data: { ... } } or error
   if (rawData?.status === 'success') {
     return {
       status: true,

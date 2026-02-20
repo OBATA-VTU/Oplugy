@@ -45,12 +45,10 @@ export const vtuService = {
     const user = auth.currentUser;
     if (!user) return { status: false, message: 'Please login to continue.' };
 
-    // Ensure we use the correct serviceID (some APIs expect names like MTN, others numeric IDs)
-    const serviceID = payload.network;
-
     const res = await cipApiClient<any>('airtime', { 
-      data: { serviceID, mobileNumber: payload.phone, amount: payload.amount }, 
-      method: 'POST' 
+      data: { serviceID: payload.network, mobileNumber: payload.phone, amount: payload.amount }, 
+      method: 'POST',
+      server: 1
     });
     
     if (res.status) {
@@ -62,7 +60,7 @@ export const vtuService = {
 
   getAirtimeOperators: async (): Promise<ApiResponse<Operator[]>> => {
     try {
-      const res = await cipApiClient<any>('services', { method: 'GET' });
+      const res = await cipApiClient<any>('services', { method: 'GET', server: 1 });
       const airtimeData = res.status && res.data ? (res.data.airtime || res.data.airtime_networks || res.data.airtimePlans) : null;
       
       if (airtimeData && Array.isArray(airtimeData)) {
@@ -80,63 +78,133 @@ export const vtuService = {
     }
   },
 
-  getDataCategories: async (network: string): Promise<ApiResponse<string[]>> => {
+  getDataNetworks: async (server: 1 | 2 = 1): Promise<ApiResponse<Operator[]>> => {
     try {
-      const res = await cipApiClient<any>('services', { method: 'GET' });
-      if (res.status && res.data?.dataPlans) {
-        const plans = res.data.dataPlans as any[];
-        const categories = Array.from(new Set(
-          plans
-            .filter(p => p.network && p.network.toUpperCase() === network.toUpperCase())
-            .map(p => p.dataType)
-        )).filter(c => !!c);
-        return { status: true, data: categories };
+      if (server === 1) {
+        const res = await cipApiClient<any>('services', { method: 'GET', server: 1 });
+        if (res.status && res.data?.dataPlans) {
+          const plans = res.data.dataPlans as any[];
+          const networks = Array.from(new Set(plans.map(p => p.network))).filter(n => !!n);
+          return { 
+            status: true, 
+            data: networks.map(n => ({ id: n, name: n })) 
+          };
+        }
+      } else {
+        // Server 2 (Ciptopup)
+        // The doc lists: MTN, GLO, AIRTEL, 9MOBILE
+        // We attempt to fetch from data/plans to see if it returns all, 
+        // but based on doc we can also provide the standard ones.
+        // However, user wants it "directly from the API".
+        const res = await cipApiClient<any>('data/plans', { method: 'GET', server: 2 });
+        if (res.status && Array.isArray(res.data)) {
+          const networks = Array.from(new Set(res.data.map((p: any) => p.network))).filter(n => !!n);
+          return { 
+            status: true, 
+            data: networks.map(n => ({ id: String(n), name: String(n) })) 
+          };
+        }
+        // Fallback to doc-defined networks if API doesn't return a list
+        return { 
+          status: true, 
+          data: [
+            { id: 'MTN', name: 'MTN' },
+            { id: 'GLO', name: 'GLO' },
+            { id: 'AIRTEL', name: 'AIRTEL' },
+            { id: '9MOBILE', name: '9MOBILE' }
+          ] 
+        };
       }
-    } catch (e) { console.error("Category fetch error:", e); }
-    return { status: false, message: 'Inlomax node sync failed.' };
+    } catch (e) { console.error("Network fetch error:", e); }
+    return { status: false, message: `Server ${server} network sync failed.` };
   },
 
-  getDataPlans: async (payload: { network: string; type: string; userRole?: UserRole }): Promise<ApiResponse<DataPlan[]>> => {
+  getDataCategories: async (network: string, server: 1 | 2 = 1): Promise<ApiResponse<string[]>> => {
+    try {
+      if (server === 1) {
+        const res = await cipApiClient<any>('services', { method: 'GET', server: 1 });
+        if (res.status && res.data?.dataPlans) {
+          const plans = res.data.dataPlans as any[];
+          const categories = Array.from(new Set(
+            plans
+              .filter(p => p.network && p.network.toUpperCase() === network.toUpperCase())
+              .map(p => p.dataType)
+          )).filter(c => !!c);
+          return { status: true, data: categories };
+        }
+      } else {
+        // Server 2 (Ciptopup) - Hardcoded based on documentation
+        return { status: true, data: ['AWOOF', 'GIFTING', 'SME', 'DATASHARE'] };
+      }
+    } catch (e) { console.error("Category fetch error:", e); }
+    return { status: false, message: `Server ${server} node sync failed.` };
+  },
+
+  getDataPlans: async (payload: { network: string; type: string; userRole?: UserRole; server?: 1 | 2 }): Promise<ApiResponse<DataPlan[]>> => {
     const role = payload.userRole || 'user';
+    const selectedServer = payload.server || 1;
     
     try {
-      const res = await cipApiClient<any>('services', { method: 'GET' });
-      if (res.status && res.data?.dataPlans) {
-        const rawPlans = (res.data.dataPlans || []) as any[];
-        const filtered = rawPlans.filter((p: any) => 
-          p.network && p.network.toUpperCase() === payload.network.toUpperCase() && 
-          (payload.type === '' || (p.dataType && p.dataType.toUpperCase() === payload.type.toUpperCase()))
-        );
+      if (selectedServer === 1) {
+        const res = await cipApiClient<any>('services', { method: 'GET', server: 1 });
+        if (res.status && res.data?.dataPlans) {
+          const rawPlans = (res.data.dataPlans || []) as any[];
+          const filtered = rawPlans.filter((p: any) => 
+            p.network && p.network.toUpperCase() === payload.network.toUpperCase() && 
+            (payload.type === '' || (p.dataType && p.dataType.toUpperCase() === payload.type.toUpperCase()))
+          );
 
-        const plans: DataPlan[] = [];
-        for (const p of filtered) {
-          const planId = String(p.serviceID);
-          const manual = await getManualPrice(planId, role);
-          const rawBase = Number(String(p.amount).replace(/,/g, ''));
-          const validityStr = p.validity ? ` (${p.validity})` : '';
-          
-          plans.push({
-            id: planId,
-            name: `${p.dataPlan} ${p.dataType}${validityStr}`,
-            amount: manual || rawBase, 
-            validity: p.validity || '30 Days'
-          });
+          const plans: DataPlan[] = [];
+          for (const p of filtered) {
+            const planId = String(p.serviceID);
+            const manual = await getManualPrice(planId, role);
+            const rawBase = Number(String(p.amount).replace(/,/g, ''));
+            const validityStr = p.validity ? ` (${p.validity})` : '';
+            
+            plans.push({
+              id: planId,
+              name: `${p.dataPlan} ${p.dataType}${validityStr}`,
+              amount: manual || rawBase, 
+              validity: p.validity || '30 Days'
+            });
+          }
+          return { status: true, data: plans };
         }
-        return { status: true, data: plans };
+      } else {
+        // Server 2 (Ciptopup)
+        const res = await cipApiClient<any>('data/plans', { 
+          method: 'GET', 
+          server: 2,
+          data: { network: payload.network.toUpperCase(), type: payload.type.toUpperCase() }
+        });
+        
+        if (res.status && Array.isArray(res.data)) {
+          const plans: DataPlan[] = res.data.map((p: any) => ({
+            id: p.id,
+            name: `${p.name} (${p.validity || 'N/A'})`,
+            amount: p.price / 100, // Ciptopup returns price in Kobo
+            validity: p.validity || 'N/A'
+          }));
+          return { status: true, data: plans };
+        }
       }
     } catch (e: any) {
-      return { status: false, message: 'Inlomax node unreachable.' };
+      return { status: false, message: `Server ${selectedServer} unreachable.` };
     }
     return { status: false, message: 'No valid plans returned by node.' };
   },
 
-  purchaseData: async (payload: { plan_id: string; phone_number: string; amount: number; network: string; plan_name: string }): Promise<ApiResponse<TransactionResponse>> => {
+  purchaseData: async (payload: { plan_id: string; phone_number: string; amount: number; network: string; plan_name: string; server?: 1 | 2 }): Promise<ApiResponse<TransactionResponse>> => {
     const user = auth.currentUser;
     if (!user) return { status: false, message: 'Please login to continue.' };
     
-    const res = await cipApiClient<any>('data', { 
+    const selectedServer = payload.server || 1;
+    const endpoint = selectedServer === 1 ? 'data' : 'data/buy';
+
+    const res = await cipApiClient<any>(endpoint, { 
       data: { serviceID: payload.plan_id, mobileNumber: payload.phone_number }, 
-      method: 'POST' 
+      method: 'POST',
+      server: selectedServer
     });
 
     if (res.status) {
@@ -148,7 +216,7 @@ export const vtuService = {
   },
 
   getElectricityOperators: async (): Promise<ApiResponse<Operator[]>> => {
-    const res = await cipApiClient<any>('services', { method: 'GET' });
+    const res = await cipApiClient<any>('services', { method: 'GET', server: 1 });
     if (res.status && res.data?.electricity) {
         const operators = (res.data.electricity || []).map((e: any) => ({ 
           id: String(e.serviceID), 
@@ -162,7 +230,8 @@ export const vtuService = {
   verifyElectricityMeter: async (payload: { meter_number: string; provider_id: string; meter_type: 'prepaid' | 'postpaid' }): Promise<ApiResponse<VerificationResponse>> => {
     return await cipApiClient<any>('validatemeter', { 
       data: { serviceID: payload.provider_id, meterNum: payload.meter_number, meterType: payload.meter_type === 'prepaid' ? 1 : 2 }, 
-      method: 'POST' 
+      method: 'POST',
+      server: 1
     });
   },
 
@@ -172,7 +241,8 @@ export const vtuService = {
 
     const res = await cipApiClient<any>('payelectric', { 
       data: { serviceID: payload.provider_id, meterNum: payload.meter_number, meterType: payload.meter_type === 'prepaid' ? 1 : 2, amount: payload.amount }, 
-      method: 'POST' 
+      method: 'POST',
+      server: 1
     });
 
     if (res.status) {
@@ -183,9 +253,8 @@ export const vtuService = {
   },
 
   getCableProviders: async (): Promise<ApiResponse<Operator[]>> => {
-    const res = await cipApiClient<any>('services', { method: 'GET' });
+    const res = await cipApiClient<any>('services', { method: 'GET', server: 1 });
     if (res.status && res.data?.cablePlans) {
-      // Deduplicate billers from the plans list
       const billers = Array.from(new Set((res.data.cablePlans as any[]).map(c => c.cable))).map(name => ({
         id: String(name).toLowerCase(),
         name: String(name)
@@ -196,7 +265,7 @@ export const vtuService = {
   },
 
   getCablePlans: async (billerName: string): Promise<ApiResponse<DataPlan[]>> => {
-    const res = await cipApiClient<any>('services', { method: 'GET' });
+    const res = await cipApiClient<any>('services', { method: 'GET', server: 1 });
     if (res.status && res.data?.cablePlans) {
         const filtered = (res.data.cablePlans || []).filter((c: any) => c.cable.toUpperCase() === billerName.toUpperCase());
         return { 
@@ -215,7 +284,8 @@ export const vtuService = {
   verifyCableSmartcard: async (payload: { biller: string; smartCardNumber: string }): Promise<ApiResponse<VerificationResponse>> => {
     return await cipApiClient<any>('validatecable', { 
       data: { serviceID: payload.biller, iucNum: payload.smartCardNumber }, 
-      method: 'POST' 
+      method: 'POST',
+      server: 1
     });
   },
 
@@ -225,7 +295,8 @@ export const vtuService = {
 
     const res = await cipApiClient<any>('subcable', { 
       data: { serviceID: payload.planCode, iucNum: payload.smartCardNumber }, 
-      method: 'POST' 
+      method: 'POST',
+      server: 1
     });
 
     if (res.status) {
@@ -241,7 +312,8 @@ export const vtuService = {
     
     const res = await cipApiClient<any>('education', { 
       data: { serviceID: payload.type, quantity: payload.quantity }, 
-      method: 'POST' 
+      method: 'POST',
+      server: 1
     });
 
     if (res.status) {
@@ -253,7 +325,7 @@ export const vtuService = {
 
   getEducationPlans: async (): Promise<ApiResponse<any[]>> => {
     try {
-      const res = await cipApiClient<any>('services', { method: 'GET' });
+      const res = await cipApiClient<any>('services', { method: 'GET', server: 1 });
       if (res.status && res.data?.education) {
         return { 
           status: true, 

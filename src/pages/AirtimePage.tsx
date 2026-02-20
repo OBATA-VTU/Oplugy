@@ -30,6 +30,8 @@ const AirtimePage: React.FC = () => {
           const constant = AIRTIME_NETWORKS.find(c => c.name.toUpperCase() === op.name.toUpperCase());
           return {
             ...op,
+            // Ensure we use the correct serviceID from the API
+            id: op.id, 
             image: constant?.image || 'https://cdn-icons-png.flaticon.com/512/8112/8112396.png'
           };
         });
