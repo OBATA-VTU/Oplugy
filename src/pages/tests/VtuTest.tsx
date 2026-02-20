@@ -2,7 +2,6 @@ import React, { useContext, useState, useEffect, useCallback } from 'react';
 import { TerminalContext } from '../../components/TerminalLayout';
 import { vtuService } from '../../services/vtuService';
 import Spinner from '../../components/Spinner';
-import { DATA_NETWORKS } from '../../constants';
 
 type ServiceType = 'AIRTIME' | 'DATA' | 'CABLE' | 'ELECTRICITY' | 'EDUCATION';
 

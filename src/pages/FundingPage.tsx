@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNotifications } from '../hooks/useNotifications';
 import Spinner from '../components/Spinner';
-import { WalletIcon, ShieldCheckIcon, BoltIcon } from '../components/Icons';
+import { WalletIcon } from '../components/Icons';
 
 declare const PaystackPop: any;
 

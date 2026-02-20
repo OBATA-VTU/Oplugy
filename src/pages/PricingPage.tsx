@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { vtuService } from '../services/vtuService';
-import { DataPlan, Operator } from '../types';
+import { Operator } from '../types';
 import Spinner from '../components/Spinner';
 
 const PricingPage: React.FC = () => {

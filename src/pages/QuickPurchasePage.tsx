@@ -4,7 +4,7 @@ import { useNotifications } from '../hooks/useNotifications';
 import Logo from '../components/Logo';
 import Spinner from '../components/Spinner';
 import Footer from '../components/Footer';
-import { PhoneIcon, SignalIcon, BoltIcon, TvIcon, ArrowIcon, ShieldCheckIcon } from '../components/Icons';
+import { PhoneIcon, SignalIcon, BoltIcon, TvIcon, ArrowIcon } from '../components/Icons';
 import { DATA_NETWORKS, AIRTIME_NETWORKS, CABLE_BILLERS } from '../constants';
 
 declare const PaystackPop: any;
