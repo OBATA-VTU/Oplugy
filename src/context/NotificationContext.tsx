@@ -26,11 +26,11 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     setNotifications((prev) => prev.filter((n) => n.id !== id));
   }, []);
 
-  const contextValue = {
+  const contextValue = React.useMemo(() => ({
     notifications,
     addNotification,
     removeNotification,
-  };
+  }), [notifications, addNotification, removeNotification]);
 
   return <NotificationContext.Provider value={contextValue}>{children}</NotificationContext.Provider>;
 };

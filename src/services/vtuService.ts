@@ -45,8 +45,11 @@ export const vtuService = {
     const user = auth.currentUser;
     if (!user) return { status: false, message: 'Please login to continue.' };
 
+    // Ensure we use the correct serviceID (some APIs expect names like MTN, others numeric IDs)
+    const serviceID = payload.network;
+
     const res = await cipApiClient<any>('airtime', { 
-      data: { serviceID: payload.network, mobileNumber: payload.phone, amount: payload.amount }, 
+      data: { serviceID, mobileNumber: payload.phone, amount: payload.amount }, 
       method: 'POST' 
     });
     
@@ -55,6 +58,32 @@ export const vtuService = {
       return { status: true, message: res.message, data: res.data };
     }
     return res;
+  },
+
+  getAirtimeOperators: async (): Promise<ApiResponse<Operator[]>> => {
+    try {
+      const res = await cipApiClient<any>('services', { method: 'GET' });
+      // Check multiple possible keys for airtime operators
+      const airtimeData = res.status && res.data ? (res.data.airtime || res.data.airtime_networks || res.data.airtimePlans) : null;
+      
+      if (airtimeData && Array.isArray(airtimeData)) {
+        const operators = airtimeData.map((a: any) => ({
+          id: String(a.serviceID || a.network || a.name || a.id),
+          name: String(a.network || a.name || a.serviceName),
+          image: '' 
+        }));
+        return { status: true, data: operators };
+      }
+      // Fallback to basic networks if node is missing airtime field
+      return { status: true, data: [
+        { id: 'MTN', name: 'MTN', image: '' },
+        { id: 'AIRTEL', name: 'Airtel', image: '' },
+        { id: 'GLO', name: 'Glo', image: '' },
+        { id: '9MOBILE', name: '9mobile', image: '' }
+      ]};
+    } catch (e) {
+      return { status: false, message: 'Airtime node sync failed.' };
+    }
   },
 
   getDataCategories: async (network: string): Promise<ApiResponse<string[]>> => {
@@ -226,6 +255,25 @@ export const vtuService = {
       return { status: true, message: res.message, data: res.data };
     }
     return res;
+  },
+
+  getEducationPlans: async (): Promise<ApiResponse<any[]>> => {
+    try {
+      const res = await cipApiClient<any>('services', { method: 'GET' });
+      const eduData = res.status && res.data ? (res.data.education || res.data.educationPlans || res.data.examPlans) : null;
+
+      if (eduData && Array.isArray(eduData)) {
+        return { 
+          status: true, 
+          data: eduData.map((e: any) => ({
+            id: String(e.serviceID || e.id),
+            name: e.exam || e.name || e.serviceName,
+            price: Number(String(e.amount || e.price || 0).replace(/,/g, ''))
+          }))
+        };
+      }
+    } catch (e) {}
+    return { status: false, message: 'Education node offline.' };
   },
 
   getTransactionHistory: async (): Promise<ApiResponse<TransactionResponse[]>> => {

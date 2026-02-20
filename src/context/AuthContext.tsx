@@ -125,7 +125,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, [user, addNotification]);
 
-  const contextValue = {
+  const contextValue = React.useMemo(() => ({
     user,
     token,
     walletBalance,
@@ -137,7 +137,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     logout,
     fetchWalletBalance,
     updateWalletBalance,
-  };
+  }), [user, token, walletBalance, isAuthenticated, isLoading, login, loginWithGoogle, signup, logout, fetchWalletBalance, updateWalletBalance]);
 
   return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;
 };

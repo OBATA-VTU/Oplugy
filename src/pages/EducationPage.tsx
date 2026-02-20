@@ -15,10 +15,26 @@ const DEFAULT_EXAM_TYPES = [
 const EducationPage: React.FC = () => {
   const { addNotification } = useNotifications();
   const { walletBalance, fetchWalletBalance } = useAuth();
+  const [examTypes, setExamTypes] = useState<any[]>([]);
+  const [isLoadingPlans, setIsLoadingPlans] = useState(true);
   const [selectedExam, setSelectedExam] = useState<any>(null);
   const [quantity, setQuantity] = useState(1);
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [showPinModal, setShowPinModal] = useState(false);
+
+  React.useEffect(() => {
+    const fetchPlans = async () => {
+      setIsLoadingPlans(true);
+      const res = await vtuService.getEducationPlans();
+      if (res.status && res.data) {
+        setExamTypes(res.data);
+      } else {
+        setExamTypes(DEFAULT_EXAM_TYPES);
+      }
+      setIsLoadingPlans(false);
+    };
+    fetchPlans();
+  }, []);
 
   const marginPerPin = 10;
   const totalAmount = (selectedExam ? (selectedExam.price + marginPerPin) : 0) * quantity;
@@ -78,7 +94,11 @@ const EducationPage: React.FC = () => {
             <div>
                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-6 ml-4">1. Choice Exam Type</label>
                <div className="grid grid-cols-1 gap-4">
-                  {DEFAULT_EXAM_TYPES.map(exam => (
+                  {isLoadingPlans ? (
+                    <div className="flex justify-center py-10">
+                      <Spinner />
+                    </div>
+                  ) : examTypes.map(exam => (
                     <button 
                      key={exam.id}
                      onClick={() => setSelectedExam(exam)}

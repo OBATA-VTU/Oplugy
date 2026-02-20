@@ -50,11 +50,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const rawServiceID = String(data.serviceID || data.plan_id || data.type || data.provider_id || data.network || '');
       
       // Strict mapping logic for Inlomax nodes
-      // ONLY lowercase if it's a cable tag (DSTV, GOTV) and NOT a numeric ID.
-      if (['validatecable', 'subcable'].includes(cleanEndpoint) && isNaN(Number(rawServiceID))) {
+      // ONLY lowercase if it's a cable tag (DSTV, GOTV) or airtime tag and NOT a numeric ID.
+      if (['validatecable', 'subcable', 'airtime'].includes(cleanEndpoint) && isNaN(Number(rawServiceID))) {
         mapped.serviceID = rawServiceID.toLowerCase();
       } else {
-        // Airtime, Data, and Education IDs must remain exactly as sent (numeric strings)
+        // Data and Education IDs must remain exactly as sent (numeric strings)
         mapped.serviceID = rawServiceID;
       }
       

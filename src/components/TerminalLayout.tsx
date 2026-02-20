@@ -10,16 +10,18 @@ const TerminalLayout: React.FC = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
 
-  const addLog = (message: string, type: 'info' | 'success' | 'error' | 'cmd' | 'data' = 'info', rawData?: any) => {
+  const addLog = React.useCallback((message: string, type: 'info' | 'success' | 'error' | 'cmd' | 'data' = 'info', rawData?: any) => {
     setLogs(prev => [...prev, {
       timestamp: new Date().toLocaleTimeString(),
       message,
       type,
       data: rawData
     }]);
-  };
+  }, []);
 
-  const clearLogs = () => setLogs([]);
+  const clearLogs = React.useCallback(() => setLogs([]), []);
+
+  const contextValue = React.useMemo(() => ({ addLog, clearLogs }), [addLog, clearLogs]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -31,7 +33,7 @@ const TerminalLayout: React.FC = () => {
   useEffect(() => setSidebarOpen(false), [location]);
 
   return (
-    <TerminalContext.Provider value={{ addLog, clearLogs }}>
+    <TerminalContext.Provider value={contextValue}>
       <div className="min-h-screen bg-zinc-950 text-green-500 font-mono flex flex-col lg:flex-row overflow-hidden">
         
         {/* Sidebar Nav */}

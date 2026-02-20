@@ -5,10 +5,10 @@ import Spinner from '../components/Spinner';
 
 const PricingPage: React.FC = () => {
   const [filter, setFilter] = useState('');
-  const [activeTab, setActiveTab] = useState<'DATA' | 'ELECTRICITY' | 'CABLE'>('DATA');
+  const [activeTab, setActiveTab] = useState<'DATA' | 'ELECTRICITY' | 'CABLE' | 'EDUCATION'>('DATA');
   const [activeNetwork, setActiveNetwork] = useState('MTN');
   const [activeCable, setActiveCable] = useState('DSTV');
-  const [plans, setPlans] = useState<DataPlan[]>([]);
+  const [plans, setPlans] = useState<any[]>([]);
   const [operators, setOperators] = useState<Operator[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -16,7 +16,6 @@ const PricingPage: React.FC = () => {
     setLoading(true);
     try {
       if (activeTab === 'DATA') {
-        // Fix: Removed 'server' property as it's not defined in the payload type for getDataPlans
         const [sme, gifting] = await Promise.all([
           vtuService.getDataPlans({ network: activeNetwork, type: 'SME' }),
           vtuService.getDataPlans({ network: activeNetwork, type: 'GIFTING' })
@@ -27,6 +26,9 @@ const PricingPage: React.FC = () => {
         if (res.status && res.data) setOperators(res.data);
       } else if (activeTab === 'CABLE') {
         const res = await vtuService.getCablePlans(activeCable);
+        if (res.status && res.data) setPlans(res.data);
+      } else if (activeTab === 'EDUCATION') {
+        const res = await vtuService.getEducationPlans();
         if (res.status && res.data) setPlans(res.data);
       }
     } catch (e) {
@@ -50,12 +52,12 @@ const PricingPage: React.FC = () => {
       </div>
 
       <div className="flex flex-col lg:flex-row gap-8 items-center justify-between">
-         <div className="flex p-1.5 bg-white rounded-2xl border border-gray-100 shadow-sm w-full lg:w-auto">
-            {['DATA', 'ELECTRICITY', 'CABLE'].map((tab: any) => (
+         <div className="flex p-1.5 bg-white rounded-2xl border border-gray-100 shadow-sm w-full lg:w-auto overflow-x-auto no-scrollbar">
+            {['DATA', 'ELECTRICITY', 'CABLE', 'EDUCATION'].map((tab: any) => (
               <button 
                 key={tab} 
                 onClick={() => { setActiveTab(tab); setFilter(''); }}
-                className={`flex-1 px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === tab ? 'bg-gray-900 text-white shadow-xl' : 'text-gray-400 hover:text-gray-900'}`}
+                className={`flex-1 px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === tab ? 'bg-gray-900 text-white shadow-xl' : 'text-gray-400 hover:text-gray-900'}`}
               >
                 {tab}
               </button>
@@ -90,7 +92,7 @@ const PricingPage: React.FC = () => {
         </div>
       ) : (
         <div className="bg-white rounded-[2.5rem] lg:rounded-[3rem] shadow-2xl border border-gray-50 overflow-hidden">
-           {activeTab === 'DATA' || activeTab === 'CABLE' ? (
+           {activeTab === 'DATA' || activeTab === 'CABLE' || activeTab === 'EDUCATION' ? (
              <table className="w-full text-left border-collapse">
                 <thead className="bg-gray-50 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 border-b border-gray-100">
                    <tr>
@@ -104,12 +106,16 @@ const PricingPage: React.FC = () => {
                      <tr key={idx} className="group hover:bg-gray-50 transition-colors">
                         <td className="px-10 py-7">
                            <div className="flex items-center space-x-4">
-                              <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center font-black text-xs">{(activeTab === 'DATA' ? activeNetwork : activeCable).charAt(0)}</div>
+                              <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center font-black text-xs">
+                                {activeTab === 'DATA' ? activeNetwork.charAt(0) : activeTab === 'CABLE' ? activeCable.charAt(0) : 'E'}
+                              </div>
                               <span className="font-black text-gray-900">{item.name}</span>
                            </div>
                         </td>
-                        <td className="px-10 py-7 text-right font-black text-gray-900 tracking-tighter text-xl">₦{item.amount.toLocaleString()}</td>
-                        <td className="px-10 py-7 text-right text-[10px] font-black uppercase tracking-widest text-gray-400">{item.validity || '30 Days'}</td>
+                        <td className="px-10 py-7 text-right font-black text-gray-900 tracking-tighter text-xl">
+                          ₦{(item.amount || item.price || 0).toLocaleString()}
+                        </td>
+                        <td className="px-10 py-7 text-right text-[10px] font-black uppercase tracking-widest text-gray-400">{item.validity || (activeTab === 'EDUCATION' ? 'Instant' : '30 Days')}</td>
                      </tr>
                    )) : (
                      <tr><td colSpan={3} className="px-10 py-20 text-center text-gray-400 font-medium">No plans found for this criteria.</td></tr>

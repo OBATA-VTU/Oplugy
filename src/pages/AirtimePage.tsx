@@ -11,13 +11,36 @@ import { AIRTIME_NETWORKS } from '../constants';
 const AirtimePage: React.FC = () => {
   const { addNotification } = useNotifications();
   const { walletBalance, updateWalletBalance } = useAuth();
-  const [operators] = useState<Operator[]>(AIRTIME_NETWORKS);
+  const [operators, setOperators] = useState<Operator[]>([]);
+  const [isLoadingOperators, setIsLoadingOperators] = useState(true);
   const [selectedOperator, setSelectedOperator] = useState<Operator | null>(null);
   const [phoneNumber, setPhoneNumber] = useState('');
   const [amount, setAmount] = useState('');
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showPinModal, setShowPinModal] = useState(false);
+
+  React.useEffect(() => {
+    const fetchOperators = async () => {
+      setIsLoadingOperators(true);
+      const res = await vtuService.getAirtimeOperators();
+      if (res.status && res.data) {
+        // Map API operators to our constants to get images
+        const mapped = res.data.map(op => {
+          const constant = AIRTIME_NETWORKS.find(c => c.name.toUpperCase() === op.name.toUpperCase());
+          return {
+            ...op,
+            image: constant?.image || 'https://cdn-icons-png.flaticon.com/512/8112/8112396.png'
+          };
+        });
+        setOperators(mapped);
+      } else {
+        setOperators(AIRTIME_NETWORKS);
+      }
+      setIsLoadingOperators(false);
+    };
+    fetchOperators();
+  }, []);
 
   const numericAmount = parseFloat(amount);
 
@@ -96,7 +119,11 @@ const AirtimePage: React.FC = () => {
           <div>
             <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-4">1. Select Network</label>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              {operators.map(op => (
+              {isLoadingOperators ? (
+                <div className="col-span-full flex justify-center py-10">
+                  <Spinner />
+                </div>
+              ) : operators.map(op => (
                 <button
                   key={op.id}
                   onClick={() => setSelectedOperator(op)}
