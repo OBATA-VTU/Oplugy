@@ -90,7 +90,7 @@ export const vtuService = {
           const planId = String(p.serviceID);
           const manual = await getManualPrice(planId, role);
           const rawBase = Number(String(p.amount).replace(/,/g, ''));
-          const validityStr = p.validity ? ` - ${p.validity}` : '';
+          const validityStr = p.validity ? ` (${p.validity})` : '';
           
           plans.push({
             id: planId,
@@ -162,11 +162,12 @@ export const vtuService = {
   getCableProviders: async (): Promise<ApiResponse<Operator[]>> => {
     const res = await cipApiClient<any>('services', { method: 'GET' });
     if (res.status && res.data?.cablePlans) {
-      const uniqueBillers = Array.from(new Set((res.data.cablePlans as any[]).map(c => c.cable)));
-      return { 
-        status: true, 
-        data: uniqueBillers.map(b => ({ id: String(b), name: String(b) })) 
-      };
+      // Deduplicate billers from the plans list
+      const billers = Array.from(new Set((res.data.cablePlans as any[]).map(c => c.cable))).map(name => ({
+        id: String(name).toLowerCase(),
+        name: String(name)
+      }));
+      return { status: true, data: billers };
     }
     return { status: false, message: 'Cable node sync failed.' };
   },

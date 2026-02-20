@@ -32,6 +32,9 @@ const VtuTest: React.FC = () => {
   const [meterNo, setMeterNo] = useState('7027914329');
   const [meterType, setMeterType] = useState<'prepaid' | 'postpaid'>('prepaid');
 
+  const [eduType, setEduType] = useState('1'); // 1 = WAEC
+  const [quantity, setQuantity] = useState(1);
+
   const fetchDataTypes = useCallback(async () => {
     addLog(`FETCH_DATA_TYPES for ${network}`, 'cmd');
     const res = await vtuService.getDataCategories(network);
@@ -160,6 +163,17 @@ const VtuTest: React.FC = () => {
       else if (activeService === 'AIRTIME') {
         addLog(`AIRTIME_PAYLOAD: [${network}] [${phone}] [100]`);
         const res = await vtuService.purchaseAirtime({ network, phone, amount: 100 });
+        if (res.status) addLog("TX_EXECUTION_SUCCESS", 'success', res.data);
+        else addLog(`TX_ABORTED: ${res.message}`, 'error');
+      }
+      else if (activeService === 'EDUCATION') {
+        addLog(`EDU_PIN_INIT: [ID: ${eduType}] [Qty: ${quantity}]`);
+        const res = await vtuService.purchaseEducation({
+          type: eduType,
+          quantity: quantity,
+          amount: 0,
+          name: 'WAEC PIN'
+        });
         if (res.status) addLog("TX_EXECUTION_SUCCESS", 'success', res.data);
         else addLog(`TX_ABORTED: ${res.message}`, 'error');
       }
@@ -328,9 +342,23 @@ const VtuTest: React.FC = () => {
             )}
 
             {activeService === 'EDUCATION' && (
-              <div className="flex flex-col items-center justify-center py-10 bg-black/40 border border-dashed border-zinc-800 rounded-3xl">
-                 <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest">Education Node Diagnostic Pending</p>
-                 <p className="text-zinc-700 text-[8px] uppercase tracking-widest mt-2">Implementation scheduled for v2.2</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-in fade-in">
+                 <div className="space-y-6">
+                    <div>
+                       <label className="text-[9px] font-black text-zinc-500 uppercase tracking-widest block mb-2">PIN Node (ServiceID)</label>
+                       <select value={eduType} onChange={(e) => setEduType(e.target.value)} className="w-full bg-black border border-zinc-800 p-4 rounded-xl text-green-500 font-mono outline-none focus:border-green-500 transition-all">
+                          <option value="1">WAEC Result Checker (1)</option>
+                          <option value="2">NECO Result Checker (2)</option>
+                          <option value="3">NABTEB Result Checker (3)</option>
+                       </select>
+                    </div>
+                 </div>
+                 <div className="space-y-6">
+                    <div>
+                       <label className="text-[9px] font-black text-zinc-500 uppercase tracking-widest block mb-2">Quantity</label>
+                       <input type="number" value={quantity} onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))} className="w-full bg-black border border-zinc-800 p-4 rounded-xl text-green-500 font-mono outline-none focus:border-green-500 transition-all" />
+                    </div>
+                 </div>
               </div>
             )}
 
@@ -338,7 +366,7 @@ const VtuTest: React.FC = () => {
             <div className="pt-10 border-t border-zinc-800">
                <button 
                  onClick={executePurchase}
-                 disabled={loading || verifying || activeService === 'EDUCATION'}
+                 disabled={loading || verifying}
                  className="w-full py-6 bg-green-500 text-black font-black text-xs uppercase tracking-[0.3em] hover:bg-white transition-all transform active:scale-95 disabled:opacity-50 flex items-center justify-center gap-4 rounded-2xl"
                >
                   {loading ? <Spinner /> : `EXECUTE SIMULATED ${activeService} FULFILLMENT`}

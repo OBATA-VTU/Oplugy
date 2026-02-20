@@ -2,7 +2,7 @@ import { ApiResponse } from '../types';
 
 async function safeFetch<T>(body: any): Promise<ApiResponse<T>> {
   try {
-    // Calling the proxy file directly to avoid Vercel rewrite issues in certain environments
+    // Calling the proxy at the direct absolute API path
     const response = await fetch('/api/paystack-proxy', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -12,14 +12,18 @@ async function safeFetch<T>(body: any): Promise<ApiResponse<T>> {
     const contentType = response.headers.get('content-type');
     if (contentType && contentType.includes('application/json')) {
       const res = await response.json();
-      // Paystack usually returns { status: true, data: ... }
-      return res.status ? { status: true, data: res.data } : { status: false, message: res.message || 'Gateway reported error' };
+      // In Paystack API responses, 'status' is a boolean
+      if (res.status === true) {
+        return { status: true, data: res.data };
+      } else {
+        return { status: false, message: res.message || 'Gateway reported failure' };
+      }
     } else {
       const text = await response.text();
-      return { status: false, message: `Gateway error: ${text.substring(0, 100)}` };
+      return { status: false, message: `Gateway Protocol Error: ${text.substring(0, 100)}` };
     }
   } catch (e: any) {
-    return { status: false, message: e.message || 'Network connectivity failed' };
+    return { status: false, message: e.message || 'Node connectivity failed' };
   }
 }
 
