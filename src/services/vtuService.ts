@@ -172,17 +172,22 @@ export const vtuService = {
         }
       } else {
         // Server 2 (Ciptopup)
-        const res = await cipApiClient<any>('data/plans', { 
-          method: 'GET', 
-          server: 2,
-          data: { network: payload.network.toUpperCase(), type: payload.type.toUpperCase() }
-        });
+        const [res, marginDoc] = await Promise.all([
+          cipApiClient<any>('data/plans', { 
+            method: 'GET', 
+            server: 2,
+            data: { network: payload.network.toUpperCase(), type: payload.type.toUpperCase() }
+          }),
+          getDoc(doc(db, "settings", "server2_config"))
+        ]);
+        
+        const margin = marginDoc.exists() ? Number(marginDoc.data().general_margin || 0) : 0;
         
         if (res.status && Array.isArray(res.data)) {
           const plans: DataPlan[] = res.data.map((p: any) => ({
             id: p.id,
             name: `${p.name} (${p.validity || 'N/A'})`,
-            amount: p.price / 100, // Ciptopup returns price in Kobo
+            amount: (p.price / 100) + margin, // Ciptopup returns price in Kobo, add margin
             validity: p.validity || 'N/A'
           }));
           return { status: true, data: plans };
@@ -344,9 +349,17 @@ export const vtuService = {
     const user = auth.currentUser;
     if (!user) return { status: false, message: 'Auth required.' };
     try {
-      const txQuery = query(collection(db, "transactions"), where("userId", "==", user.uid), orderBy("date_created", "desc"), limit(50));
+      // Simplified query to avoid index requirement if not created yet
+      const txQuery = query(collection(db, "transactions"), where("userId", "==", user.uid), limit(50));
       const snapshot = await getDocs(txQuery);
-      return { status: true, data: snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as TransactionResponse)) };
+      const data = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as TransactionResponse));
+      // Sort manually in memory to ensure descending order without composite index
+      data.sort((a: any, b: any) => {
+        const dateA = a.date_created?.seconds || 0;
+        const dateB = b.date_created?.seconds || 0;
+        return dateB - dateA;
+      });
+      return { status: true, data };
     } catch (error) { return { status: false, message: "History ledger offline." }; }
   }
 };

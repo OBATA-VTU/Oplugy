@@ -24,35 +24,79 @@ const AdminPricingPage: React.FC = () => {
   const [prices, setPrices] = useState({ user: '', reseller: '', api: '' });
   const [isSaving, setIsSaving] = useState(false);
   const [filter, setFilter] = useState('');
+  const [activeServer, setActiveServer] = useState<1 | 2>(1);
+  const [server2Margin, setServer2Margin] = useState<string>('0');
+  const [isSavingMargin, setIsSavingMargin] = useState(false);
+
+  const fetchServer2Margin = useCallback(async () => {
+    const marginDoc = await getDoc(doc(db, "settings", "server2_config"));
+    if (marginDoc.exists()) {
+      setServer2Margin(marginDoc.data().general_margin?.toString() || '0');
+    }
+  }, []);
 
   const fetchPlans = useCallback(async () => {
     setLoading(true);
-    // Fetch Server 1 plans as baseline
-    const res = await cipApiClient<any>('services', { method: 'GET', data: { server: 'server1' } });
-    if (res.status && res.data?.dataPlans) {
-      const formatted = await Promise.all((res.data.dataPlans as any[]).map(async (p) => {
-        const manualDoc = await getDoc(doc(db, "manual_pricing", String(p.serviceID)));
-        return {
-          id: String(p.serviceID),
-          name: `${p.dataPlan} ${p.dataType}`,
-          base_price: Number(String(p.amount).replace(/,/g, '')),
-          network: p.network,
-          type: p.dataType,
-          manual_prices: manualDoc.exists() ? manualDoc.data() : null
-        };
-      }));
-      setPlans(formatted);
+    if (activeServer === 1) {
+      const res = await cipApiClient<any>('services', { method: 'GET', server: 1 });
+      if (res.status && res.data?.dataPlans) {
+        const formatted = await Promise.all((res.data.dataPlans as any[]).map(async (p) => {
+          const manualDoc = await getDoc(doc(db, "manual_pricing", String(p.serviceID)));
+          return {
+            id: String(p.serviceID),
+            name: `${p.dataPlan} ${p.dataType}`,
+            base_price: Number(String(p.amount).replace(/,/g, '')),
+            network: p.network,
+            type: p.dataType,
+            manual_prices: manualDoc.exists() ? manualDoc.data() : null
+          };
+        }));
+        setPlans(formatted);
+      } else {
+        addNotification("Matrix sync failed for Node 1 Ledger.", "error");
+      }
     } else {
-      addNotification("Matrix sync failed for Node 1 Ledger.", "error");
+      // Server 2
+      const res = await cipApiClient<any>('data/plans', { method: 'GET', server: 2 });
+      if (res.status && Array.isArray(res.data)) {
+        setPlans(res.data.map((p: any) => ({
+          id: p.id,
+          name: p.name,
+          base_price: p.price / 100,
+          network: p.network,
+          type: p.type
+        })));
+        await fetchServer2Margin();
+      } else {
+        addNotification("Matrix sync failed for Node 2 Ledger.", "error");
+      }
     }
     setLoading(false);
-  }, [addNotification]);
+  }, [addNotification, activeServer, fetchServer2Margin]);
 
   useEffect(() => {
     fetchPlans();
   }, [fetchPlans]);
 
+  const handleSaveMargin = async () => {
+    setIsSavingMargin(true);
+    try {
+      await setDoc(doc(db, "settings", "server2_config"), {
+        general_margin: Number(server2Margin),
+        updatedAt: serverTimestamp()
+      }, { merge: true });
+      addNotification("General margin for Server 2 updated.", "success");
+    } catch (e) {
+      addNotification("Failed to update margin.", "error");
+    }
+    setIsSavingMargin(false);
+  };
+
   const handleEdit = (plan: ServicePlan) => {
+    if (activeServer === 2) {
+      addNotification("Individual overrides are only available for Server 1. Use general margin for Server 2.", "info");
+      return;
+    }
     setEditingPlan(plan);
     setPrices({ 
       user: plan.manual_prices?.user_price?.toString() || '', 
@@ -94,6 +138,46 @@ const AdminPricingPage: React.FC = () => {
         <h1 className="text-4xl lg:text-7xl font-black text-gray-900 tracking-tighter leading-none">Tariff Matrix</h1>
         <p className="text-gray-400 font-medium text-xl mt-6 italic max-w-3xl">Force manual price overrides across different account tiers to maximize node profitability.</p>
       </div>
+
+      <div className="flex gap-4 mb-10">
+        <button 
+          onClick={() => setActiveServer(1)} 
+          className={`px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${activeServer === 1 ? 'bg-gray-900 text-white shadow-xl' : 'bg-white text-gray-400 border border-gray-100'}`}
+        >
+          Server 1 (Inlomax)
+        </button>
+        <button 
+          onClick={() => setActiveServer(2)} 
+          className={`px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${activeServer === 2 ? 'bg-gray-900 text-white shadow-xl' : 'bg-white text-gray-400 border border-gray-100'}`}
+        >
+          Server 2 (Ciptopup)
+        </button>
+      </div>
+
+      {activeServer === 2 && (
+        <div className="bg-white p-10 rounded-[3rem] border border-gray-100 shadow-xl mb-10 animate-in slide-in-from-top-4">
+           <div className="flex flex-col md:flex-row items-center gap-8">
+              <div className="flex-1">
+                 <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-4">General Profit Margin (₦)</label>
+                 <input 
+                   type="number" 
+                   value={server2Margin} 
+                   onChange={(e) => setServer2Margin(e.target.value)}
+                   className="w-full p-6 bg-gray-50 border-4 border-transparent focus:border-blue-600 rounded-3xl font-black text-2xl outline-none transition-all"
+                   placeholder="e.g. 50"
+                 />
+              </div>
+              <button 
+                onClick={handleSaveMargin}
+                disabled={isSavingMargin}
+                className="bg-blue-600 text-white px-12 py-6 rounded-3xl font-black uppercase tracking-widest text-[10px] shadow-xl shadow-blue-200 hover:bg-black transition-all disabled:opacity-50"
+              >
+                {isSavingMargin ? <Spinner /> : 'Update Global Margin'}
+              </button>
+           </div>
+           <p className="text-[10px] font-bold text-gray-400 mt-6 italic">*This margin will be added to the base cost of all Server 2 data plans for all users.</p>
+        </div>
+      )}
 
       <div className="bg-white p-6 rounded-[3rem] border border-gray-100 shadow-xl mb-16 sticky top-24 z-20">
         <input 
