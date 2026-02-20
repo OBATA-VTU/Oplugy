@@ -16,16 +16,15 @@ const NavItem: React.FC<{ to: string; icon: ReactNode; children: ReactNode; onCl
     onClick={onClick}
     end={to === '/'}
     className={({ isActive }) =>
-      `flex items-center space-x-4 p-5 rounded-[1.75rem] transition-all duration-300 group relative ${
+      `flex items-center space-x-4 p-4 rounded-xl transition-all duration-300 group relative border-b border-white/5 ${
         isActive
-          ? 'bg-blue-600 text-white shadow-2xl shadow-blue-500/30 scale-[1.02]'
-          : 'text-gray-400 hover:bg-gray-50 hover:text-gray-900'
+          ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
+          : 'text-gray-400 hover:bg-white/5 hover:text-white'
       }`
     }
   >
     <span className="shrink-0 transition-transform group-hover:scale-110 z-10">{icon}</span>
-    <span className="font-black text-[10px] uppercase tracking-[0.25em] z-10">{children}</span>
-    <div className={`absolute inset-0 bg-blue-600/5 opacity-0 group-hover:opacity-100 transition-opacity rounded-[1.75rem] pointer-events-none`} />
+    <span className="font-bold text-[11px] uppercase tracking-[0.15em] z-10">{children}</span>
   </NavLink>
 );
 
@@ -43,43 +42,54 @@ const Layout: React.FC = () => {
   const closeSidebar = () => setIsSidebarOpen(false);
 
   const sidebarContent = (
-    <div className="h-full flex flex-col bg-white overflow-hidden border-r border-gray-100">
-      <div className="p-10 mb-4">
+    <div className="h-full flex flex-col bg-[#0A0A0B] text-white overflow-hidden">
+      <div className="p-10 mb-4 border-b border-white/5">
         <Logo />
+        <div className="mt-6 flex items-center space-x-3 bg-white/5 p-3 rounded-2xl border border-white/10">
+           <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center font-black text-sm">
+              {user?.username?.charAt(0).toUpperCase() || 'U'}
+           </div>
+           <div className="overflow-hidden">
+              <p className="text-[10px] font-black uppercase tracking-widest truncate">{user?.username || 'User'}</p>
+              <p className="text-[8px] text-gray-500 font-bold uppercase tracking-widest">Active Node</p>
+           </div>
+        </div>
       </div>
-      <nav className="flex-grow px-8 space-y-2 overflow-y-auto no-scrollbar pb-10">
-        <div className="px-5 mb-4 text-[9px] font-black uppercase tracking-[0.5em] text-gray-300">Hub Overview</div>
-        <NavItem to="/dashboard" icon={<HomeIcon />} onClick={closeSidebar}>Dashboard</NavItem>
-        <NavItem to="/funding" icon={<WalletIcon />} onClick={closeSidebar}>Add Money</NavItem>
-        <NavItem to="/history" icon={<HistoryIcon />} onClick={closeSidebar}>History</NavItem>
+      
+      <nav className="flex-grow px-6 space-y-1 overflow-y-auto no-scrollbar pb-10">
+        <div className="px-4 py-4 text-[9px] font-black uppercase tracking-[0.3em] text-gray-600">Core Systems</div>
+        <NavItem to="/dashboard" icon={<HomeIcon />} onClick={closeSidebar}>Terminal Hub</NavItem>
+        <NavItem to="/funding" icon={<WalletIcon />} onClick={closeSidebar}>Liquidity Influx</NavItem>
+        <NavItem to="/history" icon={<HistoryIcon />} onClick={closeSidebar}>System Ledger</NavItem>
         
-        <div className="px-5 mt-10 mb-4 text-[9px] font-black uppercase tracking-[0.5em] text-gray-300">Terminal Services</div>
-        <NavItem to="/airtime" icon={<PhoneIcon />} onClick={closeSidebar}>Airtime</NavItem>
-        <NavItem to="/data" icon={<SignalIcon />} onClick={closeSidebar}>Mobile Data</NavItem>
-        <NavItem to="/bills" icon={<BoltIcon />} onClick={closeSidebar}>Electricity</NavItem>
-        <NavItem to="/cable" icon={<TvIcon />} onClick={closeSidebar}>Cable TV</NavItem>
-        <NavItem to="/education" icon={<GamingIcon />} onClick={closeSidebar}>Exam Pins</NavItem>
+        <div className="px-4 py-4 mt-6 text-[9px] font-black uppercase tracking-[0.3em] text-gray-600">Service Nodes</div>
+        <NavItem to="/airtime" icon={<PhoneIcon />} onClick={closeSidebar}>Voice Node</NavItem>
+        <NavItem to="/data" icon={<SignalIcon />} onClick={closeSidebar}>Packet Data</NavItem>
+        <NavItem to="/bills" icon={<BoltIcon />} onClick={closeSidebar}>Power Grid</NavItem>
+        <NavItem to="/cable" icon={<TvIcon />} onClick={closeSidebar}>Media Stream</NavItem>
+        <NavItem to="/education" icon={<GamingIcon />} onClick={closeSidebar}>Auth Tokens</NavItem>
 
-        <div className="px-5 mt-10 mb-4 text-[9px] font-black uppercase tracking-[0.5em] text-gray-300">Account Nodes</div>
-        <NavItem to="/referral" icon={<UsersIcon />} onClick={closeSidebar}>Refer & Earn</NavItem>
-        <NavItem to="/pricing" icon={<CurrencyDollarIcon />} onClick={closeSidebar}>Price List</NavItem>
-        <NavItem to="/profile" icon={<ShieldCheckIcon />} onClick={closeSidebar}>My Profile</NavItem>
-        <NavItem to="/support" icon={<BoltIcon />} onClick={closeSidebar}>Help Center</NavItem>
+        <div className="px-4 py-4 mt-6 text-[9px] font-black uppercase tracking-[0.3em] text-gray-600">Account Config</div>
+        <NavItem to="/referral" icon={<UsersIcon />} onClick={closeSidebar}>Node Expansion</NavItem>
+        <NavItem to="/pricing" icon={<CurrencyDollarIcon />} onClick={closeSidebar}>Tariff Matrix</NavItem>
+        <NavItem to="/profile" icon={<ShieldCheckIcon />} onClick={closeSidebar}>Security Vault</NavItem>
+        <NavItem to="/support" icon={<BoltIcon />} onClick={closeSidebar}>Debug Center</NavItem>
 
         {user?.role === 'admin' && (
-          <div className="pt-10 mt-10 border-t border-gray-50">
-            <div className="px-5 mb-4 text-[9px] font-black uppercase tracking-[0.5em] text-red-500">Master Terminal</div>
-            <NavItem to="/admin" icon={<ShieldCheckIcon />} onClick={closeSidebar}>Admin Panel</NavItem>
+          <div className="pt-6 mt-6 border-t border-white/5">
+            <div className="px-4 mb-4 text-[9px] font-black uppercase tracking-[0.3em] text-red-500">Master Control</div>
+            <NavItem to="/admin" icon={<ShieldCheckIcon />} onClick={closeSidebar}>Admin Terminal</NavItem>
           </div>
         )}
       </nav>
-      <div className="p-10 bg-gray-50/30">
+
+      <div className="p-8 bg-black/40 border-t border-white/5">
         <button
           onClick={handleLogout}
-          className="w-full flex items-center space-x-4 p-5 rounded-[1.5rem] text-red-500 bg-red-50 hover:bg-red-500 hover:text-white transition-all font-black text-[10px] uppercase tracking-widest shadow-sm active:scale-95 group"
+          className="w-full flex items-center space-x-4 p-4 rounded-xl text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all font-black text-[10px] uppercase tracking-widest group"
         >
           <LogoutIcon />
-          <span className="group-hover:translate-x-1 transition-transform">Exit Session</span>
+          <span className="group-hover:translate-x-1 transition-transform">Terminate Session</span>
         </button>
       </div>
     </div>

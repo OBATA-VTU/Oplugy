@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useNotifications } from '../hooks/useNotifications';
+import { vtuService } from '../services/vtuService';
 import Logo from '../components/Logo';
 import Spinner from '../components/Spinner';
 import Footer from '../components/Footer';
 import { PhoneIcon, SignalIcon, BoltIcon, TvIcon, ArrowIcon } from '../components/Icons';
-import { DATA_NETWORKS, AIRTIME_NETWORKS, CABLE_BILLERS } from '../constants';
 
 declare const PaystackPop: any;
 
@@ -23,6 +23,43 @@ const QuickPurchasePage: React.FC = () => {
     smartcard: '' 
   });
   const [isProcessing, setIsProcessing] = useState(false);
+  const [networks, setNetworks] = useState<any[]>([]);
+  const [dataPlans, setDataPlans] = useState<any[]>([]);
+  const [loadingOptions, setLoadingOptions] = useState(false);
+
+  useEffect(() => {
+    if (step === 2 && (service === 'data' || service === 'airtime')) {
+      const fetchOptions = async () => {
+        setLoadingOptions(true);
+        try {
+          if (service === 'data' || service === 'airtime') {
+            const res = await vtuService.getDataNetworks(1); // Server 1 ONLY
+            if (res.status) setNetworks(res.data || []);
+          }
+        } catch (e) {
+          addNotification("Failed to sync with fulfillment node.", "error");
+        }
+        setLoadingOptions(false);
+      };
+      fetchOptions();
+    }
+  }, [step, service, addNotification]);
+
+  useEffect(() => {
+    if (service === 'data' && details.network) {
+      const fetchPlans = async () => {
+        setLoadingOptions(true);
+        try {
+          const res = await vtuService.getDataPlans({ network: details.network, type: '', server: 1 });
+          if (res.status) setDataPlans(res.data || []);
+        } catch (e) {
+          addNotification("Catalog sync failed.", "error");
+        }
+        setLoadingOptions(false);
+      };
+      fetchPlans();
+    }
+  }, [details.network, service, addNotification]);
 
   const calculateCharges = (amount: number) => {
     if (!amount || isNaN(amount)) return 0;
@@ -70,12 +107,6 @@ const QuickPurchasePage: React.FC = () => {
     handler.openIframe();
   };
 
-  const providers = 
-    service === 'data' ? DATA_NETWORKS : 
-    service === 'airtime' ? AIRTIME_NETWORKS : 
-    service === 'tv' ? CABLE_BILLERS : 
-    [];
-
   const handleServiceSelect = (selected: 'airtime' | 'data' | 'power' | 'tv') => {
     setService(selected);
     setDetails({ phone: '', network: '', amount: '', plan: '', meterType: 'prepaid', smartcard: '' });
@@ -116,17 +147,21 @@ const QuickPurchasePage: React.FC = () => {
             {step === 2 && (
                <div className="space-y-12 animate-in slide-in-from-bottom-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                     {service !== 'power' && (
+                     {(service === 'data' || service === 'airtime') && (
                        <div>
                           <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-2">Provider</label>
-                          <select 
-                             className="w-full p-6 bg-gray-50 rounded-[1.5rem] font-black text-xl border-4 border-transparent focus:border-blue-600 outline-none appearance-none transition-all"
-                             value={details.network}
-                             onChange={(e) => setDetails({...details, network: e.target.value})}
-                          >
-                             <option value="">Choose Network</option>
-                             {providers.map(n => <option key={n.id} value={n.id}>{n.name}</option>)}
-                          </select>
+                          <div className="relative">
+                            <select 
+                               className="w-full p-6 bg-gray-50 rounded-[1.5rem] font-black text-xl border-4 border-transparent focus:border-blue-600 outline-none appearance-none transition-all disabled:opacity-50"
+                               value={details.network}
+                               onChange={(e) => setDetails({...details, network: e.target.value})}
+                               disabled={loadingOptions}
+                            >
+                               <option value="">{loadingOptions ? 'Syncing...' : 'Choose Network'}</option>
+                               {networks.map(n => <option key={n.id} value={n.id}>{n.name}</option>)}
+                            </select>
+                            {loadingOptions && <div className="absolute right-6 top-1/2 -translate-y-1/2"><Spinner /></div>}
+                          </div>
                        </div>
                      )}
 
@@ -162,20 +197,23 @@ const QuickPurchasePage: React.FC = () => {
                      {service === 'data' ? (
                         <div className="md:col-span-2">
                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-2">Choose Data Plan</label>
-                           <select 
-                             className="w-full p-6 bg-gray-50 rounded-[1.5rem] font-black text-xl border-4 border-transparent focus:border-blue-600 outline-none appearance-none transition-all"
-                             value={details.plan}
-                             onChange={(e) => {
-                               const [id, price] = e.target.value.split('|');
-                               setDetails({...details, plan: id, amount: price});
-                             }}
-                             disabled={!details.network}
-                           >
-                              <option value="">Select Bundle</option>
-                              <option value="1|350">MTN SME 1GB - ₦350</option>
-                              <option value="2|700">MTN SME 2GB - ₦700</option>
-                              <option value="3|350">Airtel CG 1GB - ₦350</option>
-                           </select>
+                           <div className="relative">
+                            <select 
+                              className="w-full p-6 bg-gray-50 rounded-[1.5rem] font-black text-xl border-4 border-transparent focus:border-blue-600 outline-none appearance-none transition-all disabled:opacity-50"
+                              value={details.plan}
+                              onChange={(e) => {
+                                const [id, price] = e.target.value.split('|');
+                                setDetails({...details, plan: id, amount: price});
+                              }}
+                              disabled={!details.network || loadingOptions}
+                            >
+                               <option value="">{loadingOptions ? 'Syncing Catalog...' : 'Select Bundle'}</option>
+                               {dataPlans.map(p => (
+                                 <option key={p.id} value={`${p.id}|${p.amount}`}>{p.name} - ₦{p.amount}</option>
+                               ))}
+                            </select>
+                            {loadingOptions && details.network && <div className="absolute right-6 top-1/2 -translate-y-1/2"><Spinner /></div>}
+                           </div>
                         </div>
                      ) : (
                        <div className="md:col-span-2">

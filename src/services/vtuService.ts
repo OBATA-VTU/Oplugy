@@ -1,6 +1,6 @@
 import { ApiResponse, Operator, DataPlan, TransactionResponse, VerificationResponse, UserRole } from '../types';
 import { cipApiClient } from './cipApiClient';
-import { collection, query, where, getDocs, orderBy, limit, addDoc, serverTimestamp, doc, updateDoc, increment, getDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, limit, addDoc, serverTimestamp, doc, updateDoc, increment, getDoc } from 'firebase/firestore';
 import { db, auth } from '../firebase/config';
 
 async function getManualPrice(planId: string, role: UserRole): Promise<number | null> {

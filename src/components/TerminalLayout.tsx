@@ -50,10 +50,10 @@ const TerminalLayout: React.FC = () => {
             </div>
 
             <nav className="space-y-2">
-               <NavItem to="/terminal/overview" icon={<HistoryIcon />} label="System Overview" />
-               <NavItem to="/terminal/vtu" icon={<SignalIcon />} label="VTU Infrastructure" />
-               <NavItem to="/terminal/payments" icon={<WalletIcon />} label="Payment Gateway" />
-               <NavItem to="/terminal/media" icon={<ShieldCheckIcon />} label="Media & Evidence" />
+               <NavItem to="/admin/terminal/overview" icon={<HistoryIcon />} label="System Overview" />
+               <NavItem to="/admin/terminal/vtu" icon={<SignalIcon />} label="VTU Infrastructure" />
+               <NavItem to="/admin/terminal/payments" icon={<WalletIcon />} label="Payment Gateway" />
+               <NavItem to="/admin/terminal/media" icon={<ShieldCheckIcon />} label="Media & Evidence" />
             </nav>
 
             <div className="pt-10 border-t border-zinc-900">

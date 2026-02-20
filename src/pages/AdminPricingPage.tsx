@@ -205,19 +205,43 @@ const AdminPricingPage: React.FC = () => {
                       <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-2">Node ID: {plan.id}</p>
                    </div>
                    <div className="text-right">
-                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Base Node Cost</p>
-                      <p className="font-black text-gray-900 text-2xl tracking-tighter">₦{plan.base_price}</p>
+                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">
+                         {activeServer === 1 ? 'Base Node Cost' : 'Final Price (+Margin)'}
+                      </p>
+                      <p className="font-black text-gray-900 text-2xl tracking-tighter">
+                         ₦{activeServer === 1 ? plan.base_price : (plan.base_price + Number(server2Margin))}
+                      </p>
                    </div>
                 </div>
 
                 <div className="space-y-4 mb-10 relative z-10">
+                   <div className="grid grid-cols-3 gap-2">
+                      <div className="text-center p-2 bg-gray-50 rounded-xl">
+                         <p className="text-[7px] font-black text-gray-400 uppercase tracking-widest mb-1">User</p>
+                         <p className={`text-[10px] font-black ${plan.manual_prices ? 'text-blue-600' : 'text-gray-300'}`}>
+                            {plan.manual_prices ? `₦${plan.manual_prices.user_price}` : '—'}
+                         </p>
+                      </div>
+                      <div className="text-center p-2 bg-gray-50 rounded-xl">
+                         <p className="text-[7px] font-black text-gray-400 uppercase tracking-widest mb-1">Reseller</p>
+                         <p className={`text-[10px] font-black ${plan.manual_prices ? 'text-indigo-600' : 'text-gray-300'}`}>
+                            {plan.manual_prices ? `₦${plan.manual_prices.reseller_price}` : '—'}
+                         </p>
+                      </div>
+                      <div className="text-center p-2 bg-gray-50 rounded-xl">
+                         <p className="text-[7px] font-black text-gray-400 uppercase tracking-widest mb-1">API</p>
+                         <p className={`text-[10px] font-black ${plan.manual_prices ? 'text-emerald-600' : 'text-gray-300'}`}>
+                            {plan.manual_prices ? `₦${plan.manual_prices.api_price}` : '—'}
+                         </p>
+                      </div>
+                   </div>
                    <div className="flex justify-between items-center text-sm">
-                      <span className="font-black text-gray-400 text-[10px] uppercase tracking-widest">Active Markup</span>
+                      <span className="font-black text-gray-400 text-[10px] uppercase tracking-widest">Retail Margin</span>
                       <span className={`font-black tracking-tighter ${plan.manual_prices ? 'text-green-600' : 'text-orange-500'}`}>
                         {plan.manual_prices ? `+₦${(plan.manual_prices.user_price - plan.base_price).toFixed(2)}` : 'System Default'}
                       </span>
                    </div>
-                   <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                   <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
                       <div className={`h-full transition-all duration-1000 ${plan.manual_prices ? 'bg-green-500 w-full' : 'bg-orange-500 w-1/3'}`}></div>
                    </div>
                 </div>
