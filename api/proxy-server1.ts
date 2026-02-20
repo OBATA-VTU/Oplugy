@@ -35,7 +35,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       'Authorization': `Token ${apiKey}`
     };
 
-    // Specific endpoints requiring Authorization-Token header per Inlomax Docs
     if (['payelectric', 'subcable', 'validatemeter', 'validatecable'].includes(cleanEndpoint)) {
       headers['Authorization-Token'] = apiKey;
     }
@@ -48,11 +47,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (method.toUpperCase() !== 'GET' && data) {
       const mapped: any = {};
       
-      // Strict ID Mapping
       const rawServiceID = String(data.serviceID || data.plan_id || data.type || data.provider_id || data.network || '');
       
-      // Carriers and Biller Tags MUST be lowercase for certain nodes
-      if (['airtime', 'validatecable', 'subcable'].includes(cleanEndpoint)) {
+      // Numeric IDs (1, 2, 3) should be passed as strings. 
+      // We only lowercase alphabetical biller tags (like GOTV) to avoid breaking numeric Airtime/Education IDs.
+      if (['validatecable', 'subcable'].includes(cleanEndpoint) && isNaN(Number(rawServiceID))) {
         mapped.serviceID = rawServiceID.toLowerCase();
       } else {
         mapped.serviceID = rawServiceID;
@@ -70,7 +69,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       if (data.meterType !== undefined) {
-        // prepaid = 1, postpaid = 2
         mapped.meterType = (data.meterType === 'prepaid' || data.meterType === 1) ? 1 : 2;
       }
 
@@ -91,18 +89,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const responseText = await apiResponse.text();
     try {
       const responseData = JSON.parse(responseText);
-      // Ensure the proxy returns a consistent JSON structure
       return res.status(200).json(responseData);
     } catch {
-      // If server returns HTML or raw text (Fatal Error), wrap it for the frontend
       return res.status(apiResponse.status).json({ 
         status: 'error', 
-        message: responseText.includes('Fatal error') ? 'Node Fulfillment Error: Check carrier balance.' : 'Invalid Response From Provider.',
-        raw: responseText.substring(0, 150)
+        message: responseText.includes('Fatal error') ? 'Node Fulfillment Failure.' : 'Server Error.',
+        raw: responseText.substring(0, 200)
       });
     }
 
   } catch (error: any) {
-    return res.status(504).json({ status: 'error', message: 'Fulfillment Node Connectivity Error.' });
+    return res.status(504).json({ status: 'error', message: 'Inlomax Node Connectivity Error.' });
   }
 }

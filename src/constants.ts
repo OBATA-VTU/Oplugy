@@ -1,5 +1,3 @@
-
-
 // Local Storage Keys
 export const LOCAL_STORAGE_TOKEN_KEY = 'obata_token';
 export const LOCAL_STORAGE_USER_KEY = 'obata_user';
@@ -60,10 +58,11 @@ export const SERVICE_CATEGORIES = [
 ];
 
 export const AIRTIME_NETWORKS = [
-  { id: 'MTN', name: 'MTN', image: 'https://upload.wikimedia.org/wikipedia/commons/a/af/MTN_Logo.svg' },
-  { id: 'AIRTEL', name: 'Airtel', image: 'https://upload.wikimedia.org/wikipedia/commons/e/e0/Airtel_logo.png' },
-  { id: 'GLO', name: 'Glo', image: 'https://cdn-icons-png.flaticon.com/512/8112/8112396.png' },
-  { id: '9MOBILE', name: '9mobile', image: 'https://seeklogo.com/images/1/9mobile-logo-4E386762C9-seeklogo.com.png' },
+  { id: '1', name: 'MTN', image: 'https://upload.wikimedia.org/wikipedia/commons/a/af/MTN_Logo.svg' },
+  { id: '2', name: 'Airtel', image: 'https://upload.wikimedia.org/wikipedia/commons/e/e0/Airtel_logo.png' },
+  { id: '3', name: 'Glo', image: 'https://cdn-icons-png.flaticon.com/512/8112/8112396.png' },
+  { id: '4', name: '9mobile', image: 'https://seeklogo.com/images/1/9mobile-logo-4E386762C9-seeklogo.com.png' },
+  { id: '5', name: 'Vitel', image: 'https://logowik.com/content/uploads/images/vitel-wireless4489.jpg' },
 ];
 
 export const DATA_NETWORKS = [

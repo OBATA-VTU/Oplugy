@@ -2,7 +2,6 @@ import { ApiResponse } from '../types';
 
 async function safeFetch<T>(body: any): Promise<ApiResponse<T>> {
   try {
-    // Calling the proxy at the direct absolute API path
     const response = await fetch('/api/paystack-proxy', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -12,7 +11,6 @@ async function safeFetch<T>(body: any): Promise<ApiResponse<T>> {
     const contentType = response.headers.get('content-type');
     if (contentType && contentType.includes('application/json')) {
       const res = await response.json();
-      // In Paystack API responses, 'status' is a boolean
       if (res.status === true) {
         return { status: true, data: res.data };
       } else {
@@ -20,7 +18,7 @@ async function safeFetch<T>(body: any): Promise<ApiResponse<T>> {
       }
     } else {
       const text = await response.text();
-      return { status: false, message: `Gateway Protocol Error: ${text.substring(0, 100)}` };
+      return { status: false, message: `Gateway error: 404 Node Not Found or Protocol Error.` };
     }
   } catch (e: any) {
     return { status: false, message: e.message || 'Node connectivity failed' };
