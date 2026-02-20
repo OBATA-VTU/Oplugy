@@ -113,7 +113,7 @@ const PricingPage: React.FC = () => {
                            </div>
                         </td>
                         <td className="px-10 py-7 text-right font-black text-gray-900 tracking-tighter text-xl">
-                          ₦{(item.amount || item.price || 0).toLocaleString()}
+                          ₦{(Number(item.amount || item.price || 0)).toLocaleString()}
                         </td>
                         <td className="px-10 py-7 text-right text-[10px] font-black uppercase tracking-widest text-gray-400">{item.validity || (activeTab === 'EDUCATION' ? 'Instant' : '30 Days')}</td>
                      </tr>

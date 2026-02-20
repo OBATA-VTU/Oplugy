@@ -62,49 +62,19 @@ export const vtuService = {
 
   getAirtimeOperators: async (): Promise<ApiResponse<Operator[]>> => {
     try {
-      // Strict mapping to the correct numeric IDs required by the fulfillment node
-      const correctMapping: Record<string, string> = {
-        'MTN': '1',
-        'AIRTEL': '2',
-        'GLO': '3',
-        '9MOBILE': '4',
-        'VITEL': '5'
-      };
-
       const res = await cipApiClient<any>('services', { method: 'GET' });
       const airtimeData = res.status && res.data ? (res.data.airtime || res.data.airtime_networks || res.data.airtimePlans) : null;
       
       if (airtimeData && Array.isArray(airtimeData)) {
-        const operators = airtimeData.map((a: any) => {
-          const name = String(a.network || a.name || a.serviceName);
-          // Prioritize our hardcoded correct IDs if the name matches
-          const id = correctMapping[name.toUpperCase()] || String(a.serviceID || a.id || name);
-          return {
-            id,
-            name,
-            image: '' 
-          };
-        });
-        
-        // Ensure all required networks are present even if API misses some
-        const foundNames = new Set(operators.map(op => op.name.toUpperCase()));
-        Object.entries(correctMapping).forEach(([name, id]) => {
-          if (!foundNames.has(name)) {
-            operators.push({ id, name, image: '' });
-          }
-        });
-
+        const operators = airtimeData.map((a: any) => ({
+          id: String(a.serviceID || a.id),
+          name: String(a.network || a.name || a.serviceName),
+          image: '' 
+        }));
         return { status: true, data: operators };
       }
       
-      // Fallback to the known correct numeric IDs
-      return { status: true, data: [
-        { id: '1', name: 'MTN', image: '' },
-        { id: '2', name: 'Airtel', image: '' },
-        { id: '3', name: 'Glo', image: '' },
-        { id: '4', name: '9mobile', image: '' },
-        { id: '5', name: 'Vitel', image: '' }
-      ]};
+      return { status: false, message: 'Fulfillment node did not provide airtime mapping.' };
     } catch (e) {
       return { status: false, message: 'Airtime node sync failed.' };
     }
@@ -284,15 +254,13 @@ export const vtuService = {
   getEducationPlans: async (): Promise<ApiResponse<any[]>> => {
     try {
       const res = await cipApiClient<any>('services', { method: 'GET' });
-      const eduData = res.status && res.data ? (res.data.education || res.data.educationPlans || res.data.examPlans) : null;
-
-      if (eduData && Array.isArray(eduData)) {
+      if (res.status && res.data?.education) {
         return { 
           status: true, 
-          data: eduData.map((e: any) => ({
-            id: String(e.serviceID || e.id),
-            name: e.exam || e.name || e.serviceName,
-            price: Number(String(e.amount || e.price || 0).replace(/,/g, ''))
+          data: (res.data.education || []).map((e: any) => ({
+            id: String(e.serviceID),
+            name: String(e.type),
+            price: Number(String(e.amount || 0).replace(/,/g, ''))
           }))
         };
       }

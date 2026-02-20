@@ -6,12 +6,6 @@ import Spinner from '../components/Spinner';
 import PinPromptModal from '../components/PinPromptModal';
 import { ShieldCheckIcon, GamingIcon } from '../components/Icons';
 
-const DEFAULT_EXAM_TYPES = [
-  { id: '1', name: 'WAEC Result Checker', price: 3370 },
-  { id: '2', name: 'NECO Result Checker', price: 1100 },
-  { id: '3', name: 'NABTEB Result Checker', price: 950 }
-];
-
 const EducationPage: React.FC = () => {
   const { addNotification } = useNotifications();
   const { walletBalance, fetchWalletBalance } = useAuth();
@@ -28,8 +22,6 @@ const EducationPage: React.FC = () => {
       const res = await vtuService.getEducationPlans();
       if (res.status && res.data) {
         setExamTypes(res.data);
-      } else {
-        setExamTypes(DEFAULT_EXAM_TYPES);
       }
       setIsLoadingPlans(false);
     };
