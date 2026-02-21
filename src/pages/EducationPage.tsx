@@ -4,7 +4,7 @@ import { useNotifications } from '../hooks/useNotifications';
 import { vtuService } from '../services/vtuService';
 import Spinner from '../components/Spinner';
 import PinPromptModal from '../components/PinPromptModal';
-import { ShieldCheckIcon, GamingIcon } from '../components/Icons';
+import { ShieldCheckIcon } from '../components/Icons';
 
 const EducationPage: React.FC = () => {
   const { addNotification } = useNotifications();

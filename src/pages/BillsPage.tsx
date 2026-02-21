@@ -5,7 +5,7 @@ import { vtuService } from '../services/vtuService';
 import { Operator } from '../types';
 import Spinner from '../components/Spinner';
 import PinPromptModal from '../components/PinPromptModal';
-import { BoltIcon, ShieldCheckIcon, SignalIcon } from '../components/Icons';
+import { BoltIcon, ShieldCheckIcon } from '../components/Icons';
 
 const BillsPage: React.FC = () => {
   const { addNotification } = useNotifications();

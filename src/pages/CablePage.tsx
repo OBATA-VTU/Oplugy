@@ -7,7 +7,7 @@ import Spinner from '../components/Spinner';
 import PinPromptModal from '../components/PinPromptModal';
 import Modal from '../components/Modal';
 import { CABLE_BILLERS } from '../constants';
-import { TvIcon, ShieldCheckIcon, SignalIcon } from '../components/Icons';
+import { TvIcon, ShieldCheckIcon } from '../components/Icons';
 
 const CablePage: React.FC = () => {
   const { addNotification } = useNotifications();

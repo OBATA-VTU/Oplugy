@@ -7,6 +7,7 @@ import Spinner from '../components/Spinner';
 import Modal from '../components/Modal';
 import PinPromptModal from '../components/PinPromptModal';
 import { AIRTIME_NETWORKS } from '../constants';
+import { BoltIcon } from '../components/Icons';
 
 const AirtimePage: React.FC = () => {
   const { addNotification } = useNotifications();
@@ -210,8 +211,6 @@ const AirtimePage: React.FC = () => {
            <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest bg-blue-50 px-4 py-1.5 rounded-full inline-block">{selectedOperator?.name} Network</p>
         </div>
       </Modal>
-    </div>
-  );
     </div>
   );
 };
