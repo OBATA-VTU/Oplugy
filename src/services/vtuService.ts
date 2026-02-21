@@ -92,19 +92,17 @@ export const vtuService = {
         }
       } else {
         // Server 2 (Ciptopup)
-        // The doc lists: MTN, GLO, AIRTEL, 9MOBILE
-        // We attempt to fetch from data/plans to see if it returns all, 
-        // but based on doc we can also provide the standard ones.
-        // However, user wants it "directly from the API".
         const res = await cipApiClient<any>('data/plans', { method: 'GET', server: 2 });
-        if (res.status && Array.isArray(res.data)) {
-          const networks = Array.from(new Set(res.data.map((p: any) => p.network))).filter(n => !!n);
-          return { 
-            status: true, 
-            data: networks.map(n => ({ id: String(n), name: String(n) })) 
-          };
+        if (res.status && Array.isArray(res.data) && res.data.length > 0) {
+          const networksList = Array.from(new Set(res.data.map((p: any) => p.network || p.network_name || p.operator))).filter(n => !!n);
+          if (networksList.length > 0) {
+            return { 
+              status: true, 
+              data: networksList.map(n => ({ id: String(n), name: String(n) })) 
+            };
+          }
         }
-        // Fallback to doc-defined networks if API doesn't return a list
+        // Fallback to standard networks if API doesn't return a list or is empty
         return { 
           status: true, 
           data: [
@@ -133,8 +131,8 @@ export const vtuService = {
           return { status: true, data: categories };
         }
       } else {
-        // Server 2 (Ciptopup) - Hardcoded based on documentation
-        return { status: true, data: ['AWOOF', 'GIFTING', 'SME', 'DATASHARE'] };
+        // Server 2 (Ciptopup) - Expanded categories based on common VTU patterns
+        return { status: true, data: ['SME', 'GIFTING', 'CORPORATE', 'AWOOF', 'DATASHARE', 'COUPON'] };
       }
     } catch (e) { console.error("Category fetch error:", e); }
     return { status: false, message: `Server ${server} node sync failed.` };
@@ -181,15 +179,29 @@ export const vtuService = {
           getDoc(doc(db, "settings", "server2_config"))
         ]);
         
-        const margin = marginDoc.exists() ? Number(marginDoc.data().general_margin || 0) : 0;
+        const marginRaw = marginDoc.exists() ? marginDoc.data().general_margin : 0;
+        const margin = isNaN(Number(marginRaw)) ? 0 : Number(marginRaw);
         
         if (res.status && Array.isArray(res.data)) {
-          const plans: DataPlan[] = res.data.map((p: any) => ({
-            id: p.id,
-            name: `${p.name} (${p.validity || 'N/A'})`,
-            amount: (p.price / 100) + margin, // Ciptopup returns price in Kobo, add margin
-            validity: p.validity || 'N/A'
-          }));
+          // Filter client-side as well in case the API returned all plans
+          const filteredData = res.data.filter((p: any) => {
+            const netMatch = !payload.network || (p.network && p.network.toUpperCase() === payload.network.toUpperCase());
+            const typeMatch = !payload.type || (p.type && p.type.toUpperCase() === payload.type.toUpperCase()) || (p.dataType && p.dataType.toUpperCase() === payload.type.toUpperCase());
+            return netMatch && typeMatch;
+          });
+
+          const plans: DataPlan[] = filteredData.map((p: any) => {
+            const rawPrice = Number(p.price || p.amount || 0);
+            // If price is very large, it's likely in Kobo. If small, likely Naira.
+            const priceInNaira = rawPrice > 10000 ? (rawPrice / 100) : rawPrice;
+            
+            return {
+              id: String(p.id || p.plan_id || p.serviceID),
+              name: `${p.name || p.plan_name || 'Data Plan'} (${p.validity || 'N/A'})`,
+              amount: priceInNaira + margin,
+              validity: p.validity || 'N/A'
+            };
+          });
           return { status: true, data: plans };
         }
       }

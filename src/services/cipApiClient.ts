@@ -37,12 +37,21 @@ export async function cipApiClient<T>(
   
   const rawData = response.data;
   
-  // Both Inlomax and Ciptopup return { status: 'success', data: { ... } } or error
-  if (rawData?.status === 'success') {
+  // Handle direct array response (often used for plan lists)
+  if (Array.isArray(rawData)) {
+    return {
+      status: true,
+      message: 'Success',
+      data: rawData as T,
+    };
+  }
+
+  // Handle standard success formats
+  if (rawData?.status === 'success' || rawData?.status === true || rawData?.success === true) {
     return {
       status: true,
       message: rawData.message || 'Transaction Successful',
-      data: rawData.data as T,
+      data: (rawData.data !== undefined ? rawData.data : rawData) as T,
     };
   }
 

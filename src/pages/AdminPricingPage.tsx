@@ -59,13 +59,18 @@ const AdminPricingPage: React.FC = () => {
       // Server 2
       const res = await cipApiClient<any>('data/plans', { method: 'GET', server: 2 });
       if (res.status && Array.isArray(res.data)) {
-        setPlans(res.data.map((p: any) => ({
-          id: p.id,
-          name: p.name,
-          base_price: p.price / 100,
-          network: p.network,
-          type: p.type
-        })));
+        setPlans(res.data.map((p: any) => {
+          const rawPrice = Number(p.price || p.amount || 0);
+          const priceInNaira = rawPrice > 10000 ? (rawPrice / 100) : rawPrice;
+          
+          return {
+            id: String(p.id || p.plan_id || p.serviceID),
+            name: String(p.name || p.plan_name || 'Data Plan'),
+            base_price: priceInNaira,
+            network: String(p.network || p.network_name || 'Unknown'),
+            type: String(p.type || p.dataType || 'Unknown')
+          };
+        }));
         await fetchServer2Margin();
       } else {
         addNotification("Matrix sync failed for Node 2 Ledger.", "error");
