@@ -133,112 +133,112 @@ const AdminPricingPage: React.FC = () => {
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
-      <div className="mb-12">
-        <h2 className="text-[10px] font-black text-blue-600 uppercase tracking-[0.4em] mb-4">Pricing Control</h2>
-        <h1 className="text-4xl lg:text-7xl font-black text-gray-900 tracking-tighter leading-none">Tariff Matrix</h1>
-        <p className="text-gray-400 font-medium text-xl mt-6 italic max-w-3xl">Force manual price overrides across different account tiers to maximize node profitability.</p>
+      <div className="mb-10">
+        <h2 className="text-[11px] font-bold text-blue-600 uppercase tracking-[0.3em] mb-3">Management</h2>
+        <h1 className="text-4xl lg:text-5xl font-extrabold text-gray-900 tracking-tight">Pricing Control</h1>
+        <p className="text-gray-500 font-medium text-lg mt-3 max-w-2xl">Manage service prices and profit margins across different user roles.</p>
       </div>
 
-      <div className="flex gap-4 mb-10">
+      <div className="flex gap-3 mb-10 p-1.5 bg-white rounded-2xl border border-gray-100 w-fit shadow-sm">
         <button 
           onClick={() => setActiveServer(1)} 
-          className={`px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${activeServer === 1 ? 'bg-gray-900 text-white shadow-xl' : 'bg-white text-gray-400 border border-gray-100'}`}
+          className={`px-6 py-3 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all ${activeServer === 1 ? 'bg-gray-900 text-white shadow-lg' : 'text-gray-400 hover:text-gray-600'}`}
         >
-          Server 1 (Inlomax)
+          Standard Server
         </button>
         <button 
           onClick={() => setActiveServer(2)} 
-          className={`px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${activeServer === 2 ? 'bg-gray-900 text-white shadow-xl' : 'bg-white text-gray-400 border border-gray-100'}`}
+          className={`px-6 py-3 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all ${activeServer === 2 ? 'bg-gray-900 text-white shadow-lg' : 'text-gray-400 hover:text-gray-600'}`}
         >
-          Server 2 (Ciptopup)
+          Premium Server
         </button>
       </div>
 
       {activeServer === 2 && (
-        <div className="bg-white p-10 rounded-[3rem] border border-gray-100 shadow-xl mb-10 animate-in slide-in-from-top-4">
-           <div className="flex flex-col md:flex-row items-center gap-8">
-              <div className="flex-1">
-                 <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-4">General Profit Margin (₦)</label>
+        <div className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-xl mb-10 animate-in slide-in-from-top-4">
+           <div className="flex flex-col md:flex-row items-end gap-6">
+              <div className="flex-1 w-full">
+                 <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3 ml-2">Global Profit Margin (₦)</label>
                  <input 
                    type="number" 
                    value={server2Margin} 
                    onChange={(e) => setServer2Margin(e.target.value)}
-                   className="w-full p-6 bg-gray-50 border-4 border-transparent focus:border-blue-600 rounded-3xl font-black text-2xl outline-none transition-all"
+                   className="w-full p-4 bg-gray-50 border-2 border-transparent focus:border-blue-600 rounded-2xl font-bold text-xl outline-none transition-all"
                    placeholder="e.g. 50"
                  />
               </div>
               <button 
                 onClick={handleSaveMargin}
                 disabled={isSavingMargin}
-                className="bg-blue-600 text-white px-12 py-6 rounded-3xl font-black uppercase tracking-widest text-[10px] shadow-xl shadow-blue-200 hover:bg-black transition-all disabled:opacity-50"
+                className="bg-blue-600 text-white px-8 py-4 rounded-2xl font-bold uppercase tracking-wider text-[11px] shadow-lg shadow-blue-100 hover:bg-gray-900 transition-all disabled:opacity-50 h-[60px]"
               >
-                {isSavingMargin ? <Spinner /> : 'Update Global Margin'}
+                {isSavingMargin ? <Spinner /> : 'Save Global Margin'}
               </button>
            </div>
-           <p className="text-[10px] font-bold text-gray-400 mt-6 italic">*This margin will be added to the base cost of all Server 2 data plans for all users.</p>
+           <p className="text-[11px] font-medium text-gray-400 mt-4 italic">* This margin will be added to the base cost of all Premium Server data plans.</p>
         </div>
       )}
 
-      <div className="bg-white p-6 rounded-[3rem] border border-gray-100 shadow-xl mb-16 sticky top-24 z-20">
+      <div className="bg-white p-4 rounded-[2.5rem] border border-gray-100 shadow-lg mb-12 sticky top-24 z-20">
         <input 
           type="text" 
-          placeholder="Filter bundles by name, network or code..." 
-          className="w-full p-8 bg-gray-50 rounded-[2rem] font-black text-2xl focus:ring-8 focus:ring-blue-50 transition-all outline-none border-4 border-transparent focus:border-blue-600"
+          placeholder="Search plans by name or network..." 
+          className="w-full p-5 bg-gray-50 rounded-2xl font-bold text-lg focus:ring-4 focus:ring-blue-50 transition-all outline-none border-2 border-transparent focus:border-blue-600"
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
         />
       </div>
 
       {loading ? (
-        <div className="py-32 flex flex-col items-center justify-center space-y-8">
+        <div className="py-24 flex flex-col items-center justify-center space-y-6">
            <Spinner />
-           <p className="text-[11px] font-black text-gray-400 uppercase tracking-[0.4em] animate-pulse">Syncing Master Ledger Data...</p>
+           <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest animate-pulse">Loading pricing data...</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
            {filteredPlans.map(plan => (
-             <div key={plan.id} className={`bg-white p-10 rounded-[3.5rem] border-4 transition-all group relative overflow-hidden ${plan.manual_prices ? 'border-blue-100 bg-blue-50/20' : 'border-gray-50'}`}>
-                <div className="flex justify-between items-start mb-10 relative z-10">
+             <div key={plan.id} className={`bg-white p-8 rounded-[2.5rem] border-2 transition-all group relative overflow-hidden ${plan.manual_prices ? 'border-blue-100 bg-blue-50/20' : 'border-gray-50'}`}>
+                <div className="flex justify-between items-start mb-8 relative z-10">
                    <div>
-                      <span className="bg-gray-900 text-white px-5 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl">{plan.network}</span>
-                      <h4 className="text-3xl font-black text-gray-900 mt-6 tracking-tighter leading-tight group-hover:text-blue-600 transition-colors">{plan.name}</h4>
-                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-2">Node ID: {plan.id}</p>
+                      <span className="bg-gray-900 text-white px-4 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider shadow-md">{plan.network}</span>
+                      <h4 className="text-2xl font-bold text-gray-900 mt-4 tracking-tight leading-tight group-hover:text-blue-600 transition-colors">{plan.name}</h4>
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mt-2">ID: {plan.id}</p>
                    </div>
                    <div className="text-right">
-                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">
-                         {activeServer === 1 ? 'Base Node Cost' : 'Final Price (+Margin)'}
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
+                         {activeServer === 1 ? 'Base Cost' : 'Final Price'}
                       </p>
-                      <p className="font-black text-gray-900 text-2xl tracking-tighter">
+                      <p className="font-bold text-gray-900 text-xl tracking-tight">
                          ₦{activeServer === 1 ? plan.base_price : (plan.base_price + Number(server2Margin))}
                       </p>
                    </div>
                 </div>
 
-                <div className="space-y-4 mb-10 relative z-10">
+                <div className="space-y-4 mb-8 relative z-10">
                    <div className="grid grid-cols-3 gap-2">
                       <div className="text-center p-2 bg-gray-50 rounded-xl">
-                         <p className="text-[7px] font-black text-gray-400 uppercase tracking-widest mb-1">User</p>
-                         <p className={`text-[10px] font-black ${plan.manual_prices ? 'text-blue-600' : 'text-gray-300'}`}>
+                         <p className="text-[8px] font-bold text-gray-400 uppercase tracking-wider mb-1">User</p>
+                         <p className={`text-[11px] font-bold ${plan.manual_prices ? 'text-blue-600' : 'text-gray-300'}`}>
                             {plan.manual_prices ? `₦${plan.manual_prices.user_price}` : '—'}
                          </p>
                       </div>
                       <div className="text-center p-2 bg-gray-50 rounded-xl">
-                         <p className="text-[7px] font-black text-gray-400 uppercase tracking-widest mb-1">Reseller</p>
-                         <p className={`text-[10px] font-black ${plan.manual_prices ? 'text-indigo-600' : 'text-gray-300'}`}>
+                         <p className="text-[8px] font-bold text-gray-400 uppercase tracking-wider mb-1">Reseller</p>
+                         <p className={`text-[11px] font-bold ${plan.manual_prices ? 'text-indigo-600' : 'text-gray-300'}`}>
                             {plan.manual_prices ? `₦${plan.manual_prices.reseller_price}` : '—'}
                          </p>
                       </div>
                       <div className="text-center p-2 bg-gray-50 rounded-xl">
-                         <p className="text-[7px] font-black text-gray-400 uppercase tracking-widest mb-1">API</p>
-                         <p className={`text-[10px] font-black ${plan.manual_prices ? 'text-emerald-600' : 'text-gray-300'}`}>
+                         <p className="text-[8px] font-bold text-gray-400 uppercase tracking-wider mb-1">API</p>
+                         <p className={`text-[11px] font-bold ${plan.manual_prices ? 'text-emerald-600' : 'text-gray-300'}`}>
                             {plan.manual_prices ? `₦${plan.manual_prices.api_price}` : '—'}
                          </p>
                       </div>
                    </div>
-                   <div className="flex justify-between items-center text-sm">
-                      <span className="font-black text-gray-400 text-[10px] uppercase tracking-widest">Retail Margin</span>
-                      <span className={`font-black tracking-tighter ${plan.manual_prices ? 'text-green-600' : 'text-orange-500'}`}>
-                        {plan.manual_prices ? `+₦${(plan.manual_prices.user_price - plan.base_price).toFixed(2)}` : 'System Default'}
+                   <div className="flex justify-between items-center text-xs">
+                      <span className="font-bold text-gray-400 uppercase tracking-wider">Retail Margin</span>
+                      <span className={`font-bold tracking-tight ${plan.manual_prices ? 'text-green-600' : 'text-orange-500'}`}>
+                        {plan.manual_prices ? `+₦${(plan.manual_prices.user_price - plan.base_price).toFixed(2)}` : 'Default'}
                       </span>
                    </div>
                    <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
@@ -248,11 +248,10 @@ const AdminPricingPage: React.FC = () => {
 
                 <button 
                   onClick={() => handleEdit(plan)}
-                  className="w-full bg-white border-4 border-gray-100 text-gray-900 py-6 rounded-[2rem] font-black text-[11px] uppercase tracking-widest hover:bg-gray-900 hover:text-white hover:border-gray-900 transition-all shadow-xl active:scale-95 relative z-10"
+                  className={`w-full py-4 rounded-2xl font-bold uppercase tracking-widest text-[10px] transition-all relative z-10 ${activeServer === 2 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-gray-50 text-gray-900 hover:bg-blue-600 hover:text-white shadow-sm hover:shadow-lg'}`}
                 >
-                  Configure Nodes
+                  {activeServer === 2 ? 'Global Margin Active' : 'Edit Prices'}
                 </button>
-                <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-blue-600/5 rounded-full blur-3xl"></div>
              </div>
            ))}
         </div>
@@ -260,26 +259,26 @@ const AdminPricingPage: React.FC = () => {
 
       {editingPlan && (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 bg-gray-950/80 backdrop-blur-2xl animate-in fade-in duration-500">
-           <div className="bg-white w-full max-w-2xl rounded-[4.5rem] p-12 lg:p-20 shadow-2xl animate-in zoom-in-95 duration-200 border-[12px] border-gray-50">
-              <div className="text-center mb-16">
-                <div className="w-20 h-20 bg-blue-50 text-blue-600 rounded-[2rem] flex items-center justify-center mx-auto mb-8 shadow-inner"><ShieldCheckIcon /></div>
-                <h3 className="text-5xl font-black text-gray-900 tracking-tighter leading-none mb-4">Set Overrides</h3>
-                <p className="text-gray-400 font-medium text-lg leading-relaxed">Configuring manual overrides for <span className="text-blue-600 font-black tracking-tight">{editingPlan.name}</span></p>
+           <div className="bg-white w-full max-w-xl rounded-[3rem] p-10 lg:p-12 shadow-2xl animate-in zoom-in-95 duration-200 border border-gray-100">
+              <div className="text-center mb-10">
+                <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-sm"><ShieldCheckIcon /></div>
+                <h3 className="text-3xl font-bold text-gray-900 tracking-tight mb-2">Edit Prices</h3>
+                <p className="text-gray-500 font-medium text-base">Setting custom prices for <span className="text-blue-600 font-bold">{editingPlan.name}</span></p>
               </div>
               
-              <div className="space-y-10">
-                 <PriceInput label="Retail Terminal (User)" value={prices.user} onChange={(v: string) => setPrices({...prices, user: v})} base={editingPlan.base_price} />
-                 <PriceInput label="Reseller Terminal" value={prices.reseller} onChange={(v: string) => setPrices({...prices, reseller: v})} base={editingPlan.base_price} />
-                 <PriceInput label="API Infrastructure (Merchant)" value={prices.api} onChange={(v: string) => setPrices({...prices, api: v})} base={editingPlan.base_price} />
+              <div className="space-y-6">
+                 <PriceInput label="Retail Price (User)" value={prices.user} onChange={(v: string) => setPrices({...prices, user: v})} base={editingPlan.base_price} />
+                 <PriceInput label="Reseller Price" value={prices.reseller} onChange={(v: string) => setPrices({...prices, reseller: v})} base={editingPlan.base_price} />
+                 <PriceInput label="API Price (Merchant)" value={prices.api} onChange={(v: string) => setPrices({...prices, api: v})} base={editingPlan.base_price} />
                  
-                 <div className="pt-12 flex gap-8">
-                    <button onClick={() => setEditingPlan(null)} className="flex-1 py-8 rounded-[2.5rem] font-black text-[11px] uppercase tracking-widest text-gray-400 bg-gray-50 hover:bg-gray-100 transition-all shadow-sm">Cancel</button>
+                 <div className="pt-8 flex gap-4">
+                    <button onClick={() => setEditingPlan(null)} className="flex-1 py-4 rounded-2xl font-bold text-xs uppercase tracking-widest text-gray-400 bg-gray-50 hover:bg-gray-100 transition-all">Cancel</button>
                     <button 
                       onClick={handleSave}
                       disabled={isSaving || !prices.user}
-                      className="flex-[2] py-8 rounded-[2.5rem] font-black text-[11px] uppercase tracking-widest bg-blue-600 text-white shadow-2xl shadow-blue-500/30 hover:bg-black transition-all transform active:scale-95 flex items-center justify-center"
+                      className="flex-[2] py-4 rounded-2xl font-bold text-xs uppercase tracking-widest bg-blue-600 text-white shadow-lg shadow-blue-100 hover:bg-gray-900 transition-all transform active:scale-95 flex items-center justify-center"
                     >
-                      {isSaving ? <Spinner /> : 'Apply Static Pricing'}
+                      {isSaving ? <Spinner /> : 'Save Changes'}
                     </button>
                  </div>
               </div>

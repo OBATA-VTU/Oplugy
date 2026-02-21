@@ -128,11 +128,11 @@ const QuickPurchasePage: React.FC = () => {
       <main className="flex-1 flex items-center justify-center p-6 lg:py-24">
          <div className="w-full max-w-3xl bg-white rounded-[4rem] p-10 lg:p-20 shadow-2xl animate-in zoom-in-95 duration-500 border border-gray-50">
             
-            <div className="text-center mb-16">
-               <h2 className="text-4xl lg:text-6xl font-black text-gray-900 tracking-tighter">
-                  {step === 1 ? 'Choose Service' : `Buy ${service?.toUpperCase()}`}
+            <div className="text-center mb-12">
+               <h2 className="text-4xl lg:text-5xl font-extrabold text-gray-900 tracking-tight">
+                  {step === 1 ? 'Quick Buy' : `Buy ${service?.charAt(0).toUpperCase()}${service?.slice(1)}`}
                </h2>
-               <p className="text-gray-400 font-medium mt-4 text-lg">Quick buy without creating an account.</p>
+               <p className="text-gray-500 font-medium mt-3 text-lg">Purchase services instantly without an account.</p>
             </div>
 
             {step === 1 && (
@@ -145,19 +145,19 @@ const QuickPurchasePage: React.FC = () => {
             )}
 
             {step === 2 && (
-               <div className="space-y-12 animate-in slide-in-from-bottom-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+               <div className="space-y-8 animate-in slide-in-from-bottom-6">
+                  <div className="grid grid-cols-1 gap-6">
                      {(service === 'data' || service === 'airtime') && (
                        <div>
-                          <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-2">Provider</label>
+                          <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3 ml-2">Select Network</label>
                           <div className="relative">
                             <select 
-                               className="w-full p-6 bg-gray-50 rounded-[1.5rem] font-black text-xl border-4 border-transparent focus:border-blue-600 outline-none appearance-none transition-all disabled:opacity-50"
+                               className="w-full p-5 bg-gray-50 rounded-2xl font-bold text-lg border-2 border-transparent focus:border-blue-600 outline-none appearance-none transition-all disabled:opacity-50"
                                value={details.network}
                                onChange={(e) => setDetails({...details, network: e.target.value})}
                                disabled={loadingOptions}
                             >
-                               <option value="">{loadingOptions ? 'Syncing...' : 'Choose Network'}</option>
+                               <option value="">{loadingOptions ? 'Loading...' : 'Choose network'}</option>
                                {networks.map(n => <option key={n.id} value={n.id}>{n.name}</option>)}
                             </select>
                             {loadingOptions && <div className="absolute right-6 top-1/2 -translate-y-1/2"><Spinner /></div>}
@@ -167,9 +167,9 @@ const QuickPurchasePage: React.FC = () => {
 
                      {service === 'power' && (
                        <div>
-                          <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-2">Account Type</label>
+                          <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3 ml-2">Account Type</label>
                           <select 
-                             className="w-full p-6 bg-gray-50 rounded-[1.5rem] font-black text-xl border-4 border-transparent focus:border-blue-600 outline-none appearance-none transition-all"
+                             className="w-full p-5 bg-gray-50 rounded-2xl font-bold text-lg border-2 border-transparent focus:border-blue-600 outline-none appearance-none transition-all"
                              value={details.meterType}
                              onChange={(e) => setDetails({...details, meterType: e.target.value as any})}
                           >
@@ -180,26 +180,26 @@ const QuickPurchasePage: React.FC = () => {
                      )}
 
                      <div>
-                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-2">
+                        <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3 ml-2">
                           {service === 'power' ? 'Meter Number' : service === 'tv' ? 'IUC / Smartcard' : 'Phone Number'}
                         </label>
                         <input 
                           type="text" 
-                          className="w-full p-6 bg-gray-50 border-4 border-gray-100 rounded-[1.5rem] font-black text-2xl outline-none focus:border-blue-600 transition-all tracking-tight" 
-                          placeholder={service === 'tv' ? '1234567890' : '081...'} 
+                          className="w-full p-5 bg-gray-50 border-2 border-gray-100 rounded-2xl font-bold text-xl outline-none focus:border-blue-600 transition-all tracking-tight" 
+                          placeholder={service === 'tv' ? 'Enter smartcard number' : 'Enter phone number'} 
                           value={service === 'tv' ? details.smartcard : details.phone} 
                           onChange={(e) => setDetails({...details, [service === 'tv' ? 'smartcard' : 'phone']: e.target.value})} 
                         />
                      </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                  <div className="grid grid-cols-1 gap-6">
                      {service === 'data' ? (
-                        <div className="md:col-span-2">
-                           <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-2">Choose Data Plan</label>
+                        <div>
+                           <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3 ml-2">Select Data Plan</label>
                            <div className="relative">
                             <select 
-                              className="w-full p-6 bg-gray-50 rounded-[1.5rem] font-black text-xl border-4 border-transparent focus:border-blue-600 outline-none appearance-none transition-all disabled:opacity-50"
+                              className="w-full p-5 bg-gray-50 rounded-2xl font-bold text-lg border-2 border-transparent focus:border-blue-600 outline-none appearance-none transition-all disabled:opacity-50"
                               value={details.plan}
                               onChange={(e) => {
                                 const [id, price] = e.target.value.split('|');
@@ -207,7 +207,7 @@ const QuickPurchasePage: React.FC = () => {
                               }}
                               disabled={!details.network || loadingOptions}
                             >
-                               <option value="">{loadingOptions ? 'Syncing Catalog...' : 'Select Bundle'}</option>
+                               <option value="">{loadingOptions ? 'Loading plans...' : 'Choose a plan'}</option>
                                {dataPlans.map(p => (
                                  <option key={p.id} value={`${p.id}|${p.amount}`}>{p.name} - ₦{p.amount}</option>
                                ))}
@@ -216,38 +216,37 @@ const QuickPurchasePage: React.FC = () => {
                            </div>
                         </div>
                      ) : (
-                       <div className="md:col-span-2">
-                          <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-2">Amount to Pay (₦)</label>
-                          <input type="number" className="w-full p-6 bg-gray-50 border-4 border-gray-100 rounded-[1.5rem] font-black text-4xl outline-none focus:border-blue-600 transition-all tracking-tighter" placeholder="0.00" value={details.amount} onChange={(e) => setDetails({...details, amount: e.target.value})} />
-                       </div>
+                        <div>
+                           <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3 ml-2">Amount (₦)</label>
+                           <input type="number" className="w-full p-5 bg-gray-50 border-2 border-gray-100 rounded-2xl font-bold text-2xl outline-none focus:border-blue-600 transition-all tracking-tight" placeholder="0.00" value={details.amount} onChange={(e) => setDetails({...details, amount: e.target.value})} />
+                        </div>
                      )}
                   </div>
                   
-                  <div className="bg-gray-900 rounded-[3rem] p-10 lg:p-14 text-white relative overflow-hidden shadow-2xl">
-                     <div className="relative z-10 space-y-6">
+                  <div className="bg-gray-900 rounded-3xl p-8 text-white relative overflow-hidden shadow-xl">
+                     <div className="relative z-10 space-y-4">
                         <div className="flex justify-between items-center text-sm">
-                           <span className="text-white/40 font-black uppercase tracking-widest">Processing Fee</span>
-                           <span className="font-black tracking-tighter text-lg text-white">₦{feeValue.toFixed(2)}</span>
+                           <span className="text-white/40 font-bold uppercase tracking-wider">Fee</span>
+                           <span className="font-bold tracking-tight text-white">₦{feeValue.toFixed(2)}</span>
                         </div>
-                        <div className="pt-8 border-t border-white/10 flex justify-between items-center">
-                           <p className="text-xs font-black uppercase tracking-[0.3em] text-blue-400">Total Amount</p>
+                        <div className="pt-4 border-t border-white/10 flex justify-between items-center">
+                           <p className="text-xs font-bold uppercase tracking-widest text-blue-400">Total</p>
                            <div className="text-right">
-                              <p className="text-5xl lg:text-7xl font-black tracking-tighter text-white">₦{totalAmount.toLocaleString()}</p>
-                              <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mt-2">Secure Payment Terminal</p>
+                              <p className="text-4xl font-black tracking-tight text-white">₦{totalAmount.toLocaleString()}</p>
                            </div>
                         </div>
                      </div>
-                     <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/10 rounded-full blur-[100px]"></div>
+                     <div className="absolute top-0 right-0 w-48 h-48 bg-blue-600/10 rounded-full blur-[80px]"></div>
                   </div>
 
-                  <div className="flex flex-col sm:flex-row gap-6 pt-4">
-                     <button onClick={() => {setStep(1); setService('');}} className="flex-1 py-6 rounded-3xl font-black text-[11px] uppercase tracking-widest text-gray-400 bg-gray-100 hover:bg-gray-200 transition-all">Cancel</button>
+                  <div className="flex gap-4 pt-4">
+                     <button onClick={() => {setStep(1); setService('');}} className="flex-1 py-4 rounded-2xl font-bold text-xs uppercase tracking-widest text-gray-400 bg-gray-50 hover:bg-gray-100 transition-all">Cancel</button>
                      <button 
                         onClick={handlePaystack} 
-                        className="flex-[2] py-8 rounded-3xl font-black text-sm uppercase tracking-[0.2em] text-white bg-blue-600 shadow-2xl shadow-blue-200 flex items-center justify-center space-x-4 transition-all hover:bg-black hover:-translate-y-2 active:scale-95" 
+                        className="flex-[2] py-4 rounded-2xl font-bold text-sm uppercase tracking-widest text-white bg-blue-600 shadow-xl shadow-blue-100 flex items-center justify-center space-x-3 transition-all hover:bg-gray-900 transform active:scale-95" 
                         disabled={isProcessing || !details.amount}
                      >
-                        {isProcessing ? <Spinner /> : <span>Pay Now</span>}
+                        {isProcessing ? <Spinner /> : <><ShieldCheckIcon /> <span>Pay Now</span></>}
                      </button>
                   </div>
                </div>
@@ -260,11 +259,11 @@ const QuickPurchasePage: React.FC = () => {
 };
 
 const ServiceBtn = ({ icon, label, onClick }: any) => (
-  <button onClick={onClick} className="p-10 bg-gray-50 border-4 border-transparent rounded-[3.5rem] flex flex-col items-center gap-8 hover:border-blue-600 hover:bg-white transition-all group hover:shadow-2xl transform active:scale-95">
-     <div className="w-20 h-20 bg-white text-gray-400 rounded-3xl flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white shadow-xl transition-all text-3xl transform group-hover:scale-110 group-hover:rotate-6">
+  <button onClick={onClick} className="p-8 bg-gray-50 border-2 border-transparent rounded-3xl flex flex-col items-center gap-4 hover:border-blue-600 hover:bg-white transition-all group hover:shadow-xl transform active:scale-95">
+     <div className="w-14 h-14 bg-white text-gray-400 rounded-2xl flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white shadow-sm transition-all text-xl transform group-hover:scale-110">
         {icon}
      </div>
-     <span className="font-black text-[10px] uppercase tracking-[0.3em] text-gray-900">{label}</span>
+     <span className="font-bold text-[11px] uppercase tracking-wider text-gray-900">{label}</span>
   </button>
 );
 

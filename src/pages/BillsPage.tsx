@@ -93,52 +93,52 @@ const BillsPage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
+    <div className="max-w-3xl mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
       <PinPromptModal 
         isOpen={showPinModal} 
         onClose={() => setShowPinModal(false)} 
         onSuccess={handlePurchase}
-        title="Approve Utility Bill"
-        description={`Authorizing ₦${numericAmount.toLocaleString()} for Electricity Token`}
+        title="Confirm Payment"
+        description={`You are about to pay ₦${numericAmount.toLocaleString()} for electricity.`}
       />
 
       <div className="text-center">
-        <h2 className="text-4xl lg:text-6xl font-black text-gray-900 tracking-tighter mb-4 uppercase">Electricity</h2>
-        <p className="text-gray-400 font-medium text-lg">Instant token generation across all Nigerian Discos.</p>
+        <h2 className="text-4xl lg:text-5xl font-extrabold text-gray-900 tracking-tight mb-3">Pay Electricity</h2>
+        <p className="text-gray-500 font-medium text-lg">Pay your electricity bills and get tokens instantly.</p>
       </div>
 
-      <div className="bg-white p-10 lg:p-16 rounded-[4rem] shadow-2xl border border-gray-50 space-y-12">
-        <div className="space-y-10">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div className="bg-white p-8 lg:p-12 rounded-[3rem] shadow-xl border border-gray-50 space-y-10">
+        <div className="space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-4">1. Distribution Company</label>
+              <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3 ml-2">1. Select Provider</label>
               <select 
-                className="w-full p-6 bg-gray-50 rounded-[2rem] font-black text-xl border-4 border-transparent focus:border-blue-600 outline-none transition-all appearance-none" 
+                className="w-full p-5 bg-gray-50 rounded-2xl font-bold text-lg border-2 border-transparent focus:border-blue-600 outline-none transition-all appearance-none" 
                 value={selectedOperator?.id || ''} 
                 onChange={(e) => {
                   setSelectedOperator(operators.find(o => String(o.id) === String(e.target.value)) || null);
                   setCustomerName(null);
                 }}
               >
-                <option value="">Select Disco</option>
+                <option value="">Choose Disco</option>
                 {operators.map(op => <option key={op.id} value={op.id}>{op.name}</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-4">2. Meter Type</label>
-              <div className="flex p-2 bg-gray-50 rounded-[2rem] border-4 border-transparent">
-                <button onClick={() => { setMeterType('prepaid'); setCustomerName(null); }} className={`flex-1 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${meterType === 'prepaid' ? 'bg-white text-blue-600 shadow-xl' : 'text-gray-400'}`}>Prepaid</button>
-                <button onClick={() => { setMeterType('postpaid'); setCustomerName(null); }} className={`flex-1 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${meterType === 'postpaid' ? 'bg-white text-blue-600 shadow-xl' : 'text-gray-400'}`}>Postpaid</button>
+              <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3 ml-2">2. Meter Type</label>
+              <div className="flex p-1.5 bg-gray-50 rounded-2xl border-2 border-transparent">
+                <button onClick={() => { setMeterType('prepaid'); setCustomerName(null); }} className={`flex-1 py-3 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all ${meterType === 'prepaid' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-400'}`}>Prepaid</button>
+                <button onClick={() => { setMeterType('postpaid'); setCustomerName(null); }} className={`flex-1 py-3 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all ${meterType === 'postpaid' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-400'}`}>Postpaid</button>
               </div>
             </div>
           </div>
 
           <div>
-            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-4">3. Meter Identification</label>
-            <div className="flex gap-4">
+            <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3 ml-2">3. Meter Number</label>
+            <div className="flex gap-3">
               <input 
                 type="text" 
-                className="flex-1 p-6 bg-gray-50 border-4 border-gray-100 rounded-[2.5rem] font-black text-2xl tracking-tighter outline-none focus:border-blue-600 transition-all text-center" 
+                className="flex-1 p-5 bg-gray-50 border-2 border-gray-100 rounded-2xl font-bold text-xl tracking-tight outline-none focus:border-blue-600 transition-all text-center" 
                 placeholder="00000000000" 
                 value={meterNumber} 
                 onChange={(e) => setMeterNumber(e.target.value.replace(/\D/g, ''))} 
@@ -146,7 +146,7 @@ const BillsPage: React.FC = () => {
               <button 
                 onClick={handleVerify}
                 disabled={isVerifying || meterNumber.length < 5 || !selectedOperator}
-                className="px-10 bg-gray-900 text-white rounded-[2rem] font-black text-[10px] uppercase tracking-widest hover:bg-blue-600 transition-all shadow-xl disabled:opacity-50"
+                className="px-8 bg-gray-900 text-white rounded-2xl font-bold text-[11px] uppercase tracking-widest hover:bg-blue-600 transition-all shadow-lg disabled:opacity-50"
               >
                 {isVerifying ? <Spinner /> : 'Verify'}
               </button>
@@ -154,32 +154,32 @@ const BillsPage: React.FC = () => {
           </div>
 
           {customerName && (
-            <div className="p-8 bg-green-50 rounded-[3rem] border-2 border-dashed border-green-200 flex items-center space-x-6 animate-in zoom-in-95 duration-300">
-               <div className="w-16 h-16 bg-green-600 text-white rounded-3xl flex items-center justify-center shrink-0 shadow-xl shadow-green-100"><BoltIcon /></div>
+            <div className="p-6 bg-green-50 rounded-[2rem] border-2 border-dashed border-green-200 flex items-center space-x-5 animate-in zoom-in-95 duration-300">
+               <div className="w-12 h-12 bg-green-600 text-white rounded-xl flex items-center justify-center shrink-0 shadow-lg"><BoltIcon /></div>
                <div>
-                  <p className="text-[10px] font-black text-green-600 uppercase tracking-widest mb-1">Authenticated Holder</p>
-                  <p className="font-black text-gray-900 text-2xl uppercase tracking-tight leading-none">{customerName}</p>
+                  <p className="text-[10px] font-bold text-green-600 uppercase tracking-widest mb-1">Customer Name</p>
+                  <p className="font-bold text-gray-900 text-xl uppercase tracking-tight leading-none">{customerName}</p>
                </div>
             </div>
           )}
 
-          <div className={`space-y-10 transition-opacity duration-500 ${customerName ? 'opacity-100' : 'opacity-30 pointer-events-none'}`}>
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className={`space-y-8 transition-opacity duration-500 ${customerName ? 'opacity-100' : 'opacity-30 pointer-events-none'}`}>
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                   <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-4">4. Value (₦)</label>
+                   <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3 ml-2">4. Amount (₦)</label>
                    <input 
                     type="number" 
-                    className="w-full p-6 bg-gray-50 border-4 border-gray-100 rounded-[2rem] text-3xl font-black tracking-tighter outline-none focus:border-blue-600 transition-all text-center" 
+                    className="w-full p-5 bg-gray-50 border-2 border-gray-100 rounded-2xl text-2xl font-bold tracking-tight outline-none focus:border-blue-600 transition-all text-center" 
                     placeholder="0.00" 
                     value={amount} 
                     onChange={(e) => setAmount(e.target.value)} 
                    />
                 </div>
                 <div>
-                   <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-4">5. Alert Phone</label>
+                   <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3 ml-2">5. Phone Number</label>
                    <input 
                     type="tel" 
-                    className="w-full p-6 bg-gray-50 border-4 border-gray-100 rounded-[2rem] text-3xl font-black tracking-tighter outline-none focus:border-blue-600 transition-all text-center" 
+                    className="w-full p-5 bg-gray-50 border-2 border-gray-100 rounded-2xl text-2xl font-bold tracking-tight outline-none focus:border-blue-600 transition-all text-center" 
                     placeholder="080..." 
                     value={phoneNumber} 
                     onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))} 
@@ -190,24 +190,18 @@ const BillsPage: React.FC = () => {
              
              <button 
               onClick={handlePrePurchase}
-              className="w-full bg-blue-600 hover:bg-black text-white font-black py-10 rounded-[3rem] shadow-2xl shadow-blue-200 transition-all duration-300 uppercase tracking-[0.4em] text-sm transform hover:-translate-y-2 active:scale-95 disabled:opacity-50 flex items-center justify-center space-x-4"
+              className="w-full bg-blue-600 hover:bg-gray-900 text-white font-bold py-5 rounded-2xl shadow-xl shadow-blue-100 transition-all duration-300 uppercase tracking-widest text-sm transform active:scale-95 disabled:opacity-50 flex items-center justify-center space-x-3"
               disabled={!customerName || !amount || phoneNumber.length !== 11 || isPurchasing}
              >
-                {isPurchasing ? <Spinner /> : <><ShieldCheckIcon /> <span>Confirm & Generate Token</span></>}
+                {isPurchasing ? <Spinner /> : <><ShieldCheckIcon /> <span>Pay Now</span></>}
              </button>
           </div>
         </div>
       </div>
 
-      <div className="p-10 bg-gray-900 text-white rounded-[3.5rem] relative overflow-hidden shadow-2xl">
-         <div className="relative z-10 flex items-center space-x-8">
-            <div className="w-16 h-16 bg-blue-600 rounded-3xl flex items-center justify-center shrink-0 shadow-lg shadow-blue-500/40"><SignalIcon /></div>
-            <div>
-               <h4 className="text-2xl font-black tracking-tight">Real-time Validation</h4>
-               <p className="text-white/40 text-sm font-medium">Meter numbers are validated directly against Disco databases for guaranteed token delivery.</p>
-            </div>
-         </div>
-         <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/10 rounded-full blur-[100px]"></div>
+      <div className="p-8 bg-blue-50 text-blue-900 rounded-[2.5rem] border border-blue-100 flex items-center space-x-6">
+        <div className="w-12 h-12 bg-blue-600 text-white rounded-xl flex items-center justify-center shrink-0 shadow-lg"><BoltIcon /></div>
+        <p className="text-sm font-medium">Electricity tokens are generated instantly after payment. You will also receive a copy via SMS.</p>
       </div>
     </div>
   );

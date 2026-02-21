@@ -104,27 +104,27 @@ const CablePage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
+    <div className="max-w-3xl mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
       <PinPromptModal 
         isOpen={showPinModal} 
         onClose={() => setShowPinModal(false)} 
         onSuccess={handlePurchase}
-        title="Approve TV Bundle"
-        description={`Authorizing ₦${selectedPlan?.amount.toLocaleString()} for ${selectedPlan?.name}`}
+        title="Confirm Subscription"
+        description={`You are about to pay ₦${selectedPlan?.amount.toLocaleString()} for ${selectedPlan?.name}`}
       />
 
       <div className="text-center">
-        <h2 className="text-4xl lg:text-6xl font-black text-gray-900 tracking-tighter mb-4 uppercase">Cable TV Hub</h2>
-        <p className="text-gray-400 font-medium text-lg">Express renewals for DStv, GOtv, and Startimes.</p>
+        <h2 className="text-4xl lg:text-5xl font-extrabold text-gray-900 tracking-tight mb-3">Cable TV</h2>
+        <p className="text-gray-500 font-medium text-lg">Renew your DStv, GOtv, and StarTimes subscriptions instantly.</p>
       </div>
 
-      <div className="bg-white p-10 lg:p-16 rounded-[4rem] shadow-2xl border border-gray-50 space-y-12">
-        <div className="space-y-10">
-           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div className="bg-white p-8 lg:p-12 rounded-[3rem] shadow-xl border border-gray-50 space-y-10">
+        <div className="space-y-8">
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                 <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-4">1. Service Carrier</label>
+                 <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3 ml-2">1. Select Provider</label>
                  <select 
-                  className="w-full p-6 bg-gray-50 rounded-[2rem] font-black text-xl border-4 border-transparent focus:border-blue-600 outline-none transition-all appearance-none" 
+                  className="w-full p-5 bg-gray-50 rounded-2xl font-bold text-lg border-2 border-transparent focus:border-blue-600 outline-none transition-all appearance-none" 
                   value={selectedOperator?.id || ''} 
                   onChange={e => {
                     setSelectedOperator(operators.find(o => o.id === e.target.value) || null);
@@ -132,16 +132,16 @@ const CablePage: React.FC = () => {
                     setCablePlans([]);
                   }}
                  >
-                    <option value="">Select Carrier</option>
+                    <option value="">Choose Provider</option>
                     {operators.map(op => <option key={op.id} value={op.id}>{op.name}</option>)}
                  </select>
               </div>
               <div>
-                 <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-4">2. Decoder No / IUC</label>
+                 <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3 ml-2">2. IUC / Smartcard Number</label>
                  <div className="flex gap-3">
                     <input 
                       type="text" 
-                      className="flex-1 p-6 bg-gray-50 border-4 border-gray-100 rounded-[2.5rem] font-black text-2xl tracking-tighter outline-none focus:border-blue-600 transition-all text-center" 
+                      className="flex-1 p-5 bg-gray-50 border-2 border-gray-100 rounded-2xl font-bold text-xl tracking-tight outline-none focus:border-blue-600 transition-all text-center" 
                       placeholder="0000000000" 
                       value={smartcardNo} 
                       onChange={e => setSmartcardNo(e.target.value.replace(/\D/g, ''))} 
@@ -149,46 +149,46 @@ const CablePage: React.FC = () => {
                     <button 
                       onClick={handleVerify}
                       disabled={isVerifying || smartcardNo.length < 5 || !selectedOperator}
-                      className="px-10 bg-gray-900 text-white rounded-[2rem] font-black text-[10px] uppercase tracking-widest hover:bg-blue-600 transition-all shadow-xl disabled:opacity-50"
+                      className="px-8 bg-gray-900 text-white rounded-2xl font-bold text-[11px] uppercase tracking-widest hover:bg-blue-600 transition-all shadow-lg disabled:opacity-50"
                     >
-                      {isVerifying ? <Spinner /> : 'Validate'}
+                      {isVerifying ? <Spinner /> : 'Verify'}
                     </button>
                  </div>
               </div>
            </div>
 
            {customerName && (
-              <div className="p-8 bg-blue-50 rounded-[3rem] border-2 border-dashed border-blue-100 flex items-center space-x-6 animate-in zoom-in-95 duration-300">
-                 <div className="w-16 h-16 bg-blue-600 text-white rounded-3xl flex items-center justify-center shrink-0 shadow-xl shadow-blue-100"><TvIcon /></div>
+              <div className="p-6 bg-blue-50 rounded-[2rem] border-2 border-dashed border-blue-100 flex items-center space-x-5 animate-in zoom-in-95 duration-300">
+                 <div className="w-12 h-12 bg-blue-600 text-white rounded-xl flex items-center justify-center shrink-0 shadow-lg"><TvIcon /></div>
                  <div>
-                    <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-1">Subscriber Identity</p>
-                    <p className="font-black text-gray-900 text-2xl uppercase tracking-tight leading-none">{customerName}</p>
+                    <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest mb-1">Customer Name</p>
+                    <p className="font-bold text-gray-900 text-xl uppercase tracking-tight leading-none">{customerName}</p>
                  </div>
               </div>
            )}
 
-           <div className={`space-y-10 transition-opacity duration-500 ${customerName ? 'opacity-100' : 'opacity-30 pointer-events-none'}`}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+           <div className={`space-y-8 transition-opacity duration-500 ${customerName ? 'opacity-100' : 'opacity-30 pointer-events-none'}`}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                  <div>
-                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-4">3. Bouquet Selection</label>
+                    <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3 ml-2">3. Select Package</label>
                     <div className="relative">
                        <select 
-                         className="w-full p-6 bg-gray-50 rounded-[2rem] font-black text-xl border-4 border-transparent focus:border-blue-600 outline-none transition-all appearance-none disabled:opacity-50" 
+                         className="w-full p-5 bg-gray-50 rounded-2xl font-bold text-lg border-2 border-transparent focus:border-blue-600 outline-none transition-all appearance-none disabled:opacity-50" 
                          value={selectedPlan?.id || ''} 
                          onChange={e => setSelectedPlan(cablePlans.find(p => String(p.id) === String(e.target.value)) || null)}
                          disabled={isFetchingPlans || cablePlans.length === 0}
                        >
-                          <option value="">{isFetchingPlans ? 'Syncing Node...' : 'Select Plan'}</option>
+                          <option value="">{isFetchingPlans ? 'Loading packages...' : 'Choose package'}</option>
                           {cablePlans.map(plan => <option key={plan.id} value={plan.id}>{`${plan.name} - ₦${plan.amount.toLocaleString()}`}</option>)}
                        </select>
                        {isFetchingPlans && <div className="absolute right-6 top-1/2 -translate-y-1/2 scale-75"><Spinner /></div>}
                     </div>
                  </div>
                  <div>
-                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-4">4. Delivery Mobile</label>
+                    <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3 ml-2">4. Phone Number</label>
                     <input 
                       type="tel" 
-                      className="w-full p-6 bg-gray-50 border-4 border-gray-100 rounded-[2rem] text-3xl font-black tracking-tighter outline-none focus:border-blue-600 transition-all text-center" 
+                      className="w-full p-5 bg-gray-50 border-2 border-gray-100 rounded-2xl text-2xl font-bold tracking-tight outline-none focus:border-blue-600 transition-all text-center" 
                       placeholder="080..." 
                       value={phoneNumber} 
                       onChange={e => setPhoneNumber(e.target.value.replace(/\D/g, ''))} 
@@ -199,45 +199,39 @@ const CablePage: React.FC = () => {
               
               <button 
                 onClick={handlePrePurchase}
-                className="w-full bg-blue-600 hover:bg-black text-white font-black py-10 rounded-[3rem] shadow-2xl shadow-blue-200 transition-all duration-300 uppercase tracking-[0.4em] text-sm transform hover:-translate-y-2 active:scale-95 disabled:opacity-50 flex items-center justify-center space-x-4"
+                className="w-full bg-blue-600 hover:bg-gray-900 text-white font-bold py-5 rounded-2xl shadow-xl shadow-blue-100 transition-all duration-300 uppercase tracking-widest text-sm transform active:scale-95 disabled:opacity-50 flex items-center justify-center space-x-3"
                 disabled={!customerName || !selectedPlan || phoneNumber.length !== 11 || isPurchasing}
               >
-                {isPurchasing ? <Spinner /> : <><ShieldCheckIcon /> <span>Execute Renewal</span></>}
+                {isPurchasing ? <Spinner /> : <><ShieldCheckIcon /> <span>Renew Now</span></>}
               </button>
            </div>
         </div>
       </div>
 
-      <div className="p-10 bg-gray-900 text-white rounded-[3.5rem] relative overflow-hidden shadow-2xl">
-         <div className="relative z-10 flex items-center space-x-8">
-            <div className="w-16 h-16 bg-blue-600 rounded-3xl flex items-center justify-center shrink-0 shadow-lg shadow-blue-500/40"><SignalIcon /></div>
-            <div>
-               <h4 className="text-2xl font-black tracking-tight">Rapid Sync Node</h4>
-               <p className="text-white/40 text-sm font-medium">Subscription updates are sent instantly to Multichoice/StarTimes nodes for immediate signal restoration.</p>
-            </div>
-         </div>
-         <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/10 rounded-full blur-[100px]"></div>
+      <div className="p-8 bg-blue-50 text-blue-900 rounded-[2.5rem] border border-blue-100 flex items-center space-x-6">
+        <div className="w-12 h-12 bg-blue-600 text-white rounded-xl flex items-center justify-center shrink-0 shadow-lg"><TvIcon /></div>
+        <p className="text-sm font-medium">Cable TV renewals are processed instantly. Your signal will be restored within minutes of payment.</p>
       </div>
 
-      <Modal isOpen={showConfirmModal} onClose={() => setShowConfirmModal(false)} title="Secure Checkout" footer={
+      <Modal isOpen={showConfirmModal} onClose={() => setShowConfirmModal(false)} title="Confirm Order" footer={
         <div className="flex gap-4 w-full">
-          <button className="flex-1 bg-gray-100 text-gray-500 font-black py-5 rounded-2xl uppercase tracking-widest text-[10px]" onClick={() => setShowConfirmModal(false)}>Cancel</button>
-          <button className="flex-[2] bg-blue-600 hover:bg-black text-white font-black py-5 rounded-2xl uppercase tracking-widest text-[11px] flex items-center justify-center min-w-[150px] shadow-xl shadow-blue-500/20" onClick={startPinVerification} disabled={isPurchasing}>
-            {isPurchasing ? <Spinner /> : `Approve Payment`}
+          <button className="flex-1 bg-gray-100 text-gray-500 font-bold py-4 rounded-xl uppercase tracking-widest text-[10px]" onClick={() => setShowConfirmModal(false)}>Cancel</button>
+          <button className="flex-[2] bg-blue-600 hover:bg-gray-900 text-white font-bold py-4 rounded-xl uppercase tracking-widest text-[11px] flex items-center justify-center min-w-[150px] shadow-lg shadow-blue-100" onClick={startPinVerification} disabled={isPurchasing}>
+            {isPurchasing ? <Spinner /> : `Confirm & Pay`}
           </button>
         </div>
       }>
-        <div className="text-center py-6 space-y-6">
-           <div className="w-20 h-20 bg-blue-50 text-blue-600 rounded-[2rem] flex items-center justify-center mx-auto mb-6 shadow-inner">
+        <div className="text-center py-4 space-y-6">
+           <div className="w-20 h-20 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm">
               <TvIcon />
            </div>
            <div className="space-y-2">
-              <p className="text-gray-400 font-medium text-lg leading-tight">Authorizing <span className="text-gray-900 font-black tracking-tight">{selectedPlan?.name}</span> for:</p>
-              <h3 className="text-4xl font-black text-gray-900 tracking-tighter leading-none">{customerName}</h3>
+              <p className="text-gray-500 font-medium text-lg">You are renewing <span className="text-gray-900 font-bold">{selectedPlan?.name}</span> for:</p>
+              <h3 className="text-3xl font-bold text-gray-900 tracking-tight">{customerName}</h3>
            </div>
-           <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
-              <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest">IUC No: {smartcardNo}</p>
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Carrier: {selectedOperator?.name}</p>
+           <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+              <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest">IUC No: {smartcardNo}</p>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Provider: {selectedOperator?.name}</p>
            </div>
         </div>
       </Modal>

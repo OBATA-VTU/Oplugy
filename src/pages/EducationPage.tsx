@@ -67,24 +67,24 @@ const EducationPage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
+    <div className="max-w-2xl mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
       <PinPromptModal 
         isOpen={showPinModal} 
         onClose={() => setShowPinModal(false)} 
         onSuccess={handlePurchase}
-        title="Confirm Payment"
-        description={`Authorizing ₦${totalAmount.toLocaleString()} for ${quantity}x ${selectedExam?.name}`}
+        title="Confirm Purchase"
+        description={`You are about to pay ₦${totalAmount.toLocaleString()} for ${quantity}x ${selectedExam?.name} pins.`}
       />
 
       <div className="text-center">
-        <h2 className="text-4xl lg:text-6xl font-black text-gray-900 tracking-tighter mb-4 uppercase">Exam Pins</h2>
-        <p className="text-gray-400 font-medium text-lg">Instant result checkers for major Nigerian examination bodies.</p>
+        <h2 className="text-4xl lg:text-5xl font-extrabold text-gray-900 tracking-tight mb-3">Exam PINs</h2>
+        <p className="text-gray-500 font-medium text-lg">Get WAEC, NECO, and NABTEB result checker pins instantly.</p>
       </div>
 
-      <div className="bg-white p-10 lg:p-14 rounded-[4rem] shadow-2xl border border-gray-50">
-         <div className="space-y-12">
+      <div className="bg-white p-8 lg:p-12 rounded-[3rem] shadow-xl border border-gray-50">
+         <div className="space-y-10">
             <div>
-               <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-6 ml-4">1. Choice Exam Type</label>
+               <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-6 ml-2">1. Select Exam Type</label>
                <div className="grid grid-cols-1 gap-4">
                   {isLoadingPlans ? (
                     <div className="flex justify-center py-10">
@@ -94,19 +94,19 @@ const EducationPage: React.FC = () => {
                     <button 
                      key={exam.id}
                      onClick={() => setSelectedExam(exam)}
-                     className={`p-8 rounded-[2.5rem] border-4 text-left transition-all flex justify-between items-center group ${selectedExam?.id === exam.id ? 'border-blue-600 bg-blue-50' : 'border-gray-50 bg-gray-50 hover:border-gray-100'}`}
+                     className={`p-6 rounded-2xl border-2 text-left transition-all flex justify-between items-center group ${selectedExam?.id === exam.id ? 'border-blue-600 bg-blue-50' : 'border-gray-50 bg-gray-50 hover:border-gray-100'}`}
                     >
                        <div>
-                          <h4 className="font-black text-gray-900 text-xl uppercase tracking-tight">{exam.name}</h4>
-                          <p className="text-blue-600 font-black text-3xl tracking-tighter mt-1">₦{(exam.price + marginPerPin).toLocaleString()}</p>
+                          <h4 className="font-bold text-gray-900 text-lg uppercase tracking-tight">{exam.name}</h4>
+                          <p className="text-blue-600 font-bold text-2xl tracking-tight mt-1">₦{(exam.price + marginPerPin).toLocaleString()}</p>
                        </div>
                        {selectedExam?.id === exam.id ? (
-                         <div className="w-12 h-12 bg-blue-600 text-white rounded-2xl flex items-center justify-center shadow-xl shadow-blue-200 animate-in zoom-in-50">
+                         <div className="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center shadow-lg shadow-blue-100 animate-in zoom-in-50">
                            <ShieldCheckIcon />
                          </div>
                        ) : (
-                         <div className="w-12 h-12 bg-white rounded-2xl border border-gray-200 flex items-center justify-center group-hover:scale-110 transition-all opacity-40">
-                            <div className="w-3 h-3 bg-gray-300 rounded-full"></div>
+                         <div className="w-10 h-10 bg-white rounded-xl border border-gray-200 flex items-center justify-center group-hover:scale-110 transition-all opacity-40">
+                            <div className="w-2.5 h-2.5 bg-gray-300 rounded-full"></div>
                          </div>
                        )}
                     </button>
@@ -114,43 +114,37 @@ const EducationPage: React.FC = () => {
                </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-end">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
                <div>
-                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-4">2. Pin Quantity</label>
+                  <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-4 ml-2">2. Quantity</label>
                   <input 
                     type="number" 
                     min="1" 
                     max="10" 
-                    className="w-full p-8 bg-gray-50 border-4 border-transparent rounded-[2.5rem] font-black text-3xl tracking-tight outline-none focus:border-blue-600 focus:bg-white transition-all text-center" 
+                    className="w-full p-5 bg-gray-50 border-2 border-transparent rounded-2xl font-bold text-2xl tracking-tight outline-none focus:border-blue-600 focus:bg-white transition-all text-center" 
                     value={quantity} 
                     onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))} 
                   />
                </div>
-               <div className="bg-gray-900 p-8 rounded-[2.5rem] flex flex-col justify-center border-t-8 border-blue-600 shadow-2xl">
-                  <p className="text-[10px] font-black text-white/30 uppercase tracking-widest mb-2">Total Due</p>
-                  <p className="text-5xl font-black text-white tracking-tighter leading-none">₦{totalAmount.toLocaleString()}</p>
+               <div className="bg-gray-900 p-6 rounded-2xl flex flex-col justify-center border-t-4 border-blue-600 shadow-xl">
+                  <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-1">Total Amount</p>
+                  <p className="text-4xl font-black text-white tracking-tight leading-none">₦{totalAmount.toLocaleString()}</p>
                </div>
             </div>
 
             <button 
               onClick={handlePrePurchase}
               disabled={!selectedExam || isPurchasing}
-              className="w-full bg-blue-600 hover:bg-black text-white py-10 rounded-[3.5rem] font-black uppercase tracking-[0.4em] text-sm shadow-2xl shadow-blue-200 transition-all transform active:scale-95 disabled:opacity-50 flex items-center justify-center space-x-4"
+              className="w-full bg-blue-600 hover:bg-gray-900 text-white py-5 rounded-2xl font-bold uppercase tracking-widest text-sm shadow-xl shadow-blue-100 transition-all transform active:scale-95 disabled:opacity-50 flex items-center justify-center space-x-3"
             >
-               {isPurchasing ? <Spinner /> : <><GamingIcon /> <span>Execute Delivery</span></>}
+               {isPurchasing ? <Spinner /> : <><ShieldCheckIcon /> <span>Buy Now</span></>}
             </button>
          </div>
       </div>
 
-      <div className="p-10 bg-gray-900 text-white rounded-[3.5rem] relative overflow-hidden shadow-2xl">
-         <div className="relative z-10 flex items-center space-x-8">
-            <div className="w-16 h-16 bg-blue-600 rounded-3xl flex items-center justify-center shrink-0 shadow-lg shadow-blue-500/40"><ShieldCheckIcon /></div>
-            <div>
-               <h4 className="text-2xl font-black tracking-tight">Post-Payment Node</h4>
-               <p className="text-white/40 text-sm font-medium">Exam pins are delivered instantly to your transaction history ledger. Copy and use on respective result portals.</p>
-            </div>
-         </div>
-         <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/10 rounded-full blur-[100px]"></div>
+      <div className="p-8 bg-blue-50 text-blue-900 rounded-[2.5rem] border border-blue-100 flex items-center space-x-6">
+        <div className="w-12 h-12 bg-blue-600 text-white rounded-xl flex items-center justify-center shrink-0 shadow-lg"><ShieldCheckIcon /></div>
+        <p className="text-sm font-medium">Exam PINs are delivered instantly. You can find them in your transaction history after purchase.</p>
       </div>
     </div>
   );

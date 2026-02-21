@@ -144,102 +144,102 @@ const DataPage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="max-w-3xl mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <PinPromptModal 
         isOpen={showPinModal} 
         onClose={() => setShowPinModal(false)} 
         onSuccess={handlePurchase}
-        title="Approve Transaction"
-        description={`Paying ₦${selectedPlan?.amount.toLocaleString()} for ${selectedPlan?.name}`}
+        title="Confirm Purchase"
+        description={`You are about to pay ₦${selectedPlan?.amount.toLocaleString()} for ${selectedPlan?.name}`}
       />
 
       <div className="text-center">
-        <h2 className="text-4xl lg:text-5xl font-black text-gray-900 tracking-tighter mb-4">Mobile Data</h2>
-        <p className="text-gray-400 font-medium text-lg">Instant delivery across independent provider nodes.</p>
+        <h2 className="text-4xl lg:text-5xl font-extrabold text-gray-900 tracking-tight mb-3">Buy Data</h2>
+        <p className="text-gray-500 font-medium text-lg">Get instant data bundles delivered to any phone number.</p>
       </div>
 
-      <div className="bg-white p-8 lg:p-16 rounded-[3.5rem] shadow-2xl border border-gray-50 space-y-12">
-         <div className="space-y-10">
-            <div className="flex gap-4 p-2 bg-gray-100 rounded-3xl">
+      <div className="bg-white p-8 lg:p-12 rounded-[3rem] shadow-xl border border-gray-50 space-y-10">
+         <div className="space-y-8">
+            <div className="flex gap-3 p-1.5 bg-gray-50 rounded-2xl border border-gray-100">
                <button 
                  onClick={() => setSelectedServer(1)} 
-                 className={`flex-1 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${selectedServer === 1 ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+                 className={`flex-1 py-3 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all ${selectedServer === 1 ? 'bg-white text-blue-600 shadow-sm border border-blue-50' : 'text-gray-400 hover:text-gray-600'}`}
                >
-                 Server 1 (Inlomax)
+                 Standard Server
                </button>
                <button 
                  onClick={() => setSelectedServer(2)} 
-                 className={`flex-1 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${selectedServer === 2 ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+                 className={`flex-1 py-3 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all ${selectedServer === 2 ? 'bg-white text-blue-600 shadow-sm border border-blue-50' : 'text-gray-400 hover:text-gray-600'}`}
                >
-                 Server 2 (Ciptopup)
+                 Premium Server
                </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                <div>
-                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-4">1. Network Carrier</label>
+                  <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3 ml-2">1. Select Network</label>
                   <select 
                     value={selectedOperator} 
                     onChange={(e) => setSelectedOperator(e.target.value)}
                     disabled={isFetchingNetworks}
-                    className="w-full p-6 bg-gray-50 border-4 border-transparent focus:border-blue-600 rounded-3xl font-black text-xl outline-none transition-all appearance-none disabled:opacity-40"
+                    className="w-full p-5 bg-gray-50 border-2 border-transparent focus:border-blue-600 rounded-2xl font-bold text-lg outline-none transition-all appearance-none disabled:opacity-40"
                   >
-                     <option value="">{isFetchingNetworks ? 'Syncing Nodes...' : 'Select Network'}</option>
+                     <option value="">{isFetchingNetworks ? 'Loading networks...' : 'Choose a network'}</option>
                      {networks.map(op => <option key={op.id} value={op.id}>{op.name}</option>)}
                   </select>
                </div>
 
                <div>
-                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-4">2. Data Tier</label>
+                  <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3 ml-2">2. Select Type</label>
                   <select 
                     value={selectedType} 
                     onChange={(e) => setSelectedType(e.target.value)}
                     disabled={!selectedOperator || isFetchingTypes}
-                    className="w-full p-6 bg-gray-50 border-4 border-transparent focus:border-blue-600 rounded-3xl font-black text-xl outline-none transition-all appearance-none disabled:opacity-40"
+                    className="w-full p-5 bg-gray-50 border-2 border-transparent focus:border-blue-600 rounded-2xl font-bold text-lg outline-none transition-all appearance-none disabled:opacity-40"
                   >
-                     <option value="">{isFetchingTypes ? 'Loading Node...' : 'Select Category'}</option>
+                     <option value="">{isFetchingTypes ? 'Loading types...' : 'Choose data type'}</option>
                      {dataTypes.map(dt => <option key={dt} value={dt}>{dt}</option>)}
                   </select>
                </div>
             </div>
 
             <div className="relative">
-               <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-4">3. Package Selection</label>
+               <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3 ml-2">3. Select Plan</label>
                <select 
                  value={selectedPlanId} 
                  onChange={(e) => setSelectedPlanId(e.target.value)}
                  disabled={isFetchingPlans}
-                 className="w-full p-6 bg-gray-50 border-4 border-transparent focus:border-blue-600 rounded-3xl font-black text-xl outline-none transition-all appearance-none disabled:opacity-40"
+                 className="w-full p-5 bg-gray-50 border-2 border-transparent focus:border-blue-600 rounded-2xl font-bold text-lg outline-none transition-all appearance-none disabled:opacity-40"
                >
-                  <option value="">{isFetchingPlans ? 'Syncing Catalog...' : 'Select Plan'}</option>
+                  <option value="">{isFetchingPlans ? 'Loading plans...' : 'Choose a data plan'}</option>
                   {dataPlans.map(plan => (
                     <option key={plan.id} value={plan.id}>
                        {`${plan.name} - ₦${plan.amount.toLocaleString()}`}
                     </option>
                   ))}
                </select>
-               {isFetchingPlans && <div className="absolute right-10 top-1/2 mt-3"><Spinner /></div>}
+               {isFetchingPlans && <div className="absolute right-8 top-1/2 mt-2"><Spinner /></div>}
             </div>
 
             {selectedPlan && (
-               <div className="bg-blue-50/50 p-8 rounded-[2.5rem] border-2 border-dashed border-blue-100 flex justify-between items-center animate-in zoom-in-95 duration-300">
+               <div className="bg-blue-50/50 p-6 rounded-3xl border-2 border-dashed border-blue-100 flex justify-between items-center animate-in zoom-in-95 duration-300">
                   <div>
-                    <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-1">Total Due</p>
-                    <p className="text-4xl font-black text-gray-900 tracking-tighter">₦{selectedPlan.amount.toLocaleString()}</p>
+                    <p className="text-[10px] font-bold text-blue-600 uppercase tracking-wider mb-1">Price</p>
+                    <p className="text-3xl font-black text-gray-900 tracking-tight">₦{selectedPlan.amount.toLocaleString()}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Plan Life</p>
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Validity</p>
                     <p className="font-bold text-gray-700">{selectedPlan.validity}</p>
                   </div>
                </div>
             )}
 
-            <div className={`space-y-8 transition-opacity duration-500 ${selectedPlan ? 'opacity-100' : 'opacity-30 pointer-events-none'}`}>
+            <div className={`space-y-6 transition-opacity duration-500 ${selectedPlan ? 'opacity-100' : 'opacity-30 pointer-events-none'}`}>
                <div>
-                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-4">4. Delivery Phone Number</label>
+                  <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3 ml-2">4. Phone Number</label>
                   <input 
                     type="tel" 
-                    className="w-full p-8 bg-gray-50 border-4 border-gray-100 focus:border-blue-600 rounded-[2.5rem] text-3xl font-black tracking-tight text-center outline-none transition-all"
+                    className="w-full p-6 bg-gray-50 border-2 border-gray-100 focus:border-blue-600 rounded-2xl text-2xl font-bold tracking-tight text-center outline-none transition-all"
                     placeholder="08012345678"
                     maxLength={11}
                     value={phoneNumber}
@@ -250,23 +250,23 @@ const DataPage: React.FC = () => {
                <button 
                  onClick={handlePrePurchase}
                  disabled={!selectedPlan || phoneNumber.length !== 11 || isPurchasing}
-                 className="w-full bg-blue-600 hover:bg-black text-white py-10 rounded-[3rem] font-black uppercase tracking-[0.4em] text-sm shadow-2xl shadow-blue-200 transition-all flex items-center justify-center space-x-4 transform active:scale-95 disabled:opacity-50"
+                 className="w-full bg-blue-600 hover:bg-gray-900 text-white py-5 rounded-2xl font-bold uppercase tracking-widest text-sm shadow-xl shadow-blue-100 transition-all flex items-center justify-center space-x-3 transform active:scale-95 disabled:opacity-50"
                >
-                 {isPurchasing ? <Spinner /> : <><ShieldCheckIcon /> <span>Execute Delivery</span></>}
+                 {isPurchasing ? <Spinner /> : <><ShieldCheckIcon /> <span>Buy Now</span></>}
                </button>
             </div>
          </div>
       </div>
 
-      <div className="p-10 bg-gray-900 text-white rounded-[3.5rem] relative overflow-hidden shadow-2xl">
-         <div className="relative z-10 flex items-center space-x-8">
-            <div className="w-16 h-16 bg-blue-600 rounded-3xl flex items-center justify-center shrink-0 shadow-lg"><SignalIcon /></div>
+      <div className="p-8 bg-gray-900 text-white rounded-[2.5rem] relative overflow-hidden shadow-xl">
+         <div className="relative z-10 flex items-center space-x-6">
+            <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center shrink-0 shadow-lg"><SignalIcon /></div>
             <div>
-               <h4 className="text-2xl font-black tracking-tight">Optimized Data Core</h4>
-               <p className="text-white/40 text-sm font-medium">Bundles are provisioned instantly through our primary cloud gateway for zero delays.</p>
+               <h4 className="text-xl font-bold tracking-tight">Instant Delivery</h4>
+               <p className="text-white/50 text-sm font-medium">Your data bundle will be activated immediately after payment is confirmed.</p>
             </div>
          </div>
-         <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/10 rounded-full blur-[100px]"></div>
+         <div className="absolute top-0 right-0 w-48 h-48 bg-blue-600/10 rounded-full blur-[80px]"></div>
       </div>
     </div>
   );
