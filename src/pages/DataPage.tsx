@@ -5,271 +5,442 @@ import { vtuService } from '../services/vtuService';
 import { DataPlan } from '../types';
 import Spinner from '../components/Spinner';
 import PinPromptModal from '../components/PinPromptModal';
-import { ShieldCheckIcon, SignalIcon } from '../components/Icons';
+import LoadingScreen from '../components/LoadingScreen';
+import Modal from '../components/Modal';
+import { ShieldCheck, Signal, Server, Smartphone, Wifi, CheckCircle2, Receipt, ArrowRight, AlertCircle, Zap } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import { useNavigate } from 'react-router-dom';
 
 const DataPage: React.FC = () => {
+  const navigate = useNavigate();
   const { addNotification } = useNotifications();
   const { user, walletBalance, updateWalletBalance } = useAuth();
   
+  const [step, setStep] = useState<'SERVER' | 'NETWORK' | 'CATEGORY' | 'PLAN' | 'PHONE' | 'CHECKOUT' | 'SUCCESS'>('SERVER');
+  const [selectedServer, setSelectedServer] = useState<1 | 2 | null>(null);
   const [selectedOperator, setSelectedOperator] = useState<string>('');
   const [selectedType, setSelectedType] = useState<string>('');
   const [selectedPlanId, setSelectedPlanId] = useState<string>('');
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [selectedServer, setSelectedServer] = useState<1 | 2>(1);
-
+  
   const [networks, setNetworks] = useState<any[]>([]);
   const [dataTypes, setDataTypes] = useState<string[]>([]);
   const [dataPlans, setDataPlans] = useState<DataPlan[]>([]);
   const [selectedPlan, setSelectedPlan] = useState<DataPlan | null>(null);
   
-  const [isFetchingNetworks, setIsFetchingNetworks] = useState(false);
-  const [isFetchingTypes, setIsFetchingTypes] = useState(false);
-  const [isFetchingPlans, setIsFetchingPlans] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState('');
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [showPinModal, setShowPinModal] = useState(false);
 
-  const resetPlans = useCallback(() => {
-    setSelectedPlanId('');
-    setDataPlans([]);
-    setSelectedPlan(null);
-  }, []);
-
   const resetAll = useCallback(() => {
+    setStep('SERVER');
+    setSelectedServer(null);
     setSelectedOperator('');
     setSelectedType('');
-    setDataTypes([]);
-    resetPlans();
-  }, [resetPlans]);
-
-  const fetchNetworks = useCallback(async () => {
-    setIsFetchingNetworks(true);
-    const res = await vtuService.getDataNetworks(selectedServer);
-    if (res.status) {
-      setNetworks(res.data || []);
-    }
-    setIsFetchingNetworks(false);
-  }, [selectedServer]);
-
-  const fetchPlans = useCallback(async (net: string, type: string) => {
-    setIsFetchingPlans(true);
     setSelectedPlanId('');
-    setDataPlans([]);
+    setPhoneNumber('');
     setSelectedPlan(null);
-    const res = await vtuService.getDataPlans({ 
-      network: net, 
-      type, 
-      userRole: user?.role || 'user',
-      server: selectedServer
-    });
-    if (res.status && res.data) {
-      setDataPlans(res.data);
-    } else {
-      addNotification(res.message || 'Plan sync failed.', 'error');
+    setNetworks([]);
+    setDataTypes([]);
+    setDataPlans([]);
+  }, []);
+
+  const handleServerSelect = async (server: 1 | 2) => {
+    setSelectedServer(server);
+    setIsLoading(true);
+    setLoadingMessage('Syncing Network Nodes...');
+    try {
+      const res = await vtuService.getDataNetworks(server);
+      if (res.status) {
+        setNetworks(res.data || []);
+        setStep('NETWORK');
+      } else {
+        addNotification("Failed to sync networks.", "error");
+      }
+    } catch (e) {
+      addNotification("Connection error.", "error");
+    } finally {
+      setTimeout(() => setIsLoading(false), 800);
     }
-    setIsFetchingPlans(false);
-  }, [user?.role, addNotification, selectedServer]);
+  };
 
-  useEffect(() => {
-    fetchNetworks();
-    resetAll();
-  }, [selectedServer, fetchNetworks, resetAll]);
-
-  useEffect(() => {
-    const fetchTypes = async () => {
-      if (!selectedOperator) return;
-      setIsFetchingTypes(true);
-      setSelectedType('');
-      setDataTypes([]);
-      resetPlans();
-
-      const res = await vtuService.getDataCategories(selectedOperator, selectedServer);
+  const handleNetworkSelect = async (netId: string) => {
+    setSelectedOperator(netId);
+    setIsLoading(true);
+    setLoadingMessage('Fetching Data Protocols...');
+    try {
+      const res = await vtuService.getDataCategories(netId, selectedServer!);
       if (res.status && res.data) {
         setDataTypes(res.data);
         if (res.data.length === 0) {
-          fetchPlans(selectedOperator, '');
+          // No categories, go straight to plans
+          await fetchPlans(netId, '');
+        } else {
+          setStep('CATEGORY');
         }
       } else {
-        addNotification(res.message || 'Node unreachable.', 'error');
+        addNotification("Failed to fetch categories.", "error");
       }
-      setIsFetchingTypes(false);
-    };
-    fetchTypes();
-  }, [selectedOperator, addNotification, fetchPlans, resetPlans, selectedServer]);
-
-  useEffect(() => {
-    if (selectedType && selectedOperator) {
-      fetchPlans(selectedOperator, selectedType);
+    } catch (e) {
+      addNotification("Connection error.", "error");
+    } finally {
+      setTimeout(() => setIsLoading(false), 800);
     }
-  }, [selectedType, selectedOperator, fetchPlans]);
+  };
 
-  useEffect(() => {
-    setSelectedPlan(dataPlans.find(p => p.id === selectedPlanId) || null);
-  }, [selectedPlanId, dataPlans]);
+  const handleCategorySelect = async (type: string) => {
+    setSelectedType(type);
+    await fetchPlans(selectedOperator, type);
+  };
 
-  const handlePrePurchase = () => {
-    if (!selectedPlan || phoneNumber.length !== 11) {
-      addNotification('Please select a plan and enter a valid phone number.', 'warning');
-      return;
+  const fetchPlans = async (net: string, type: string) => {
+    setIsLoading(true);
+    setLoadingMessage('Syncing Tariff Matrix...');
+    try {
+      const res = await vtuService.getDataPlans({ 
+        network: net, 
+        type, 
+        userRole: user?.role || 'user',
+        server: selectedServer!
+      });
+      if (res.status && res.data) {
+        setDataPlans(res.data);
+        setStep('PLAN');
+      } else {
+        addNotification(res.message || 'Plan sync failed.', 'error');
+      }
+    } catch (e) {
+      addNotification("Connection error.", "error");
+    } finally {
+      setTimeout(() => setIsLoading(false), 800);
     }
-    if (walletBalance !== null && selectedPlan.amount > walletBalance) {
-      addNotification('Insufficient balance.', 'error');
-      return;
+  };
+
+  const handlePlanSelect = (planId: string) => {
+    const plan = dataPlans.find(p => p.id === planId);
+    if (plan) {
+      setSelectedPlan(plan);
+      setSelectedPlanId(planId);
+      setStep('PHONE');
     }
-    setShowPinModal(true);
   };
 
   const handlePurchase = async () => {
     if (!selectedPlan || isPurchasing) return;
     setIsPurchasing(true);
     setShowPinModal(false);
+    setIsLoading(true);
+    setLoadingMessage('Fulfilling Data Protocol...');
 
-    const res = await vtuService.purchaseData({
-      plan_id: selectedPlan.id,
-      phone_number: phoneNumber,
-      amount: selectedPlan.amount,
-      network: selectedOperator,
-      plan_name: selectedPlan.name,
-      server: selectedServer
-    });
-    
-    if (res.status) {
-      addNotification(`Data bundle active on ${phoneNumber}.`, 'success');
-      updateWalletBalance((walletBalance || 0) - selectedPlan.amount);
-      setPhoneNumber('');
-      setSelectedPlanId('');
-    } else {
-      addNotification(res.message || 'Fulfillment error.', 'error');
+    try {
+      const res = await vtuService.purchaseData({
+        plan_id: selectedPlan.id,
+        phone_number: phoneNumber,
+        amount: selectedPlan.amount,
+        network: selectedOperator,
+        plan_name: selectedPlan.name,
+        server: selectedServer!
+      });
+      
+      if (res.status) {
+        updateWalletBalance((walletBalance || 0) - selectedPlan.amount);
+        setStep('SUCCESS');
+      } else {
+        addNotification(res.message || 'Fulfillment error.', 'error');
+      }
+    } catch (e) {
+      addNotification("Transaction failed.", "error");
+    } finally {
+      setIsPurchasing(false);
+      setTimeout(() => setIsLoading(false), 800);
     }
-    setIsPurchasing(false);
   };
 
+  if (isLoading) return <LoadingScreen message={loadingMessage} />;
+
   return (
-    <div className="max-w-3xl mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="max-w-4xl mx-auto space-y-12 pb-24">
       <PinPromptModal 
         isOpen={showPinModal} 
         onClose={() => setShowPinModal(false)} 
         onSuccess={handlePurchase}
-        title="Confirm Purchase"
-        description={`You are about to pay ₦${selectedPlan?.amount.toLocaleString()} for ${selectedPlan?.name}`}
+        title="Authenticate Transaction"
+        description={`Confirm ₦${selectedPlan?.amount.toLocaleString()} for ${selectedPlan?.name}`}
       />
 
-      <div className="text-center">
-        <h2 className="text-4xl lg:text-5xl font-extrabold text-gray-900 tracking-tight mb-3">Buy Data</h2>
-        <p className="text-gray-500 font-medium text-lg">Get instant data bundles delivered to any phone number.</p>
+      <div className="text-center space-y-4">
+        <h2 className="text-[11px] font-black text-blue-600 uppercase tracking-[0.5em]">Fulfillment Node</h2>
+        <h1 className="text-5xl lg:text-8xl font-black text-gray-900 tracking-tighter leading-[0.85]">Buy <br /><span className="text-blue-600">Data.</span></h1>
+        <p className="text-gray-400 font-medium text-lg max-w-xl mx-auto leading-relaxed">High-velocity data delivery across all Nigerian networks.</p>
       </div>
 
-      <div className="bg-white p-8 lg:p-12 rounded-[3rem] shadow-xl border border-gray-50 space-y-10">
-         <div className="space-y-8">
-            <div className="flex gap-3 p-1.5 bg-gray-50 rounded-2xl border border-gray-100">
-               <button 
-                 onClick={() => setSelectedServer(1)} 
-                 className={`flex-1 py-3 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all ${selectedServer === 1 ? 'bg-white text-blue-600 shadow-sm border border-blue-50' : 'text-gray-400 hover:text-gray-600'}`}
-               >
-                 Standard Server
-               </button>
-               <button 
-                 onClick={() => setSelectedServer(2)} 
-                 className={`flex-1 py-3 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all ${selectedServer === 2 ? 'bg-white text-blue-600 shadow-sm border border-blue-50' : 'text-gray-400 hover:text-gray-600'}`}
-               >
-                 Premium Server
-               </button>
-            </div>
+      <div className="bg-white p-8 lg:p-16 rounded-[4rem] shadow-2xl border border-gray-50 relative overflow-hidden">
+        <AnimatePresence mode="wait">
+          {step === 'SERVER' && (
+            <motion.div 
+              key="server"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="space-y-12"
+            >
+              <div className="p-8 bg-blue-50 rounded-[2.5rem] border border-blue-100 flex items-start space-x-6">
+                 <AlertCircle className="w-8 h-8 text-blue-600 shrink-0" />
+                 <div className="space-y-2">
+                    <h4 className="text-lg font-black text-blue-900 tracking-tight">Important Notice</h4>
+                    <p className="text-blue-800/60 font-medium leading-relaxed">Both servers have different data plans and prices. Please check both to find the one that suits your needs best. Fulfillment speed is identical on both nodes.</p>
+                 </div>
+              </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-               <div>
-                  <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3 ml-2">1. Select Network</label>
-                  <select 
-                    value={selectedOperator} 
-                    onChange={(e) => setSelectedOperator(e.target.value)}
-                    disabled={isFetchingNetworks}
-                    className="w-full p-5 bg-gray-50 border-2 border-transparent focus:border-blue-600 rounded-2xl font-bold text-lg outline-none transition-all appearance-none disabled:opacity-40"
-                  >
-                     <option value="">{isFetchingNetworks ? 'Loading networks...' : 'Choose a network'}</option>
-                     {networks.map(op => <option key={op.id} value={op.id}>{op.name}</option>)}
-                  </select>
-               </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                 <ServerCard 
+                   title="Omega Server" 
+                   desc="Standard fulfillment node with competitive rates." 
+                   icon={<Server className="w-8 h-8" />} 
+                   onClick={() => handleServerSelect(1)} 
+                 />
+                 <ServerCard 
+                   title="Alpha Server" 
+                   desc="Alternative fulfillment node with unique data bundles." 
+                   icon={<Zap className="w-8 h-8" />} 
+                   onClick={() => handleServerSelect(2)} 
+                 />
+              </div>
+            </motion.div>
+          )}
 
-               <div>
-                  <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3 ml-2">2. Select Type</label>
-                  <select 
-                    value={selectedType} 
-                    onChange={(e) => setSelectedType(e.target.value)}
-                    disabled={!selectedOperator || isFetchingTypes}
-                    className="w-full p-5 bg-gray-50 border-2 border-transparent focus:border-blue-600 rounded-2xl font-bold text-lg outline-none transition-all appearance-none disabled:opacity-40"
-                  >
-                     <option value="">{isFetchingTypes ? 'Loading types...' : 'Choose data type'}</option>
-                     {dataTypes.map(dt => <option key={dt} value={dt}>{dt}</option>)}
-                  </select>
-               </div>
-            </div>
-
-            <div className="relative">
-               <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3 ml-2">3. Select Plan</label>
-               <select 
-                 value={selectedPlanId} 
-                 onChange={(e) => setSelectedPlanId(e.target.value)}
-                 disabled={isFetchingPlans}
-                 className="w-full p-5 bg-gray-50 border-2 border-transparent focus:border-blue-600 rounded-2xl font-bold text-lg outline-none transition-all appearance-none disabled:opacity-40"
-               >
-                  <option value="">{isFetchingPlans ? 'Loading plans...' : 'Choose a data plan'}</option>
-                  {dataPlans.map(plan => (
-                    <option key={plan.id} value={plan.id}>
-                       {`${plan.name} - ₦${plan.amount.toLocaleString()}`}
-                    </option>
-                  ))}
-               </select>
-               {isFetchingPlans && <div className="absolute right-8 top-1/2 mt-2"><Spinner /></div>}
-            </div>
-
-            {selectedPlan && (
-               <div className="bg-blue-50/50 p-6 rounded-3xl border-2 border-dashed border-blue-100 flex justify-between items-center animate-in zoom-in-95 duration-300">
-                  <div>
-                    <p className="text-[10px] font-bold text-blue-600 uppercase tracking-wider mb-1">Price</p>
-                    <p className="text-3xl font-black text-gray-900 tracking-tight">₦{selectedPlan.amount.toLocaleString()}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Validity</p>
-                    <p className="font-bold text-gray-700">{selectedPlan.validity}</p>
-                  </div>
-               </div>
-            )}
-
-            <div className={`space-y-6 transition-opacity duration-500 ${selectedPlan ? 'opacity-100' : 'opacity-30 pointer-events-none'}`}>
-               <div>
-                  <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3 ml-2">4. Phone Number</label>
-                  <input 
-                    type="tel" 
-                    className="w-full p-6 bg-gray-50 border-2 border-gray-100 focus:border-blue-600 rounded-2xl text-2xl font-bold tracking-tight text-center outline-none transition-all"
-                    placeholder="08012345678"
-                    maxLength={11}
-                    value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
+          {step === 'NETWORK' && (
+            <motion.div 
+              key="network"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              className="space-y-10"
+            >
+              <StepHeader num="1" title="Select Network" />
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                {networks.map(n => (
+                  <SelectionButton 
+                    key={n.id} 
+                    label={n.name} 
+                    icon={<Smartphone className="w-6 h-6" />} 
+                    onClick={() => handleNetworkSelect(n.id)} 
                   />
-               </div>
+                ))}
+              </div>
+              <BackButton onClick={() => setStep('SERVER')} />
+            </motion.div>
+          )}
 
-               <button 
-                 onClick={handlePrePurchase}
-                 disabled={!selectedPlan || phoneNumber.length !== 11 || isPurchasing}
-                 className="w-full bg-blue-600 hover:bg-gray-900 text-white py-5 rounded-2xl font-bold uppercase tracking-widest text-sm shadow-xl shadow-blue-100 transition-all flex items-center justify-center space-x-3 transform active:scale-95 disabled:opacity-50"
-               >
-                 {isPurchasing ? <Spinner /> : <><ShieldCheckIcon /> <span>Buy Now</span></>}
-               </button>
-            </div>
-         </div>
-      </div>
+          {step === 'CATEGORY' && (
+            <motion.div 
+              key="category"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              className="space-y-10"
+            >
+              <StepHeader num="2" title="Select Data Type" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {dataTypes.map(type => (
+                  <SelectionButton 
+                    key={type} 
+                    label={type} 
+                    icon={<Wifi className="w-6 h-6" />} 
+                    onClick={() => handleCategorySelect(type)} 
+                  />
+                ))}
+              </div>
+              <BackButton onClick={() => setStep('NETWORK')} />
+            </motion.div>
+          )}
 
-      <div className="p-8 bg-gray-900 text-white rounded-[2.5rem] relative overflow-hidden shadow-xl">
-         <div className="relative z-10 flex items-center space-x-6">
-            <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center shrink-0 shadow-lg"><SignalIcon /></div>
-            <div>
-               <h4 className="text-xl font-bold tracking-tight">Instant Delivery</h4>
-               <p className="text-white/50 text-sm font-medium">Your data bundle will be activated immediately after payment is confirmed.</p>
-            </div>
-         </div>
-         <div className="absolute top-0 right-0 w-48 h-48 bg-blue-600/10 rounded-full blur-[80px]"></div>
+          {step === 'PLAN' && (
+            <motion.div 
+              key="plan"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              className="space-y-10"
+            >
+              <StepHeader num="3" title="Choose Data Plan" />
+              <div className="relative">
+                <select 
+                  className="w-full p-8 bg-gray-50 border-2 border-transparent focus:border-blue-600 rounded-[2rem] font-black text-xl outline-none transition-all appearance-none"
+                  onChange={(e) => handlePlanSelect(e.target.value)}
+                  value={selectedPlanId}
+                >
+                  <option value="">Select a plan</option>
+                  {dataPlans.map(p => (
+                    <option key={p.id} value={p.id}>{p.name} - ₦{p.amount.toLocaleString()}</option>
+                  ))}
+                </select>
+                <div className="absolute right-8 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                  <ArrowRight className="w-6 h-6 rotate-90" />
+                </div>
+              </div>
+              <BackButton onClick={() => setStep(dataTypes.length > 0 ? 'CATEGORY' : 'NETWORK')} />
+            </motion.div>
+          )}
+
+          {step === 'PHONE' && (
+            <motion.div 
+              key="phone"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              className="space-y-10"
+            >
+              <StepHeader num="4" title="Recipient Number" />
+              <div className="space-y-8">
+                <input 
+                  type="tel" 
+                  className="w-full p-10 bg-gray-50 border-4 border-transparent focus:border-blue-600 rounded-[3rem] text-5xl font-black tracking-tighter text-center outline-none transition-all placeholder:text-gray-200"
+                  placeholder="08012345678"
+                  maxLength={11}
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
+                />
+                <button 
+                  disabled={phoneNumber.length !== 11}
+                  onClick={() => setStep('CHECKOUT')}
+                  className="w-full py-8 bg-blue-600 text-white rounded-[2.5rem] font-black text-[12px] uppercase tracking-[0.4em] shadow-2xl shadow-blue-100 hover:bg-gray-950 transition-all transform active:scale-95 disabled:opacity-50"
+                >
+                  Continue to Checkout
+                </button>
+              </div>
+              <BackButton onClick={() => setStep('PLAN')} />
+            </motion.div>
+          )}
+
+          {step === 'CHECKOUT' && (
+            <motion.div 
+              key="checkout"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="space-y-10"
+            >
+              <div className="text-center space-y-2">
+                <h3 className="text-3xl font-black text-gray-900 tracking-tight">Confirm Purchase</h3>
+                <p className="text-gray-400 font-medium">Please review the transaction details below.</p>
+              </div>
+
+              <div className="bg-gray-50 p-10 rounded-[3rem] space-y-6 border border-gray-100">
+                <CheckoutRow label="Service" value="Data Bundle" />
+                <CheckoutRow label="Network" value={networks.find(n => n.id === selectedOperator)?.name || selectedOperator} />
+                <CheckoutRow label="Plan" value={selectedPlan?.name || ''} />
+                <CheckoutRow label="Recipient" value={phoneNumber} />
+                <div className="pt-6 border-t border-gray-200 flex justify-between items-center">
+                  <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Total Amount</span>
+                  <span className="text-3xl font-black text-blue-600 tracking-tighter">₦{selectedPlan?.amount.toLocaleString()}</span>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <button 
+                  onClick={() => setShowPinModal(true)}
+                  className="w-full py-8 bg-blue-600 text-white rounded-[2.5rem] font-black text-[12px] uppercase tracking-[0.4em] shadow-2xl shadow-blue-100 hover:bg-gray-950 transition-all transform active:scale-95"
+                >
+                  Confirm & Pay
+                </button>
+                <button 
+                  onClick={() => setStep('PHONE')}
+                  className="w-full py-6 text-gray-400 font-black text-[10px] uppercase tracking-widest hover:text-gray-900 transition-all"
+                >
+                  Go Back
+                </button>
+              </div>
+            </motion.div>
+          )}
+
+          {step === 'SUCCESS' && (
+            <motion.div 
+              key="success"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="text-center space-y-10 py-10"
+            >
+              <div className="w-24 h-24 bg-green-50 text-green-500 rounded-[2rem] flex items-center justify-center mx-auto shadow-inner">
+                <CheckCircle2 className="w-12 h-12" />
+              </div>
+              <div className="space-y-4">
+                <h3 className="text-4xl font-black text-gray-900 tracking-tighter">Purchase Successful!</h3>
+                <p className="text-gray-400 font-medium text-lg">Your data bundle has been fulfilled successfully.</p>
+              </div>
+              
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <button 
+                  onClick={resetAll}
+                  className="px-10 py-6 bg-blue-600 text-white rounded-3xl font-black text-[11px] uppercase tracking-widest hover:bg-gray-950 transition-all shadow-xl shadow-blue-100 flex items-center justify-center space-x-3"
+                >
+                  <ArrowRight className="w-4 h-4" />
+                  <span>Buy Again</span>
+                </button>
+                <button 
+                  onClick={() => navigate('/history')}
+                  className="px-10 py-6 bg-gray-100 text-gray-900 rounded-3xl font-black text-[11px] uppercase tracking-widest hover:bg-gray-200 transition-all flex items-center justify-center space-x-3"
+                >
+                  <Receipt className="w-4 h-4" />
+                  <span>View Receipt</span>
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
 };
+
+const ServerCard = ({ title, desc, icon, onClick }: any) => (
+  <button 
+    onClick={onClick}
+    className="p-10 bg-gray-50 border-2 border-transparent hover:border-blue-600 hover:bg-white rounded-[3rem] text-left transition-all group shadow-sm hover:shadow-2xl"
+  >
+    <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mb-8 text-blue-600 shadow-sm group-hover:scale-110 group-hover:rotate-6 transition-all">
+      {icon}
+    </div>
+    <h4 className="text-2xl font-black text-gray-900 tracking-tight mb-2">{title}</h4>
+    <p className="text-gray-400 font-medium leading-relaxed">{desc}</p>
+  </button>
+);
+
+const SelectionButton = ({ label, icon, onClick }: any) => (
+  <button 
+    onClick={onClick}
+    className="p-8 bg-gray-50 border-2 border-transparent hover:border-blue-600 hover:bg-white rounded-[2.5rem] flex flex-col items-center gap-4 transition-all group shadow-sm hover:shadow-xl"
+  >
+    <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-gray-400 group-hover:text-blue-600 shadow-sm group-hover:scale-110 transition-all">
+      {icon}
+    </div>
+    <span className="text-[10px] font-black uppercase tracking-widest text-gray-500 group-hover:text-gray-900">{label}</span>
+  </button>
+);
+
+const StepHeader = ({ num, title }: { num: string, title: string }) => (
+  <div className="flex items-center space-x-4 mb-8">
+    <div className="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center font-black text-sm">{num}</div>
+    <h3 className="text-3xl font-black text-gray-900 tracking-tight">{title}</h3>
+  </div>
+);
+
+const CheckoutRow = ({ label, value }: { label: string, value: string }) => (
+  <div className="flex justify-between items-center">
+    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{label}</span>
+    <span className="font-black text-gray-900 tracking-tight">{value}</span>
+  </div>
+);
+
+const BackButton = ({ onClick }: { onClick: () => void }) => (
+  <button 
+    onClick={onClick}
+    className="text-[10px] font-black text-gray-400 uppercase tracking-widest hover:text-blue-600 transition-all flex items-center space-x-2"
+  >
+    <span>← Back to previous step</span>
+  </button>
+);
+
 
 export default DataPage;
