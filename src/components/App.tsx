@@ -18,7 +18,13 @@ import ProfilePage from './pages/ProfilePage';
 import FundingPage from './pages/FundingPage';
 import TransactionHistoryPage from './pages/TransactionHistoryPage';
 import ReferralPage from './pages/ReferralPage';
+import SchedulePurchasePage from './pages/SchedulePurchasePage';
 import QuickPurchasePage from './pages/QuickPurchasePage';
+import QuickBuyAirtime from './pages/quick-buy/QuickBuyAirtime';
+import QuickBuyData from './pages/quick-buy/QuickBuyData';
+import QuickBuyElectricity from './pages/quick-buy/QuickBuyElectricity';
+import QuickBuyCable from './pages/quick-buy/QuickBuyCable';
+import QuickBuyCheckout from './pages/quick-buy/QuickBuyCheckout';
 import ApiDocsPage from './pages/ApiDocsPage';
 import SupportPage from './pages/SupportPage';
 import FAQPage from './pages/FAQPage';
@@ -50,6 +56,11 @@ const App: React.FC = () => {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignUpPage />} />
             <Route path="/quick-purchase" element={<QuickPurchasePage />} />
+            <Route path="/quick-purchase/airtime" element={<QuickBuyAirtime />} />
+            <Route path="/quick-purchase/data" element={<QuickBuyData />} />
+            <Route path="/quick-purchase/electricity" element={<QuickBuyElectricity />} />
+            <Route path="/quick-purchase/cable" element={<QuickBuyCable />} />
+            <Route path="/quick-purchase/checkout" element={<QuickBuyCheckout />} />
             <Route path="/pricing" element={<PricingPage />} />
             <Route path="/api-docs" element={<ApiDocsPage />} />
             <Route path="/support" element={<SupportPage />} />
@@ -69,6 +80,7 @@ const App: React.FC = () => {
               <Route path="/funding" element={<FundingPage />} />
               <Route path="/history" element={<TransactionHistoryPage />} />
               <Route path="/referrals" element={<ReferralPage />} />
+              <Route path="/schedule" element={<SchedulePurchasePage />} />
             </Route>
 
             {/* ADMIN ROUTES */}

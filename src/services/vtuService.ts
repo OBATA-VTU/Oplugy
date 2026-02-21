@@ -131,8 +131,16 @@ export const vtuService = {
           return { status: true, data: categories };
         }
       } else {
-        // Server 2 (Ciptopup) - Expanded categories based on common VTU patterns
-        return { status: true, data: ['SME', 'GIFTING', 'CORPORATE', 'AWOOF', 'DATASHARE', 'COUPON'] };
+        // Server 2 (Ciptopup) - Fetch all plans and extract unique types
+        const res = await cipApiClient<any>('data/plans', { method: 'GET', server: 2 });
+        if (res.status && Array.isArray(res.data)) {
+          const categories = Array.from(new Set(
+            res.data
+              .filter((p: any) => p.network && p.network.toUpperCase() === network.toUpperCase())
+              .map((p: any) => p.type || p.dataType)
+          )).filter(c => !!c);
+          return { status: true, data: categories };
+        }
       }
     } catch (e) { console.error("Category fetch error:", e); }
     return { status: false, message: `Server ${server} node sync failed.` };

@@ -6,12 +6,13 @@ import { Operator } from '../types';
 import Spinner from '../components/Spinner';
 import Modal from '../components/Modal';
 import PinPromptModal from '../components/PinPromptModal';
+import InsufficientBalanceModal from '../components/InsufficientBalanceModal';
 import { AIRTIME_NETWORKS } from '../constants';
 import { BoltIcon } from '../components/Icons';
 
 const AirtimePage: React.FC = () => {
   const { addNotification } = useNotifications();
-  const { walletBalance, updateWalletBalance } = useAuth();
+  const { user, walletBalance, updateWalletBalance } = useAuth();
   const [operators, setOperators] = useState<Operator[]>([]);
   const [isLoadingOperators, setIsLoadingOperators] = useState(true);
   const [selectedOperator, setSelectedOperator] = useState<Operator | null>(null);
@@ -20,6 +21,7 @@ const AirtimePage: React.FC = () => {
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showPinModal, setShowPinModal] = useState(false);
+  const [showInsufficientModal, setShowInsufficientModal] = useState(false);
 
   React.useEffect(() => {
     const fetchOperators = async () => {
@@ -61,10 +63,16 @@ const AirtimePage: React.FC = () => {
       return;
     }
     if (walletBalance !== null && numericAmount > walletBalance) {
-      addNotification('Insufficient wallet balance.', 'error');
+      setShowInsufficientModal(true);
       return;
     }
     setShowConfirmModal(true);
+  };
+
+  const handlePayRemaining = () => {
+    setShowInsufficientModal(false);
+    // Redirect to funding with the required amount or trigger payment gateway
+    addNotification("Redirecting to payment gateway...", "info");
   };
 
   const startPinVerification = () => {
@@ -110,6 +118,22 @@ const AirtimePage: React.FC = () => {
         onSuccess={handlePurchase}
         title="Confirm Purchase"
         description={`You are about to buy ₦${numericAmount.toLocaleString()} ${selectedOperator?.name} airtime.`}
+      />
+
+      <InsufficientBalanceModal 
+        isOpen={showInsufficientModal}
+        onClose={() => setShowInsufficientModal(false)}
+        requiredAmount={numericAmount}
+        currentBalance={walletBalance || 0}
+        onPayRemaining={handlePayRemaining}
+      />
+
+      <InsufficientBalanceModal 
+        isOpen={showInsufficientModal}
+        onClose={() => setShowInsufficientModal(false)}
+        requiredAmount={numericAmount}
+        currentBalance={walletBalance || 0}
+        onPayRemaining={handlePayRemaining}
       />
 
       <div className="text-center">

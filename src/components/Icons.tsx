@@ -76,3 +76,7 @@ export const BanIcon = () => (
 export const ArrowIcon = () => (
   <svg {...iconProps}><path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
 );
+
+export const ClockIcon = () => (
+  <svg {...iconProps}><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+);

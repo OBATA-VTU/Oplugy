@@ -7,7 +7,8 @@ import ChatBubble from './ChatBubble';
 import { 
   HomeIcon, PhoneIcon, SignalIcon, BoltIcon, TvIcon, 
   LogoutIcon, MenuIcon, HistoryIcon, WalletIcon,
-  ShieldCheckIcon, CurrencyDollarIcon, UsersIcon, GamingIcon
+  ShieldCheckIcon, CurrencyDollarIcon, UsersIcon, GamingIcon,
+  ClockIcon
 } from './Icons';
 
 const NavItem: React.FC<{ to: string; icon: ReactNode; children: ReactNode; onClick?: () => void }> = ({ to, icon, children, onClick }) => (
@@ -62,6 +63,7 @@ const Layout: React.FC = () => {
         <div className="px-4 py-3 text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400">Main Menu</div>
         <NavItem to="/dashboard" icon={<HomeIcon />} onClick={closeSidebar}>Dashboard</NavItem>
         <NavItem to="/funding" icon={<WalletIcon />} onClick={closeSidebar}>Add Funds</NavItem>
+        <NavItem to="/schedule" icon={<ClockIcon />} onClick={closeSidebar}>Schedule Purchase</NavItem>
         <NavItem to="/history" icon={<HistoryIcon />} onClick={closeSidebar}>History</NavItem>
         
         <div className="px-4 py-3 mt-6 text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400">Services</div>
