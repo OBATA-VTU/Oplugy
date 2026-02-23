@@ -1,8 +1,10 @@
 import React, { useState, ReactNode } from 'react';
 import { NavLink, useNavigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { useTheme } from '../context/ThemeContext';
 import Spinner from './Spinner';
 import Logo from './Logo';
+import { Sun, Moon } from 'lucide-react';
 import { 
   HomeIcon, 
   UsersIcon, 
@@ -35,6 +37,7 @@ const AdminNavItem: React.FC<{ to: string; icon: ReactNode; children: ReactNode;
 
 const AdminLayout: React.FC = () => {
   const { logout, isLoading } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -46,10 +49,10 @@ const AdminLayout: React.FC = () => {
   const closeSidebar = () => setIsSidebarOpen(false);
 
   const sidebarContent = (
-    <div className="h-full flex flex-col bg-white">
-      <div className="p-8 mb-4 border-b border-gray-50">
+    <div className="h-full flex flex-col bg-white dark:bg-gray-950 border-r border-gray-100 dark:border-gray-900">
+      <div className="p-8 mb-4 border-b border-gray-50 dark:border-gray-900">
         <Logo />
-        <div className="mt-6 flex items-center space-x-2 bg-blue-50 text-blue-600 px-3 py-1.5 rounded-xl border border-blue-100/50">
+        <div className="mt-6 flex items-center space-x-2 bg-blue-50 dark:bg-blue-950/30 text-blue-600 px-3 py-1.5 rounded-xl border border-blue-100/50 dark:border-blue-900/30">
            <ShieldCheckIcon />
            <span className="text-[10px] font-bold uppercase tracking-wider">Admin Dashboard</span>
         </div>
@@ -65,15 +68,15 @@ const AdminLayout: React.FC = () => {
         <div className="px-4 py-3 mt-6 text-[10px] font-bold uppercase tracking-widest text-gray-400">System</div>
         <AdminNavItem to="/admin/terminal" icon={<BoltIcon />} onClick={closeSidebar}>Terminal Suite</AdminNavItem>
         <AdminNavItem to="/admin/settings" icon={<ExchangeIcon />} onClick={closeSidebar}>Settings</AdminNavItem>
-        <div className="pt-4 mt-4 border-t border-gray-50">
+        <div className="pt-4 mt-4 border-t border-gray-50 dark:border-gray-900">
           <AdminNavItem to="/dashboard" icon={<HomeIcon />} onClick={closeSidebar}>User Dashboard</AdminNavItem>
         </div>
       </nav>
 
-      <div className="p-6 border-t border-gray-50">
+      <div className="p-6 border-t border-gray-50 dark:border-gray-900">
         <button
           onClick={handleLogout}
-          className="w-full flex items-center space-x-3 px-4 py-3 rounded-2xl text-red-500 hover:bg-red-50 transition-all font-bold text-xs tracking-tight"
+          className="w-full flex items-center space-x-3 px-4 py-3 rounded-2xl text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all font-bold text-xs tracking-tight"
         >
           <LogoutIcon />
           <span>Logout</span>
@@ -83,8 +86,8 @@ const AdminLayout: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      <aside className="hidden lg:flex lg:flex-col lg:w-72 bg-white border-r border-gray-100 flex-shrink-0">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex transition-colors duration-500">
+      <aside className="hidden lg:flex lg:flex-col lg:w-72 bg-white dark:bg-gray-950 border-r border-gray-100 dark:border-gray-900 flex-shrink-0">
         {sidebarContent}
       </aside>
       
@@ -94,17 +97,24 @@ const AdminLayout: React.FC = () => {
       </aside>
 
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="bg-white/80 backdrop-blur-md sticky top-0 z-30 flex items-center justify-between p-4 px-8 border-b border-gray-100">
+        <header className="bg-white/80 dark:bg-gray-950/80 backdrop-blur-md sticky top-0 z-30 flex items-center justify-between p-4 px-8 border-b border-gray-100 dark:border-gray-900">
           <div className="flex items-center space-x-4">
-            <button className="lg:hidden text-gray-500 p-2" onClick={() => setIsSidebarOpen(true)}>
+            <button className="lg:hidden text-gray-500 dark:text-gray-400 p-2" onClick={() => setIsSidebarOpen(true)}>
               <MenuIcon />
             </button>
-            <h1 className="text-lg font-bold text-gray-900 tracking-tight">
+            <h1 className="text-lg font-bold text-gray-900 dark:text-white tracking-tight">
               Admin Portal
             </h1>
           </div>
           
           <div className="flex items-center space-x-4">
+            <button 
+              onClick={toggleTheme}
+              className="p-2.5 bg-gray-50 dark:bg-gray-900 rounded-xl text-gray-500 dark:text-gray-400 hover:text-blue-600 transition-all transform active:scale-90"
+              title="Toggle Theme"
+            >
+              {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+            </button>
             {isLoading && <Spinner />}
             <div className="hidden sm:flex flex-col items-end">
               <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">System Online</span>

@@ -139,7 +139,7 @@ const Layout: React.FC = () => {
           </div>
           
           <div className="flex items-center space-x-4 lg:space-x-8">
-             <div className="hidden md:flex items-center space-x-2">
+             <div className="flex items-center space-x-2">
                 <button 
                   onClick={toggleTheme}
                   className="p-4 bg-gray-100 dark:bg-gray-900 rounded-2xl text-gray-500 dark:text-gray-400 hover:text-blue-600 transition-all transform active:scale-90"
@@ -149,7 +149,7 @@ const Layout: React.FC = () => {
                 </button>
                 <button 
                   onClick={() => setNotificationsEnabled(!notificationsEnabled)}
-                  className={`p-4 rounded-2xl transition-all transform active:scale-90 ${notificationsEnabled ? 'bg-blue-50 text-blue-600 dark:bg-blue-950/30' : 'bg-gray-100 text-gray-400 dark:bg-gray-900'}`}
+                  className={`hidden md:block p-4 rounded-2xl transition-all transform active:scale-90 ${notificationsEnabled ? 'bg-blue-50 text-blue-600 dark:bg-blue-950/30' : 'bg-gray-100 text-gray-400 dark:bg-gray-900'}`}
                   title="Toggle Notifications"
                 >
                   <Bell className="w-5 h-5" />

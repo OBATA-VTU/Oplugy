@@ -102,16 +102,6 @@ export const vtuService = {
             };
           }
         }
-        // Fallback to standard networks if API doesn't return a list or is empty
-        return { 
-          status: true, 
-          data: [
-            { id: 'MTN', name: 'MTN' },
-            { id: 'GLO', name: 'GLO' },
-            { id: 'AIRTEL', name: 'AIRTEL' },
-            { id: '9MOBILE', name: '9MOBILE' }
-          ] 
-        };
       }
     } catch (e) { console.error("Network fetch error:", e); }
     return { status: false, message: `Server ${server} network sync failed.` };
@@ -136,7 +126,10 @@ export const vtuService = {
         if (res.status && Array.isArray(res.data)) {
           const categories = Array.from(new Set(
             res.data
-              .filter((p: any) => p.network && p.network.toUpperCase() === network.toUpperCase())
+              .filter((p: any) => {
+                const pNet = (p.network || p.network_name || p.operator || '').toUpperCase();
+                return pNet === network.toUpperCase();
+              })
               .map((p: any) => p.type || p.dataType)
           )).filter(c => !!c);
           return { status: true, data: categories };

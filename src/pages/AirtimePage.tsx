@@ -7,7 +7,7 @@ import Spinner from '../components/Spinner';
 import PinPromptModal from '../components/PinPromptModal';
 import InsufficientBalanceModal from '../components/InsufficientBalanceModal';
 import LoadingScreen from '../components/LoadingScreen';
-import { AIRTIME_NETWORKS } from '../constants';
+import { getNetworkLogo } from '../constants';
 import { Smartphone, Zap, CheckCircle2, Receipt, ArrowRight, AlertCircle, ShieldCheck } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
@@ -35,21 +35,18 @@ const AirtimePage: React.FC = () => {
       setLoadingMessage('Syncing Network Nodes...');
       const res = await vtuService.getAirtimeOperators();
       if (res.status && res.data) {
-        const mapped = res.data.map(op => {
-          const constant = AIRTIME_NETWORKS.find(c => c.name.toUpperCase() === op.name.toUpperCase());
-          return {
-            ...op,
-            image: constant?.image || 'https://cdn-icons-png.flaticon.com/512/8112/8112396.png'
-          };
-        });
+        const mapped = res.data.map(op => ({
+          ...op,
+          image: getNetworkLogo(op.name)
+        }));
         setOperators(mapped);
       } else {
-        setOperators(AIRTIME_NETWORKS);
+        addNotification("Failed to sync airtime networks.", "error");
       }
       setTimeout(() => setIsLoading(false), 800);
     };
     fetchOperators();
-  }, []);
+  }, [addNotification]);
 
   const numericAmount = parseFloat(amount) || 0;
 

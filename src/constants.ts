@@ -59,17 +59,17 @@ export const SERVICE_CATEGORIES = [
 
 export const AIRTIME_NETWORKS = [
   { id: '1', name: 'MTN', image: 'https://upload.wikimedia.org/wikipedia/commons/a/af/MTN_Logo.svg' },
-  { id: '2', name: 'Airtel', image: 'https://upload.wikimedia.org/wikipedia/commons/e/e0/Airtel_logo.png' },
+  { id: '2', name: 'Airtel', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Airtel_logo.png/640px-Airtel_logo.png' },
   { id: '3', name: 'Glo', image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRfZcer-ds2QYQ7lANRzCE5dMglP8I4cR8RfUITEvtO-w&s' },
-  { id: '4', name: '9mobile', image: 'https://upload.wikimedia.org/wikipedia/commons/2/2c/9mobile_Logo.png' },
+  { id: '4', name: '9mobile', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/9mobile_Logo.png/1200px-9mobile_Logo.png' },
   { id: '5', name: 'Vitel', image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRRrmbc5nUJnHg9CKhUWbYbQFbeNhSEngD3CncTu1W3BFiXukixtR1A8fI&s' },
 ];
 
 export const DATA_NETWORKS = [
   { id: 'MTN', name: 'MTN', image: 'https://upload.wikimedia.org/wikipedia/commons/a/af/MTN_Logo.svg' },
-  { id: 'AIRTEL', name: 'Airtel', image: 'https://upload.wikimedia.org/wikipedia/commons/e/e0/Airtel_logo.png' },
+  { id: 'AIRTEL', name: 'Airtel', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Airtel_logo.png/640px-Airtel_logo.png' },
   { id: 'GLO', name: 'Glo', image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRfZcer-ds2QYQ7lANRzCE5dMglP8I4cR8RfUITEvtO-w&s' },
-  { id: '9MOBILE', name: '9mobile', image: 'https://upload.wikimedia.org/wikipedia/commons/2/2c/9mobile_Logo.png' },
+  { id: '9MOBILE', name: '9mobile', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/9mobile_Logo.png/1200px-9mobile_Logo.png' },
   { id: 'VITEL', name: 'Vitel', image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRRrmbc5nUJnHg9CKhUWbYbQFbeNhSEngD3CncTu1W3BFiXukixtR1A8fI&s' },
 ];
 
@@ -103,3 +103,13 @@ export const PRICING_DATA = [
   { network: 'GLO', type: 'GIFTING', size: '1GB', price: '300', validity: '30 DAYS' },
   { network: '9MOBILE', type: 'CORPORATE', size: '1GB', price: '320', validity: '30 DAYS' },
 ];
+
+export const getNetworkLogo = (networkName: string): string => {
+  const name = networkName.toUpperCase();
+  if (name.includes('MTN')) return 'https://upload.wikimedia.org/wikipedia/commons/a/af/MTN_Logo.svg';
+  if (name.includes('AIRTEL')) return 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Airtel_logo.png/640px-Airtel_logo.png';
+  if (name.includes('GLO')) return 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRfZcer-ds2QYQ7lANRzCE5dMglP8I4cR8RfUITEvtO-w&s';
+  if (name.includes('9MOBILE')) return 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/9mobile_Logo.png/1200px-9mobile_Logo.png';
+  if (name.includes('VITEL')) return 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRRrmbc5nUJnHg9CKhUWbYbQFbeNhSEngD3CncTu1W3BFiXukixtR1A8fI&s';
+  return 'https://cdn-icons-png.flaticon.com/512/8112/8112396.png'; // Placeholder
+};

@@ -2,6 +2,7 @@ import React from 'react';
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { NotificationProvider } from './context/NotificationContext';
 import { AuthProvider } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 import NotificationContainer from './components/NotificationContainer';
 import Layout from './components/Layout';
 import LandingPage from './pages/LandingPage';
@@ -46,70 +47,72 @@ import ScrollToTop from './components/ScrollToTop';
 
 const App: React.FC = () => {
   return (
-    <NotificationProvider>
-      <AuthProvider>
-        <Router>
-          <ScrollToTop />
-          <NotificationContainer />
-          <Routes>
-            {/* PUBLIC ROUTES */}
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/signup" element={<SignUpPage />} />
-            <Route path="/quick-purchase" element={<QuickPurchasePage />} />
-            <Route path="/quick-purchase/airtime" element={<QuickBuyAirtime />} />
-            <Route path="/quick-purchase/data" element={<QuickBuyData />} />
-            <Route path="/quick-purchase/electricity" element={<QuickBuyElectricity />} />
-            <Route path="/quick-purchase/cable" element={<QuickBuyCable />} />
-            <Route path="/quick-purchase/checkout" element={<QuickBuyCheckout />} />
-            <Route path="/pricing" element={<PricingPage />} />
-            <Route path="/api-docs" element={<ApiDocsPage />} />
-            <Route path="/support" element={<SupportPage />} />
-            <Route path="/faq" element={<FAQPage />} />
-            <Route path="/terms" element={<TermsPage />} />
-            <Route path="/privacy" element={<PrivacyPage />} />
+    <ThemeProvider>
+      <NotificationProvider>
+        <AuthProvider>
+          <Router>
+            <ScrollToTop />
+            <NotificationContainer />
+            <Routes>
+              {/* PUBLIC ROUTES */}
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/signup" element={<SignUpPage />} />
+              <Route path="/quick-purchase" element={<QuickPurchasePage />} />
+              <Route path="/quick-purchase/airtime" element={<QuickBuyAirtime />} />
+              <Route path="/quick-purchase/data" element={<QuickBuyData />} />
+              <Route path="/quick-purchase/electricity" element={<QuickBuyElectricity />} />
+              <Route path="/quick-purchase/cable" element={<QuickBuyCable />} />
+              <Route path="/quick-purchase/checkout" element={<QuickBuyCheckout />} />
+              <Route path="/pricing" element={<PricingPage />} />
+              <Route path="/api-docs" element={<ApiDocsPage />} />
+              <Route path="/support" element={<SupportPage />} />
+              <Route path="/faq" element={<FAQPage />} />
+              <Route path="/terms" element={<TermsPage />} />
+              <Route path="/privacy" element={<PrivacyPage />} />
 
-            {/* PROTECTED USER ROUTES */}
-            <Route element={<Layout />}>
-              <Route path="/dashboard" element={<DashboardPage />} />
-              <Route path="/airtime" element={<AirtimePage />} />
-              <Route path="/data" element={<DataPage />} />
-              <Route path="/bills" element={<BillsPage />} />
-              <Route path="/cable" element={<CablePage />} />
-              <Route path="/education" element={<EducationPage />} />
-              <Route path="/profile" element={<ProfilePage />} />
-              <Route path="/funding" element={<FundingPage />} />
-              <Route path="/history" element={<TransactionHistoryPage />} />
-              <Route path="/referrals" element={<ReferralPage />} />
-              <Route path="/schedule" element={<SchedulePurchasePage />} />
-              <Route path="/whatsapp-bot" element={<WhatsAppBotPage />} />
-            </Route>
-
-            {/* ADMIN ROUTES */}
-            <Route path="/admin" element={<AdminLayout />}>
-              <Route index element={<Navigate to="dashboard" replace />} />
-              <Route path="dashboard" element={<AdminDashboardPage />} />
-              <Route path="users" element={<AdminUsersPage />} />
-              <Route path="transactions" element={<AdminTransactionsPage />} />
-              <Route path="pricing" element={<AdminPricingPage />} />
-              <Route path="settings" element={<AdminSettingsPage />} />
-              
-              {/* TERMINAL SUITE (NESTED IN ADMIN) */}
-              <Route path="terminal" element={<TerminalLayout />}>
-                <Route index element={<Navigate to="overview" replace />} />
-                <Route path="overview" element={<OverviewTest />} />
-                <Route path="vtu" element={<VtuTest />} />
-                <Route path="payments" element={<PaymentTest />} />
-                <Route path="media" element={<MediaTest />} />
+              {/* PROTECTED USER ROUTES */}
+              <Route element={<Layout />}>
+                <Route path="/dashboard" element={<DashboardPage />} />
+                <Route path="/airtime" element={<AirtimePage />} />
+                <Route path="/data" element={<DataPage />} />
+                <Route path="/bills" element={<BillsPage />} />
+                <Route path="/cable" element={<CablePage />} />
+                <Route path="/education" element={<EducationPage />} />
+                <Route path="/profile" element={<ProfilePage />} />
+                <Route path="/funding" element={<FundingPage />} />
+                <Route path="/history" element={<TransactionHistoryPage />} />
+                <Route path="/referrals" element={<ReferralPage />} />
+                <Route path="/schedule" element={<SchedulePurchasePage />} />
+                <Route path="/whatsapp-bot" element={<WhatsAppBotPage />} />
               </Route>
-            </Route>
-            
-            {/* GLOBAL REDIRECT */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </Router>
-      </AuthProvider>
-    </NotificationProvider>
+
+              {/* ADMIN ROUTES */}
+              <Route path="/admin" element={<AdminLayout />}>
+                <Route index element={<Navigate to="dashboard" replace />} />
+                <Route path="dashboard" element={<AdminDashboardPage />} />
+                <Route path="users" element={<AdminUsersPage />} />
+                <Route path="transactions" element={<AdminTransactionsPage />} />
+                <Route path="pricing" element={<AdminPricingPage />} />
+                <Route path="settings" element={<AdminSettingsPage />} />
+                
+                {/* TERMINAL SUITE (NESTED IN ADMIN) */}
+                <Route path="terminal" element={<TerminalLayout />}>
+                  <Route index element={<Navigate to="overview" replace />} />
+                  <Route path="overview" element={<OverviewTest />} />
+                  <Route path="vtu" element={<VtuTest />} />
+                  <Route path="payments" element={<PaymentTest />} />
+                  <Route path="media" element={<MediaTest />} />
+                </Route>
+              </Route>
+              
+              {/* GLOBAL REDIRECT */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Router>
+        </AuthProvider>
+      </NotificationProvider>
+    </ThemeProvider>
   );
 };
 
