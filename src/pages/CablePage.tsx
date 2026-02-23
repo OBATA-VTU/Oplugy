@@ -1,14 +1,13 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNotifications } from '../hooks/useNotifications';
 import { vtuService } from '../services/vtuService';
 import { Operator, DataPlan } from '../types';
-import Spinner from '../components/Spinner';
 import PinPromptModal from '../components/PinPromptModal';
 import InsufficientBalanceModal from '../components/InsufficientBalanceModal';
 import LoadingScreen from '../components/LoadingScreen';
 import { CABLE_BILLERS } from '../constants';
-import { Tv, ShieldCheck, CheckCircle2, Receipt, ArrowRight, Zap, Smartphone, CreditCard } from 'lucide-react';
+import { Tv, CheckCircle2, Receipt, ArrowRight, Zap, Smartphone, CreditCard } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 

@@ -1,20 +1,19 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNotifications } from '../hooks/useNotifications';
 import { vtuService } from '../services/vtuService';
 import { Operator } from '../types';
-import Spinner from '../components/Spinner';
 import PinPromptModal from '../components/PinPromptModal';
 import InsufficientBalanceModal from '../components/InsufficientBalanceModal';
 import LoadingScreen from '../components/LoadingScreen';
-import { getNetworkLogo } from '../constants';
-import { Smartphone, Zap, CheckCircle2, Receipt, ArrowRight, AlertCircle, ShieldCheck } from 'lucide-react';
+import { AIRTIME_NETWORKS } from '../constants';
+import { Zap, CheckCircle2, Receipt, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 
 const AirtimePage: React.FC = () => {
   const { addNotification } = useNotifications();
-  const { user, walletBalance, updateWalletBalance } = useAuth();
+  const { walletBalance, updateWalletBalance } = useAuth();
   const navigate = useNavigate();
   
   const [step, setStep] = useState<'NETWORK' | 'AMOUNT' | 'PHONE' | 'CHECKOUT' | 'SUCCESS'>('NETWORK');
@@ -35,18 +34,21 @@ const AirtimePage: React.FC = () => {
       setLoadingMessage('Syncing Network Nodes...');
       const res = await vtuService.getAirtimeOperators();
       if (res.status && res.data) {
-        const mapped = res.data.map(op => ({
-          ...op,
-          image: getNetworkLogo(op.name)
-        }));
+        const mapped = res.data.map(op => {
+          const constant = AIRTIME_NETWORKS.find(c => c.name.toUpperCase() === op.name.toUpperCase());
+          return {
+            ...op,
+            image: constant?.image || 'https://cdn-icons-png.flaticon.com/512/8112/8112396.png'
+          };
+        });
         setOperators(mapped);
       } else {
-        addNotification("Failed to sync airtime networks.", "error");
+        setOperators(AIRTIME_NETWORKS);
       }
       setTimeout(() => setIsLoading(false), 800);
     };
     fetchOperators();
-  }, [addNotification]);
+  }, []);
 
   const numericAmount = parseFloat(amount) || 0;
 

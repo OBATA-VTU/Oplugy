@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNotifications } from '../hooks/useNotifications';
-import { User, Mail, Phone, Shield, Camera, Edit2, LogOut, Key, Smartphone, MapPin, Calendar, CheckCircle2, AlertCircle, ChevronRight, Zap, Copy, Check, Code } from 'lucide-react';
+import { Mail, Phone, Shield, LogOut, Copy, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { authService } from '../services/authService';
 import Spinner from '../components/Spinner';

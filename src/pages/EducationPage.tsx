@@ -6,7 +6,7 @@ import Spinner from '../components/Spinner';
 import PinPromptModal from '../components/PinPromptModal';
 import InsufficientBalanceModal from '../components/InsufficientBalanceModal';
 import LoadingScreen from '../components/LoadingScreen';
-import { GraduationCap, ShieldCheck, CheckCircle2, Receipt, ArrowRight, Zap, Smartphone, CreditCard, Minus, Plus } from 'lucide-react';
+import { GraduationCap, ShieldCheck, CheckCircle2, Receipt, ArrowRight, Zap, Minus, Plus } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 

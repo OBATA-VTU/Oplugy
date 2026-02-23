@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNotifications } from '../hooks/useNotifications';
-import { Wallet, CreditCard, Landmark, Copy, CheckCircle2, Zap, ArrowRight, ShieldCheck, Info } from 'lucide-react';
+import { Wallet, CreditCard, Landmark, Copy, Zap, ShieldCheck, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 declare const PaystackPop: any;

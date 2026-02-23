@@ -10,10 +10,10 @@ import { authService } from '../services/authService';
 import { vtuService } from '../services/vtuService';
 import { TransactionResponse } from '../types';
 import { Link, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
 import { 
   Smartphone, Wifi, Zap, Tv, GraduationCap, History, 
-  Wallet, ShieldCheck, Zap as Bolt, Users, ArrowUpRight, 
+  Wallet, ShieldCheck, Zap as Bolt, ArrowUpRight, 
   MessageSquare, Bell, ChevronRight, Copy, Check
 } from 'lucide-react';
 

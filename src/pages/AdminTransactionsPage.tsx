@@ -5,7 +5,7 @@ import { adminService } from '../services/adminService';
 import { TransactionResponse } from '../types';
 import { useNotifications } from '../hooks/useNotifications';
 import { motion, AnimatePresence } from 'motion/react';
-import { Search, RefreshCw, Filter, Download, ArrowUpRight, ArrowDownLeft, Activity } from 'lucide-react';
+import { Search, RefreshCw, ArrowUpRight, ArrowDownLeft, Activity } from 'lucide-react';
 
 const AdminTransactionsPage: React.FC = () => {
   const { addNotification } = useNotifications();

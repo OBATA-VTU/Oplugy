@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { motion } from 'motion/react';
-import { Terminal, ShieldCheck, Zap, Code2, Globe, Lock, Cpu } from 'lucide-react';
+import { ShieldCheck, Zap, Globe, Lock, Cpu } from 'lucide-react';
 
 const ApiDocsPage: React.FC = () => {
   return (

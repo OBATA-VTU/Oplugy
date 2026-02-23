@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNotifications } from '../hooks/useNotifications';
-import { Users, Gift, Copy, Share2, Award, ArrowRight, Zap, ShieldCheck, TrendingUp, Wallet, Check } from 'lucide-react';
+import { Gift, Copy, Share2, Award, Zap, TrendingUp, Wallet, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 const ReferralPage: React.FC = () => {

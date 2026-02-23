@@ -6,12 +6,11 @@ import Modal from '../components/Modal';
 import { useNotifications } from '../hooks/useNotifications';
 import { 
   UsersIcon, 
-  CurrencyDollarIcon, 
   ShieldCheckIcon, 
   BanIcon,
   SignalIcon
 } from '../components/Icons';
-import { Search, Filter, RefreshCw, MoreVertical, Shield, UserPlus, Trash2, CreditCard } from 'lucide-react';
+import { Search, RefreshCw, Shield, CreditCard } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface RoleButtonProps {

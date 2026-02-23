@@ -3,7 +3,7 @@ import { adminService } from '../services/adminService';
 import { useNotifications } from '../hooks/useNotifications';
 import Spinner from '../components/Spinner';
 import { motion } from 'motion/react';
-import { Settings, Bell, DollarSign, Server, Save, RefreshCw, Shield, Info } from 'lucide-react';
+import { Bell, DollarSign, Server, Save, Shield, Info } from 'lucide-react';
 
 const AdminSettingsPage: React.FC = () => {
   const { addNotification } = useNotifications();

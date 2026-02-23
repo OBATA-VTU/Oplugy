@@ -3,7 +3,7 @@ import { vtuService } from '../services/vtuService';
 import { TransactionResponse } from '../types';
 import Spinner from '../components/Spinner';
 import ReceiptModal from '../components/ReceiptModal';
-import { Search, Filter, ArrowDownLeft, ArrowUpRight, Clock, CheckCircle2, XCircle, AlertCircle, Receipt, Calendar, CreditCard, Smartphone, Zap, GraduationCap, Lightbulb, Tv, Download } from 'lucide-react';
+import { Search, Clock, CheckCircle2, XCircle, AlertCircle, Receipt, Calendar, CreditCard, Smartphone, Zap, GraduationCap, Lightbulb, Tv, Download } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 const TransactionHistoryPage: React.FC = () => {

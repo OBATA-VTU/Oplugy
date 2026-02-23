@@ -1,16 +1,14 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNotifications } from '../hooks/useNotifications';
 import { vtuService } from '../services/vtuService';
 import { DataPlan } from '../types';
-import Spinner from '../components/Spinner';
 import PinPromptModal from '../components/PinPromptModal';
 import LoadingScreen from '../components/LoadingScreen';
-import Modal from '../components/Modal';
-import { ShieldCheck, Signal, Server, Smartphone, Wifi, CheckCircle2, Receipt, ArrowRight, AlertCircle, Zap } from 'lucide-react';
+import { Server, Smartphone, Wifi, CheckCircle2, Receipt, ArrowRight, AlertCircle, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
-import { getNetworkLogo } from '../constants';
+import { DATA_NETWORKS } from '../constants';
 
 const DataPage: React.FC = () => {
   const navigate = useNavigate();
@@ -20,7 +18,6 @@ const DataPage: React.FC = () => {
   const [step, setStep] = useState<'SERVER' | 'NETWORK' | 'CATEGORY' | 'PLAN' | 'PHONE' | 'CHECKOUT' | 'SUCCESS'>('SERVER');
   const [selectedServer, setSelectedServer] = useState<1 | 2 | null>(null);
   const [selectedOperator, setSelectedOperator] = useState<string>('');
-  const [selectedType, setSelectedType] = useState<string>('');
   const [selectedPlanId, setSelectedPlanId] = useState<string>('');
   const [phoneNumber, setPhoneNumber] = useState('');
   
@@ -38,7 +35,6 @@ const DataPage: React.FC = () => {
     setStep('SERVER');
     setSelectedServer(null);
     setSelectedOperator('');
-    setSelectedType('');
     setSelectedPlanId('');
     setPhoneNumber('');
     setSelectedPlan(null);
@@ -91,7 +87,6 @@ const DataPage: React.FC = () => {
   };
 
   const handleCategorySelect = async (type: string) => {
-    setSelectedType(type);
     await fetchPlans(selectedOperator, type);
   };
 
@@ -221,15 +216,18 @@ const DataPage: React.FC = () => {
             >
               <StepHeader num="1" title="Select Network" />
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                {networks.map(n => (
-                  <SelectionButton 
-                    key={n.id} 
-                    label={n.name} 
-                    image={getNetworkLogo(n.name)}
-                    icon={<Smartphone className="w-6 h-6" />} 
-                    onClick={() => handleNetworkSelect(n.id)} 
-                  />
-                ))}
+                {networks.map(n => {
+                  const constant = DATA_NETWORKS.find(c => c.name.toUpperCase() === n.name.toUpperCase());
+                  return (
+                    <SelectionButton 
+                      key={n.id} 
+                      label={n.name} 
+                      image={constant?.image}
+                      icon={<Smartphone className="w-6 h-6" />} 
+                      onClick={() => handleNetworkSelect(n.id)} 
+                    />
+                  );
+                })}
               </div>
               <BackButton onClick={() => setStep('SERVER')} />
             </motion.div>

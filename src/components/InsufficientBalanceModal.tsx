@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { AlertTriangle, X, CreditCard, ArrowRight } from 'lucide-react';
+import { AlertTriangle, X, CreditCard } from 'lucide-react';
 
 interface InsufficientBalanceModalProps {
   isOpen: boolean;
