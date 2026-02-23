@@ -185,5 +185,3 @@ const MarginInput = ({ label, value, onChange, dark }: MarginInputProps) => (
 );
 
 export default AdminSettingsPage;
-
-export default AdminSettingsPage;

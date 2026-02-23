@@ -14,8 +14,6 @@ function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-import LoadingScreen from '../../components/LoadingScreen';
-
 const QuickBuyElectricity: React.FC = () => {
   const navigate = useNavigate();
   const { addNotification } = useNotifications();

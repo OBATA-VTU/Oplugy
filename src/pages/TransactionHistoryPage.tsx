@@ -3,11 +3,14 @@ import { vtuService } from '../services/vtuService';
 import { TransactionResponse } from '../types';
 import Spinner from '../components/Spinner';
 import ReceiptModal from '../components/ReceiptModal';
-import { HistoryIcon } from '../components/Icons';
+import { Search, Filter, ArrowDownLeft, ArrowUpRight, Clock, CheckCircle2, XCircle, AlertCircle, Receipt, Calendar, CreditCard, Smartphone, Zap, GraduationCap, Lightbulb, Tv, Download } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 
 const TransactionHistoryPage: React.FC = () => {
   const [transactions, setTransactions] = useState<TransactionResponse[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filter, setFilter] = useState<'all' | 'SUCCESS' | 'FAILED' | 'PENDING'>('all');
   
   const [selectedTx, setSelectedTx] = useState<TransactionResponse | null>(null);
   const [isReceiptOpen, setIsReceiptOpen] = useState(false);
@@ -52,126 +55,175 @@ const TransactionHistoryPage: React.FC = () => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.setAttribute('href', url);
-    link.setAttribute('download', `OBATA_Transactions_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute('download', `INLOMAX_Transactions_${new Date().toISOString().split('T')[0]}.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
-  const getStatusStyle = (status: string) => {
+  const filteredTransactions = transactions.filter(tx => {
+    const matchesSearch = tx.id?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          tx.type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          tx.source?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesFilter = filter === 'all' || tx.status === filter;
+    return matchesSearch && matchesFilter;
+  });
+
+  const getStatusColor = (status: string) => {
     switch (status) {
-      case 'SUCCESS': return 'bg-green-100 text-green-700 border-green-200';
-      case 'FAILED': return 'bg-red-50 text-red-600 border-red-100';
-      default: return 'bg-orange-50 text-orange-600 border-orange-100';
+      case 'SUCCESS': return 'text-green-600 bg-green-50 border-green-100';
+      case 'FAILED': return 'text-red-600 bg-red-50 border-red-100';
+      case 'PENDING': return 'text-amber-600 bg-amber-50 border-amber-100';
+      default: return 'text-gray-600 bg-gray-50 border-gray-100';
     }
   };
 
-  if (loading) return (
-    <div className="flex flex-col items-center justify-center p-20 space-y-4">
-      <Spinner />
-      <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Loading your history...</p>
-    </div>
-  );
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'SUCCESS': return <CheckCircle2 className="w-4 h-4" />;
+      case 'FAILED': return <XCircle className="w-4 h-4" />;
+      case 'PENDING': return <Clock className="w-4 h-4" />;
+      default: return <AlertCircle className="w-4 h-4" />;
+    }
+  };
+
+  const getTypeIcon = (type: string) => {
+    switch (type?.toLowerCase()) {
+      case 'airtime': return <Smartphone className="w-5 h-5" />;
+      case 'data': return <Zap className="w-5 h-5" />;
+      case 'cable': return <Tv className="w-5 h-5" />;
+      case 'electricity': return <Lightbulb className="w-5 h-5" />;
+      case 'education': return <GraduationCap className="w-5 h-5" />;
+      case 'funding': return <CreditCard className="w-5 h-5" />;
+      default: return <Receipt className="w-5 h-5" />;
+    }
+  };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="max-w-6xl mx-auto space-y-12 pb-32">
       <ReceiptModal 
         isOpen={isReceiptOpen} 
         onClose={() => setIsReceiptOpen(false)} 
         transaction={selectedTx} 
       />
 
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
-        <div>
-          <h2 className="text-4xl lg:text-5xl font-extrabold text-gray-900 tracking-tight">Activity History</h2>
-          <p className="text-gray-500 font-medium text-lg mt-2">Track all your payments and recharges in one place.</p>
+      <div className="text-center space-y-4">
+        <div className="inline-flex p-4 bg-blue-50 text-blue-600 rounded-[2rem] mb-4 shadow-inner">
+          <Receipt className="w-10 h-10" />
         </div>
-        
-        <div className="flex items-center space-x-3">
-          {transactions.length > 0 && (
-            <button 
-              onClick={downloadCSV}
-              className="bg-gray-900 hover:bg-blue-600 text-white px-6 py-4 rounded-2xl font-bold text-[11px] uppercase tracking-widest transition-all flex items-center space-x-2 shadow-lg"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              <span>Export CSV</span>
-            </button>
-          )}
-        </div>
+        <h2 className="text-5xl lg:text-6xl font-black text-gray-900 tracking-tighter">Activity Log</h2>
+        <p className="text-gray-400 font-medium text-xl max-w-xl mx-auto">Track your spending and transaction history across all services.</p>
       </div>
 
-      <div className="bg-white rounded-[3rem] shadow-xl border border-gray-50 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead className="bg-gray-50/50 text-[11px] font-bold uppercase tracking-wider text-gray-400 border-b border-gray-100">
-              <tr>
-                <th className="px-10 py-6">Transaction</th>
-                <th className="px-10 py-6 text-center">Type</th>
-                <th className="px-10 py-6 text-right">Amount</th>
-                <th className="px-10 py-6 text-center">Status</th>
-                <th className="px-10 py-6 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {transactions.length > 0 ? transactions.map((txn) => (
-                <tr key={txn.id} className="group hover:bg-blue-50/30 transition-all duration-300">
-                  <td className="px-10 py-7">
-                    <div className="flex items-center space-x-5">
-                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xl font-bold ${txn.status === 'SUCCESS' ? 'bg-blue-600 text-white shadow-lg shadow-blue-100' : 'bg-gray-100 text-gray-400'}`}>
-                        {txn.type.charAt(0)}
+      <div className="bg-white p-8 lg:p-12 rounded-[4rem] shadow-2xl shadow-blue-100/50 border border-gray-50 space-y-10">
+        {/* Filters & Search */}
+        <div className="flex flex-col lg:flex-row gap-6 justify-between items-center">
+          <div className="flex p-2 bg-gray-50 rounded-[2rem] border-2 border-transparent w-full lg:w-auto">
+            {['all', 'SUCCESS', 'PENDING', 'FAILED'].map((f) => (
+              <button 
+                key={f}
+                onClick={() => setFilter(f as any)} 
+                className={`flex-1 lg:px-8 py-4 rounded-[1.5rem] font-black uppercase tracking-widest text-[10px] transition-all ${filter === f ? 'bg-white text-blue-600 shadow-xl' : 'text-gray-400 hover:text-gray-600'}`}
+              >
+                {f}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-4 w-full lg:w-auto">
+            <div className="relative flex-1 lg:w-80 group">
+              <input 
+                type="text" 
+                placeholder="Search ID, type..." 
+                className="w-full pl-14 pr-8 py-5 bg-gray-50 border-2 border-transparent rounded-[2rem] font-bold text-gray-900 outline-none focus:border-blue-600 focus:bg-white transition-all placeholder:text-gray-300"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-600 transition-colors w-5 h-5" />
+            </div>
+            
+            {transactions.length > 0 && (
+              <button 
+                onClick={downloadCSV}
+                className="p-5 bg-gray-900 text-white rounded-[1.5rem] hover:bg-blue-600 transition-all shadow-lg"
+                title="Export CSV"
+              >
+                <Download className="w-5 h-5" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Transactions List */}
+        <div className="space-y-4">
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-32 space-y-4">
+              <Spinner />
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">Syncing Ledger...</p>
+            </div>
+          ) : filteredTransactions.length > 0 ? (
+            <div className="grid grid-cols-1 gap-4">
+              <AnimatePresence mode="popLayout">
+                {filteredTransactions.map((tx, idx) => (
+                  <motion.div 
+                    key={tx.id || idx}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    onClick={() => openReceipt(tx)}
+                    className="group bg-white p-6 lg:p-8 rounded-[2.5rem] border border-gray-100 hover:border-blue-100 hover:shadow-xl hover:shadow-blue-100/50 transition-all flex flex-col lg:flex-row lg:items-center justify-between gap-6 cursor-pointer"
+                  >
+                    <div className="flex items-center space-x-6">
+                      <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform ${tx.type === 'FUNDING' ? 'bg-green-50 text-green-600' : 'bg-blue-50 text-blue-600'}`}>
+                        {getTypeIcon(tx.type)}
                       </div>
-                      <div>
-                        <div className="font-bold text-gray-900 tracking-tight">{txn.source}</div>
-                        <div className="text-[10px] font-medium text-gray-400 uppercase tracking-wider">
-                          {txn.date_created?.seconds 
-                            ? new Date(txn.date_created.seconds * 1000).toLocaleDateString() 
-                            : new Date(txn.date_created).toLocaleDateString()}
+                      <div className="space-y-1">
+                        <div className="flex items-center space-x-3">
+                          <h4 className="font-black text-gray-900 uppercase tracking-tight text-lg">{tx.type}</h4>
+                          <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border flex items-center gap-1.5 ${getStatusColor(tx.status)}`}>
+                            {getStatusIcon(tx.status)}
+                            {tx.status}
+                          </span>
+                        </div>
+                        <p className="text-gray-400 font-medium text-sm">{tx.source}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between lg:justify-end lg:space-x-12">
+                      <div className="text-right lg:text-left space-y-1">
+                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Amount</p>
+                        <p className={`text-2xl font-black tracking-tighter ${tx.type === 'FUNDING' ? 'text-green-600' : 'text-gray-900'}`}>
+                          {tx.type === 'FUNDING' ? '+' : '-'}₦{tx.amount.toLocaleString()}
+                        </p>
+                      </div>
+                      <div className="text-right space-y-1">
+                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Timestamp</p>
+                        <div className="flex items-center justify-end space-x-2 text-gray-400 font-bold text-xs">
+                          <Calendar className="w-3 h-3" />
+                          <span>
+                            {tx.date_created?.seconds 
+                              ? new Date(tx.date_created.seconds * 1000).toLocaleDateString() 
+                              : new Date(tx.date_created).toLocaleDateString()}
+                          </span>
                         </div>
                       </div>
                     </div>
-                  </td>
-                  <td className="px-10 py-7 text-center">
-                    <span className="text-[11px] font-bold text-gray-500 uppercase tracking-widest bg-gray-100 px-3 py-1 rounded-lg">
-                      {txn.type}
-                    </span>
-                  </td>
-                  <td className="px-10 py-7 text-right">
-                    <div className="font-bold text-gray-900 text-lg tracking-tight">₦{txn.amount.toLocaleString()}</div>
-                  </td>
-                  <td className="px-10 py-7 text-center">
-                    <span className={`inline-flex px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest ${getStatusStyle(txn.status)}`}>
-                      {txn.status}
-                    </span>
-                  </td>
-                  <td className="px-10 py-7 text-right">
-                    <button 
-                      onClick={() => openReceipt(txn)}
-                      className="text-[10px] font-bold uppercase tracking-widest text-blue-600 hover:text-white hover:bg-blue-600 px-4 py-2 rounded-xl transition-all border border-blue-600"
-                    >
-                      View Receipt
-                    </button>
-                  </td>
-                </tr>
-              )) : (
-                <tr>
-                  <td colSpan={5} className="px-10 py-32 text-center">
-                    <div className="flex flex-col items-center space-y-6">
-                      <div className="w-24 h-24 bg-gray-50 rounded-[2.5rem] flex items-center justify-center text-gray-200 shadow-inner">
-                        <HistoryIcon />
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-gray-900 font-bold text-2xl tracking-tight">No activity yet</p>
-                        <p className="text-gray-500 font-medium max-w-xs mx-auto">Your recent transactions will appear here.</p>
-                      </div>
-                    </div>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </div>
+          ) : (
+            <div className="text-center py-32 space-y-6">
+              <div className="w-24 h-24 bg-gray-50 rounded-[2.5rem] flex items-center justify-center mx-auto text-gray-200">
+                <Search className="w-10 h-10" />
+              </div>
+              <div className="space-y-2">
+                <h4 className="text-2xl font-black text-gray-900 tracking-tight">No records found</h4>
+                <p className="text-gray-400 font-medium">Try adjusting your filters or search terms.</p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

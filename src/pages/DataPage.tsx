@@ -10,6 +10,7 @@ import Modal from '../components/Modal';
 import { ShieldCheck, Signal, Server, Smartphone, Wifi, CheckCircle2, Receipt, ArrowRight, AlertCircle, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
+import { DATA_NETWORKS } from '../constants';
 
 const DataPage: React.FC = () => {
   const navigate = useNavigate();
@@ -220,14 +221,18 @@ const DataPage: React.FC = () => {
             >
               <StepHeader num="1" title="Select Network" />
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                {networks.map(n => (
-                  <SelectionButton 
-                    key={n.id} 
-                    label={n.name} 
-                    icon={<Smartphone className="w-6 h-6" />} 
-                    onClick={() => handleNetworkSelect(n.id)} 
-                  />
-                ))}
+                {networks.map(n => {
+                  const constant = DATA_NETWORKS.find(c => c.name.toUpperCase() === n.name.toUpperCase());
+                  return (
+                    <SelectionButton 
+                      key={n.id} 
+                      label={n.name} 
+                      image={constant?.image}
+                      icon={<Smartphone className="w-6 h-6" />} 
+                      onClick={() => handleNetworkSelect(n.id)} 
+                    />
+                  );
+                })}
               </div>
               <BackButton onClick={() => setStep('SERVER')} />
             </motion.div>
@@ -407,13 +412,13 @@ const ServerCard = ({ title, desc, icon, onClick }: any) => (
   </button>
 );
 
-const SelectionButton = ({ label, icon, onClick }: any) => (
+const SelectionButton = ({ label, icon, image, onClick }: any) => (
   <button 
     onClick={onClick}
     className="p-8 bg-gray-50 border-2 border-transparent hover:border-blue-600 hover:bg-white rounded-[2.5rem] flex flex-col items-center gap-4 transition-all group shadow-sm hover:shadow-xl"
   >
-    <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-gray-400 group-hover:text-blue-600 shadow-sm group-hover:scale-110 transition-all">
-      {icon}
+    <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-gray-400 group-hover:text-blue-600 shadow-sm group-hover:scale-110 transition-all overflow-hidden p-2">
+      {image ? <img src={image} alt={label} className="w-full h-full object-contain" /> : icon}
     </div>
     <span className="text-[10px] font-black uppercase tracking-widest text-gray-500 group-hover:text-gray-900">{label}</span>
   </button>

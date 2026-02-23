@@ -30,7 +30,7 @@ const AdminTransactionsPage: React.FC = () => {
 
   const filteredTransactions = transactions.filter(t => 
     t.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    t.userEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (t.userEmail || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
     t.type.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -93,8 +93,8 @@ const AdminTransactionsPage: React.FC = () => {
                   >
                     <td className="px-12 py-8">
                       <div className="flex items-center space-x-4">
-                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${t.type === 'CREDIT' ? 'bg-green-50 text-green-600' : 'bg-blue-50 text-blue-600'} shadow-inner`}>
-                          {t.type === 'CREDIT' ? <ArrowDownLeft className="w-6 h-6" /> : <ArrowUpRight className="w-6 h-6" />}
+                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${t.type === 'FUNDING' ? 'bg-green-50 text-green-600' : 'bg-blue-50 text-blue-600'} shadow-inner`}>
+                          {t.type === 'FUNDING' ? <ArrowDownLeft className="w-6 h-6" /> : <ArrowUpRight className="w-6 h-6" />}
                         </div>
                         <div>
                           <div className="font-black text-gray-900 tracking-tighter text-lg leading-none mb-2">{t.id}</div>

@@ -5,32 +5,43 @@ import { vtuService } from '../services/vtuService';
 import { Operator } from '../types';
 import Spinner from '../components/Spinner';
 import PinPromptModal from '../components/PinPromptModal';
-import { BoltIcon, ShieldCheckIcon } from '../components/Icons';
+import InsufficientBalanceModal from '../components/InsufficientBalanceModal';
+import LoadingScreen from '../components/LoadingScreen';
+import { Bolt, ShieldCheck, CheckCircle2, Receipt, ArrowRight, Zap, Smartphone, CreditCard, Lightbulb } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import { useNavigate } from 'react-router-dom';
 
 const BillsPage: React.FC = () => {
   const { addNotification } = useNotifications();
   const { fetchWalletBalance, walletBalance } = useAuth();
+  const navigate = useNavigate();
+  
+  const [step, setStep] = useState<'PROVIDER' | 'METER' | 'AMOUNT' | 'PHONE' | 'CHECKOUT' | 'SUCCESS'>('PROVIDER');
   const [operators, setOperators] = useState<Operator[]>([]);
   const [selectedOperator, setSelectedOperator] = useState<Operator | null>(null);
   const [meterNumber, setMeterNumber] = useState('');
   const [meterType, setMeterType] = useState<'prepaid' | 'postpaid'>('prepaid');
   const [amount, setAmount] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [isVerifying, setIsVerifying] = useState(false);
+  
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState('');
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [customerName, setCustomerName] = useState<string | null>(null);
   const [showPinModal, setShowPinModal] = useState(false);
+  const [showInsufficientModal, setShowInsufficientModal] = useState(false);
+  const [token, setToken] = useState<string | null>(null);
 
   const numericAmount = parseFloat(amount);
 
   const fetchOperators = useCallback(async () => {
-    setOperators([]);
-    setSelectedOperator(null);
-    setCustomerName(null);
+    setIsLoading(true);
+    setLoadingMessage('Syncing Electricity Nodes...');
     const response = await vtuService.getElectricityOperators();
     if (response.status && response.data) {
       setOperators(response.data);
     }
+    setTimeout(() => setIsLoading(false), 800);
   }, []);
 
   useEffect(() => {
@@ -39,7 +50,8 @@ const BillsPage: React.FC = () => {
 
   const handleVerify = async () => {
     if (!selectedOperator || !meterNumber) return;
-    setIsVerifying(true);
+    setIsLoading(true);
+    setLoadingMessage('Verifying Meter Identity...');
     setCustomerName(null);
     const response = await vtuService.verifyElectricityMeter({
       provider_id: selectedOperator.id,
@@ -49,19 +61,11 @@ const BillsPage: React.FC = () => {
     if (response.status && response.data?.customerName) {
       setCustomerName(response.data.customerName);
       addNotification('Meter verified successfully.', 'success');
+      setStep('AMOUNT');
     } else {
       addNotification(response.message || 'Verification failed. Please check the meter number.', 'error');
     }
-    setIsVerifying(false);
-  };
-
-  const handlePrePurchase = () => {
-    if (!customerName || !numericAmount || !phoneNumber) return;
-    if (walletBalance !== null && numericAmount > walletBalance) {
-      addNotification('Wallet balance insufficient.', 'error');
-      return;
-    }
-    setShowPinModal(true);
+    setIsLoading(false);
   };
 
   const handlePurchase = async () => {
@@ -69,6 +73,8 @@ const BillsPage: React.FC = () => {
     
     setIsPurchasing(true);
     setShowPinModal(false);
+    setIsLoading(true);
+    setLoadingMessage('Generating Electricity Token...');
 
     const response = await vtuService.purchaseElectricity({
       provider_id: selectedOperator!.id,
@@ -80,131 +86,338 @@ const BillsPage: React.FC = () => {
     });
 
     if (response.status && response.data) {
-      addNotification(`Bill paid! Token: ${response.data.token || 'Successful'}.`, 'success');
-      setMeterNumber('');
-      setAmount('');
-      setPhoneNumber('');
-      setCustomerName(null);
+      setToken(response.data.token || null);
+      addNotification(`Bill paid successfully!`, 'success');
+      setStep('SUCCESS');
       await fetchWalletBalance();
     } else {
       addNotification(response.message || 'Fulfillment node error.', 'error');
     }
     setIsPurchasing(false);
+    setIsLoading(false);
+  };
+
+  const resetAll = () => {
+    setStep('PROVIDER');
+    setSelectedOperator(null);
+    setMeterNumber('');
+    setAmount('');
+    setPhoneNumber('');
+    setCustomerName(null);
+    setToken(null);
   };
 
   return (
-    <div className="max-w-3xl mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
+    <div className="max-w-4xl mx-auto space-y-12 pb-32">
+      {isLoading && <LoadingScreen message={loadingMessage} />}
+      
       <PinPromptModal 
         isOpen={showPinModal} 
         onClose={() => setShowPinModal(false)} 
         onSuccess={handlePurchase}
-        title="Confirm Payment"
-        description={`You are about to pay ₦${numericAmount.toLocaleString()} for electricity.`}
+        title="Authorize Payment"
+        description={`Confirm ₦${numericAmount.toLocaleString()} for electricity.`}
       />
 
-      <div className="text-center">
-        <h2 className="text-4xl lg:text-5xl font-extrabold text-gray-900 tracking-tight mb-3">Pay Electricity</h2>
-        <p className="text-gray-500 font-medium text-lg">Pay your electricity bills and get tokens instantly.</p>
+      <InsufficientBalanceModal 
+        isOpen={showInsufficientModal}
+        onClose={() => setShowInsufficientModal(false)}
+        currentBalance={walletBalance || 0}
+        requiredAmount={numericAmount}
+        onPayRemaining={() => navigate('/funding')}
+      />
+
+      <div className="text-center space-y-4">
+        <div className="inline-flex p-4 bg-blue-50 text-blue-600 rounded-[2rem] mb-4 shadow-inner">
+          <Lightbulb className="w-10 h-10" />
+        </div>
+        <h2 className="text-5xl lg:text-6xl font-black text-gray-900 tracking-tighter">Electricity</h2>
+        <p className="text-gray-400 font-medium text-xl max-w-xl mx-auto">Pay your electricity bills and get tokens instantly.</p>
       </div>
 
-      <div className="bg-white p-8 lg:p-12 rounded-[3rem] shadow-xl border border-gray-50 space-y-10">
-        <div className="space-y-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3 ml-2">1. Select Provider</label>
-              <select 
-                className="w-full p-5 bg-gray-50 rounded-2xl font-bold text-lg border-2 border-transparent focus:border-blue-600 outline-none transition-all appearance-none" 
-                value={selectedOperator?.id || ''} 
-                onChange={(e) => {
-                  setSelectedOperator(operators.find(o => String(o.id) === String(e.target.value)) || null);
-                  setCustomerName(null);
-                }}
-              >
-                <option value="">Choose Disco</option>
-                {operators.map(op => <option key={op.id} value={op.id}>{op.name}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3 ml-2">2. Meter Type</label>
-              <div className="flex p-1.5 bg-gray-50 rounded-2xl border-2 border-transparent">
-                <button onClick={() => { setMeterType('prepaid'); setCustomerName(null); }} className={`flex-1 py-3 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all ${meterType === 'prepaid' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-400'}`}>Prepaid</button>
-                <button onClick={() => { setMeterType('postpaid'); setCustomerName(null); }} className={`flex-1 py-3 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all ${meterType === 'postpaid' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-400'}`}>Postpaid</button>
+      <div className="bg-white p-10 lg:p-16 rounded-[4rem] shadow-2xl shadow-blue-100/50 border border-gray-50 relative overflow-hidden">
+        <AnimatePresence mode="wait">
+          {step === 'PROVIDER' && (
+            <motion.div 
+              key="provider"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              className="space-y-10"
+            >
+              <StepHeader num="01" title="Select Disco" />
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                {operators.map(op => (
+                  <button 
+                    key={op.id}
+                    onClick={() => {
+                      setSelectedOperator(op);
+                      setStep('METER');
+                    }}
+                    className={`group p-8 rounded-[2.5rem] border-2 transition-all flex flex-col items-center space-y-4 ${selectedOperator?.id === op.id ? 'border-blue-600 bg-blue-50 shadow-xl shadow-blue-100' : 'border-gray-50 bg-gray-50 hover:border-gray-200'}`}
+                  >
+                    <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                      <Bolt className="w-10 h-10 text-blue-600" />
+                    </div>
+                    <span className="font-black text-gray-900 uppercase tracking-widest text-xs text-center">{op.name}</span>
+                  </button>
+                ))}
               </div>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3 ml-2">3. Meter Number</label>
-            <div className="flex gap-3">
-              <input 
-                type="text" 
-                className="flex-1 p-5 bg-gray-50 border-2 border-gray-100 rounded-2xl font-bold text-xl tracking-tight outline-none focus:border-blue-600 transition-all text-center" 
-                placeholder="00000000000" 
-                value={meterNumber} 
-                onChange={(e) => setMeterNumber(e.target.value.replace(/\D/g, ''))} 
-              />
-              <button 
-                onClick={handleVerify}
-                disabled={isVerifying || meterNumber.length < 5 || !selectedOperator}
-                className="px-8 bg-gray-900 text-white rounded-2xl font-bold text-[11px] uppercase tracking-widest hover:bg-blue-600 transition-all shadow-lg disabled:opacity-50"
-              >
-                {isVerifying ? <Spinner /> : 'Verify'}
-              </button>
-            </div>
-          </div>
-
-          {customerName && (
-            <div className="p-6 bg-green-50 rounded-[2rem] border-2 border-dashed border-green-200 flex items-center space-x-5 animate-in zoom-in-95 duration-300">
-               <div className="w-12 h-12 bg-green-600 text-white rounded-xl flex items-center justify-center shrink-0 shadow-lg"><BoltIcon /></div>
-               <div>
-                  <p className="text-[10px] font-bold text-green-600 uppercase tracking-widest mb-1">Customer Name</p>
-                  <p className="font-bold text-gray-900 text-xl uppercase tracking-tight leading-none">{customerName}</p>
-               </div>
-            </div>
+            </motion.div>
           )}
 
-          <div className={`space-y-8 transition-opacity duration-500 ${customerName ? 'opacity-100' : 'opacity-30 pointer-events-none'}`}>
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {step === 'METER' && (
+            <motion.div 
+              key="meter"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              className="space-y-10"
+            >
+              <BackButton onClick={() => setStep('PROVIDER')} />
+              <StepHeader num="02" title="Meter Details" />
+              
+              <div className="space-y-8">
+                <div className="flex p-2 bg-gray-50 rounded-[2rem] border-2 border-transparent">
+                  <button 
+                    onClick={() => setMeterType('prepaid')} 
+                    className={`flex-1 py-6 rounded-[1.5rem] font-black uppercase tracking-widest text-xs transition-all ${meterType === 'prepaid' ? 'bg-white text-blue-600 shadow-xl' : 'text-gray-400'}`}
+                  >
+                    Prepaid
+                  </button>
+                  <button 
+                    onClick={() => setMeterType('postpaid')} 
+                    className={`flex-1 py-6 rounded-[1.5rem] font-black uppercase tracking-widest text-xs transition-all ${meterType === 'postpaid' ? 'bg-white text-blue-600 shadow-xl' : 'text-gray-400'}`}
+                  >
+                    Postpaid
+                  </button>
+                </div>
+
+                <div className="relative">
+                  <input 
+                    type="text" 
+                    className="w-full p-10 bg-gray-50 border-4 border-transparent rounded-[2.5rem] text-4xl font-black tracking-tighter outline-none focus:border-blue-600 focus:bg-white transition-all text-center placeholder:text-gray-200" 
+                    placeholder="00000000000" 
+                    value={meterNumber} 
+                    onChange={e => setMeterNumber(e.target.value.replace(/\D/g, ''))} 
+                  />
+                  <div className="absolute left-10 top-1/2 -translate-y-1/2 text-gray-300">
+                    <CreditCard className="w-8 h-8" />
+                  </div>
+                </div>
+
+                <button 
+                  onClick={handleVerify}
+                  disabled={meterNumber.length < 5}
+                  className="w-full py-8 bg-gray-900 text-white rounded-[2.5rem] font-black text-[12px] uppercase tracking-[0.4em] shadow-2xl hover:bg-blue-600 transition-all transform active:scale-95 disabled:opacity-30"
+                >
+                  Verify Meter
+                </button>
+              </div>
+            </motion.div>
+          )}
+
+          {step === 'AMOUNT' && (
+            <motion.div 
+              key="amount"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              className="space-y-10"
+            >
+              <BackButton onClick={() => setStep('METER')} />
+              <StepHeader num="03" title="Payment Amount" />
+              
+              <div className="p-8 bg-blue-50 rounded-[2.5rem] border-2 border-dashed border-blue-100 flex items-center space-x-6">
+                <div className="w-16 h-16 bg-blue-600 text-white rounded-2xl flex items-center justify-center shrink-0 shadow-lg">
+                  <Bolt className="w-8 h-8" />
+                </div>
                 <div>
-                   <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3 ml-2">4. Amount (₦)</label>
-                   <input 
+                  <p className="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] mb-1">Meter Identified</p>
+                  <p className="text-2xl font-black text-gray-900 tracking-tight uppercase">{customerName}</p>
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                <div className="relative">
+                  <input 
                     type="number" 
-                    className="w-full p-5 bg-gray-50 border-2 border-gray-100 rounded-2xl text-2xl font-bold tracking-tight outline-none focus:border-blue-600 transition-all text-center" 
+                    className="w-full p-10 bg-gray-50 border-4 border-transparent rounded-[2.5rem] text-5xl font-black tracking-tighter outline-none focus:border-blue-600 focus:bg-white transition-all text-center placeholder:text-gray-200" 
                     placeholder="0.00" 
                     value={amount} 
-                    onChange={(e) => setAmount(e.target.value)} 
-                   />
+                    onChange={e => setAmount(e.target.value)} 
+                  />
+                  <div className="absolute left-10 top-1/2 -translate-y-1/2 text-gray-300 font-black text-2xl">₦</div>
                 </div>
-                <div>
-                   <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3 ml-2">5. Phone Number</label>
-                   <input 
+                
+                <button 
+                  onClick={() => setStep('PHONE')}
+                  disabled={!amount || numericAmount <= 0}
+                  className="w-full py-8 bg-blue-600 text-white rounded-[2.5rem] font-black text-[12px] uppercase tracking-[0.4em] shadow-2xl shadow-blue-100 hover:bg-gray-950 transition-all transform active:scale-95 disabled:opacity-30"
+                >
+                  Continue
+                </button>
+              </div>
+            </motion.div>
+          )}
+
+          {step === 'PHONE' && (
+            <motion.div 
+              key="phone"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              className="space-y-10"
+            >
+              <BackButton onClick={() => setStep('AMOUNT')} />
+              <StepHeader num="04" title="Notification Phone" />
+              <div className="space-y-6">
+                <div className="relative">
+                  <input 
                     type="tel" 
-                    className="w-full p-5 bg-gray-50 border-2 border-gray-100 rounded-2xl text-2xl font-bold tracking-tight outline-none focus:border-blue-600 transition-all text-center" 
-                    placeholder="080..." 
+                    className="w-full p-10 bg-gray-50 border-4 border-transparent rounded-[2.5rem] text-4xl font-black tracking-tighter outline-none focus:border-blue-600 focus:bg-white transition-all text-center placeholder:text-gray-200" 
+                    placeholder="08000000000" 
                     value={phoneNumber} 
-                    onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))} 
+                    onChange={e => setPhoneNumber(e.target.value.replace(/\D/g, ''))} 
                     maxLength={11}
-                   />
+                  />
+                  <div className="absolute left-10 top-1/2 -translate-y-1/2 text-gray-300">
+                    <Smartphone className="w-8 h-8" />
+                  </div>
                 </div>
-             </div>
-             
-             <button 
-              onClick={handlePrePurchase}
-              className="w-full bg-blue-600 hover:bg-gray-900 text-white font-bold py-5 rounded-2xl shadow-xl shadow-blue-100 transition-all duration-300 uppercase tracking-widest text-sm transform active:scale-95 disabled:opacity-50 flex items-center justify-center space-x-3"
-              disabled={!customerName || !amount || phoneNumber.length !== 11 || isPurchasing}
-             >
-                {isPurchasing ? <Spinner /> : <><ShieldCheckIcon /> <span>Pay Now</span></>}
-             </button>
-          </div>
-        </div>
+                <button 
+                  onClick={() => {
+                    if (walletBalance !== null && numericAmount > walletBalance) {
+                      setShowInsufficientModal(true);
+                      return;
+                    }
+                    setStep('CHECKOUT');
+                  }}
+                  disabled={phoneNumber.length !== 11}
+                  className="w-full py-8 bg-blue-600 text-white rounded-[2.5rem] font-black text-[12px] uppercase tracking-[0.4em] shadow-2xl shadow-blue-100 hover:bg-gray-950 transition-all transform active:scale-95 disabled:opacity-30"
+                >
+                  Review Order
+                </button>
+              </div>
+            </motion.div>
+          )}
+
+          {step === 'CHECKOUT' && (
+            <motion.div 
+              key="checkout"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              className="space-y-10"
+            >
+              <StepHeader num="05" title="Final Checkout" />
+              
+              <div className="bg-gray-50 rounded-[3rem] p-10 space-y-8 border border-gray-100">
+                <CheckoutRow label="Disco" value={selectedOperator?.name || ''} />
+                <CheckoutRow label="Meter Number" value={meterNumber} />
+                <CheckoutRow label="Meter Type" value={meterType.toUpperCase()} />
+                <CheckoutRow label="Customer" value={customerName || ''} />
+                <CheckoutRow label="Recipient" value={phoneNumber} />
+                
+                <div className="pt-8 border-t-4 border-dashed border-gray-200 flex justify-between items-end">
+                  <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Total Amount</span>
+                  <span className="text-4xl font-black text-blue-600 tracking-tighter">₦{numericAmount.toLocaleString()}</span>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <button 
+                  onClick={() => setShowPinModal(true)}
+                  className="w-full py-8 bg-blue-600 text-white rounded-[2.5rem] font-black text-[12px] uppercase tracking-[0.4em] shadow-2xl shadow-blue-100 hover:bg-gray-950 transition-all transform active:scale-95"
+                >
+                  Confirm & Pay
+                </button>
+                <button 
+                  onClick={() => setStep('PHONE')}
+                  className="w-full py-6 text-gray-400 font-black text-[10px] uppercase tracking-widest hover:text-gray-900 transition-all"
+                >
+                  Go Back
+                </button>
+              </div>
+            </motion.div>
+          )}
+
+          {step === 'SUCCESS' && (
+            <motion.div 
+              key="success"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="text-center space-y-10 py-10"
+            >
+              <div className="w-24 h-24 bg-green-50 text-green-500 rounded-[2rem] flex items-center justify-center mx-auto shadow-inner">
+                <CheckCircle2 className="w-12 h-12" />
+              </div>
+              <div className="space-y-4">
+                <h3 className="text-4xl font-black text-gray-900 tracking-tighter">Payment Successful!</h3>
+                <p className="text-gray-400 font-medium text-lg">Your electricity bill has been settled.</p>
+                {token && (
+                  <div className="bg-gray-900 p-8 rounded-[2rem] border-t-4 border-blue-600 shadow-2xl mt-6">
+                    <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.3em] mb-2">Your Token</p>
+                    <p className="text-4xl font-black text-white tracking-[0.2em]">{token}</p>
+                  </div>
+                )}
+              </div>
+              
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <button 
+                  onClick={resetAll}
+                  className="px-10 py-6 bg-blue-600 text-white rounded-3xl font-black text-[11px] uppercase tracking-widest hover:bg-gray-950 transition-all shadow-xl shadow-blue-100 flex items-center justify-center space-x-3"
+                >
+                  <ArrowRight className="w-4 h-4" />
+                  <span>Pay Another</span>
+                </button>
+                <button 
+                  onClick={() => navigate('/history')}
+                  className="px-10 py-6 bg-gray-100 text-gray-900 rounded-3xl font-black text-[11px] uppercase tracking-widest hover:bg-gray-200 transition-all flex items-center justify-center space-x-3"
+                >
+                  <Receipt className="w-4 h-4" />
+                  <span>View Receipt</span>
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
-      <div className="p-8 bg-blue-50 text-blue-900 rounded-[2.5rem] border border-blue-100 flex items-center space-x-6">
-        <div className="w-12 h-12 bg-blue-600 text-white rounded-xl flex items-center justify-center shrink-0 shadow-lg"><BoltIcon /></div>
-        <p className="text-sm font-medium">Electricity tokens are generated instantly after payment. You will also receive a copy via SMS.</p>
+      <div className="p-10 bg-blue-50 rounded-[3rem] border border-blue-100 flex items-start space-x-8">
+        <div className="w-16 h-16 bg-blue-600 text-white rounded-2xl flex items-center justify-center shrink-0 shadow-lg">
+          <Zap className="w-8 h-8" />
+        </div>
+        <div className="space-y-2">
+          <h4 className="text-xl font-black text-blue-900 tracking-tight">Instant Token Generation</h4>
+          <p className="text-blue-800/60 font-medium leading-relaxed">Electricity tokens are generated instantly after payment. You will also receive a copy via SMS to the provided phone number.</p>
+        </div>
       </div>
     </div>
   );
 };
+
+const StepHeader = ({ num, title }: { num: string, title: string }) => (
+  <div className="flex items-center space-x-4 mb-8">
+    <div className="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center font-black text-sm">{num}</div>
+    <h3 className="text-3xl font-black text-gray-900 tracking-tight">{title}</h3>
+  </div>
+);
+
+const CheckoutRow = ({ label, value }: { label: string, value: string }) => (
+  <div className="flex justify-between items-center">
+    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{label}</span>
+    <span className="font-black text-gray-900 tracking-tight">{value}</span>
+  </div>
+);
+
+const BackButton = ({ onClick }: { onClick: () => void }) => (
+  <button 
+    onClick={onClick}
+    className="text-[10px] font-black text-gray-400 uppercase tracking-widest hover:text-blue-600 transition-all flex items-center space-x-2"
+  >
+    <span>← Back to previous step</span>
+  </button>
+);
 
 export default BillsPage;

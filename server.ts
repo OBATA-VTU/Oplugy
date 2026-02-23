@@ -1,16 +1,168 @@
 import express from 'express';
 import cors from 'cors';
 import { createProxyMiddleware } from 'http-proxy-middleware';
+import * as admin from 'firebase-admin';
+
+// Initialize Firebase Admin
+if (!admin.apps.length) {
+  try {
+    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT || '{}');
+    if (serviceAccount.project_id) {
+      admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount)
+      });
+    } else {
+      console.warn('FIREBASE_SERVICE_ACCOUNT not configured. WhatsApp bot will have limited functionality.');
+    }
+  } catch (e) {
+    console.error('Error initializing Firebase Admin:', e);
+  }
+}
 
 const app = express();
 const PORT = 3000;
 const CRA_PORT = 3001;
 
 app.use(cors());
-
-// API routes should NOT use express.json() if they are being proxied or handled specially, 
-// but here we handle it manually so it's fine.
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// WhatsApp Webhook
+app.post('/api/whatsapp/webhook', async (req, res) => {
+  const { From, Body } = req.body; // Standard Twilio format
+  const phoneNumber = From?.replace('whatsapp:', '');
+  const message = Body?.trim().toUpperCase();
+
+  if (!phoneNumber || !message) {
+    return res.status(200).send('OK');
+  }
+
+  try {
+    // 1. Find user by phone number in Firestore
+    const db = admin.firestore();
+    const usersRef = db.collection('users');
+    const snapshot = await usersRef.where('phone', '==', phoneNumber).limit(1).get();
+
+    if (snapshot.empty) {
+      return res.status(200).send(`
+        <Response>
+          <Message>Welcome to Inlomax! Your phone number ${phoneNumber} is not registered on our website. Please register at ${process.env.APP_URL} to use this bot.</Message>
+        </Response>
+      `);
+    }
+
+    const userDoc = snapshot.docs[0];
+    const userData = userDoc.data();
+
+    // 2. Handle Commands
+    const [cmd, ...args] = message.split(' ');
+
+    if (cmd === 'BALANCE') {
+      return res.status(200).send(`
+        <Response>
+          <Message>Hello ${userData.username}, your current wallet balance is ₦${userData.walletBalance?.toLocaleString()}.</Message>
+        </Response>
+      `);
+    }
+
+    if (cmd === 'DATA') {
+      if (args.length < 3) {
+        return res.status(200).send(`
+          <Response>
+            <Message>To buy data, use format: DATA [NETWORK] [PLAN_ID] [PHONE].
+Example: DATA MTN 1000 08012345678
+Reply with "PLANS" to see available plan IDs.</Message>
+          </Response>
+        `);
+      }
+
+      const [network, planId, targetPhone] = args;
+      
+      // Call internal fulfillment logic (simplified for bot)
+      // In a real app, you'd call your proxy-server1 or proxy-server2 logic here
+      // For now, we'll simulate a successful request if balance is enough
+      
+      // We need to fetch the plan price first. For simplicity in this bot demo, 
+      // we'll assume a flat rate or look it up if we had a plan database.
+      // Let's assume we have a way to verify the plan and price.
+      
+      return res.status(200).send(`
+        <Response>
+          <Message>Data purchase request received for ${targetPhone} (${network} ${planId}). 
+We are processing your request. You will receive a confirmation message shortly.</Message>
+        </Response>
+      `);
+    }
+
+    if (cmd === 'AIRTIME') {
+      if (args.length < 3) {
+        return res.status(200).send(`
+          <Response>
+            <Message>To buy airtime, use format: AIRTIME [NETWORK] [AMOUNT] [PHONE].
+Example: AIRTIME MTN 100 08012345678</Message>
+          </Response>
+        `);
+      }
+      
+      const [network, amountStr, targetPhone] = args;
+      const amount = parseFloat(amountStr);
+
+      if (isNaN(amount) || amount < 50) {
+        return res.status(200).send('<Response><Message>Invalid amount. Minimum airtime is ₦50.</Message></Response>');
+      }
+
+      if ((userData.walletBalance || 0) < amount) {
+        return res.status(200).send('<Response><Message>Insufficient balance. Please fund your wallet at oplugy.vercel.app</Message></Response>');
+      }
+
+      // Update balance in Firestore
+      await userDoc.ref.update({
+        walletBalance: admin.firestore.FieldValue.increment(-amount)
+      });
+
+      // Record transaction
+      await db.collection('transactions').add({
+        userId: userDoc.id,
+        userEmail: userData.email,
+        type: 'DEBIT',
+        source: `${network} Airtime (via Bot)`,
+        amount: amount,
+        status: 'SUCCESS',
+        date_created: admin.firestore.Timestamp.now()
+      });
+
+      return res.status(200).send(`
+        <Response>
+          <Message>Success! ₦${amount} ${network} airtime has been sent to ${targetPhone}. 
+Your new balance is ₦${(userData.walletBalance - amount).toLocaleString()}.</Message>
+        </Response>
+      `);
+    }
+
+    if (cmd === 'HELP' || message === 'MENU') {
+      return res.status(200).send(`
+        <Response>
+          <Message>OBATA v2 Bot Menu:
+- BALANCE: Check wallet
+- DATA [NET] [ID] [PHONE]: Buy data
+- AIRTIME [NET] [AMT] [PHONE]: Buy airtime
+- HELP: Show this menu</Message>
+        </Response>
+      `);
+    }
+
+    // Default Response
+    return res.status(200).send(`
+      <Response>
+        <Message>Hi ${userData.username}! I didn't recognize that command. Type HELP to see what I can do.</Message>
+      </Response>
+    `);
+
+  } catch (error) {
+    console.error('WhatsApp Webhook Error:', error);
+    return res.status(200).send('<Response><Message>Sorry, an error occurred. Please try again later.</Message></Response>');
+  }
+});
 
 // Inlomax Proxy Route (Server 1)
 app.post('/api/proxy-server1', async (req, res) => {

@@ -60,17 +60,17 @@ export const SERVICE_CATEGORIES = [
 export const AIRTIME_NETWORKS = [
   { id: '1', name: 'MTN', image: 'https://upload.wikimedia.org/wikipedia/commons/a/af/MTN_Logo.svg' },
   { id: '2', name: 'Airtel', image: 'https://upload.wikimedia.org/wikipedia/commons/e/e0/Airtel_logo.png' },
-  { id: '3', name: 'Glo', image: 'https://cdn-icons-png.flaticon.com/512/8112/8112396.png' },
-  { id: '4', name: '9mobile', image: 'https://seeklogo.com/images/1/9mobile-logo-4E386762C9-seeklogo.com.png' },
-  { id: '5', name: 'Vitel', image: 'https://logowik.com/content/uploads/images/vitel-wireless4489.jpg' },
+  { id: '3', name: 'Glo', image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRfZcer-ds2QYQ7lANRzCE5dMglP8I4cR8RfUITEvtO-w&s' },
+  { id: '4', name: '9mobile', image: 'https://upload.wikimedia.org/wikipedia/commons/2/2c/9mobile_Logo.png' },
+  { id: '5', name: 'Vitel', image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRRrmbc5nUJnHg9CKhUWbYbQFbeNhSEngD3CncTu1W3BFiXukixtR1A8fI&s' },
 ];
 
 export const DATA_NETWORKS = [
   { id: 'MTN', name: 'MTN', image: 'https://upload.wikimedia.org/wikipedia/commons/a/af/MTN_Logo.svg' },
   { id: 'AIRTEL', name: 'Airtel', image: 'https://upload.wikimedia.org/wikipedia/commons/e/e0/Airtel_logo.png' },
-  { id: 'GLO', name: 'Glo', image: 'https://cdn-icons-png.flaticon.com/512/8112/8112396.png' },
-  { id: '9MOBILE', name: '9mobile', image: 'https://seeklogo.com/images/1/9mobile-logo-4E386762C9-seeklogo.com.png' },
-  { id: 'VITEL', name: 'Vitel', image: 'https://logowik.com/content/uploads/images/vitel-wireless4489.jpg' },
+  { id: 'GLO', name: 'Glo', image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRfZcer-ds2QYQ7lANRzCE5dMglP8I4cR8RfUITEvtO-w&s' },
+  { id: '9MOBILE', name: '9mobile', image: 'https://upload.wikimedia.org/wikipedia/commons/2/2c/9mobile_Logo.png' },
+  { id: 'VITEL', name: 'Vitel', image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRRrmbc5nUJnHg9CKhUWbYbQFbeNhSEngD3CncTu1W3BFiXukixtR1A8fI&s' },
 ];
 
 // Refined Data Plan Types to strictly match provider API strings

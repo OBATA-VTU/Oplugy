@@ -328,20 +328,3 @@ const RoleButton: React.FC<RoleButtonProps> = ({ label, icon, active, onClick })
 );
 
 export default AdminUsersPage;
-    </div>
-  );
-};
-
-const RoleButton: React.FC<RoleButtonProps> = ({ label, icon, active, onClick }) => (
-  <button 
-    onClick={onClick}
-    className={`p-6 border-2 rounded-3xl flex flex-col items-center gap-3 transition-all ${
-      active ? 'border-blue-600 bg-blue-50 text-blue-600' : 'border-gray-50 bg-gray-50 text-gray-400 hover:border-gray-200'
-    }`}
-  >
-    {icon}
-    <span className="text-[9px] font-black uppercase tracking-widest">{label}</span>
-  </button>
-);
-
-export default AdminUsersPage;

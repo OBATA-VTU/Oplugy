@@ -7,13 +7,6 @@ import { vtuService } from '../../services/vtuService';
 import Logo from '../../components/Logo';
 import Footer from '../../components/Footer';
 import Spinner from '../../components/Spinner';
-import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
-
-function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
-
 import LoadingScreen from '../../components/LoadingScreen';
 
 const QuickBuyCable: React.FC = () => {

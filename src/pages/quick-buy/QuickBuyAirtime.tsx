@@ -1,19 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { Phone, ArrowLeft, Smartphone, ChevronRight } from 'lucide-react';
+import { Phone, ArrowLeft, ChevronRight } from 'lucide-react';
 import { useNotifications } from '../../hooks/useNotifications';
 import { vtuService } from '../../services/vtuService';
 import Logo from '../../components/Logo';
 import Footer from '../../components/Footer';
-import Spinner from '../../components/Spinner';
-import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
-
-function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
-
 import LoadingScreen from '../../components/LoadingScreen';
 
 const QuickBuyAirtime: React.FC = () => {

@@ -19,6 +19,7 @@ import FundingPage from './pages/FundingPage';
 import TransactionHistoryPage from './pages/TransactionHistoryPage';
 import ReferralPage from './pages/ReferralPage';
 import SchedulePurchasePage from './pages/SchedulePurchasePage';
+import WhatsAppBotPage from './pages/WhatsAppBotPage';
 import QuickPurchasePage from './pages/QuickPurchasePage';
 import QuickBuyAirtime from './pages/quick-buy/QuickBuyAirtime';
 import QuickBuyData from './pages/quick-buy/QuickBuyData';
@@ -81,6 +82,7 @@ const App: React.FC = () => {
               <Route path="/history" element={<TransactionHistoryPage />} />
               <Route path="/referrals" element={<ReferralPage />} />
               <Route path="/schedule" element={<SchedulePurchasePage />} />
+              <Route path="/whatsapp-bot" element={<WhatsAppBotPage />} />
             </Route>
 
             {/* ADMIN ROUTES */}

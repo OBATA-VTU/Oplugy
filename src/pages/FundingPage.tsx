@@ -1,21 +1,26 @@
 import React, { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNotifications } from '../hooks/useNotifications';
-import Spinner from '../components/Spinner';
-import { WalletIcon } from '../components/Icons';
+import { Wallet, CreditCard, Landmark, Copy, CheckCircle2, Zap, ArrowRight, ShieldCheck, Info } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 
 declare const PaystackPop: any;
 
 const FundingPage: React.FC = () => {
-  const { user, updateWalletBalance, walletBalance } = useAuth();
+  const { user, fetchWalletBalance, walletBalance } = useAuth();
   const { addNotification } = useNotifications();
-  const [method, setMethod] = useState<'AUTO' | 'MANUAL'>('AUTO');
   const [amount, setAmount] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [fundingMethod, setFundingMethod] = useState<'AUTO' | 'MANUAL'>('AUTO');
 
   const numAmount = parseFloat(amount) || 0;
   const serviceFee = numAmount * 0.02; // 2% service fee
   const totalCharge = numAmount + serviceFee;
+
+  const handleCopy = (text: string, label: string) => {
+    navigator.clipboard.writeText(text);
+    addNotification(`${label} copied to clipboard`, 'success');
+  };
 
   const handlePaystack = () => {
     if (!amount || isNaN(numAmount) || numAmount < 100) {
@@ -23,9 +28,7 @@ const FundingPage: React.FC = () => {
       return;
     }
 
-    addNotification("Connecting to our secure payment partner...", "info");
     setIsProcessing(true);
-    // Explicitly using the user-specified environment variable name
     const publicKey = process.env.REACT_APP_PAYSTACK_PUBLIC_KEY;
     
     if (!publicKey) {
@@ -38,19 +41,16 @@ const FundingPage: React.FC = () => {
       const handler = PaystackPop.setup({
         key: publicKey,
         email: user?.email || 'user@obata.com',
-        amount: Math.round(totalCharge * 100), // Charge amount + 2% fee in kobo
+        amount: Math.round(totalCharge * 100),
         currency: 'NGN',
-        callback: (response: any) => {
-          setIsProcessing(false);
-          const currentBal = walletBalance || 0;
-          // Credit only the base amount to the wallet
-          updateWalletBalance(currentBal + numAmount);
-          addNotification(`Wallet funded! ₦${numAmount.toLocaleString()} added to balance.`, "success");
+        callback: async (response: any) => {
+          addNotification('Payment successful! Syncing wallet...', 'success');
+          await fetchWalletBalance();
           setAmount('');
+          setIsProcessing(false);
         },
         onClose: () => {
           setIsProcessing(false);
-          addNotification("Payment cancelled.", "info");
         }
       });
       handler.openIframe();
@@ -61,119 +61,177 @@ const FundingPage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-1000 pb-24">
+    <div className="max-w-4xl mx-auto space-y-12 pb-32">
       <div className="text-center space-y-4">
-        <h2 className="text-4xl lg:text-6xl font-extrabold text-gray-900 tracking-tight">Add Funds</h2>
-        <p className="text-gray-500 font-medium text-xl max-w-xl mx-auto">Top up your wallet instantly using your card or a bank transfer.</p>
+        <div className="inline-flex p-4 bg-blue-50 text-blue-600 rounded-[2rem] mb-4 shadow-inner">
+          <Wallet className="w-10 h-10" />
+        </div>
+        <h2 className="text-5xl lg:text-6xl font-black text-gray-900 tracking-tighter">Fund Wallet</h2>
+        <p className="text-gray-400 font-medium text-xl max-w-xl mx-auto">Add liquidity to your account via automated or manual channels.</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-         <div className="lg:col-span-7 bg-white p-8 lg:p-12 rounded-[3rem] shadow-xl border border-gray-50 relative overflow-hidden group">
-            <div className="relative z-10">
-              <div className="flex p-1.5 bg-gray-50 rounded-2xl mb-12">
-                 <button onClick={() => setMethod('AUTO')} className={`flex-1 py-4 rounded-xl font-bold text-[11px] uppercase tracking-wider transition-all ${method === 'AUTO' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}>Card Payment</button>
-                 <button onClick={() => setMethod('MANUAL')} className={`flex-1 py-4 rounded-xl font-bold text-[11px] uppercase tracking-wider transition-all ${method === 'MANUAL' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-400 hover:text-gray-900'}`}>Bank Transfer</button>
-              </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="space-y-8">
+          <div className="bg-white p-10 rounded-[3.5rem] shadow-2xl shadow-blue-100/50 border border-gray-50 space-y-10">
+            <div className="flex p-2 bg-gray-50 rounded-[2rem] border-2 border-transparent">
+              <button 
+                onClick={() => setFundingMethod('AUTO')} 
+                className={`flex-1 py-5 rounded-[1.5rem] font-black uppercase tracking-widest text-[10px] transition-all flex items-center justify-center space-x-2 ${fundingMethod === 'AUTO' ? 'bg-white text-blue-600 shadow-xl' : 'text-gray-400'}`}
+              >
+                <Zap className="w-4 h-4" />
+                <span>Automated</span>
+              </button>
+              <button 
+                onClick={() => setFundingMethod('MANUAL')} 
+                className={`flex-1 py-5 rounded-[1.5rem] font-black uppercase tracking-widest text-[10px] transition-all flex items-center justify-center space-x-2 ${fundingMethod === 'MANUAL' ? 'bg-white text-blue-600 shadow-xl' : 'text-gray-400'}`}
+              >
+                <Landmark className="w-4 h-4" />
+                <span>Manual</span>
+              </button>
+            </div>
 
-              {method === 'AUTO' ? (
-                <div className="space-y-10 animate-in fade-in duration-500">
-                   <div>
-                      <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-4 ml-2">Amount to Add (₦)</label>
+            <AnimatePresence mode="wait">
+              {fundingMethod === 'AUTO' ? (
+                <motion.div 
+                  key="auto"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="space-y-8"
+                >
+                  <div className="space-y-4">
+                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-4">Deposit Amount (₦)</label>
+                    <div className="relative">
                       <input 
                         type="number" 
-                        className="w-full p-8 bg-gray-50 border-2 border-transparent focus:border-blue-600 rounded-3xl text-6xl font-black tracking-tight outline-none transition-all placeholder:text-gray-200"
-                        placeholder="0.00"
-                        value={amount}
-                        onChange={(e) => setAmount(e.target.value)}
+                        className="w-full p-10 bg-gray-50 border-4 border-transparent rounded-[2.5rem] text-5xl font-black tracking-tighter outline-none focus:border-blue-600 focus:bg-white transition-all text-center placeholder:text-gray-200" 
+                        placeholder="0.00" 
+                        value={amount} 
+                        onChange={(e) => setAmount(e.target.value)} 
                       />
-                   </div>
-
-                   {numAmount >= 100 && (
-                     <div className="bg-gray-50 p-6 rounded-2xl space-y-3 border border-gray-100">
-                        <div className="flex justify-between items-center text-sm">
-                           <span className="font-bold text-gray-400 uppercase tracking-wider text-[10px]">Amount</span>
-                           <span className="font-bold text-gray-900">₦{numAmount.toLocaleString()}</span>
-                        </div>
-                        <div className="flex justify-between items-center text-sm">
-                           <span className="font-bold text-gray-400 uppercase tracking-wider text-[10px]">Fee (2%)</span>
-                           <span className="font-bold text-red-500">₦{serviceFee.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-                        </div>
-                        <div className="pt-3 border-t border-gray-200 flex justify-between items-center">
-                           <span className="font-bold text-gray-900 uppercase tracking-wider text-[11px]">Total</span>
-                           <span className="font-black text-blue-600 text-2xl tracking-tight">₦{totalCharge.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-                        </div>
-                     </div>
-                   )}
-                   
-                   <div className="pt-4">
-                     <button 
-                      onClick={handlePaystack}
-                      disabled={isProcessing || !amount || numAmount < 100}
-                      className="w-full bg-blue-600 hover:bg-gray-900 text-white py-6 rounded-2xl font-bold uppercase tracking-widest text-sm shadow-xl shadow-blue-100 transition-all flex items-center justify-center space-x-3 transform active:scale-95 disabled:opacity-50"
-                     >
-                        {isProcessing ? <Spinner /> : <><WalletIcon /> <span>Pay Now</span></>}
-                     </button>
-                   </div>
-                </div>
-              ) : (
-                <div className="space-y-10 animate-in slide-in-from-right-4 duration-500">
-                   <div className="bg-gray-900 p-10 rounded-[2.5rem] text-white text-center shadow-xl relative overflow-hidden">
-                      <div className="relative z-10">
-                        <p className="text-white/30 text-[10px] font-bold uppercase tracking-widest mb-8">Bank Account Details</p>
-                        <h3 className="text-5xl font-black tracking-tight mb-4">8142452729</h3>
-                        <div className="bg-white/5 p-8 rounded-2xl border border-white/10 mt-8 text-left">
-                           <p className="text-blue-400 font-bold text-xs uppercase tracking-widest mb-2">Palmpay</p>
-                           <p className="text-2xl font-bold text-white tracking-tight">Boluwatife Oluwapelumi Ayuba</p>
-                        </div>
-                      </div>
-                      <div className="absolute -top-10 -right-10 w-40 h-40 bg-blue-600/20 rounded-full blur-3xl"></div>
-                   </div>
-                   <div className="text-center space-y-8">
-                      <p className="text-lg font-medium text-gray-500 leading-relaxed px-6">After making the transfer, please send your receipt to us on WhatsApp for confirmation. No extra fees for manual transfers.</p>
-                      <a 
-                        href="https://wa.me/2348142452729" 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="w-full bg-green-500 hover:bg-green-600 text-white py-6 rounded-2xl font-bold uppercase tracking-widest text-xs transition-all flex items-center justify-center space-x-3 shadow-xl shadow-green-100 transform active:scale-95"
-                      >
-                         <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.038 3.069l-1.094 3.993 4.1-.1.071 3.967 1.687-6.162z" opacity=".1"/><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.693.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413z"/></svg>
-                         <span>Send Receipt on WhatsApp</span>
-                      </a>
-                   </div>
-                </div>
-              )}
-            </div>
-         </div>
-
-         <div className="lg:col-span-5 space-y-8">
-            <div className="bg-blue-600 p-10 rounded-[3rem] text-white shadow-xl relative overflow-hidden group">
-               <div className="relative z-10">
-                  <h4 className="text-3xl font-bold tracking-tight mb-6">Safe & Secure</h4>
-                  <p className="text-blue-100 text-lg font-medium leading-relaxed mb-10 opacity-80">All payments are encrypted and verified immediately to ensure your wallet is credited correctly.</p>
-                  <div className="space-y-6">
-                     <SecureCheck label="Secure Payment System" />
-                     <SecureCheck label="Safe Wallet Storage" />
-                     <SecureCheck label="Instant Confirmation" />
+                      <div className="absolute left-10 top-1/2 -translate-y-1/2 text-gray-300 font-black text-2xl">₦</div>
+                    </div>
                   </div>
-               </div>
-               <div className="absolute -bottom-20 -right-20 w-80 h-80 bg-white/10 rounded-full blur-[120px] group-hover:bg-white/20 transition-all duration-1000"></div>
+
+                  {numAmount >= 100 && (
+                    <div className="bg-gray-50 p-6 rounded-2xl space-y-3 border border-gray-100">
+                      <div className="flex justify-between items-center">
+                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Base Amount</span>
+                        <span className="font-black text-gray-900">₦{numAmount.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Fee (2%)</span>
+                        <span className="font-black text-red-500">₦{serviceFee.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                      </div>
+                      <div className="pt-3 border-t border-gray-200 flex justify-between items-center">
+                        <span className="text-[10px] font-black text-gray-900 uppercase tracking-widest">Total Charge</span>
+                        <span className="font-black text-blue-600 text-2xl tracking-tight">₦{totalCharge.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  <button 
+                    onClick={handlePaystack}
+                    disabled={isProcessing || !amount || parseFloat(amount) < 100}
+                    className="w-full py-8 bg-blue-600 text-white rounded-[2.5rem] font-black text-[12px] uppercase tracking-[0.4em] shadow-2xl shadow-blue-100 hover:bg-gray-950 transition-all transform active:scale-95 disabled:opacity-30 flex items-center justify-center space-x-4"
+                  >
+                    <CreditCard className="w-5 h-5" />
+                    <span>Initialize Payment</span>
+                  </button>
+
+                  <div className="p-6 bg-blue-50 rounded-[2rem] border border-blue-100 flex items-start space-x-4">
+                    <Info className="w-5 h-5 text-blue-600 shrink-0 mt-1" />
+                    <p className="text-[11px] font-medium text-blue-800 leading-relaxed">Automated funding via Paystack attracts a 2% processing fee. Funds are credited instantly upon successful transaction.</p>
+                  </div>
+                </motion.div>
+              ) : (
+                <motion.div 
+                  key="manual"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="space-y-8"
+                >
+                  <div className="p-8 bg-gray-900 rounded-[2.5rem] text-white space-y-6 shadow-2xl">
+                    <div className="flex justify-between items-start">
+                      <div className="space-y-1">
+                        <p className="text-[10px] font-black text-white/30 uppercase tracking-widest">Bank Name</p>
+                        <p className="text-xl font-black tracking-tight">Palmpay</p>
+                      </div>
+                      <Landmark className="text-blue-500 w-8 h-8" />
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <p className="text-[10px] font-black text-white/30 uppercase tracking-widest">Account Number</p>
+                      <div className="flex items-center justify-between">
+                        <p className="text-4xl font-black tracking-tighter">8142452729</p>
+                        <button onClick={() => handleCopy('8142452729', 'Account Number')} className="p-3 bg-white/10 rounded-xl hover:bg-white/20 transition-all">
+                          <Copy className="w-5 h-5" />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <p className="text-[10px] font-black text-white/30 uppercase tracking-widest">Account Name</p>
+                      <p className="text-lg font-bold tracking-tight">Boluwatife Oluwapelumi Ayuba</p>
+                    </div>
+                  </div>
+
+                  <div className="p-6 bg-amber-50 rounded-[2rem] border border-amber-100 flex items-start space-x-4">
+                    <Info className="w-5 h-5 text-amber-600 shrink-0 mt-1" />
+                    <div className="space-y-2">
+                      <p className="text-[11px] font-bold text-amber-900 uppercase tracking-widest">Manual Funding Notice</p>
+                      <p className="text-[11px] font-medium text-amber-800 leading-relaxed">After transfer, send proof of payment to our WhatsApp support. Manual funding is processed within 5-30 minutes.</p>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+
+        <div className="space-y-8">
+          <div className="bg-gray-50 p-10 rounded-[3.5rem] border border-gray-100 space-y-8">
+            <div className="flex items-center justify-between">
+              <h3 className="text-2xl font-black text-gray-900 tracking-tight">Virtual Accounts</h3>
+              <div className="px-4 py-2 bg-green-100 text-green-600 rounded-full text-[10px] font-black uppercase tracking-widest">Active</div>
             </div>
             
-            <div className="bg-gray-50 p-8 rounded-[2.5rem] border-2 border-dashed border-gray-200 text-center">
-               <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-2">Current Balance</p>
-               <p className="text-4xl font-black text-gray-900 tracking-tight">₦{walletBalance?.toLocaleString() || '0.00'}</p>
+            <p className="text-gray-400 font-medium text-sm">Transfer to any of these accounts to fund your wallet instantly. No manual verification needed.</p>
+
+            <div className="space-y-4">
+              {[
+                { bank: 'Wema Bank', acc: '8234567890', name: 'INLOMAX - ' + (user?.full_name || 'User') },
+                { bank: 'Moniepoint', acc: '5123456789', name: 'INLOMAX - ' + (user?.full_name || 'User') },
+                { bank: 'Sterling Bank', acc: '0012345678', name: 'INLOMAX - ' + (user?.full_name || 'User') }
+              ].map((acc, i) => (
+                <div key={i} className="bg-white p-6 rounded-[2rem] border border-gray-100 flex items-center justify-between group hover:shadow-xl hover:shadow-blue-100/50 transition-all">
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest">{acc.bank}</p>
+                    <p className="text-xl font-black text-gray-900 tracking-tighter">{acc.acc}</p>
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">{acc.name}</p>
+                  </div>
+                  <button onClick={() => handleCopy(acc.acc, acc.bank)} className="p-4 bg-gray-50 text-gray-400 rounded-2xl group-hover:bg-blue-600 group-hover:text-white transition-all">
+                    <Copy className="w-5 h-5" />
+                  </button>
+                </div>
+              ))}
             </div>
-         </div>
+          </div>
+
+          <div className="p-10 bg-blue-600 rounded-[3rem] text-white flex items-center space-x-8 shadow-2xl shadow-blue-200">
+            <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center shrink-0">
+              <ShieldCheck className="w-8 h-8" />
+            </div>
+            <div className="space-y-1">
+              <h4 className="text-xl font-black tracking-tight">Secure Protocol</h4>
+              <p className="text-white/60 text-xs font-medium leading-relaxed">All transactions are encrypted with 256-bit SSL security. Your financial data is never stored on our servers.</p>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
 };
-
-const SecureCheck = ({ label }: { label: string }) => (
-  <div className="flex items-center space-x-4 text-[10px] font-black uppercase tracking-[0.3em]">
-    <div className="w-3 h-3 bg-blue-300 rounded-full shadow-[0_0_15px_rgba(147,197,253,0.8)]"></div>
-    <span>{label}</span>
-  </div>
-);
 
 export default FundingPage;

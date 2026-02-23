@@ -1,19 +1,11 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { Wifi, ArrowLeft, Smartphone, ChevronRight, Layers } from 'lucide-react';
+import { Wifi, ArrowLeft, ChevronRight } from 'lucide-react';
 import { useNotifications } from '../../hooks/useNotifications';
 import { vtuService } from '../../services/vtuService';
 import Logo from '../../components/Logo';
 import Footer from '../../components/Footer';
-import Spinner from '../../components/Spinner';
-import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
-
-function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
-
 import LoadingScreen from '../../components/LoadingScreen';
 
 const QuickBuyData: React.FC = () => {
