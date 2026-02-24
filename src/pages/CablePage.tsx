@@ -33,7 +33,7 @@ const CablePage: React.FC = () => {
 
   const fetchPlans = useCallback(async (billerName: string) => {
     setIsLoading(true);
-    setLoadingMessage('Syncing Package Nodes...');
+    setLoadingMessage('Loading Packages...');
     setCablePlans([]);
     setSelectedPlan(null);
     const response = await vtuService.getCablePlans(billerName);
@@ -48,7 +48,7 @@ const CablePage: React.FC = () => {
   const handleVerify = async () => {
     if (!selectedOperator || !smartcardNo) return;
     setIsLoading(true);
-    setLoadingMessage('Verifying Decoder Identity...');
+    setLoadingMessage('Checking Decoder...');
     setCustomerName(null);
     const response = await vtuService.verifyCableSmartcard({ 
       biller: selectedOperator.id, 
@@ -71,7 +71,7 @@ const CablePage: React.FC = () => {
     setIsPurchasing(true);
     setShowPinModal(false);
     setIsLoading(true);
-    setLoadingMessage('Processing Protocol Fulfillment...');
+    setLoadingMessage('Processing Payment...');
 
     const response = await vtuService.purchaseCable({
       biller: selectedOperator!.id,
@@ -330,7 +330,7 @@ const CablePage: React.FC = () => {
                 <CheckCircle2 className="w-12 h-12" />
               </div>
               <div className="space-y-4">
-                <h3 className="text-4xl font-black text-gray-900 tracking-tighter">Renewal Successful!</h3>
+                <h3 className="text-4xl font-black text-gray-900 tracking-tighter">Success!</h3>
                 <p className="text-gray-400 font-medium text-lg">Your {selectedOperator?.name} subscription is now active.</p>
               </div>
               
@@ -361,7 +361,7 @@ const CablePage: React.FC = () => {
         </div>
         <div className="space-y-2">
           <h4 className="text-xl font-black text-blue-900 tracking-tight">Instant Activation</h4>
-          <p className="text-blue-800/60 font-medium leading-relaxed">Cable TV renewals are processed instantly. Your signal will be restored within minutes of protocol confirmation.</p>
+          <p className="text-blue-800/60 font-medium leading-relaxed">Cable TV renewals are done instantly. Your signal will be back within minutes after payment.</p>
         </div>
       </div>
     </div>

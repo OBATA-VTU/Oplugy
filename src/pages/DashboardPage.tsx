@@ -131,7 +131,7 @@ const DashboardPage: React.FC = () => {
           <div className="lg:col-span-8 space-y-8">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
               <div>
-                <h2 className="text-[11px] font-black text-blue-600 uppercase tracking-[0.5em] mb-2">Independent Node Alpha</h2>
+                <h2 className="text-[11px] font-black text-blue-600 uppercase tracking-[0.5em] mb-2">Welcome to Obata App</h2>
                 <h1 className="text-5xl lg:text-7xl font-black text-gray-900 tracking-tighter leading-[0.85]">
                   Welcome back, <br /><span className="text-blue-600">{user?.username}.</span>
                 </h1>
@@ -139,7 +139,7 @@ const DashboardPage: React.FC = () => {
               <div className="flex items-center space-x-4">
                 <div className="p-4 bg-white rounded-2xl border border-gray-100 shadow-sm flex items-center space-x-3">
                   <div className={`w-3 h-3 rounded-full bg-green-500 animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.5)]`}></div>
-                  <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">System Online</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">App Online</span>
                 </div>
               </div>
             </div>
@@ -148,7 +148,7 @@ const DashboardPage: React.FC = () => {
               <div className="relative z-10 space-y-12">
                 <div className="flex justify-between items-start">
                   <div className="space-y-2">
-                    <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/40">Available Liquidity</p>
+                    <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/40">Your Balance</p>
                     <div className="text-6xl lg:text-8xl font-black tracking-tighter leading-none flex items-baseline">
                       <span className="text-3xl mr-2 text-white/20 font-bold">₦</span>
                       {walletBalance !== null ? walletBalance.toLocaleString('en-US', { minimumFractionDigits: 2 }) : '0.00'}
@@ -161,7 +161,7 @@ const DashboardPage: React.FC = () => {
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-8 pt-12 border-t border-white/10">
                   <div className="space-y-2">
-                    <p className="text-[9px] font-black text-white/30 uppercase tracking-widest">Account Tier</p>
+                    <p className="text-[9px] font-black text-white/30 uppercase tracking-widest">Account Type</p>
                     <div className="flex items-center space-x-2">
                       <ShieldCheck className="w-4 h-4 text-blue-500" />
                       <p className="font-black text-lg tracking-tight capitalize">{user?.role || 'User'}</p>
@@ -195,12 +195,12 @@ const DashboardPage: React.FC = () => {
                 <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-3xl flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-all shadow-inner">
                   <MessageSquare className="w-8 h-8" />
                 </div>
-                <h4 className="text-3xl font-black text-gray-900 tracking-tighter">Direct Support</h4>
-                <p className="text-gray-400 font-medium text-lg leading-relaxed">Our neural support network is active 24/7 to assist with your transactions.</p>
+                <h4 className="text-3xl font-black text-gray-900 tracking-tighter">Customer Support</h4>
+                <p className="text-gray-400 font-medium text-lg leading-relaxed">Our support team is active 24/7 to help you with your transactions.</p>
               </div>
               <a href="https://wa.me/2348142452729" target="_blank" rel="noopener noreferrer" className="w-full bg-green-500 hover:bg-gray-950 text-white py-6 rounded-[2rem] font-black text-[11px] uppercase tracking-[0.3em] transition-all flex items-center justify-center gap-4 shadow-2xl shadow-green-100 transform active:scale-95 mt-12 relative z-10">
                 <Smartphone className="w-5 h-5" />
-                WhatsApp Node
+                WhatsApp Support
               </a>
               <div className="absolute -top-20 -right-20 w-48 h-48 bg-blue-50 rounded-full blur-3xl opacity-50"></div>
             </div>
@@ -217,7 +217,7 @@ const DashboardPage: React.FC = () => {
               <Bell className="w-8 h-8" />
             </div>
             <div className="flex-1 space-y-1">
-              <p className="text-[10px] font-black text-white/50 uppercase tracking-[0.4em]">Global Broadcast</p>
+              <p className="text-[10px] font-black text-white/50 uppercase tracking-[0.4em]">Announcement</p>
               <p className="text-xl font-black text-white tracking-tight">{announcement}</p>
             </div>
             <div className="absolute inset-0 bg-white/5 -translate-x-full group-hover:translate-x-full transition-transform duration-1500"></div>
@@ -239,8 +239,8 @@ const DashboardPage: React.FC = () => {
           <div className="lg:col-span-8 bg-white rounded-[4rem] p-12 lg:p-16 shadow-2xl border border-gray-50">
             <div className="flex justify-between items-center mb-12">
               <div className="space-y-1">
-                <h3 className="text-4xl font-black text-gray-900 tracking-tighter">Recent Activity</h3>
-                <p className="text-gray-400 font-medium">Your latest fulfillment protocols.</p>
+                <h3 className="text-4xl font-black text-gray-900 tracking-tighter">Recent Transactions</h3>
+                <p className="text-gray-400 font-medium">Your latest transaction history.</p>
               </div>
               <Link to="/history" className="text-blue-600 font-black text-[10px] uppercase tracking-widest bg-blue-50 px-8 py-4 rounded-2xl hover:bg-blue-600 hover:text-white transition-all shadow-sm transform active:scale-95 flex items-center space-x-2">
                 <span>View All</span>
@@ -279,7 +279,7 @@ const DashboardPage: React.FC = () => {
                   <div className="py-32 text-center bg-gray-50 rounded-[3rem] border-4 border-dashed border-gray-100">
                      <div className="w-24 h-24 bg-white rounded-3xl flex items-center justify-center mx-auto mb-8 text-gray-200 shadow-inner"><History className="w-12 h-12" /></div>
                      <h4 className="font-black text-gray-900 text-3xl tracking-tighter mb-4">No activity yet</h4>
-                     <p className="text-gray-400 font-medium text-lg max-w-xs mx-auto leading-relaxed">Your fulfillment history will materialize here once you initiate a protocol.</p>
+                     <p className="text-gray-400 font-medium text-lg max-w-xs mx-auto leading-relaxed">Your transaction history will show up here once you make a purchase.</p>
                   </div>
                 )}
               </div>
@@ -290,11 +290,11 @@ const DashboardPage: React.FC = () => {
             <div className="bg-gray-950 p-12 rounded-[4rem] text-white relative overflow-hidden group shadow-2xl">
                <div className="relative z-10 space-y-10">
                   <div className="space-y-4">
-                    <h4 className="text-4xl font-black tracking-tighter">Refer & <br /><span className="text-blue-600">Scale.</span></h4>
-                    <p className="text-white/40 text-lg font-medium leading-relaxed">Earn ₦500 for every node upgrade initiated through your referral link.</p>
+                    <h4 className="text-4xl font-black tracking-tighter">Refer & <br /><span className="text-blue-600">Earn.</span></h4>
+                    <p className="text-white/40 text-lg font-medium leading-relaxed">Earn ₦500 for every friend who upgrades through your link.</p>
                   </div>
-                  <Link to="/referral" className="inline-flex items-center gap-4 bg-white text-gray-950 px-10 py-5 rounded-2xl font-black text-[11px] uppercase tracking-[0.3em] hover:bg-blue-600 hover:text-white transition-all transform active:scale-95 shadow-2xl group/btn">
-                     Invite Node
+                  <Link to="/referrals" className="inline-flex items-center gap-4 bg-white text-gray-950 px-10 py-5 rounded-2xl font-black text-[11px] uppercase tracking-[0.3em] hover:bg-blue-600 hover:text-white transition-all transform active:scale-95 shadow-2xl group/btn">
+                     Invite Friend
                      <ChevronRight className="w-4 h-4 group-hover/btn:translate-x-2 transition-transform" />
                   </Link>
                </div>
@@ -302,11 +302,11 @@ const DashboardPage: React.FC = () => {
             </div>
 
             <div className="bg-white p-12 rounded-[4rem] shadow-2xl border border-gray-50 group hover:shadow-2xl transition-all">
-               <h4 className="text-2xl font-black text-gray-900 tracking-tighter mb-10 leading-none">Node Status</h4>
+               <h4 className="text-2xl font-black text-gray-900 tracking-tighter mb-10 leading-none">Service Status</h4>
                <div className="space-y-6">
-                  <StatusItem label="Data Node" status="Active" active={true} />
-                  <StatusItem label="Airtime Node" status="Active" active={true} />
-                  <StatusItem label="Payment Node" status="Active" active={true} />
+                  <StatusItem label="Data Service" status="Active" active={true} />
+                  <StatusItem label="Airtime Service" status="Active" active={true} />
+                  <StatusItem label="Payment Service" status="Active" active={true} />
                </div>
             </div>
           </div>

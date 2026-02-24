@@ -16,11 +16,24 @@ const PricingPage: React.FC = () => {
     setLoading(true);
     try {
       if (activeTab === 'DATA') {
-        const [sme, gifting] = await Promise.all([
-          vtuService.getDataPlans({ network: activeNetwork, type: 'SME' }),
-          vtuService.getDataPlans({ network: activeNetwork, type: 'GIFTING' })
+        const [sme1, gifting1, sme2, gifting2] = await Promise.all([
+          vtuService.getDataPlans({ network: activeNetwork, type: 'SME', server: 1 }),
+          vtuService.getDataPlans({ network: activeNetwork, type: 'GIFTING', server: 1 }),
+          vtuService.getDataPlans({ network: activeNetwork, type: 'SME', server: 2 }),
+          vtuService.getDataPlans({ network: activeNetwork, type: 'GIFTING', server: 2 })
         ]);
-        setPlans([...(sme.status && sme.data ? sme.data : []), ...(gifting.status && gifting.data ? gifting.data : [])]);
+
+        const server1Plans = [
+          ...(sme1.status && sme1.data ? sme1.data.map((p: any) => ({ ...p, server: 1 })) : []),
+          ...(gifting1.status && gifting1.data ? gifting1.data.map((p: any) => ({ ...p, server: 1 })) : [])
+        ];
+
+        const server2Plans = [
+          ...(sme2.status && sme2.data ? sme2.data.map((p: any) => ({ ...p, server: 2 })) : []),
+          ...(gifting2.status && gifting2.data ? gifting2.data.map((p: any) => ({ ...p, server: 2 })) : [])
+        ];
+
+        setPlans([...server1Plans, ...server2Plans]);
       } else if (activeTab === 'ELECTRICITY') {
         const res = await vtuService.getElectricityOperators();
         if (res.status && res.data) setOperators(res.data);
@@ -46,9 +59,9 @@ const PricingPage: React.FC = () => {
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 space-y-10 pb-20">
       <div>
-        <h2 className="text-4xl lg:text-5xl font-extrabold text-gray-900 tracking-tight mb-3">Price List</h2>
-        <p className="text-gray-500 font-medium text-lg">View current prices for all our services.</p>
-        <p className="text-blue-600 font-bold text-xs mt-4 uppercase tracking-wider">*Prices are inclusive of all charges.</p>
+        <h2 className="text-4xl lg:text-5xl font-extrabold text-gray-900 tracking-tight mb-3">Our Prices</h2>
+        <p className="text-gray-500 font-medium text-lg">Check out our current prices for all services.</p>
+        <p className="text-blue-600 font-bold text-xs mt-4 uppercase tracking-wider">*Prices are final and include all charges.</p>
       </div>
 
       <div className="flex flex-col lg:flex-row gap-6 items-center justify-between">
@@ -97,7 +110,8 @@ const PricingPage: React.FC = () => {
               <table className="w-full text-left border-collapse">
                   <thead className="bg-gray-50 text-[10px] font-bold uppercase tracking-wider text-gray-400 border-b border-gray-100">
                     <tr>
-                        <th className="px-8 py-5">Service Plan</th>
+                        <th className="px-8 py-5">Plan Name</th>
+                        <th className="px-8 py-5 text-center">Server</th>
                         <th className="px-8 py-5 text-right">Price</th>
                         <th className="px-8 py-5 text-right">Validity</th>
                     </tr>
@@ -112,6 +126,11 @@ const PricingPage: React.FC = () => {
                                 </div>
                                 <span className="font-bold text-gray-900">{item.name}</span>
                             </div>
+                          </td>
+                          <td className="px-8 py-6 text-center">
+                            <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${item.server === 2 ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'}`}>
+                              {item.server ? `Server ${item.server}` : 'N/A'}
+                            </span>
                           </td>
                           <td className="px-8 py-6 text-right font-bold text-gray-900 tracking-tight text-lg">
                             ₦{(Number(item.amount || item.price || 0)).toLocaleString()}

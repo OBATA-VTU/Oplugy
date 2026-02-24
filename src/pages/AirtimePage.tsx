@@ -31,7 +31,7 @@ const AirtimePage: React.FC = () => {
   useEffect(() => {
     const fetchOperators = async () => {
       setIsLoading(true);
-      setLoadingMessage('Syncing Network Nodes...');
+      setLoadingMessage('Loading Networks...');
       const res = await vtuService.getAirtimeOperators();
       if (res.status && res.data) {
         const mapped = res.data.map(op => {
@@ -82,7 +82,7 @@ const AirtimePage: React.FC = () => {
     setIsPurchasing(true);
     setShowPinModal(false);
     setIsLoading(true);
-    setLoadingMessage('Fulfilling Airtime Protocol...');
+    setLoadingMessage('Processing Order...');
 
     try {
       const res = await vtuService.purchaseAirtime({
@@ -133,7 +133,7 @@ const AirtimePage: React.FC = () => {
       />
 
       <div className="text-center space-y-4">
-        <h2 className="text-[11px] font-black text-blue-600 uppercase tracking-[0.5em]">Fulfillment Node</h2>
+        <h2 className="text-[11px] font-black text-blue-600 uppercase tracking-[0.5em]">Service Provider</h2>
         <h1 className="text-5xl lg:text-8xl font-black text-gray-900 tracking-tighter leading-[0.85]">Buy <br /><span className="text-blue-600">Airtime.</span></h1>
         <p className="text-gray-400 font-medium text-lg max-w-xl mx-auto leading-relaxed">Instant airtime recharge across all Nigerian networks.</p>
       </div>
@@ -279,8 +279,8 @@ const AirtimePage: React.FC = () => {
                 <CheckCircle2 className="w-12 h-12" />
               </div>
               <div className="space-y-4">
-                <h3 className="text-4xl font-black text-gray-900 tracking-tighter">Recharge Successful!</h3>
-                <p className="text-gray-400 font-medium text-lg">Airtime has been delivered to {phoneNumber}.</p>
+                <h3 className="text-4xl font-black text-gray-900 tracking-tighter">Success!</h3>
+                <p className="text-gray-400 font-medium text-lg">Airtime has been sent to {phoneNumber}.</p>
               </div>
               
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -309,8 +309,8 @@ const AirtimePage: React.FC = () => {
           <Zap className="w-8 h-8" />
         </div>
         <div className="space-y-2">
-          <h4 className="text-xl font-black text-blue-900 tracking-tight">Instant Fulfillment</h4>
-          <p className="text-blue-800/60 font-medium leading-relaxed">Our airtime nodes are optimized for sub-second delivery. Your recharge will materialize on the recipient's device immediately after protocol confirmation.</p>
+          <h4 className="text-xl font-black text-blue-900 tracking-tight">Instant Delivery</h4>
+          <p className="text-blue-800/60 font-medium leading-relaxed">Our service is very fast. Your recharge will reach the phone immediately after payment is confirmed.</p>
         </div>
       </div>
     </div>

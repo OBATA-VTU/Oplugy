@@ -112,8 +112,8 @@ const TransactionHistoryPage: React.FC = () => {
         <div className="inline-flex p-4 bg-blue-50 text-blue-600 rounded-[2rem] mb-4 shadow-inner">
           <Receipt className="w-10 h-10" />
         </div>
-        <h2 className="text-5xl lg:text-6xl font-black text-gray-900 tracking-tighter">Activity Log</h2>
-        <p className="text-gray-400 font-medium text-xl max-w-xl mx-auto">Track your spending and transaction history across all services.</p>
+        <h2 className="text-5xl lg:text-6xl font-black text-gray-900 tracking-tighter">History</h2>
+        <p className="text-gray-400 font-medium text-xl max-w-xl mx-auto">Track your spending and all your transactions here.</p>
       </div>
 
       <div className="bg-white p-8 lg:p-12 rounded-[4rem] shadow-2xl shadow-blue-100/50 border border-gray-50 space-y-10">
@@ -160,7 +160,7 @@ const TransactionHistoryPage: React.FC = () => {
           {loading ? (
             <div className="flex flex-col items-center justify-center py-32 space-y-4">
               <Spinner />
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">Syncing Ledger...</p>
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">Loading History...</p>
             </div>
           ) : filteredTransactions.length > 0 ? (
             <div className="grid grid-cols-1 gap-4">
@@ -198,7 +198,7 @@ const TransactionHistoryPage: React.FC = () => {
                         </p>
                       </div>
                       <div className="text-right space-y-1">
-                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Timestamp</p>
+                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Date & Time</p>
                         <div className="flex items-center justify-end space-x-2 text-gray-400 font-bold text-xs">
                           <Calendar className="w-3 h-3" />
                           <span>

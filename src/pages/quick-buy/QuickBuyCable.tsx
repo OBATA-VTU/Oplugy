@@ -7,7 +7,6 @@ import { vtuService } from '../../services/vtuService';
 import Logo from '../../components/Logo';
 import Footer from '../../components/Footer';
 import Spinner from '../../components/Spinner';
-import LoadingScreen from '../../components/LoadingScreen';
 
 const QuickBuyCable: React.FC = () => {
   const navigate = useNavigate();

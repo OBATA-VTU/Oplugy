@@ -1,22 +1,19 @@
 
-import React, { useState } from 'react';
-import { useAuth } from '../hooks/useAuth';
-import { useNotifications } from '../hooks/useNotifications';
 import { Gift, Copy, Share2, Award, Zap, TrendingUp, Wallet, Check } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import React, { useState } from 'react';
 
 const ReferralPage: React.FC = () => {
   const { user } = useAuth();
   const { addNotification } = useNotifications();
   const [copied, setCopied] = useState(false);
 
-  const displayCode = user?.referralCode || 'JOIN-INLOMAX';
+  const displayCode = user?.referralCode || 'JOIN-OBATA';
   const referralLink = `${window.location.origin}/#/signup?ref=${displayCode}`;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(referralLink);
     setCopied(true);
-    addNotification('Referral link copied to clipboard!', 'success');
+    addNotification('Link copied!', 'success');
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -24,8 +21,8 @@ const ReferralPage: React.FC = () => {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'Join Inlomax VTU',
-          text: 'Get cheap data and airtime on Inlomax. Join now!',
+          title: 'Join Obata App',
+          text: 'Get cheap data and airtime on Obata. Join now!',
           url: referralLink,
         });
       } catch (err) {
@@ -43,7 +40,7 @@ const ReferralPage: React.FC = () => {
           <Gift className="w-10 h-10" />
         </div>
         <h2 className="text-5xl lg:text-6xl font-black text-gray-900 tracking-tighter">Refer & Earn</h2>
-        <p className="text-gray-400 font-medium text-xl max-w-xl mx-auto">Invite your friends and earn commissions on every transaction they make.</p>
+        <p className="text-gray-400 font-medium text-xl max-w-xl mx-auto">Invite your friends and earn money when they buy data or airtime.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -91,9 +88,9 @@ const ReferralPage: React.FC = () => {
             <h3 className="text-2xl font-black tracking-tight">How it works</h3>
             
             <div className="space-y-8">
-              <Step icon="1" title="Share Link" desc="Copy your unique link and share it with your network." />
-              <Step icon="2" title="They Register" desc="Your friends join Inlomax using your referral link." />
-              <Step icon="3" title="You Earn" desc="Get instant commissions whenever they fund or buy." />
+              <Step icon="1" title="Share Link" desc="Copy your link and share it with your friends." />
+              <Step icon="2" title="They Join" desc="Your friends join Obata using your link." />
+              <Step icon="3" title="You Earn" desc="Get money instantly whenever they buy anything." />
             </div>
 
             <div className="pt-8 border-t border-white/10">
@@ -101,7 +98,7 @@ const ReferralPage: React.FC = () => {
                 <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
                   <Zap className="w-6 h-6" />
                 </div>
-                <p className="text-xs font-medium text-white/60 leading-relaxed">Commissions are credited to your referral wallet instantly and can be moved to your main wallet anytime.</p>
+                <p className="text-xs font-medium text-white/60 leading-relaxed">Your earnings are added to your wallet instantly. You can use it to buy anything on the app.</p>
               </div>
             </div>
           </div>

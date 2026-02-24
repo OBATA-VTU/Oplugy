@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'motion/react';
 declare const PaystackPop: any;
 
 const FundingPage: React.FC = () => {
-  const { user, fetchWalletBalance, walletBalance } = useAuth();
+  const { user, fetchWalletBalance } = useAuth();
   const { addNotification } = useNotifications();
   const [amount, setAmount] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -67,7 +67,7 @@ const FundingPage: React.FC = () => {
           <Wallet className="w-10 h-10" />
         </div>
         <h2 className="text-5xl lg:text-6xl font-black text-gray-900 tracking-tighter">Fund Wallet</h2>
-        <p className="text-gray-400 font-medium text-xl max-w-xl mx-auto">Add liquidity to your account via automated or manual channels.</p>
+        <p className="text-gray-400 font-medium text-xl max-w-xl mx-auto">Add money to your wallet to start buying services.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -136,12 +136,12 @@ const FundingPage: React.FC = () => {
                     className="w-full py-8 bg-blue-600 text-white rounded-[2.5rem] font-black text-[12px] uppercase tracking-[0.4em] shadow-2xl shadow-blue-100 hover:bg-gray-950 transition-all transform active:scale-95 disabled:opacity-30 flex items-center justify-center space-x-4"
                   >
                     <CreditCard className="w-5 h-5" />
-                    <span>Initialize Payment</span>
+                    <span>Pay Now</span>
                   </button>
 
                   <div className="p-6 bg-blue-50 rounded-[2rem] border border-blue-100 flex items-start space-x-4">
                     <Info className="w-5 h-5 text-blue-600 shrink-0 mt-1" />
-                    <p className="text-[11px] font-medium text-blue-800 leading-relaxed">Automated funding via Paystack attracts a 2% processing fee. Funds are credited instantly upon successful transaction.</p>
+                    <p className="text-[11px] font-medium text-blue-800 leading-relaxed">Paying with Paystack has a 2% fee. Your wallet will be funded immediately after payment.</p>
                   </div>
                 </motion.div>
               ) : (
@@ -180,8 +180,8 @@ const FundingPage: React.FC = () => {
                   <div className="p-6 bg-amber-50 rounded-[2rem] border border-amber-100 flex items-start space-x-4">
                     <Info className="w-5 h-5 text-amber-600 shrink-0 mt-1" />
                     <div className="space-y-2">
-                      <p className="text-[11px] font-bold text-amber-900 uppercase tracking-widest">Manual Funding Notice</p>
-                      <p className="text-[11px] font-medium text-amber-800 leading-relaxed">After transfer, send proof of payment to our WhatsApp support. Manual funding is processed within 5-30 minutes.</p>
+                      <p className="text-[11px] font-bold text-amber-900 uppercase tracking-widest">Manual Funding</p>
+                      <p className="text-[11px] font-medium text-amber-800 leading-relaxed">After transfer, send the receipt to our WhatsApp support. We will fund your wallet within 5-30 minutes.</p>
                     </div>
                   </div>
                 </motion.div>
@@ -224,8 +224,8 @@ const FundingPage: React.FC = () => {
               <ShieldCheck className="w-8 h-8" />
             </div>
             <div className="space-y-1">
-              <h4 className="text-xl font-black tracking-tight">Secure Protocol</h4>
-              <p className="text-white/60 text-xs font-medium leading-relaxed">All transactions are encrypted with 256-bit SSL security. Your financial data is never stored on our servers.</p>
+              <h4 className="text-xl font-black tracking-tight">Safe & Secure</h4>
+              <p className="text-white/60 text-xs font-medium leading-relaxed">Your payments are safe with us. We use the best security to protect your data.</p>
             </div>
           </div>
         </div>

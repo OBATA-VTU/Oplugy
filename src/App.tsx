@@ -64,14 +64,8 @@ const App: React.FC = () => {
               <Route path="/quick-purchase/electricity" element={<QuickBuyElectricity />} />
               <Route path="/quick-purchase/cable" element={<QuickBuyCable />} />
               <Route path="/quick-purchase/checkout" element={<QuickBuyCheckout />} />
-              <Route path="/pricing" element={<PricingPage />} />
-              <Route path="/api-docs" element={<ApiDocsPage />} />
-              <Route path="/support" element={<SupportPage />} />
-              <Route path="/faq" element={<FAQPage />} />
-              <Route path="/terms" element={<TermsPage />} />
-              <Route path="/privacy" element={<PrivacyPage />} />
 
-              {/* PROTECTED USER ROUTES */}
+              {/* ROUTES WITH SIDEBAR (Layout) */}
               <Route element={<Layout />}>
                 <Route path="/dashboard" element={<DashboardPage />} />
                 <Route path="/airtime" element={<AirtimePage />} />
@@ -85,6 +79,12 @@ const App: React.FC = () => {
                 <Route path="/referrals" element={<ReferralPage />} />
                 <Route path="/schedule" element={<SchedulePurchasePage />} />
                 <Route path="/whatsapp-bot" element={<WhatsAppBotPage />} />
+                <Route path="/pricing" element={<PricingPage />} />
+                <Route path="/api-docs" element={<ApiDocsPage />} />
+                <Route path="/support" element={<SupportPage />} />
+                <Route path="/faq" element={<FAQPage />} />
+                <Route path="/terms" element={<TermsPage />} />
+                <Route path="/privacy" element={<PrivacyPage />} />
               </Route>
 
               {/* ADMIN ROUTES */}

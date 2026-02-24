@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'motion/react';
 import { Phone, ArrowLeft, ChevronRight } from 'lucide-react';
 import { useNotifications } from '../../hooks/useNotifications';
 import { vtuService } from '../../services/vtuService';

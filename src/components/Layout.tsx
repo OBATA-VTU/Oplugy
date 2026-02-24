@@ -60,35 +60,35 @@ const Layout: React.FC = () => {
               </div>
               <div className="overflow-hidden">
                  <p className="text-lg font-black text-gray-900 dark:text-white tracking-tighter leading-none mb-1 truncate">{user?.username || 'User'}</p>
-                 <p className="text-[9px] text-blue-600 dark:text-blue-400 font-black uppercase tracking-[0.2em]">{user?.role || 'Member'} NODE</p>
+                 <p className="text-[9px] text-blue-600 dark:text-blue-400 font-black uppercase tracking-[0.2em]">{user?.role || 'Member'}</p>
               </div>
            </div>
         </div>
       </div>
       
       <nav className="flex-grow px-6 space-y-2 overflow-y-auto no-scrollbar pb-10">
-        <div className="px-6 py-4 text-[9px] font-black uppercase tracking-[0.5em] text-gray-400 dark:text-gray-600">Main Matrix</div>
+        <div className="px-6 py-4 text-[9px] font-black uppercase tracking-[0.5em] text-gray-400 dark:text-gray-600">Main Menu</div>
         <NavItem to="/dashboard" icon={<Home className="w-5 h-5" />} onClick={closeSidebar}>Dashboard</NavItem>
         <NavItem to="/funding" icon={<Wallet className="w-5 h-5" />} onClick={closeSidebar}>Add Funds</NavItem>
         <NavItem to="/schedule" icon={<Clock className="w-5 h-5" />} onClick={closeSidebar}>Schedule</NavItem>
-        <NavItem to="/history" icon={<History className="w-5 h-5" />} onClick={closeSidebar}>Ledger</NavItem>
+        <NavItem to="/history" icon={<History className="w-5 h-5" />} onClick={closeSidebar}>Transactions</NavItem>
         
-        <div className="px-6 py-4 mt-8 text-[9px] font-black uppercase tracking-[0.5em] text-gray-400 dark:text-gray-600">Fulfillment</div>
+        <div className="px-6 py-4 mt-8 text-[9px] font-black uppercase tracking-[0.5em] text-gray-400 dark:text-gray-600">Services</div>
         <NavItem to="/airtime" icon={<Smartphone className="w-5 h-5" />} onClick={closeSidebar}>Airtime</NavItem>
         <NavItem to="/data" icon={<Wifi className="w-5 h-5" />} onClick={closeSidebar}>Data</NavItem>
-        <NavItem to="/bills" icon={<Zap className="w-5 h-5" />} onClick={closeSidebar}>Utility</NavItem>
-        <NavItem to="/cable" icon={<Tv className="w-5 h-5" />} onClick={closeSidebar}>Cable</NavItem>
+        <NavItem to="/bills" icon={<Zap className="w-5 h-5" />} onClick={closeSidebar}>Electricity</NavItem>
+        <NavItem to="/cable" icon={<Tv className="w-5 h-5" />} onClick={closeSidebar}>Cable TV</NavItem>
         <NavItem to="/education" icon={<Gamepad2 className="w-5 h-5" />} onClick={closeSidebar}>Education</NavItem>
 
-        <div className="px-6 py-4 mt-8 text-[9px] font-black uppercase tracking-[0.5em] text-gray-400 dark:text-gray-600">Governance</div>
-        <NavItem to="/referral" icon={<Users className="w-5 h-5" />} onClick={closeSidebar}>Referrals</NavItem>
-        <NavItem to="/pricing" icon={<DollarSign className="w-5 h-5" />} onClick={closeSidebar}>Tariffs</NavItem>
-        <NavItem to="/profile" icon={<ShieldCheck className="w-5 h-5" />} onClick={closeSidebar}>Security</NavItem>
+        <div className="px-6 py-4 mt-8 text-[9px] font-black uppercase tracking-[0.5em] text-gray-400 dark:text-gray-600">Account</div>
+        <NavItem to="/referrals" icon={<Users className="w-5 h-5" />} onClick={closeSidebar}>Referrals</NavItem>
+        <NavItem to="/pricing" icon={<DollarSign className="w-5 h-5" />} onClick={closeSidebar}>Pricing</NavItem>
+        <NavItem to="/profile" icon={<ShieldCheck className="w-5 h-5" />} onClick={closeSidebar}>Profile</NavItem>
 
         {user?.role === 'admin' && (
           <div className="pt-8 mt-8 border-t border-gray-100 dark:border-gray-900">
-            <div className="px-6 mb-4 text-[9px] font-black uppercase tracking-[0.5em] text-red-500">Superuser</div>
-            <NavItem to="/admin" icon={<ShieldCheck className="w-5 h-5" />} onClick={closeSidebar}>Admin Node</NavItem>
+            <div className="px-6 mb-4 text-[9px] font-black uppercase tracking-[0.5em] text-red-500">Admin</div>
+            <NavItem to="/admin" icon={<ShieldCheck className="w-5 h-5" />} onClick={closeSidebar}>Admin Panel</NavItem>
           </div>
         )}
       </nav>
@@ -99,7 +99,7 @@ const Layout: React.FC = () => {
           className="w-full flex items-center space-x-4 px-6 py-4 rounded-[1.5rem] text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all font-black text-[11px] uppercase tracking-widest group"
         >
           <LogOut className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-          <span>Terminate Session</span>
+          <span>Logout</span>
         </button>
       </div>
     </div>
@@ -134,7 +134,7 @@ const Layout: React.FC = () => {
               <Menu className="w-6 h-6" />
             </button>
             <div className="hidden sm:block">
-               <h1 className="text-[10px] font-black text-gray-400 dark:text-gray-600 uppercase tracking-[0.5em] leading-none">Obata Node <span className="text-blue-600">v2.1.0</span></h1>
+               <h1 className="text-[10px] font-black text-gray-400 dark:text-gray-600 uppercase tracking-[0.5em] leading-none">Obata App <span className="text-blue-600">v2.1.0</span></h1>
             </div>
           </div>
           
@@ -157,7 +157,7 @@ const Layout: React.FC = () => {
              </div>
 
              <div className="text-right hidden sm:block">
-                <p className="text-[9px] font-black text-gray-400 dark:text-gray-600 uppercase tracking-[0.4em] mb-1">Liquidity</p>
+                <p className="text-[9px] font-black text-gray-400 dark:text-gray-600 uppercase tracking-[0.4em] mb-1">Balance</p>
                 <p className="text-gray-900 dark:text-white font-black text-2xl tracking-tighter leading-none">₦{walletBalance?.toLocaleString() || '0.00'}</p>
              </div>
 

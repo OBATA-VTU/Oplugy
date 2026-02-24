@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNotifications } from '../hooks/useNotifications';
-import { Mail, Phone, Shield, LogOut, Copy, Check } from 'lucide-react';
+import { Shield, LogOut, Copy, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { authService } from '../services/authService';
 import Spinner from '../components/Spinner';
@@ -41,7 +41,7 @@ const ProfilePage: React.FC = () => {
   const copyToClipboard = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
     setCopied(id);
-    addNotification(`${id} copied to clipboard!`, "success");
+    addNotification(`${id} copied!`, "success");
     setTimeout(() => setCopied(null), 2000);
   };
 
@@ -78,8 +78,8 @@ const ProfilePage: React.FC = () => {
               <p className="text-gray-400 text-[11px] font-black mt-2 uppercase tracking-[0.3em] bg-gray-50 inline-block px-6 py-2 rounded-full border border-gray-100">{user?.role || 'CUSTOMER'} ACCOUNT</p>
               
               <div className="mt-16 pt-12 border-t border-gray-50 space-y-8">
-                <ProfileMetric label="Wallet Balance" value={`₦${user?.walletBalance?.toLocaleString() || '0.00'}`} />
-                <ProfileMetric label="Total Referrals" value={`${user?.referralCount || 0} People`} />
+                <ProfileMetric label="Balance" value={`₦${user?.walletBalance?.toLocaleString() || '0.00'}`} />
+                <ProfileMetric label="Referrals" value={`${user?.referralCount || 0} People`} />
               </div>
             </div>
             <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50/50 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl"></div>
@@ -90,7 +90,7 @@ const ProfilePage: React.FC = () => {
             className="w-full p-8 bg-red-50 text-red-600 rounded-[3rem] font-black text-[12px] uppercase tracking-[0.3em] flex items-center justify-center space-x-4 hover:bg-red-600 hover:text-white transition-all group"
           >
             <LogOut className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-            <span>Sign Out Account</span>
+            <span>Sign Out</span>
           </button>
         </div>
 
@@ -126,7 +126,7 @@ const ProfilePage: React.FC = () => {
                     <div className="w-16 h-16 bg-white rounded-3xl flex items-center justify-center shadow-lg text-blue-600">
                       <Shield className="w-8 h-8" />
                     </div>
-                    <p className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] leading-relaxed">To change your name or email, please contact support for verification.</p>
+                    <p className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] leading-relaxed">To change your name or email, please contact support.</p>
                   </div>
                 </motion.div>
               )}
@@ -141,7 +141,7 @@ const ProfilePage: React.FC = () => {
                 >
                   <div>
                     <h3 className="text-5xl font-black text-gray-900 tracking-tighter mb-4">Security PIN</h3>
-                    <p className="text-gray-400 font-medium text-lg">Change your 5-digit PIN used to approve payments.</p>
+                    <p className="text-gray-400 font-medium text-lg">Change your 5-digit PIN for payments.</p>
                   </div>
                   <form onSubmit={handleUpdatePin} className="space-y-10 max-w-lg">
                     <InputGroup 
@@ -185,8 +185,8 @@ const ProfilePage: React.FC = () => {
                   className="space-y-16"
                 >
                   <div>
-                    <h3 className="text-5xl font-black text-gray-900 tracking-tighter mb-4">Developer / API</h3>
-                    <p className="text-gray-400 font-medium text-lg leading-relaxed">For developers who want to connect to our services.</p>
+                    <h3 className="text-5xl font-black text-gray-900 tracking-tighter mb-4">API Access</h3>
+                    <p className="text-gray-400 font-medium text-lg leading-relaxed">Connect our services to your own website or app.</p>
                   </div>
                   
                   <div className="space-y-12">

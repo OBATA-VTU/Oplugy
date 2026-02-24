@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNotifications } from '../hooks/useNotifications';
 import { vtuService } from '../services/vtuService';
-import Spinner from '../components/Spinner';
 import PinPromptModal from '../components/PinPromptModal';
 import InsufficientBalanceModal from '../components/InsufficientBalanceModal';
 import LoadingScreen from '../components/LoadingScreen';
@@ -29,7 +28,7 @@ const EducationPage: React.FC = () => {
   useEffect(() => {
     const fetchPlans = async () => {
       setIsLoading(true);
-      setLoadingMessage('Syncing Examination Nodes...');
+      setLoadingMessage('Loading Exams...');
       const res = await vtuService.getEducationPlans();
       if (res.status && res.data) {
         setExamTypes(res.data);
@@ -48,7 +47,7 @@ const EducationPage: React.FC = () => {
     setIsPurchasing(true);
     setShowPinModal(false);
     setIsLoading(true);
-    setLoadingMessage('Generating Secure PINs...');
+    setLoadingMessage('Generating PINs...');
     
     const response = await vtuService.purchaseEducation({
       type: String(selectedExam.id),
@@ -58,11 +57,11 @@ const EducationPage: React.FC = () => {
     });
 
     if (response.status) {
-      addNotification(`Successfully generated ${quantity} ${selectedExam.name}(s).`, 'success');
+      addNotification(`Successfully bought ${quantity} ${selectedExam.name}(s).`, 'success');
       setStep('SUCCESS');
       await fetchWalletBalance();
     } else {
-      addNotification(response.message || 'Transaction failed. Node synchronization interrupted.', 'error');
+      addNotification(response.message || 'Transaction failed. Please try again.', 'error');
     }
     setIsPurchasing(false);
     setIsLoading(false);
@@ -234,8 +233,8 @@ const EducationPage: React.FC = () => {
                 <CheckCircle2 className="w-12 h-12" />
               </div>
               <div className="space-y-4">
-                <h3 className="text-4xl font-black text-gray-900 tracking-tighter">Purchase Successful!</h3>
-                <p className="text-gray-400 font-medium text-lg">Your {quantity}x {selectedExam?.name} PINs have been generated.</p>
+                <h3 className="text-4xl font-black text-gray-900 tracking-tighter">Success!</h3>
+                <p className="text-gray-400 font-medium text-lg">Your {quantity}x {selectedExam?.name} PINs are ready.</p>
               </div>
               
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -265,7 +264,7 @@ const EducationPage: React.FC = () => {
         </div>
         <div className="space-y-2">
           <h4 className="text-xl font-black text-blue-900 tracking-tight">Instant Delivery</h4>
-          <p className="text-blue-800/60 font-medium leading-relaxed">Exam PINs are delivered instantly. You can find them in your transaction history immediately after protocol confirmation.</p>
+          <p className="text-blue-800/60 font-medium leading-relaxed">Exam PINs are ready instantly. You can find them in your history immediately after payment.</p>
         </div>
       </div>
     </div>

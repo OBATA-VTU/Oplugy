@@ -7,7 +7,6 @@ import Spinner from '../components/Spinner';
 import { Calendar, Clock, ShieldCheck, Smartphone, Wifi, Zap, Tv, ChevronRight, Info } from 'lucide-react';
 import { db } from '../firebase/config';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { motion, AnimatePresence } from 'motion/react';
 
 const SchedulePurchasePage: React.FC = () => {
   const { addNotification } = useNotifications();
@@ -28,13 +27,10 @@ const SchedulePurchasePage: React.FC = () => {
   const [dataTypes, setDataTypes] = useState<string[]>([]);
   const [dataPlans, setDataPlans] = useState<DataPlan[]>([]);
   const [isScheduling, setIsScheduling] = useState(false);
-  const [loading, setLoading] = useState(false);
 
   const fetchNetworks = useCallback(async () => {
-    setLoading(true);
     const res = await vtuService.getDataNetworks(1);
     if (res.status) setNetworks(res.data || []);
-    setLoading(false);
   }, []);
 
   useEffect(() => {
@@ -100,7 +96,7 @@ const SchedulePurchasePage: React.FC = () => {
         <div className="inline-flex p-4 bg-blue-50 text-blue-600 rounded-[2rem] mb-4 shadow-inner">
           <Clock className="w-10 h-10" />
         </div>
-        <h2 className="text-5xl lg:text-6xl font-black text-gray-900 tracking-tighter">Schedule Purchase</h2>
+        <h2 className="text-5xl lg:text-6xl font-black text-gray-900 tracking-tighter">Schedule</h2>
         <p className="text-gray-400 font-medium text-xl max-w-xl mx-auto">Set it and forget it. Automate your bills and recharges for any future date.</p>
       </div>
 
@@ -138,7 +134,7 @@ const SchedulePurchasePage: React.FC = () => {
                 <select 
                   className="w-full p-6 bg-gray-50 rounded-[2rem] font-bold text-lg border-2 border-transparent focus:border-blue-600 focus:bg-white outline-none transition-all appearance-none"
                   value={details.network}
-                  onChange={(e) => setDetails({...details, network: e.target.value})}
+                  onChange={(e) => setDetails({...details, network: e.target.value, type: '', planId: ''})}
                 >
                   <option value="">Choose Provider</option>
                   {networks.map(n => <option key={n.id} value={n.id}>{n.name}</option>)}
@@ -146,6 +142,43 @@ const SchedulePurchasePage: React.FC = () => {
                 <ChevronRight className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-400 rotate-90 pointer-events-none" />
               </div>
             </div>
+
+            {service === 'data' && dataTypes.length > 0 && (
+              <div className="space-y-3">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">2b. Data Type</label>
+                <div className="relative">
+                  <select 
+                    className="w-full p-6 bg-gray-50 rounded-[2rem] font-bold text-lg border-2 border-transparent focus:border-blue-600 focus:bg-white outline-none transition-all appearance-none"
+                    value={details.type}
+                    onChange={(e) => setDetails({...details, type: e.target.value, planId: ''})}
+                  >
+                    <option value="">Select Type</option>
+                    {dataTypes.map(t => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                  <ChevronRight className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-400 rotate-90 pointer-events-none" />
+                </div>
+              </div>
+            )}
+
+            {service === 'data' && dataPlans.length > 0 && (
+              <div className="space-y-3">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">2c. Data Plan</label>
+                <div className="relative">
+                  <select 
+                    className="w-full p-6 bg-gray-50 rounded-[2rem] font-bold text-lg border-2 border-transparent focus:border-blue-600 focus:bg-white outline-none transition-all appearance-none"
+                    value={details.planId}
+                    onChange={(e) => {
+                      const plan = dataPlans.find(p => p.id === e.target.value);
+                      setDetails({...details, planId: e.target.value, amount: plan ? String(plan.amount) : details.amount});
+                    }}
+                  >
+                    <option value="">Select Plan</option>
+                    {dataPlans.map(p => <option key={p.id} value={p.id}>{p.name} - ₦{p.amount}</option>)}
+                  </select>
+                  <ChevronRight className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-400 rotate-90 pointer-events-none" />
+                </div>
+              </div>
+            )}
 
             <div className="space-y-3">
               <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">3. Recipient Details</label>
@@ -208,7 +241,7 @@ const SchedulePurchasePage: React.FC = () => {
           disabled={isScheduling}
           className="w-full py-8 bg-blue-600 text-white rounded-[2.5rem] font-black text-[12px] uppercase tracking-[0.4em] shadow-2xl shadow-blue-100 hover:bg-gray-950 transition-all flex items-center justify-center space-x-4 transform active:scale-95 disabled:opacity-50"
         >
-          {isScheduling ? <Spinner /> : <><ShieldCheck className="w-5 h-5" /> <span>Schedule Transaction</span></>}
+          {isScheduling ? <Spinner /> : <><ShieldCheck className="w-5 h-5" /> <span>Schedule Now</span></>}
         </button>
       </div>
 
@@ -218,8 +251,8 @@ const SchedulePurchasePage: React.FC = () => {
               <Info className="w-8 h-8" />
             </div>
             <div className="space-y-2">
-               <h4 className="text-2xl font-black tracking-tight">Precision Automation</h4>
-               <p className="text-white/40 font-medium text-lg leading-relaxed">Scheduled transactions are executed exactly at the specified time. Ensure you have sufficient balance in your wallet at the time of execution.</p>
+               <h4 className="text-2xl font-black tracking-tight">Automatic Payment</h4>
+               <p className="text-white/40 font-medium text-lg leading-relaxed">Your payment will be made automatically at the time you set. Please make sure you have enough money in your wallet then.</p>
             </div>
          </div>
          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/10 rounded-full blur-[100px]"></div>

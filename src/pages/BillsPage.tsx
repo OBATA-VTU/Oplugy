@@ -3,7 +3,6 @@ import { useAuth } from '../hooks/useAuth';
 import { useNotifications } from '../hooks/useNotifications';
 import { vtuService } from '../services/vtuService';
 import { Operator } from '../types';
-import Spinner from '../components/Spinner';
 import PinPromptModal from '../components/PinPromptModal';
 import InsufficientBalanceModal from '../components/InsufficientBalanceModal';
 import LoadingScreen from '../components/LoadingScreen';
@@ -36,7 +35,7 @@ const BillsPage: React.FC = () => {
 
   const fetchOperators = useCallback(async () => {
     setIsLoading(true);
-    setLoadingMessage('Syncing Electricity Nodes...');
+    setLoadingMessage('Loading Companies...');
     const response = await vtuService.getElectricityOperators();
     if (response.status && response.data) {
       setOperators(response.data);
@@ -51,7 +50,7 @@ const BillsPage: React.FC = () => {
   const handleVerify = async () => {
     if (!selectedOperator || !meterNumber) return;
     setIsLoading(true);
-    setLoadingMessage('Verifying Meter Identity...');
+    setLoadingMessage('Checking Meter...');
     setCustomerName(null);
     const response = await vtuService.verifyElectricityMeter({
       provider_id: selectedOperator.id,
@@ -74,7 +73,7 @@ const BillsPage: React.FC = () => {
     setIsPurchasing(true);
     setShowPinModal(false);
     setIsLoading(true);
-    setLoadingMessage('Generating Electricity Token...');
+    setLoadingMessage('Getting Token...');
 
     const response = await vtuService.purchaseElectricity({
       provider_id: selectedOperator!.id,
@@ -87,11 +86,11 @@ const BillsPage: React.FC = () => {
 
     if (response.status && response.data) {
       setToken(response.data.token || null);
-      addNotification(`Bill paid successfully!`, 'success');
+      addNotification(`Payment successful!`, 'success');
       setStep('SUCCESS');
       await fetchWalletBalance();
     } else {
-      addNotification(response.message || 'Fulfillment node error.', 'error');
+      addNotification(response.message || 'Payment failed.', 'error');
     }
     setIsPurchasing(false);
     setIsLoading(false);
@@ -353,8 +352,8 @@ const BillsPage: React.FC = () => {
                 <CheckCircle2 className="w-12 h-12" />
               </div>
               <div className="space-y-4">
-                <h3 className="text-4xl font-black text-gray-900 tracking-tighter">Payment Successful!</h3>
-                <p className="text-gray-400 font-medium text-lg">Your electricity bill has been settled.</p>
+                <h3 className="text-4xl font-black text-gray-900 tracking-tighter">Success!</h3>
+                <p className="text-gray-400 font-medium text-lg">Your electricity bill has been paid.</p>
                 {token && (
                   <div className="bg-gray-900 p-8 rounded-[2rem] border-t-4 border-blue-600 shadow-2xl mt-6">
                     <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.3em] mb-2">Your Token</p>
@@ -389,8 +388,8 @@ const BillsPage: React.FC = () => {
           <Zap className="w-8 h-8" />
         </div>
         <div className="space-y-2">
-          <h4 className="text-xl font-black text-blue-900 tracking-tight">Instant Token Generation</h4>
-          <p className="text-blue-800/60 font-medium leading-relaxed">Electricity tokens are generated instantly after payment. You will also receive a copy via SMS to the provided phone number.</p>
+          <h4 className="text-xl font-black text-blue-900 tracking-tight">Instant Token</h4>
+          <p className="text-blue-800/60 font-medium leading-relaxed">Your token will be ready immediately after payment. We will also send it to your phone via SMS.</p>
         </div>
       </div>
     </div>

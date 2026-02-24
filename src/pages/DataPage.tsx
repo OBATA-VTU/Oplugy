@@ -46,7 +46,7 @@ const DataPage: React.FC = () => {
   const handleServerSelect = async (server: 1 | 2) => {
     setSelectedServer(server);
     setIsLoading(true);
-    setLoadingMessage('Syncing Network Nodes...');
+    setLoadingMessage('Loading Networks...');
     try {
       const res = await vtuService.getDataNetworks(server);
       if (res.status) {
@@ -65,7 +65,7 @@ const DataPage: React.FC = () => {
   const handleNetworkSelect = async (netId: string) => {
     setSelectedOperator(netId);
     setIsLoading(true);
-    setLoadingMessage('Fetching Data Protocols...');
+    setLoadingMessage('Loading Categories...');
     try {
       const res = await vtuService.getDataCategories(netId, selectedServer!);
       if (res.status && res.data) {
@@ -92,7 +92,7 @@ const DataPage: React.FC = () => {
 
   const fetchPlans = async (net: string, type: string) => {
     setIsLoading(true);
-    setLoadingMessage('Syncing Tariff Matrix...');
+    setLoadingMessage('Loading Plans...');
     try {
       const res = await vtuService.getDataPlans({ 
         network: net, 
@@ -127,7 +127,7 @@ const DataPage: React.FC = () => {
     setIsPurchasing(true);
     setShowPinModal(false);
     setIsLoading(true);
-    setLoadingMessage('Fulfilling Data Protocol...');
+    setLoadingMessage('Processing Order...');
 
     try {
       const res = await vtuService.purchaseData({
@@ -166,7 +166,7 @@ const DataPage: React.FC = () => {
       />
 
       <div className="text-center space-y-4">
-        <h2 className="text-[11px] font-black text-blue-600 uppercase tracking-[0.5em]">Fulfillment Node</h2>
+        <h2 className="text-[11px] font-black text-blue-600 uppercase tracking-[0.5em]">Service Provider</h2>
         <h1 className="text-5xl lg:text-8xl font-black text-gray-900 tracking-tighter leading-[0.85]">Buy <br /><span className="text-blue-600">Data.</span></h1>
         <p className="text-gray-400 font-medium text-lg max-w-xl mx-auto leading-relaxed">High-velocity data delivery across all Nigerian networks.</p>
       </div>
@@ -185,20 +185,20 @@ const DataPage: React.FC = () => {
                  <AlertCircle className="w-8 h-8 text-blue-600 shrink-0" />
                  <div className="space-y-2">
                     <h4 className="text-lg font-black text-blue-900 tracking-tight">Important Notice</h4>
-                    <p className="text-blue-800/60 font-medium leading-relaxed">Both servers have different data plans and prices. Please check both to find the one that suits your needs best. Fulfillment speed is identical on both nodes.</p>
+                    <p className="text-blue-800/60 font-medium leading-relaxed">Both servers have different data plans and prices. Please check both to find the best one for you. Delivery speed is the same on both.</p>
                  </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                  <ServerCard 
-                   title="Omega Server" 
-                   desc="Standard fulfillment node with competitive rates." 
+                   title="Server 1" 
+                   desc="Standard service with competitive rates." 
                    icon={<Server className="w-8 h-8" />} 
                    onClick={() => handleServerSelect(1)} 
                  />
                  <ServerCard 
-                   title="Alpha Server" 
-                   desc="Alternative fulfillment node with unique data bundles." 
+                   title="Server 2" 
+                   desc="Alternative service with unique data bundles." 
                    icon={<Zap className="w-8 h-8" />} 
                    onClick={() => handleServerSelect(2)} 
                  />
@@ -366,8 +366,8 @@ const DataPage: React.FC = () => {
                 <CheckCircle2 className="w-12 h-12" />
               </div>
               <div className="space-y-4">
-                <h3 className="text-4xl font-black text-gray-900 tracking-tighter">Purchase Successful!</h3>
-                <p className="text-gray-400 font-medium text-lg">Your data bundle has been fulfilled successfully.</p>
+                <h3 className="text-4xl font-black text-gray-900 tracking-tighter">Success!</h3>
+                <p className="text-gray-400 font-medium text-lg">Your data bundle has been sent successfully.</p>
               </div>
               
               <div className="flex flex-col sm:flex-row gap-4 justify-center">

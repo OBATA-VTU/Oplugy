@@ -72,9 +72,9 @@ export const vtuService = {
         return { status: true, data: operators };
       }
       
-      return { status: false, message: 'Fulfillment node did not provide airtime mapping.' };
+      return { status: false, message: 'Could not load airtime networks.' };
     } catch (e) {
-      return { status: false, message: 'Airtime node sync failed.' };
+      return { status: false, message: 'Loading airtime failed.' };
     }
   },
 
@@ -104,7 +104,7 @@ export const vtuService = {
         }
       }
     } catch (e) { console.error("Network fetch error:", e); }
-    return { status: false, message: `Server ${server} network sync failed.` };
+    return { status: false, message: `Server ${server} loading failed.` };
   },
 
   getDataCategories: async (network: string, server: 1 | 2 = 1): Promise<ApiResponse<string[]>> => {
@@ -136,7 +136,7 @@ export const vtuService = {
         }
       }
     } catch (e) { console.error("Category fetch error:", e); }
-    return { status: false, message: `Server ${server} node sync failed.` };
+    return { status: false, message: `Server ${server} loading failed.` };
   },
 
   getDataPlans: async (payload: { network: string; type: string; userRole?: UserRole; server?: 1 | 2 }): Promise<ApiResponse<DataPlan[]>> => {
@@ -207,9 +207,9 @@ export const vtuService = {
         }
       }
     } catch (e: any) {
-      return { status: false, message: `Server ${selectedServer} unreachable.` };
+      return { status: false, message: `Server ${selectedServer} error.` };
     }
-    return { status: false, message: 'No valid plans returned by node.' };
+    return { status: false, message: 'No plans found.' };
   },
 
   purchaseData: async (payload: { plan_id: string; phone_number: string; amount: number; network: string; plan_name: string; server?: 1 | 2 }): Promise<ApiResponse<TransactionResponse>> => {
@@ -242,7 +242,7 @@ export const vtuService = {
         }));
         return { status: true, data: operators };
     }
-    return { status: false, message: 'Utility node offline.' };
+    return { status: false, message: 'Electricity service offline.' };
   },
 
   verifyElectricityMeter: async (payload: { meter_number: string; provider_id: string; meter_type: 'prepaid' | 'postpaid' }): Promise<ApiResponse<VerificationResponse>> => {
@@ -279,7 +279,7 @@ export const vtuService = {
       }));
       return { status: true, data: billers };
     }
-    return { status: false, message: 'Cable node sync failed.' };
+    return { status: false, message: 'Cable service loading failed.' };
   },
 
   getCablePlans: async (billerName: string): Promise<ApiResponse<DataPlan[]>> => {
@@ -296,7 +296,7 @@ export const vtuService = {
           }))
         };
     }
-    return { status: false, message: 'Cable node offline.' };
+    return { status: false, message: 'Cable service offline.' };
   },
 
   verifyCableSmartcard: async (payload: { biller: string; smartCardNumber: string }): Promise<ApiResponse<VerificationResponse>> => {
@@ -355,7 +355,7 @@ export const vtuService = {
         };
       }
     } catch (e) {}
-    return { status: false, message: 'Education node offline.' };
+    return { status: false, message: 'Education service offline.' };
   },
 
   getTransactionHistory: async (): Promise<ApiResponse<TransactionResponse[]>> => {
@@ -373,6 +373,6 @@ export const vtuService = {
         return dateB - dateA;
       });
       return { status: true, data };
-    } catch (error) { return { status: false, message: "History ledger offline." }; }
+    } catch (error) { return { status: false, message: "History not available." }; }
   }
 };
