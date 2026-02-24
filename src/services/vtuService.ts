@@ -93,8 +93,10 @@ export const vtuService = {
       } else {
         // Server 2 (Ciptopup)
         const res = await cipApiClient<any>('data/plans', { method: 'GET', server: 2 });
-        if (res.status && Array.isArray(res.data) && res.data.length > 0) {
-          const networksList = Array.from(new Set(res.data.map((p: any) => p.network || p.network_name || p.operator))).filter(n => !!n);
+        const rawPlans = res.status ? (Array.isArray(res.data) ? res.data : (res.data?.data || res.data?.plans || [])) : [];
+        
+        if (Array.isArray(rawPlans) && rawPlans.length > 0) {
+          const networksList = Array.from(new Set(rawPlans.map((p: any) => p.network || p.network_name || p.operator))).filter(n => !!n);
           if (networksList.length > 0) {
             return { 
               status: true, 
@@ -123,9 +125,11 @@ export const vtuService = {
       } else {
         // Server 2 (Ciptopup) - Fetch all plans and extract unique types
         const res = await cipApiClient<any>('data/plans', { method: 'GET', server: 2 });
-        if (res.status && Array.isArray(res.data)) {
+        const rawPlans = res.status ? (Array.isArray(res.data) ? res.data : (res.data?.data || res.data?.plans || [])) : [];
+        
+        if (Array.isArray(rawPlans)) {
           const categories = Array.from(new Set(
-            res.data
+            rawPlans
               .filter((p: any) => {
                 const pNet = String(p.network || p.network_name || p.operator || '').trim().toUpperCase();
                 const searchNet = String(network).trim().toUpperCase();
@@ -175,8 +179,7 @@ export const vtuService = {
         const [res, marginDoc] = await Promise.all([
           cipApiClient<any>('data/plans', { 
             method: 'GET', 
-            server: 2,
-            data: { network: payload.network.toUpperCase(), type: payload.type.toUpperCase() }
+            server: 2
           }),
           getDoc(doc(db, "settings", "server2_config"))
         ]);
@@ -184,9 +187,11 @@ export const vtuService = {
         const marginRaw = marginDoc.exists() ? marginDoc.data().general_margin : 0;
         const margin = isNaN(Number(marginRaw)) ? 0 : Number(marginRaw);
         
-        if (res.status && Array.isArray(res.data)) {
-          // Filter client-side as well in case the API returned all plans
-          const filteredData = res.data.filter((p: any) => {
+        const rawPlans = res.status ? (Array.isArray(res.data) ? res.data : (res.data?.data || res.data?.plans || [])) : [];
+        
+        if (Array.isArray(rawPlans)) {
+          // Filter client-side as the API might not support query filters
+          const filteredData = rawPlans.filter((p: any) => {
             const pNet = String(p.network || p.network_name || p.operator || '').trim().toUpperCase();
             const searchNet = String(payload.network).trim().toUpperCase();
             const netMatch = !payload.network || pNet === searchNet || pNet.includes(searchNet) || searchNet.includes(pNet);
@@ -200,8 +205,8 @@ export const vtuService = {
 
           const plans: DataPlan[] = filteredData.map((p: any) => {
             const rawPrice = Number(p.price || p.amount || 0);
-            // If price is very large, it's likely in Kobo. If small, likely Naira.
-            const priceInNaira = rawPrice > 10000 ? (rawPrice / 100) : rawPrice;
+            // CIP API returns prices in Kobo
+            const priceInNaira = rawPrice / 100;
             
             return {
               id: String(p.id || p.plan_id || p.serviceID),
