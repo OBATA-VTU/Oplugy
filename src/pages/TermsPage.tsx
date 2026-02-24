@@ -1,54 +1,45 @@
 
 import React from 'react';
-import Logo from '../components/Logo';
-import Footer from '../components/Footer';
 
 const TermsPage: React.FC = () => {
   return (
-    <div className="bg-white min-h-screen">
-      <nav className="p-6 border-b border-gray-100">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <Logo />
-        </div>
-      </nav>
-      
-      <main className="max-w-4xl mx-auto px-4 py-20">
+    <div className="max-w-4xl mx-auto pb-32">
+      <div className="px-4 py-20">
         <h1 className="text-4xl font-extrabold text-gray-900 mb-8">Terms of Service</h1>
         <p className="text-gray-500 mb-8">Last updated: February 20, 2025</p>
         
         <div className="prose prose-blue max-w-none text-gray-600 space-y-8">
           <section>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">1. Acceptance of Terms</h2>
-            <p>By accessing and using Oplug ("the Service"), you agree to be bound by these Terms of Service. If you do not agree to these terms, please refrain from using our platform.</p>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">1. Agreement</h2>
+            <p>By using Obata App, you agree to follow these rules. If you don't agree, please don't use the app.</p>
           </section>
 
           <section>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">2. Description of Service</h2>
-            <p>Oplug provides Virtual Top-Up (VTU) services, including airtime purchase, data subscriptions, bill payments, and cable TV renewals. We act as an intermediary between users and service providers.</p>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">2. What we do</h2>
+            <p>Obata App helps you buy data, airtime, and pay bills easily. We connect you to the service providers.</p>
           </section>
 
           <section>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">3. User Accounts</h2>
-            <p>You are responsible for maintaining the confidentiality of your account credentials. All activities under your account are your sole responsibility. You must provide accurate information during registration.</p>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">3. Your Account</h2>
+            <p>You are responsible for keeping your account safe. Make sure you use a strong password and don't share it with anyone.</p>
           </section>
 
           <section>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">4. Wallet and Payments</h2>
-            <p>Users can fund their Oplug wallet to perform transactions. Funds added to the wallet are non-refundable but can be used for any service on the platform. We are not responsible for transactions made to wrong numbers or meter accounts provided by the user.</p>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">4. Money & Payments</h2>
+            <p>You can add money to your wallet to buy things. Once you add money, you can't take it back, but you can use it to buy anything on the app. Be careful when typing phone numbers or meter numbers.</p>
           </section>
 
           <section>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">5. Service Availability</h2>
-            <p>While we strive for 99.9% uptime, services may occasionally be unavailable due to provider downtime or maintenance. Oplug is not liable for losses resulting from such interruptions.</p>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">5. App Availability</h2>
+            <p>We try to make sure the app is always working, but sometimes there might be small breaks for maintenance.</p>
           </section>
 
           <section>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">6. Prohibited Activities</h2>
-            <p>You may not use Oplug for any fraudulent or illegal activities. Any suspicious activity may lead to immediate account suspension and reporting to relevant authorities.</p>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">6. Rules</h2>
+            <p>Don't use the app for anything illegal or fraudulent. If we see anything bad, we will close your account.</p>
           </section>
         </div>
-      </main>
-      <Footer />
+      </div>
     </div>
   );
 };

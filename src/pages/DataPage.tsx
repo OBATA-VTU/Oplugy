@@ -166,9 +166,9 @@ const DataPage: React.FC = () => {
       />
 
       <div className="text-center space-y-4">
-        <h2 className="text-[11px] font-black text-blue-600 uppercase tracking-[0.5em]">Service Provider</h2>
+        <h2 className="text-[11px] font-black text-blue-600 uppercase tracking-[0.5em]">Choose Server</h2>
         <h1 className="text-5xl lg:text-8xl font-black text-gray-900 tracking-tighter leading-[0.85]">Buy <br /><span className="text-blue-600">Data.</span></h1>
-        <p className="text-gray-400 font-medium text-lg max-w-xl mx-auto leading-relaxed">High-velocity data delivery across all Nigerian networks.</p>
+        <p className="text-gray-400 font-medium text-lg max-w-xl mx-auto leading-relaxed">Get cheap data for all networks in Nigeria.</p>
       </div>
 
       <div className="bg-white p-8 lg:p-16 rounded-[4rem] shadow-2xl border border-gray-50 relative overflow-hidden">
@@ -184,21 +184,21 @@ const DataPage: React.FC = () => {
               <div className="p-8 bg-blue-50 rounded-[2.5rem] border border-blue-100 flex items-start space-x-6">
                  <AlertCircle className="w-8 h-8 text-blue-600 shrink-0" />
                  <div className="space-y-2">
-                    <h4 className="text-lg font-black text-blue-900 tracking-tight">Important Notice</h4>
-                    <p className="text-blue-800/60 font-medium leading-relaxed">Both servers have different data plans and prices. Please check both to find the best one for you. Delivery speed is the same on both.</p>
+                    <h4 className="text-lg font-black text-blue-900 tracking-tight">Note</h4>
+                    <p className="text-blue-800/60 font-medium leading-relaxed">We have two servers. Check both to see which one is cheaper for you. Both are very fast.</p>
                  </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                  <ServerCard 
                    title="Server 1" 
-                   desc="Standard service with competitive rates." 
+                   desc="Good prices and fast delivery." 
                    icon={<Server className="w-8 h-8" />} 
                    onClick={() => handleServerSelect(1)} 
                  />
                  <ServerCard 
                    title="Server 2" 
-                   desc="Alternative service with unique data bundles." 
+                   desc="Different plans and also very fast." 
                    icon={<Zap className="w-8 h-8" />} 
                    onClick={() => handleServerSelect(2)} 
                  />
@@ -214,7 +214,7 @@ const DataPage: React.FC = () => {
               exit={{ opacity: 0, x: -20 }}
               className="space-y-10"
             >
-              <StepHeader num="1" title="Select Network" />
+              <StepHeader num="1" title="Choose Network" />
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                 {networks.map(n => {
                   const constant = DATA_NETWORKS.find(c => c.name.toUpperCase() === n.name.toUpperCase());
@@ -241,7 +241,7 @@ const DataPage: React.FC = () => {
               exit={{ opacity: 0, x: -20 }}
               className="space-y-10"
             >
-              <StepHeader num="2" title="Select Data Type" />
+              <StepHeader num="2" title="Choose Type" />
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {dataTypes.map(type => (
                   <SelectionButton 
@@ -264,7 +264,7 @@ const DataPage: React.FC = () => {
               exit={{ opacity: 0, x: -20 }}
               className="space-y-10"
             >
-              <StepHeader num="3" title="Choose Data Plan" />
+              <StepHeader num="3" title="Choose Plan" />
               <div className="relative">
                 <select 
                   className="w-full p-8 bg-gray-50 border-2 border-transparent focus:border-blue-600 rounded-[2rem] font-black text-xl outline-none transition-all appearance-none"
@@ -292,7 +292,7 @@ const DataPage: React.FC = () => {
               exit={{ opacity: 0, x: -20 }}
               className="space-y-10"
             >
-              <StepHeader num="4" title="Recipient Number" />
+              <StepHeader num="4" title="Phone Number" />
               <div className="space-y-8">
                 <input 
                   type="tel" 
@@ -307,7 +307,7 @@ const DataPage: React.FC = () => {
                   onClick={() => setStep('CHECKOUT')}
                   className="w-full py-8 bg-blue-600 text-white rounded-[2.5rem] font-black text-[12px] uppercase tracking-[0.4em] shadow-2xl shadow-blue-100 hover:bg-gray-950 transition-all transform active:scale-95 disabled:opacity-50"
                 >
-                  Continue to Checkout
+                  Next
                 </button>
               </div>
               <BackButton onClick={() => setStep('PLAN')} />
@@ -323,8 +323,8 @@ const DataPage: React.FC = () => {
               className="space-y-10"
             >
               <div className="text-center space-y-2">
-                <h3 className="text-3xl font-black text-gray-900 tracking-tight">Confirm Purchase</h3>
-                <p className="text-gray-400 font-medium">Please review the transaction details below.</p>
+                <h3 className="text-3xl font-black text-gray-900 tracking-tight">Check Details</h3>
+                <p className="text-gray-400 font-medium">Please check if everything is correct.</p>
               </div>
 
               <div className="bg-gray-50 p-10 rounded-[3rem] space-y-6 border border-gray-100">
@@ -343,7 +343,7 @@ const DataPage: React.FC = () => {
                   onClick={() => setShowPinModal(true)}
                   className="w-full py-8 bg-blue-600 text-white rounded-[2.5rem] font-black text-[12px] uppercase tracking-[0.4em] shadow-2xl shadow-blue-100 hover:bg-gray-950 transition-all transform active:scale-95"
                 >
-                  Confirm & Pay
+                  Pay Now
                 </button>
                 <button 
                   onClick={() => setStep('PHONE')}

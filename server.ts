@@ -320,6 +320,89 @@ app.use('/', createProxyMiddleware({
   logLevel: 'error'
 }));
 
+// Background Scheduler for Transactions
+async function processScheduledTransactions() {
+  if (!admin.apps.length) return;
+  
+  const db = admin.firestore();
+  const now = admin.firestore.Timestamp.now();
+  
+  try {
+    const snapshot = await db.collection('scheduled_transactions')
+      .where('status', '==', 'PENDING')
+      .where('scheduledTime', '<=', now)
+      .limit(10)
+      .get();
+
+    if (snapshot.empty) return;
+
+    console.log(`Processing ${snapshot.size} scheduled transactions...`);
+
+    for (const doc of snapshot.docs) {
+      const data = doc.data();
+      const { userId, service, amount, recipient, network, planId, type } = data;
+
+      try {
+        // 1. Check user balance
+        const userRef = db.collection('users').doc(userId);
+        const userDoc = await userRef.get();
+        
+        if (!userDoc.exists || (userDoc.data()?.walletBalance || 0) < amount) {
+          await doc.ref.update({ 
+            status: 'FAILED', 
+            error: 'Insufficient balance at execution time.',
+            updatedAt: admin.firestore.FieldValue.serverTimestamp() 
+          });
+          continue;
+        }
+
+        // 2. Execute Transaction (Simplified - calling Server 1 by default for scheduler)
+        // In a real production app, this would use the same logic as the proxy routes
+        // For this demo, we'll simulate the API call or use a simplified version
+        
+        // Update status to PROCESSING to avoid double execution
+        await doc.ref.update({ status: 'PROCESSING' });
+
+        // Deduct balance
+        await userRef.update({
+          walletBalance: admin.firestore.FieldValue.increment(-amount)
+        });
+
+        // Log transaction
+        await db.collection('transactions').add({
+          userId,
+          userEmail: data.userEmail,
+          type: service.toUpperCase(),
+          amount,
+          source: `${network} ${service} (Scheduled)`,
+          remarks: `Automated payment for ${recipient}`,
+          status: 'SUCCESS',
+          date_created: admin.firestore.FieldValue.serverTimestamp()
+        });
+
+        // Mark as completed
+        await doc.ref.update({ 
+          status: 'COMPLETED',
+          updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+
+      } catch (err: any) {
+        console.error(`Error processing scheduled doc ${doc.id}:`, err);
+        await doc.ref.update({ 
+          status: 'FAILED', 
+          error: err.message || 'Unknown execution error',
+          updatedAt: admin.firestore.FieldValue.serverTimestamp() 
+        });
+      }
+    }
+  } catch (error) {
+    console.error('Scheduler Error:', error);
+  }
+}
+
+// Run scheduler every 60 seconds
+setInterval(processScheduledTransactions, 60000);
+
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`API Gateway running on http://0.0.0.0:${PORT}`);
 });

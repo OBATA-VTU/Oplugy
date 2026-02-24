@@ -127,10 +127,11 @@ export const vtuService = {
           const categories = Array.from(new Set(
             res.data
               .filter((p: any) => {
-                const pNet = (p.network || p.network_name || p.operator || '').toUpperCase();
-                return pNet === network.toUpperCase();
+                const pNet = String(p.network || p.network_name || p.operator || '').trim().toUpperCase();
+                const searchNet = String(network).trim().toUpperCase();
+                return pNet === searchNet || pNet.includes(searchNet) || searchNet.includes(pNet);
               })
-              .map((p: any) => p.type || p.dataType)
+              .map((p: any) => p.type || p.dataType || p.plan_type || p.category)
           )).filter(c => !!c);
           return { status: true, data: categories };
         }
@@ -186,8 +187,14 @@ export const vtuService = {
         if (res.status && Array.isArray(res.data)) {
           // Filter client-side as well in case the API returned all plans
           const filteredData = res.data.filter((p: any) => {
-            const netMatch = !payload.network || (p.network && p.network.toUpperCase() === payload.network.toUpperCase());
-            const typeMatch = !payload.type || (p.type && p.type.toUpperCase() === payload.type.toUpperCase()) || (p.dataType && p.dataType.toUpperCase() === payload.type.toUpperCase());
+            const pNet = String(p.network || p.network_name || p.operator || '').trim().toUpperCase();
+            const searchNet = String(payload.network).trim().toUpperCase();
+            const netMatch = !payload.network || pNet === searchNet || pNet.includes(searchNet) || searchNet.includes(pNet);
+            
+            const pType = String(p.type || p.dataType || p.plan_type || p.category || '').trim().toUpperCase();
+            const searchType = String(payload.type).trim().toUpperCase();
+            const typeMatch = !payload.type || pType === searchType || pType.includes(searchType) || searchType.includes(pType);
+            
             return netMatch && typeMatch;
           });
 

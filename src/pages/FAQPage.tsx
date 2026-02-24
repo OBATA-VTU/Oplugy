@@ -1,7 +1,5 @@
 
 import React, { useState } from 'react';
-import Logo from '../components/Logo';
-import Footer from '../components/Footer';
 
 const FAQPage: React.FC = () => {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
@@ -18,20 +16,13 @@ const FAQPage: React.FC = () => {
   const whatsappUrl = `https://wa.me/${proNumber.replace(/\D/g, '')}?text=Hello%20OBATA%20PRO,%20I%20need%20assistance%20with%20my%20account.`;
 
   return (
-    <div className="bg-white min-h-screen">
-      <nav className="p-6 border-b border-gray-100">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <Logo />
-        </div>
-      </nav>
+    <div className="max-w-4xl mx-auto pb-32">
+      <div className="text-center mb-20">
+        <h2 className="text-blue-600 text-[10px] font-black uppercase tracking-[0.4em] mb-4">Help Center</h2>
+        <h1 className="text-5xl lg:text-7xl font-black text-gray-900 tracking-tighter leading-none">Questions & Answers</h1>
+      </div>
 
-      <main className="max-w-4xl mx-auto px-6 py-24">
-        <div className="text-center mb-20">
-          <h2 className="text-blue-600 text-[10px] font-black uppercase tracking-[0.4em] mb-4">Help Center</h2>
-          <h1 className="text-5xl lg:text-7xl font-black text-gray-900 tracking-tighter leading-none">Questions & Answers</h1>
-        </div>
-
-        <div className="space-y-4 mb-24">
+      <div className="space-y-4 mb-24">
           {faqs.map((faq, idx) => (
             <div key={idx} className="border border-gray-100 rounded-[2rem] overflow-hidden transition-all duration-300">
               <button 
@@ -69,10 +60,7 @@ const FAQPage: React.FC = () => {
            <div className="absolute top-0 right-0 w-80 h-80 bg-blue-600/10 rounded-full blur-[100px]"></div>
            <div className="absolute bottom-0 left-0 w-80 h-80 bg-blue-600/10 rounded-full blur-[100px]"></div>
         </div>
-      </main>
-
-      <Footer />
-    </div>
+      </div>
   );
 };
 

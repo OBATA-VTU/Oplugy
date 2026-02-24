@@ -59,9 +59,9 @@ const PricingPage: React.FC = () => {
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 space-y-10 pb-20">
       <div>
-        <h2 className="text-4xl lg:text-5xl font-extrabold text-gray-900 tracking-tight mb-3">Our Prices</h2>
-        <p className="text-gray-500 font-medium text-lg">Check out our current prices for all services.</p>
-        <p className="text-blue-600 font-bold text-xs mt-4 uppercase tracking-wider">*Prices are final and include all charges.</p>
+        <h2 className="text-4xl lg:text-5xl font-extrabold text-gray-900 tracking-tight mb-3">Prices</h2>
+        <p className="text-gray-500 font-medium text-lg">See how much we charge for data, airtime, and bills.</p>
+        <p className="text-blue-600 font-bold text-xs mt-4 uppercase tracking-wider">*These are the final prices. No hidden fees.</p>
       </div>
 
       <div className="flex flex-col lg:flex-row gap-6 items-center justify-between">
@@ -101,7 +101,7 @@ const PricingPage: React.FC = () => {
       {loading ? (
         <div className="py-20 flex flex-col items-center justify-center space-y-6">
            <Spinner />
-           <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest animate-pulse">Updating prices...</p>
+           <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest animate-pulse">Loading prices...</p>
         </div>
       ) : (
         <div className="bg-white rounded-[2.5rem] shadow-xl border border-gray-50 overflow-hidden">
@@ -138,7 +138,7 @@ const PricingPage: React.FC = () => {
                           <td className="px-8 py-6 text-right text-[10px] font-bold uppercase tracking-widest text-gray-400">{item.validity || (activeTab === 'EDUCATION' ? 'Instant' : '30 Days')}</td>
                       </tr>
                     )) : (
-                      <tr><td colSpan={3} className="px-8 py-20 text-center text-gray-400 font-medium">No plans found.</td></tr>
+                      <tr><td colSpan={4} className="px-8 py-20 text-center text-gray-400 font-medium">Nothing found.</td></tr>
                     )}
                   </tbody>
               </table>
