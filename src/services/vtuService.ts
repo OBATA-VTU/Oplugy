@@ -93,7 +93,9 @@ export const vtuService = {
       } else {
         // Server 2 (Ciptopup)
         const res = await cipApiClient<any>('data/plans', { method: 'GET', server: 2 });
-        const rawPlans = res.status ? (Array.isArray(res.data) ? res.data : (res.data?.data || res.data?.plans || [])) : [];
+        if (!res.status) return res;
+        
+        const rawPlans = Array.isArray(res.data) ? res.data : (res.data?.data || res.data?.plans || []);
         
         if (Array.isArray(rawPlans) && rawPlans.length > 0) {
           const networksList = Array.from(new Set(rawPlans.map((p: any) => p.network || p.network_name || p.operator))).filter(n => !!n);
@@ -125,7 +127,9 @@ export const vtuService = {
       } else {
         // Server 2 (Ciptopup) - Fetch all plans and extract unique types
         const res = await cipApiClient<any>('data/plans', { method: 'GET', server: 2 });
-        const rawPlans = res.status ? (Array.isArray(res.data) ? res.data : (res.data?.data || res.data?.plans || [])) : [];
+        if (!res.status) return res;
+        
+        const rawPlans = Array.isArray(res.data) ? res.data : (res.data?.data || res.data?.plans || []);
         
         if (Array.isArray(rawPlans)) {
           const categories = Array.from(new Set(
@@ -184,10 +188,12 @@ export const vtuService = {
           getDoc(doc(db, "settings", "server2_config"))
         ]);
         
+        if (!res.status) return res;
+        
         const marginRaw = marginDoc.exists() ? marginDoc.data().general_margin : 0;
         const margin = isNaN(Number(marginRaw)) ? 0 : Number(marginRaw);
         
-        const rawPlans = res.status ? (Array.isArray(res.data) ? res.data : (res.data?.data || res.data?.plans || [])) : [];
+        const rawPlans = Array.isArray(res.data) ? res.data : (res.data?.data || res.data?.plans || []);
         
         if (Array.isArray(rawPlans)) {
           // Filter client-side as the API might not support query filters

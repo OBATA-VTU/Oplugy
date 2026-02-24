@@ -48,6 +48,8 @@ const VtuTest: React.FC = () => {
         setNetwork(res.data[0].id);
       }
       addLog("NETWORKS_LOADED", 'success', res.data);
+    } else {
+      addLog(`NETWORKS_SYNC_FAIL: ${res.message}`, 'error');
     }
   }, [addLog, selectedServer, network]);
 
@@ -57,6 +59,8 @@ const VtuTest: React.FC = () => {
     if (res.status) {
       setDataTypes(res.data || []);
       addLog("TYPES_LOADED", 'success', res.data);
+    } else {
+      addLog(`TYPES_FETCH_FAIL: ${res.message}`, 'error');
     }
   }, [addLog, network, selectedServer]);
 
@@ -119,6 +123,8 @@ const VtuTest: React.FC = () => {
     if (res.status) {
       setPlans(res.data || []);
       addLog(`CATALOG_SYNC_OK: Found ${res.data?.length} plans`, 'success');
+    } else {
+      addLog(`CATALOG_SYNC_FAIL: ${res.message}`, 'error');
     }
     setLoading(false);
   };

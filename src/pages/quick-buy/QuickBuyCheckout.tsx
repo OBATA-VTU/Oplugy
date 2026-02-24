@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'motion/react';
 import { ShieldCheck, CreditCard, CheckCircle2, ArrowLeft, Info } from 'lucide-react';
 import { useNotifications } from '../../hooks/useNotifications';
 import Logo from '../../components/Logo';

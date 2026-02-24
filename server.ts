@@ -266,6 +266,8 @@ app.post('/api/proxy-server2', async (req, res) => {
        if (qs) fullUrl += (fullUrl.includes('?') ? '&' : '?') + qs;
     }
 
+    console.log(`[Server 2 Proxy] ${method} ${fullUrl}`);
+
     const headers: any = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
