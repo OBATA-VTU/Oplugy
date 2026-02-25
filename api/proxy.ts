@@ -30,7 +30,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const selectedProvider = providers[server as keyof typeof providers] || providers.server1;
 
   if (!selectedProvider.apiKey) {
-    return res.status(500).json({ status: 'error', message: `System: API key for ${server} is not configured in environment.` });
+    return res.status(500).json({ status: 'error', message: `System: API key for ${server} is not configured.` });
   }
 
   try {
@@ -108,6 +108,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(apiResponse.status).send(responseText);
     }
   } catch (error: any) {
-    return res.status(504).json({ status: 'error', message: 'Fulfillment Node Connectivity Timeout.' });
+    return res.status(504).json({ status: 'error', message: 'Server Connection Timeout.' });
   }
 }

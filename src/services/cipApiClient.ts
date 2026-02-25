@@ -30,7 +30,7 @@ export async function cipApiClient<T>(
   if (!response.status) {
     return {
       status: false,
-      message: response.message || 'Node Connectivity Error',
+      message: response.message || 'Server Connection Error',
       data: undefined,
     };
   }
@@ -45,16 +45,16 @@ export async function cipApiClient<T>(
       data: rawData as T,
     };
   }
-
+ 
   // Handle standard success formats
   if (rawData?.status === 'success' || rawData?.status === true || rawData?.success === true) {
     return {
       status: true,
-      message: rawData.message || 'Transaction Successful',
+      message: rawData.message || 'Success',
       data: (rawData.data !== undefined ? rawData.data : rawData) as T,
     };
   }
-
-  const errorMsg = rawData?.message || 'Fulfillment Node Rejected Request';
+ 
+  const errorMsg = rawData?.message || 'Server Rejected Request';
   return { status: false, message: errorMsg };
 }

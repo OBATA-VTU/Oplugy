@@ -48,7 +48,7 @@ const AdminSettingsPage: React.FC = () => {
   if (loading) return (
     <div className="flex flex-col h-[60vh] items-center justify-center space-y-6">
       <Spinner />
-      <p className="text-[11px] font-black text-gray-400 uppercase tracking-[0.5em] animate-pulse">Accessing Core Config...</p>
+      <p className="text-[11px] font-black text-gray-400 uppercase tracking-[0.5em] animate-pulse">Loading Settings...</p>
     </div>
   );
 
@@ -56,7 +56,7 @@ const AdminSettingsPage: React.FC = () => {
     <div className="max-w-7xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-1000 pb-24">
       <div className="flex flex-col lg:flex-row justify-between lg:items-end gap-10">
         <div className="space-y-4">
-          <h2 className="text-[11px] font-black text-blue-600 uppercase tracking-[0.5em]">Infrastructure</h2>
+          <h2 className="text-[11px] font-black text-blue-600 uppercase tracking-[0.5em]">System Settings</h2>
           <h1 className="text-5xl lg:text-8xl font-black text-gray-900 tracking-tighter leading-[0.85]">System <br /><span className="text-blue-600">Config.</span></h1>
         </div>
         <button 
@@ -64,7 +64,7 @@ const AdminSettingsPage: React.FC = () => {
           disabled={isUpdating}
           className="flex items-center space-x-4 bg-gray-950 text-white px-10 py-6 rounded-[2rem] shadow-2xl text-[11px] font-black uppercase tracking-widest hover:bg-blue-600 transition-all transform active:scale-95 group"
         >
-          {isUpdating ? <Spinner /> : <><Save className="w-4 h-4 group-hover:scale-110 transition-transform" /> <span>Synchronize Matrix</span></>}
+          {isUpdating ? <Spinner /> : <><Save className="w-4 h-4 group-hover:scale-110 transition-transform" /> <span>Save All Settings</span></>}
         </button>
       </div>
 
@@ -80,12 +80,12 @@ const AdminSettingsPage: React.FC = () => {
                      <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center shadow-inner">
                         <DollarSign className="w-6 h-6" />
                      </div>
-                     <h3 className="text-4xl font-black text-gray-900 tracking-tighter">Tier Margins</h3>
+                     <h3 className="text-4xl font-black text-gray-900 tracking-tighter">Profit Margins</h3>
                   </div>
                   <div className="space-y-6">
-                     <MarginInput label="Standard Node Add-on" value={pricing.user_margin} onChange={(val: number) => setPricing({...pricing, user_margin: val})} />
-                     <MarginInput label="Reseller Node Add-on" value={pricing.reseller_margin} onChange={(val: number) => setPricing({...pricing, reseller_margin: val})} />
-                     <MarginInput label="API Merchant Add-on" value={pricing.api_margin} onChange={(val: number) => setPricing({...pricing, api_margin: val})} />
+                     <MarginInput label="Standard User Profit" value={pricing.user_margin} onChange={(val: number) => setPricing({...pricing, user_margin: val})} />
+                     <MarginInput label="Reseller Profit" value={pricing.reseller_margin} onChange={(val: number) => setPricing({...pricing, reseller_margin: val})} />
+                     <MarginInput label="API Merchant Profit" value={pricing.api_margin} onChange={(val: number) => setPricing({...pricing, api_margin: val})} />
                   </div>
                </div>
                <div className="absolute top-0 right-0 w-64 h-64 bg-blue-50/50 rounded-full translate-x-1/2 -translate-y-1/2 blur-3xl"></div>
@@ -101,18 +101,18 @@ const AdminSettingsPage: React.FC = () => {
                   <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center shadow-inner">
                      <Bell className="w-6 h-6" />
                   </div>
-                  <h3 className="text-4xl font-black text-gray-900 tracking-tighter">Global Broadcast</h3>
+                  <h3 className="text-4xl font-black text-gray-900 tracking-tighter">System Notice</h3>
                </div>
                <div className="space-y-6">
                   <textarea 
                     className="w-full p-10 bg-gray-50 border-2 border-transparent rounded-[3rem] font-bold text-lg min-h-[200px] focus:ring-8 focus:ring-blue-50 focus:bg-white focus:border-blue-100 transition-all outline-none" 
-                    placeholder="Enter system-wide announcement..." 
+                    placeholder="Enter message for all users..." 
                     value={announcement} 
                     onChange={(e) => setAnnouncement(e.target.value)} 
                   />
                   <div className="flex items-center space-x-3 text-gray-400 px-6">
                      <Info className="w-4 h-4" />
-                     <p className="text-[10px] font-black uppercase tracking-widest">This message will be visible to all active nodes.</p>
+                     <p className="text-[10px] font-black uppercase tracking-widest">This message will be shown to all users on their dashboard.</p>
                   </div>
                </div>
             </motion.div>
@@ -129,28 +129,28 @@ const AdminSettingsPage: React.FC = () => {
                      <div className="w-12 h-12 bg-white/10 text-blue-500 rounded-2xl flex items-center justify-center shadow-inner">
                         <Server className="w-6 h-6" />
                      </div>
-                     <h3 className="text-4xl font-black mb-2 tracking-tighter">Node Architecture</h3>
+                     <h3 className="text-4xl font-black mb-2 tracking-tighter">Server Settings</h3>
                   </div>
                   
                   <div className="space-y-12">
                      <div className="space-y-8">
                        <div className="flex items-center justify-between">
-                          <p className="text-[11px] font-black text-blue-400 uppercase tracking-[0.4em]">Primary Node: INLOMAX</p>
+                          <p className="text-[11px] font-black text-blue-400 uppercase tracking-[0.4em]">Primary Server: INLOMAX</p>
                           <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.5)]"></div>
                        </div>
                        <div className="space-y-6">
-                          <MarginInput dark label="Data Protocol Add-on" value={pricing.server1.data_margin} onChange={(v: number) => setPricing({...pricing, server1: {...pricing.server1, data_margin: v}})} />
-                          <MarginInput dark label="Cable Protocol Add-on" value={pricing.server1.cable_margin} onChange={(v: number) => setPricing({...pricing, server1: {...pricing.server1, cable_margin: v}})} />
-                          <MarginInput dark label="Energy Protocol Add-on" value={pricing.server1.electricity_margin} onChange={(v: number) => setPricing({...pricing, server1: {...pricing.server1, electricity_margin: v}})} />
+                          <MarginInput dark label="Data Profit" value={pricing.server1.data_margin} onChange={(v: number) => setPricing({...pricing, server1: {...pricing.server1, data_margin: v}})} />
+                          <MarginInput dark label="Cable TV Profit" value={pricing.server1.cable_margin} onChange={(v: number) => setPricing({...pricing, server1: {...pricing.server1, cable_margin: v}})} />
+                          <MarginInput dark label="Electricity Profit" value={pricing.server1.electricity_margin} onChange={(v: number) => setPricing({...pricing, server1: {...pricing.server1, electricity_margin: v}})} />
                        </div>
                      </div>
 
                      <div className="p-10 bg-white/5 rounded-[2.5rem] border border-white/10">
                         <div className="flex items-center space-x-4 mb-4">
                            <Shield className="w-5 h-5 text-blue-500" />
-                           <h4 className="text-[11px] font-black uppercase tracking-widest">Security Override</h4>
+                           <h4 className="text-[11px] font-black uppercase tracking-widest">Security Note</h4>
                         </div>
-                        <p className="text-white/40 text-sm leading-relaxed font-medium">These settings bypass individual node overrides. Use with caution during high-traffic periods.</p>
+                        <p className="text-white/40 text-sm leading-relaxed font-medium">These settings apply to all services. Be careful when changing these during busy hours.</p>
                      </div>
                   </div>
                </div>

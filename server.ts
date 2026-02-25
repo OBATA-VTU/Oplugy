@@ -236,12 +236,12 @@ app.post('/api/proxy-server1', async (req, res) => {
     } catch {
       return res.status(apiResponse.status).json({ 
         status: 'error', 
-        message: responseText.includes('Fatal error') ? 'Node Fulfillment Failure: Check liquidity.' : 'Gateway Protocol Error.',
+        message: responseText.includes('Fatal error') ? 'Server Error: Please try again later.' : 'Server Error.',
         raw: responseText.substring(0, 150)
       });
     }
   } catch (error: any) {
-    return res.status(504).json({ status: 'error', message: 'Fulfillment Node Connectivity Error.' });
+    return res.status(504).json({ status: 'error', message: 'Server Connection Error.' });
   }
 });
 
@@ -305,12 +305,12 @@ app.post('/api/proxy-server2', async (req, res) => {
     } catch {
       return res.status(apiResponse.status).json({ 
         status: 'error', 
-        message: 'Ciptopup Node Gateway Error.',
+        message: 'Server Error.',
         raw: responseText.substring(0, 150)
       });
     }
   } catch (error: any) {
-    return res.status(504).json({ status: 'error', message: 'Ciptopup Node Connectivity Error.' });
+    return res.status(504).json({ status: 'error', message: 'Server Connection Error.' });
   }
 });
 

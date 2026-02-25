@@ -53,7 +53,7 @@ const AdminPricingPage: React.FC = () => {
         }));
         setPlans(formatted);
       } else {
-        addNotification("Matrix sync failed for Node 1 Ledger.", "error");
+        addNotification("System update failed for Server 1.", "error");
       }
     } else {
       // Server 2
@@ -73,7 +73,7 @@ const AdminPricingPage: React.FC = () => {
         }));
         await fetchServer2Margin();
       } else {
-        addNotification("Matrix sync failed for Node 2 Ledger.", "error");
+        addNotification("System update failed for Server 2.", "error");
       }
     }
     setLoading(false);

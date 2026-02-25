@@ -41,6 +41,19 @@ async function logTransaction(userId: string, type: TransactionResponse['type'],
 }
 
 export const vtuService = {
+  checkServerStatus: async (server: 1 | 2): Promise<ApiResponse<any>> => {
+    try {
+      const endpoint = server === 1 ? 'services' : 'data/plans';
+      const res = await cipApiClient<any>(endpoint, { method: 'GET', server });
+      if (res.status) {
+        return { status: true, message: `Server ${server} is online and connected.` };
+      }
+      return { status: false, message: `Server ${server} connection failed: ${res.message}` };
+    } catch (e: any) {
+      return { status: false, message: `Server ${server} is offline.` };
+    }
+  },
+
   purchaseAirtime: async (payload: { network: string; phone: string; amount: number }): Promise<ApiResponse<TransactionResponse>> => {
     const user = auth.currentUser;
     if (!user) return { status: false, message: 'Please login to continue.' };

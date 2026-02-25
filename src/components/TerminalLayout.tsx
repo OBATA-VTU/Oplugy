@@ -44,14 +44,14 @@ const TerminalLayout: React.FC = () => {
           <div className="p-8 space-y-12">
             <div>
                <h1 className="text-white font-black tracking-tighter text-xl flex items-center gap-2">
-                 <BoltIcon /> NODE_DEBUG
+                 <BoltIcon /> SYSTEM_LOGS
                </h1>
-               <p className="text-zinc-600 text-[9px] uppercase tracking-widest mt-1 font-bold">Oplug Infrastructure v2.1</p>
+               <p className="text-zinc-600 text-[9px] uppercase tracking-widest mt-1 font-bold">Oplug System v2.1</p>
             </div>
 
             <nav className="space-y-2">
                <NavItem to="/admin/terminal/overview" icon={<HistoryIcon />} label="System Overview" />
-               <NavItem to="/admin/terminal/vtu" icon={<SignalIcon />} label="VTU Infrastructure" />
+               <NavItem to="/admin/terminal/vtu" icon={<SignalIcon />} label="VTU Services" />
                <NavItem to="/admin/terminal/payments" icon={<WalletIcon />} label="Payment Gateway" />
                <NavItem to="/admin/terminal/media" icon={<ShieldCheckIcon />} label="Media & Evidence" />
             </nav>
@@ -59,7 +59,7 @@ const TerminalLayout: React.FC = () => {
             <div className="pt-10 border-t border-zinc-900">
                <div className="flex items-center gap-3 px-4 py-3 bg-zinc-900/50 border border-zinc-800 rounded-lg">
                   <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                  <span className="text-[10px] text-zinc-400 font-bold uppercase">Socket Stable</span>
+                  <span className="text-[10px] text-zinc-400 font-bold uppercase">System Connected</span>
                </div>
             </div>
           </div>
@@ -73,9 +73,9 @@ const TerminalLayout: React.FC = () => {
              <div className="flex items-center gap-4">
                 <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 text-zinc-500"><MenuIcon /></button>
                 <div className="hidden lg:block h-4 w-1 bg-green-500/20 rounded-full"></div>
-                <h2 className="text-zinc-400 text-xs font-black uppercase tracking-[0.3em]">Diagnostic Path: <span className="text-green-500">{location.pathname.replace('/terminal/', '').toUpperCase()}</span></h2>
+                <h2 className="text-zinc-400 text-xs font-black uppercase tracking-[0.3em]">System Check: <span className="text-green-500">{location.pathname.replace('/terminal/', '').toUpperCase()}</span></h2>
              </div>
-             <button onClick={clearLogs} className="px-4 py-2 border border-red-900/50 text-red-500 text-[10px] font-black uppercase hover:bg-red-950 transition-all rounded">Reset Buffer</button>
+             <button onClick={clearLogs} className="px-4 py-2 border border-red-900/50 text-red-500 text-[10px] font-black uppercase hover:bg-red-950 transition-all rounded">Clear Logs</button>
           </header>
 
           {/* Test Area */}
@@ -86,12 +86,12 @@ const TerminalLayout: React.FC = () => {
           {/* Persistent Shared Console Output */}
           <section className="h-1/3 lg:h-80 bg-zinc-950 border-t border-zinc-800 flex flex-col shrink-0 shadow-2xl">
              <div className="p-3 px-6 bg-zinc-900/50 border-b border-zinc-800 flex justify-between items-center">
-                <span className="text-[10px] font-black uppercase text-zinc-500 tracking-widest">Diagnostic Stream (v2.1)</span>
-                <span className="text-[9px] font-mono text-zinc-700">STD_ERR // STD_OUT</span>
+                <span className="text-[10px] font-black uppercase text-zinc-500 tracking-widest">System Logs (v2.1)</span>
+                <span className="text-[9px] font-mono text-zinc-700">LOGS // OUTPUT</span>
              </div>
              <div ref={scrollRef} className="flex-1 p-6 overflow-y-auto font-mono text-xs space-y-2 selection:bg-green-900 selection:text-white">
                 {logs.length === 0 ? (
-                  <div className="h-full flex items-center justify-center text-zinc-800 italic uppercase tracking-[0.2em] text-[10px]">Awaiting node command execution...</div>
+                  <div className="h-full flex items-center justify-center text-zinc-800 italic uppercase tracking-[0.2em] text-[10px]">Waiting for system activity...</div>
                 ) : (
                   logs.map((log, i) => (
                     <div key={i} className="animate-in fade-in duration-100">

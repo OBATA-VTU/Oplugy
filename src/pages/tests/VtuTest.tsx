@@ -39,6 +39,16 @@ const VtuTest: React.FC = () => {
 
   const [airtimeOperators, setAirtimeOperators] = useState<any[]>([]);
 
+  const checkStatus = async (server: 1 | 2) => {
+    addLog(`CHECKING_SERVER_${server}_STATUS...`, 'cmd');
+    const res = await vtuService.checkServerStatus(server);
+    if (res.status) {
+      addLog(`SERVER_${server}_ONLINE: ${res.message}`, 'success');
+    } else {
+      addLog(`SERVER_${server}_OFFLINE: ${res.message}`, 'error');
+    }
+  };
+
   const fetchNetworks = useCallback(async () => {
     addLog(`SYNC_NETWORKS: [Server: ${selectedServer}]`, 'cmd');
     const res = await vtuService.getDataNetworks(selectedServer);
@@ -65,7 +75,7 @@ const VtuTest: React.FC = () => {
   }, [addLog, network, selectedServer]);
 
   const fetchDiscos = useCallback(async () => {
-    addLog("SYNC_DISCO_NODES", 'cmd');
+    addLog("SYNC_DISCO_PROVIDERS", 'cmd');
     const res = await vtuService.getElectricityOperators();
     if (res.status) {
       setDiscos(res.data || []);
@@ -254,11 +264,25 @@ const VtuTest: React.FC = () => {
       {/* Interactive Simulation Frame */}
       <div className="bg-zinc-900 border border-zinc-800 rounded-[2rem] overflow-hidden">
          <div className="p-4 bg-zinc-800/30 border-b border-zinc-800 flex items-center justify-between">
-            <span className="text-[10px] font-black uppercase text-zinc-400 tracking-widest ml-4">Fulfillment Simulation Node</span>
-            <div className="flex gap-1.5 mr-4">
-               <div className="w-2 h-2 rounded-full bg-zinc-700"></div>
-               <div className="w-2 h-2 rounded-full bg-zinc-700"></div>
-               <div className="w-2 h-2 rounded-full bg-green-500"></div>
+            <span className="text-[10px] font-black uppercase text-zinc-400 tracking-widest ml-4">Service Test Area</span>
+            <div className="flex gap-2 mr-4">
+               <button 
+                 onClick={() => checkStatus(1)}
+                 className="px-3 py-1 bg-zinc-900 border border-zinc-700 text-zinc-400 text-[8px] font-black uppercase hover:bg-zinc-800 transition-all rounded"
+               >
+                 Check Server 1
+               </button>
+               <button 
+                 onClick={() => checkStatus(2)}
+                 className="px-3 py-1 bg-zinc-900 border border-zinc-700 text-zinc-400 text-[8px] font-black uppercase hover:bg-zinc-800 transition-all rounded"
+               >
+                 Check Server 2
+               </button>
+               <div className="flex gap-1.5 ml-2 items-center">
+                  <div className="w-2 h-2 rounded-full bg-zinc-700"></div>
+                  <div className="w-2 h-2 rounded-full bg-zinc-700"></div>
+                  <div className="w-2 h-2 rounded-full bg-green-500"></div>
+               </div>
             </div>
          </div>
 
@@ -283,7 +307,7 @@ const VtuTest: React.FC = () => {
                  </div>
                   <div className="space-y-6">
                     <div>
-                       <label className="text-[9px] font-black text-zinc-500 uppercase tracking-widest block mb-2">Plan Catalog</label>
+                       <label className="text-[9px] font-black text-zinc-500 uppercase tracking-widest block mb-2">Available Plans</label>
                        <select value={selectedPlanId} onChange={(e) => setSelectedPlanId(e.target.value)} className="w-full bg-black border border-zinc-800 p-4 rounded-xl text-green-500 font-mono outline-none focus:border-green-500 transition-all">
                           <option value="">Select Plan</option>
                           {plans.map(p => <option key={p.id} value={p.id}>{p.name} - ₦{p.amount}</option>)}
@@ -294,7 +318,7 @@ const VtuTest: React.FC = () => {
                        <input type="text" value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full bg-black border border-zinc-800 p-4 rounded-xl text-green-500 font-mono outline-none focus:border-green-500 transition-all" />
                     </div>
                     <div>
-                       <label className="text-[9px] font-black text-zinc-500 uppercase tracking-widest block mb-2">Fulfillment Node (Server)</label>
+                       <label className="text-[9px] font-black text-zinc-500 uppercase tracking-widest block mb-2">Select Server</label>
                        <div className="flex gap-2">
                           <button onClick={() => { setSelectedServer(1); setPlans([]); setSelectedPlanId(''); }} className={`flex-1 py-3 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all border ${selectedServer === 1 ? 'bg-green-500 text-black border-green-400' : 'bg-black text-zinc-500 border-zinc-800'}`}>Server 1 (Inlomax)</button>
                           <button onClick={() => { setSelectedServer(2); setPlans([]); setSelectedPlanId(''); }} className={`flex-1 py-3 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all border ${selectedServer === 2 ? 'bg-green-500 text-black border-green-400' : 'bg-black text-zinc-500 border-zinc-800'}`}>Server 2 (Ciptopup)</button>
@@ -308,14 +332,14 @@ const VtuTest: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-in fade-in">
                  <div className="space-y-6">
                     <div>
-                       <label className="text-[9px] font-black text-zinc-500 uppercase tracking-widest block mb-2">Biller Node</label>
+                       <label className="text-[9px] font-black text-zinc-500 uppercase tracking-widest block mb-2">Cable Provider</label>
                        <select value={cableBiller} onChange={(e) => { setCableBiller(e.target.value); setCustomerName(null); setCablePlans([]); }} className="w-full bg-black border border-zinc-800 p-4 rounded-xl text-green-500 font-mono outline-none focus:border-green-500 transition-all">
                           <option value="">Choose Provider</option>
                           {cableBillers.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
                        </select>
                     </div>
                     <div>
-                       <label className="text-[9px] font-black text-zinc-500 uppercase tracking-widest block mb-2">IUC / Smartcard</label>
+                       <label className="text-[9px] font-black text-zinc-500 uppercase tracking-widest block mb-2">Smartcard Number</label>
                        <div className="flex gap-2">
                           <input type="text" value={iuc} onChange={(e) => setIuc(e.target.value)} className="flex-1 bg-black border border-zinc-800 p-4 rounded-xl text-green-500 font-mono outline-none focus:border-green-500 transition-all" />
                           <button onClick={handleValidateCable} disabled={verifying || !cableBiller} className="px-6 bg-zinc-100 text-black font-black text-[9px] uppercase tracking-widest rounded-xl hover:bg-white transition-all disabled:opacity-50">
@@ -332,7 +356,7 @@ const VtuTest: React.FC = () => {
                        </div>
                     )}
                     <div>
-                       <label className="text-[9px] font-black text-zinc-500 uppercase tracking-widest block mb-2">Available Bouquets</label>
+                       <label className="text-[9px] font-black text-zinc-500 uppercase tracking-widest block mb-2">Cable Plans</label>
                        <select value={selectedCablePlan} onChange={(e) => setSelectedCablePlan(e.target.value)} className="w-full bg-black border border-zinc-800 p-4 rounded-xl text-green-500 font-mono outline-none focus:border-green-500 disabled:opacity-30 transition-all" disabled={!customerName}>
                           <option value="">Select Plan</option>
                           {cablePlans.map(p => <option key={p.id} value={p.id}>{p.name} - ₦{p.amount}</option>)}

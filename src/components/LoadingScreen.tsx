@@ -6,7 +6,7 @@ interface LoadingScreenProps {
   message?: string;
 }
 
-const LoadingScreen: React.FC<LoadingScreenProps> = ({ message = "Initializing Secure Node..." }) => {
+const LoadingScreen: React.FC<LoadingScreenProps> = ({ message = "Starting Secure System..." }) => {
   return (
     <div className="fixed inset-0 z-[9999] bg-white flex flex-col items-center justify-center">
       <motion.div
