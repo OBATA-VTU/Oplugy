@@ -8,7 +8,7 @@ import LoadingScreen from '../components/LoadingScreen';
 import { Server, Smartphone, Wifi, CheckCircle2, Receipt, ArrowRight, AlertCircle, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
-import { DATA_NETWORKS } from '../constants';
+
 
 const DataPage: React.FC = () => {
   const navigate = useNavigate();
@@ -217,12 +217,10 @@ const DataPage: React.FC = () => {
               <StepHeader num="1" title="Choose Network" />
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                 {networks.map(n => {
-                  const constant = DATA_NETWORKS.find(c => c.name.toUpperCase() === n.name.toUpperCase());
                   return (
                     <SelectionButton 
                       key={n.id} 
                       label={n.name} 
-                      image={constant?.image}
                       icon={<Smartphone className="w-6 h-6" />} 
                       onClick={() => handleNetworkSelect(n.id)} 
                     />

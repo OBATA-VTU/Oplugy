@@ -45,11 +45,17 @@ export const vtuService = {
     try {
       const endpoint = server === 1 ? 'services' : 'data/plans';
       const res = await cipApiClient<any>(endpoint, { method: 'GET', server });
-      if (res.status) {
+      console.log(`[vtuService] checkServerStatus Server ${server} raw response:`, res);
+      
+      // For Server 2, the "Invalid option" error actually confirms the server is reachable and responding
+      if (res.status || (server === 2 && String(res.message).toLowerCase().includes('expected one of'))) {
         return { status: true, message: `Server ${server} is online and connected.` };
       }
+      
+      console.error(`[vtuService] checkServerStatus Server ${server} failed:`, res.message);
       return { status: false, message: `Server ${server} connection failed: ${res.message}` };
     } catch (e: any) {
+      console.error(`[vtuService] checkServerStatus Server ${server} exception:`, e);
       return { status: false, message: `Server ${server} is offline.` };
     }
   },
@@ -106,6 +112,25 @@ export const vtuService = {
       } else {
         // Server 2 (Ciptopup)
         const res = await cipApiClient<any>('data/plans', { method: 'GET', server: 2 });
+        
+        // DYNAMIC EXTRACTION: No hardcoded network names. 
+        // We parse the API's own error message to find what it expects.
+        if (!res.status && res.message?.includes('expected one of')) {
+          const parts = res.message.split('expected one of');
+          if (parts.length > 1) {
+            const networkPart = parts[1];
+            const regex = /"([^"]+)"/g;
+            let match;
+            const networksFromError: string[] = [];
+            while ((match = regex.exec(networkPart)) !== null) {
+              networksFromError.push(match[1]);
+            }
+            if (networksFromError.length > 0) {
+              return { status: true, data: networksFromError.map(n => ({ id: n, name: n })) };
+            }
+          }
+        }
+
         if (!res.status) return res;
         
         const rawPlans = Array.isArray(res.data) ? res.data : (res.data?.data || res.data?.plans || []);
@@ -139,7 +164,11 @@ export const vtuService = {
         }
       } else {
         // Server 2 (Ciptopup) - Fetch all plans and extract unique types
-        const res = await cipApiClient<any>('data/plans', { method: 'GET', server: 2 });
+        const res = await cipApiClient<any>('data/plans', { 
+          method: 'GET', 
+          server: 2,
+          data: { network } // Pass the network to get plans for this network
+        });
         console.log('[vtuService] Server 2 Categories Raw Response:', res);
         if (!res.status) return res;
         
@@ -201,7 +230,8 @@ export const vtuService = {
         const [res, marginDoc] = await Promise.all([
           cipApiClient<any>('data/plans', { 
             method: 'GET', 
-            server: 2
+            server: 2,
+            data: { network: payload.network } // Pass the network to get plans for this network
           }),
           getDoc(doc(db, "settings", "server2_config"))
         ]);
