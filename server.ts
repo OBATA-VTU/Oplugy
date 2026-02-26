@@ -332,8 +332,7 @@ async function processScheduledTransactions() {
   try {
     const snapshot = await db.collection('scheduled_transactions')
       .where('status', '==', 'PENDING')
-      .where('scheduledTime', '<=', now)
-      .limit(10)
+      .limit(20)
       .get();
 
     if (snapshot.empty) return;
@@ -342,7 +341,12 @@ async function processScheduledTransactions() {
 
     for (const doc of snapshot.docs) {
       const data = doc.data();
-      const { userId, service, amount, recipient, network, planId, type } = data;
+      const { userId, service, amount, recipient, network, planId } = data;
+
+      // Filter in memory to avoid composite index requirement
+      if (!data.scheduledTime || data.scheduledTime.toDate() > now.toDate()) {
+        continue;
+      }
 
       try {
         // 1. Check user balance
@@ -358,19 +362,66 @@ async function processScheduledTransactions() {
           continue;
         }
 
-        // 2. Execute Transaction (Simplified - calling Server 1 by default for scheduler)
-        // In a real production app, this would use the same logic as the proxy routes
-        // For this demo, we'll simulate the API call or use a simplified version
+        // 2. Execute Transaction
+        const apiKey = process.env.INLOMAX_API_KEY;
+        const baseUrl = 'https://inlomax.com/api';
         
+        if (!apiKey) {
+          throw new Error('API key not configured');
+        }
+
+        let endpoint = '';
+        let payload: any = {};
+        
+        if (service === 'airtime') {
+          endpoint = 'airtime';
+          payload = { serviceID: network, mobileNumber: recipient, amount };
+        } else if (service === 'data') {
+          endpoint = 'data';
+          payload = { serviceID: planId, mobileNumber: recipient };
+        } else if (service === 'power') {
+          endpoint = 'payelectric';
+          payload = { serviceID: network, meterNum: recipient, amount, meterType: data.meterType === 'prepaid' ? 1 : 2 };
+        } else if (service === 'tv') {
+          endpoint = 'subcable';
+          payload = { serviceID: planId, iucNum: recipient };
+        }
+
+        if (!endpoint) {
+          throw new Error(`Unsupported service: ${service}`);
+        }
+
         // Update status to PROCESSING to avoid double execution
         await doc.ref.update({ status: 'PROCESSING' });
 
-        // Deduct balance
+        const headers: any = {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': `Token ${apiKey}`
+        };
+        
+        if (['payelectric', 'subcable'].includes(endpoint)) {
+          headers['Authorization-Token'] = apiKey;
+        }
+
+        const apiResponse = await fetch(`${baseUrl}/${endpoint}`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(payload)
+        });
+        
+        const responseData = await apiResponse.json();
+        
+        if (!apiResponse.ok || (responseData.status !== 'success' && responseData.status !== true)) {
+          throw new Error(responseData.message || 'Server rejected the transaction');
+        }
+
+        // 3. Deduct balance
         await userRef.update({
           walletBalance: admin.firestore.FieldValue.increment(-amount)
         });
 
-        // Log transaction
+        // 4. Log transaction
         await db.collection('transactions').add({
           userId,
           userEmail: data.userEmail,
@@ -379,10 +430,11 @@ async function processScheduledTransactions() {
           source: `${network} ${service} (Scheduled)`,
           remarks: `Automated payment for ${recipient}`,
           status: 'SUCCESS',
+          server: 'Inlomax Node',
           date_created: admin.firestore.FieldValue.serverTimestamp()
         });
 
-        // Mark as completed
+        // 5. Mark as completed
         await doc.ref.update({ 
           status: 'COMPLETED',
           updatedAt: admin.firestore.FieldValue.serverTimestamp()

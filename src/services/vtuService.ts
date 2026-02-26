@@ -140,9 +140,11 @@ export const vtuService = {
       } else {
         // Server 2 (Ciptopup) - Fetch all plans and extract unique types
         const res = await cipApiClient<any>('data/plans', { method: 'GET', server: 2 });
+        console.log('[vtuService] Server 2 Categories Raw Response:', res);
         if (!res.status) return res;
         
         const rawPlans = Array.isArray(res.data) ? res.data : (res.data?.data || res.data?.plans || []);
+        console.log('[vtuService] Server 2 Categories Processed Raw Plans:', rawPlans);
         
         if (Array.isArray(rawPlans)) {
           const categories = Array.from(new Set(
@@ -150,10 +152,13 @@ export const vtuService = {
               .filter((p: any) => {
                 const pNet = String(p.network || p.network_name || p.operator || '').trim().toUpperCase();
                 const searchNet = String(network).trim().toUpperCase();
-                return pNet === searchNet || pNet.includes(searchNet) || searchNet.includes(pNet);
+                const match = pNet === searchNet || pNet.includes(searchNet) || searchNet.includes(pNet);
+                // console.log(`[vtuService] Filtering: Plan Network: ${pNet}, Search Network: ${searchNet}, Match: ${match}`);
+                return match;
               })
               .map((p: any) => p.type || p.dataType || p.plan_type || p.category)
           )).filter(c => !!c);
+          console.log('[vtuService] Server 2 Extracted Categories:', categories);
           return { status: true, data: categories };
         }
       }

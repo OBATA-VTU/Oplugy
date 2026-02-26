@@ -97,13 +97,13 @@ const SchedulePurchasePage: React.FC = () => {
           <Clock className="w-10 h-10" />
         </div>
         <h2 className="text-5xl lg:text-6xl font-black text-gray-900 tracking-tighter">Schedule</h2>
-        <p className="text-gray-400 font-medium text-xl max-w-xl mx-auto">Set it and forget it. Automate your bills and recharges for any future date.</p>
+        <p className="text-gray-400 font-medium text-xl max-w-xl mx-auto">Set it and forget it. We'll handle your payments and recharges automatically for you.</p>
       </div>
 
       <div className="bg-white p-10 lg:p-14 rounded-[4rem] shadow-2xl shadow-blue-100/50 border border-gray-50 space-y-12">
         {/* Service Selection */}
         <div className="space-y-6">
-          <p className="text-[10px] font-black text-blue-600 uppercase tracking-[0.3em] ml-4">1. Select Service</p>
+          <p className="text-[10px] font-black text-blue-600 uppercase tracking-[0.3em] ml-4">1. Choose what you want to buy</p>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
               { id: 'airtime', icon: <Smartphone />, label: 'Airtime' },
@@ -129,7 +129,7 @@ const SchedulePurchasePage: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
           <div className="space-y-8">
             <div className="space-y-3">
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">2. Network / Provider</label>
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">2. Pick your Network / Provider</label>
               <div className="relative">
                 <select 
                   className="w-full p-6 bg-gray-50 rounded-[2rem] font-bold text-lg border-2 border-transparent focus:border-blue-600 focus:bg-white outline-none transition-all appearance-none"
@@ -145,7 +145,7 @@ const SchedulePurchasePage: React.FC = () => {
 
             {service === 'data' && dataTypes.length > 0 && (
               <div className="space-y-3">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">2b. Data Type</label>
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">2b. Choose Data Type</label>
                 <div className="relative">
                   <select 
                     className="w-full p-6 bg-gray-50 rounded-[2rem] font-bold text-lg border-2 border-transparent focus:border-blue-600 focus:bg-white outline-none transition-all appearance-none"
@@ -162,7 +162,7 @@ const SchedulePurchasePage: React.FC = () => {
 
             {service === 'data' && dataPlans.length > 0 && (
               <div className="space-y-3">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">2c. Data Plan</label>
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">2c. Pick a Data Plan</label>
                 <div className="relative">
                   <select 
                     className="w-full p-6 bg-gray-50 rounded-[2rem] font-bold text-lg border-2 border-transparent focus:border-blue-600 focus:bg-white outline-none transition-all appearance-none"
@@ -181,7 +181,7 @@ const SchedulePurchasePage: React.FC = () => {
             )}
 
             <div className="space-y-3">
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">3. Recipient Details</label>
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">3. Who is receiving this?</label>
               <input 
                 type="text" 
                 className="w-full p-6 bg-gray-50 border-2 border-transparent rounded-[2rem] font-bold text-xl outline-none focus:border-blue-600 focus:bg-white transition-all tracking-tight" 
@@ -194,7 +194,7 @@ const SchedulePurchasePage: React.FC = () => {
 
           <div className="space-y-8">
             <div className="space-y-3">
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">4. Amount (₦)</label>
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">4. How much (₦)?</label>
               <div className="relative">
                 <span className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-xl">₦</span>
                 <input 
@@ -209,7 +209,7 @@ const SchedulePurchasePage: React.FC = () => {
 
             <div className="grid grid-cols-2 gap-6">
               <div className="space-y-3">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">5. Date</label>
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">5. When should this happen? (Date)</label>
                 <div className="relative">
                   <Calendar className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300" />
                   <input 
@@ -221,7 +221,7 @@ const SchedulePurchasePage: React.FC = () => {
                 </div>
               </div>
               <div className="space-y-3">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">6. Time</label>
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">6. When should this happen? (Time)</label>
                 <div className="relative">
                   <Clock className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300" />
                   <input 
@@ -241,7 +241,7 @@ const SchedulePurchasePage: React.FC = () => {
           disabled={isScheduling}
           className="w-full py-8 bg-blue-600 text-white rounded-[2.5rem] font-black text-[12px] uppercase tracking-[0.4em] shadow-2xl shadow-blue-100 hover:bg-gray-950 transition-all flex items-center justify-center space-x-4 transform active:scale-95 disabled:opacity-50"
         >
-          {isScheduling ? <Spinner /> : <><ShieldCheck className="w-5 h-5" /> <span>Schedule Now</span></>}
+          {isScheduling ? <Spinner /> : <><ShieldCheck className="w-5 h-5" /> <span>Set it Up Now</span></>}
         </button>
       </div>
 
@@ -252,7 +252,7 @@ const SchedulePurchasePage: React.FC = () => {
             </div>
             <div className="space-y-2">
                <h4 className="text-2xl font-black tracking-tight">Automatic Payment</h4>
-               <p className="text-white/40 font-medium text-lg leading-relaxed">Your payment will be made automatically at the time you set. Please make sure you have enough money in your wallet then.</p>
+               <p className="text-white/40 font-medium text-lg leading-relaxed">We'll make this payment for you automatically at the time you choose. Just make sure you have enough money in your wallet.</p>
             </div>
          </div>
          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/10 rounded-full blur-[100px]"></div>

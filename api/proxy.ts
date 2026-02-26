@@ -22,7 +22,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     },
     server2: {
       baseUrl: 'https://api.ciptopup.ng/api',
-      apiKey: process.env.CIP_API_KEY,
+      apiKey: process.env.CIPTOPUP_API_KEY,
       authHeader: (key: string) => ({ 'x-api-key': key })
     }
   };
