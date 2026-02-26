@@ -36,6 +36,7 @@ import AdminLayout from './components/AdminLayout';
 import AdminDashboardPage from './pages/AdminDashboardPage';
 import AdminUsersPage from './pages/AdminUsersPage';
 import AdminTransactionsPage from './pages/AdminTransactionsPage';
+import AdminFundingRequestsPage from './pages/AdminFundingRequestsPage';
 import AdminPricingPage from './pages/AdminPricingPage';
 import AdminSettingsPage from './pages/AdminSettingsPage';
 import TerminalLayout from './components/TerminalLayout';
@@ -93,6 +94,7 @@ const App: React.FC = () => {
                 <Route path="dashboard" element={<AdminDashboardPage />} />
                 <Route path="users" element={<AdminUsersPage />} />
                 <Route path="transactions" element={<AdminTransactionsPage />} />
+                <Route path="funding-requests" element={<AdminFundingRequestsPage />} />
                 <Route path="pricing" element={<AdminPricingPage />} />
                 <Route path="settings" element={<AdminSettingsPage />} />
                 

@@ -440,5 +440,23 @@ export const vtuService = {
       });
       return { status: true, data };
     } catch (error) { return { status: false, message: "History not available." }; }
+  },
+
+  submitManualFundingRequest: async (payload: { amount: number; receiptUrl: string }): Promise<ApiResponse<any>> => {
+    const user = auth.currentUser;
+    if (!user) return { status: false, message: 'Auth required.' };
+    try {
+      await addDoc(collection(db, "funding_requests"), {
+        userId: user.uid,
+        userEmail: user.email,
+        amount: payload.amount,
+        receiptUrl: payload.receiptUrl,
+        status: 'PENDING',
+        date_created: serverTimestamp(),
+      });
+      return { status: true, message: 'Funding request submitted successfully. Admin will review it shortly.' };
+    } catch (e) {
+      return { status: false, message: 'Failed to submit request.' };
+    }
   }
 };

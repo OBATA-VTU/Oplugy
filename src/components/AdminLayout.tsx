@@ -4,7 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../context/ThemeContext';
 import Spinner from './Spinner';
 import Logo from './Logo';
-import { Sun, Moon } from 'lucide-react';
+import { Sun, Moon, Landmark } from 'lucide-react';
 import { 
   HomeIcon, 
   UsersIcon, 
@@ -63,6 +63,7 @@ const AdminLayout: React.FC = () => {
         <AdminNavItem to="/admin" icon={<HomeIcon />} onClick={closeSidebar}>Overview</AdminNavItem>
         <AdminNavItem to="/admin/users" icon={<UsersIcon />} onClick={closeSidebar}>Users</AdminNavItem>
         <AdminNavItem to="/admin/transactions" icon={<HistoryIcon />} onClick={closeSidebar}>Transactions</AdminNavItem>
+        <AdminNavItem to="/admin/funding-requests" icon={<Landmark className="w-5 h-5" />} onClick={closeSidebar}>Funding Requests</AdminNavItem>
         <AdminNavItem to="/admin/pricing" icon={<CurrencyDollarIcon />} onClick={closeSidebar}>Pricing Control</AdminNavItem>
         
         <div className="px-4 py-3 mt-6 text-[10px] font-bold uppercase tracking-widest text-gray-400">System</div>

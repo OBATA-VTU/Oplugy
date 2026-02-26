@@ -9,7 +9,9 @@ import {
   increment,
   limit,
   orderBy,
-  setDoc
+  setDoc,
+  serverTimestamp,
+  addDoc
 } from 'firebase/firestore';
 import { cipApiClient } from './cipApiClient';
 import { ApiResponse, User, UserRole, UserStatus, TransactionResponse } from '../types';
@@ -138,6 +140,61 @@ export const adminService = {
       };
     } catch (error: any) {
       return { status: false, message: "Stats failure" };
+    }
+  },
+
+  // --- Funding Requests ---
+  async getFundingRequests(): Promise<ApiResponse<any[]>> {
+    try {
+      const q = query(collection(db, "funding_requests"), orderBy("date_created", "desc"), limit(50));
+      const snapshot = await getDocs(q);
+      const requests = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+      return { status: true, data: requests };
+    } catch (error: any) {
+      return { status: false, message: "Failed to fetch funding requests" };
+    }
+  },
+
+  async updateFundingRequestStatus(requestId: string, status: 'APPROVED' | 'REJECTED'): Promise<ApiResponse<void>> {
+    try {
+      const requestRef = doc(db, "funding_requests", requestId);
+      const requestSnap = await getDoc(requestRef);
+      
+      if (!requestSnap.exists()) return { status: false, message: "Request not found" };
+      
+      const requestData = requestSnap.data();
+      if (requestData.status !== 'PENDING') return { status: false, message: "Request already processed" };
+
+      if (status === 'APPROVED') {
+        // Credit user
+        await updateDoc(doc(db, "users", requestData.userId), { 
+          walletBalance: increment(requestData.amount) 
+        });
+        
+        // Log transaction
+        await addDoc(collection(db, "transactions"), {
+          userId: requestData.userId,
+          userEmail: requestData.userEmail,
+          type: 'FUNDING',
+          amount: requestData.amount,
+          source: 'Manual Transfer',
+          remarks: 'Manual funding approved by admin',
+          status: 'SUCCESS',
+          server: 'Admin Panel',
+          date_created: serverTimestamp(),
+          date_updated: serverTimestamp()
+        });
+      }
+
+      await updateDoc(requestRef, { 
+        status,
+        date_updated: serverTimestamp()
+      });
+
+      return { status: true, message: `Request ${status.toLowerCase()} successfully` };
+    } catch (error: any) {
+      console.error("Funding update error:", error);
+      return { status: false, message: "Failed to update request" };
     }
   }
 };
