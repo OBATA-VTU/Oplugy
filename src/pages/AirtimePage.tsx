@@ -7,7 +7,7 @@ import PinPromptModal from '../components/PinPromptModal';
 import InsufficientBalanceModal from '../components/InsufficientBalanceModal';
 import LoadingScreen from '../components/LoadingScreen';
 import { AIRTIME_NETWORKS } from '../constants';
-import { Zap, CheckCircle2, Receipt, ArrowRight } from 'lucide-react';
+import { Zap, CheckCircle2, Receipt, ArrowRight, Smartphone, ShieldCheck } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 
@@ -414,13 +414,6 @@ const AirtimePage: React.FC = () => {
     </div>
   );
 };
-
-const StepHeader = ({ num, title }: { num: string, title: string }) => (
-  <div className="flex items-center space-x-4 mb-8">
-    <div className="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center font-black text-sm">{num}</div>
-    <h3 className="text-3xl font-black text-gray-900 tracking-tight">{title}</h3>
-  </div>
-);
 
 const CheckoutRow = ({ label, value }: { label: string, value: string }) => (
   <div className="flex justify-between items-center">

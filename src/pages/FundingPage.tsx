@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNotifications } from '../hooks/useNotifications';
-import { Wallet, CreditCard, Landmark, Copy, Zap, ShieldCheck, Info, ArrowRight, Upload, CheckCircle2, XCircle, ChevronLeft } from 'lucide-react';
+import { Wallet, CreditCard, Landmark, Copy, Zap, ShieldCheck, Info, ArrowRight, Upload, CheckCircle2, ChevronLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { uploadToImgBB } from '../services/imgbbService';
 import { vtuService } from '../services/vtuService';

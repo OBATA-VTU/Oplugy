@@ -6,15 +6,8 @@ import {
   XCircle, 
   Eye, 
   Clock, 
-  User, 
-  CreditCard, 
   ExternalLink,
-  Search,
-  Filter,
-  ArrowUpRight,
-  ArrowDownRight,
-  MoreVertical,
-  Image as ImageIcon
+  Search
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 

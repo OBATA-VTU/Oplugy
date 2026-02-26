@@ -3,7 +3,7 @@ export const LOCAL_STORAGE_TOKEN_KEY = 'obata_token';
 export const LOCAL_STORAGE_USER_KEY = 'obata_user';
 
 // API Base URLs
-export const OBATA_API_BASE_URL = process.env.REACT_APP_OBATA_API_BASE_URL || '/api/mock';
+export const OBATA_API_BASE_URL = process.env.REACT_APP_OBATA_API_BASE_URL || '/api';
 
 // Service Categories for Dashboard
 export const SERVICE_CATEGORIES = [

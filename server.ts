@@ -27,6 +27,134 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Helper functions for API calls
+async function callServer1(endpoint: string, method: string, data: any) {
+  const apiKey = process.env.INLOMAX_API_KEY;
+  const baseUrl = 'https://inlomax.com/api';
+
+  if (!apiKey) {
+    throw new Error('Inlomax API key not configured.');
+  }
+
+  const cleanEndpoint = (endpoint || '').replace(/^\//, '');
+  let fullUrl = `${baseUrl}/${cleanEndpoint}`;
+  
+  if (method.toUpperCase() === 'GET' && data) {
+     const params = new URLSearchParams();
+     Object.entries(data).forEach(([k, v]) => params.append(k, String(v)));
+     const qs = params.toString();
+     if (qs) fullUrl += (fullUrl.includes('?') ? '&' : '?') + qs;
+  }
+
+  const headers: any = {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    'Authorization': `Token ${apiKey}`
+  };
+
+  if (['payelectric', 'subcable', 'validatemeter', 'validatecable'].includes(cleanEndpoint)) {
+    headers['Authorization-Token'] = apiKey;
+  }
+
+  const fetchOptions: any = {
+    method: method.toUpperCase(),
+    headers,
+  };
+
+  if (method.toUpperCase() !== 'GET' && data) {
+    const mapped: any = {};
+    const rawServiceID = String(data.serviceID || data.plan_id || data.type || data.provider_id || data.network || '');
+    
+    if (['validatecable', 'subcable', 'airtime'].includes(cleanEndpoint) && isNaN(Number(rawServiceID))) {
+      mapped.serviceID = rawServiceID.toLowerCase();
+    } else {
+      mapped.serviceID = rawServiceID;
+    }
+    
+    if (data.mobileNumber || data.phone || data.phone_number) {
+      mapped.mobileNumber = String(data.mobileNumber || data.phone || data.phone_number);
+    }
+    if (data.amount) mapped.amount = Number(data.amount);
+    if (data.quantity !== undefined) mapped.quantity = Number(data.quantity);
+    if (data.meterNum || data.meter_number) mapped.meterNum = String(data.meterNum || data.meter_number);
+    if (data.meterType !== undefined) mapped.meterType = (data.meterType === 'prepaid' || data.meterType === 1) ? 1 : 2;
+    if (data.iucNum || data.smartCardNumber || data.smartcard) mapped.iucNum = String(data.iucNum || data.smartCardNumber || data.smartcard);
+
+    fetchOptions.body = JSON.stringify(mapped);
+  }
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 28000);
+  fetchOptions.signal = controller.signal;
+
+  const apiResponse = await fetch(fullUrl, fetchOptions);
+  clearTimeout(timeout);
+  
+  const responseText = await apiResponse.text();
+  try {
+    return JSON.parse(responseText);
+  } catch {
+    throw new Error(responseText.substring(0, 100));
+  }
+}
+
+async function callServer2(endpoint: string, method: string, data: any) {
+  const apiKey = process.env.CIPTOPUP_API_KEY;
+  const baseUrl = 'https://api.ciptopup.ng/api'; 
+
+  if (!apiKey) {
+    throw new Error('Ciptopup API key not configured.');
+  }
+
+  const cleanEndpoint = (endpoint || '').replace(/^\//, '');
+  let fullUrl = `${baseUrl}/${cleanEndpoint}`;
+  
+  if (method.toUpperCase() === 'GET' && data) {
+     const params = new URLSearchParams();
+     Object.entries(data).forEach(([k, v]) => {
+       if (v !== undefined && v !== null && v !== '') {
+         params.append(k, String(v));
+       }
+     });
+     const qs = params.toString();
+     if (qs) fullUrl += (fullUrl.includes('?') ? '&' : '?') + qs;
+  }
+
+  const headers: any = {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    'x-api-key': apiKey
+  };
+
+  const fetchOptions: any = {
+    method: method.toUpperCase(),
+    headers,
+  };
+
+  if (method.toUpperCase() !== 'GET' && data) {
+    const payload: any = { ...data };
+    if (cleanEndpoint === 'data/buy') {
+      if (data.serviceID) payload.plan_id = data.serviceID;
+      if (data.mobileNumber) payload.phone_number = data.mobileNumber;
+    }
+    fetchOptions.body = JSON.stringify(payload);
+  }
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 28000);
+  fetchOptions.signal = controller.signal;
+
+  const apiResponse = await fetch(fullUrl, fetchOptions);
+  clearTimeout(timeout);
+  
+  const responseText = await apiResponse.text();
+  try {
+    return JSON.parse(responseText);
+  } catch {
+    throw new Error(responseText.substring(0, 100));
+  }
+}
+
 // WhatsApp Webhook
 app.post('/api/whatsapp/webhook', async (req, res) => {
   const { From, Body } = req.body; // Standard Twilio format
@@ -78,20 +206,35 @@ Reply with "PLANS" to see available plan IDs.</Message>
 
       const [network, planId, targetPhone] = args;
       
-      // Call internal fulfillment logic (simplified for bot)
-      // In a real app, you'd call your proxy-server1 or proxy-server2 logic here
-      // For now, we'll simulate a successful request if balance is enough
-      
-      // We need to fetch the plan price first. For simplicity in this bot demo, 
-      // we'll assume a flat rate or look it up if we had a plan database.
-      // Let's assume we have a way to verify the plan and price.
-      
-      return res.status(200).send(`
-        <Response>
-          <Message>Data purchase request received for ${targetPhone} (${network} ${planId}). 
-We are processing your request. You will receive a confirmation message shortly.</Message>
-        </Response>
-      `);
+      try {
+        // For simplicity, we'll try to execute via Server 1
+        // In a real app, you might need to look up which server has this planId
+        const result = await callServer1('data', 'POST', {
+          serviceID: network.toLowerCase(),
+          plan_id: planId,
+          mobileNumber: targetPhone
+        });
+
+        if (result.status === 'success' || result.status === true) {
+           return res.status(200).send(`
+            <Response>
+              <Message>Success! Data bundle has been sent to ${targetPhone}.</Message>
+            </Response>
+          `);
+        } else {
+          return res.status(200).send(`
+            <Response>
+              <Message>Failed: ${result.message || 'Provider error'}.</Message>
+            </Response>
+          `);
+        }
+      } catch (err: any) {
+        return res.status(200).send(`
+          <Response>
+            <Message>Error: ${err.message}.</Message>
+          </Response>
+        `);
+      }
     }
 
     if (cmd === 'AIRTIME') {
@@ -115,28 +258,50 @@ Example: AIRTIME MTN 100 08012345678</Message>
         return res.status(200).send('<Response><Message>Insufficient balance. Please fund your wallet at oplugy.vercel.app</Message></Response>');
       }
 
-      // Update balance in Firestore
-      await userDoc.ref.update({
-        walletBalance: admin.firestore.FieldValue.increment(-amount)
-      });
+      try {
+        const result = await callServer1('airtime', 'POST', {
+          serviceID: network.toLowerCase(),
+          amount: amount,
+          mobileNumber: targetPhone
+        });
 
-      // Record transaction
-      await db.collection('transactions').add({
-        userId: userDoc.id,
-        userEmail: userData.email,
-        type: 'DEBIT',
-        source: `${network} Airtime (via Bot)`,
-        amount: amount,
-        status: 'SUCCESS',
-        date_created: admin.firestore.Timestamp.now()
-      });
+        if (result.status === 'success' || result.status === true) {
+          // Update balance in Firestore
+          await userDoc.ref.update({
+            walletBalance: admin.firestore.FieldValue.increment(-amount)
+          });
 
-      return res.status(200).send(`
-        <Response>
-          <Message>Success! ₦${amount} ${network} airtime has been sent to ${targetPhone}. 
+          // Record transaction
+          await db.collection('transactions').add({
+            userId: userDoc.id,
+            userEmail: userData.email,
+            type: 'DEBIT',
+            source: `${network} Airtime (via Bot)`,
+            amount: amount,
+            status: 'SUCCESS',
+            date_created: admin.firestore.Timestamp.now()
+          });
+
+          return res.status(200).send(`
+            <Response>
+              <Message>Success! ₦${amount} ${network} airtime has been sent to ${targetPhone}. 
 Your new balance is ₦${(userData.walletBalance - amount).toLocaleString()}.</Message>
-        </Response>
-      `);
+            </Response>
+          `);
+        } else {
+          return res.status(200).send(`
+            <Response>
+              <Message>Failed: ${result.message || 'Provider error'}.</Message>
+            </Response>
+          `);
+        }
+      } catch (err: any) {
+        return res.status(200).send(`
+          <Response>
+            <Message>Error: ${err.message}.</Message>
+          </Response>
+        `);
+      }
     }
 
     if (cmd === 'HELP' || message === 'MENU') {
@@ -167,160 +332,22 @@ Your new balance is ₦${(userData.walletBalance - amount).toLocaleString()}.</M
 // Inlomax Proxy Route (Server 1)
 app.post('/api/proxy-server1', async (req, res) => {
   const { endpoint, method = 'GET', data } = req.body || {};
-  const apiKey = process.env.INLOMAX_API_KEY;
-  const baseUrl = 'https://inlomax.com/api';
-
-  if (!apiKey) {
-    return res.status(500).json({ status: 'error', message: 'Inlomax API key not configured in environment.' });
-  }
-
   try {
-    const cleanEndpoint = (endpoint || '').replace(/^\//, '');
-    let fullUrl = `${baseUrl}/${cleanEndpoint}`;
-    
-    if (method.toUpperCase() === 'GET' && data) {
-       const params = new URLSearchParams();
-       Object.entries(data).forEach(([k, v]) => params.append(k, String(v)));
-       const qs = params.toString();
-       if (qs) fullUrl += (fullUrl.includes('?') ? '&' : '?') + qs;
-    }
-
-    const headers: any = {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      'Authorization': `Token ${apiKey}`
-    };
-
-    if (['payelectric', 'subcable', 'validatemeter', 'validatecable'].includes(cleanEndpoint)) {
-      headers['Authorization-Token'] = apiKey;
-    }
-
-    const fetchOptions: any = {
-      method: method.toUpperCase(),
-      headers,
-    };
-
-    if (method.toUpperCase() !== 'GET' && data) {
-      const mapped: any = {};
-      const rawServiceID = String(data.serviceID || data.plan_id || data.type || data.provider_id || data.network || '');
-      
-      if (['validatecable', 'subcable', 'airtime'].includes(cleanEndpoint) && isNaN(Number(rawServiceID))) {
-        mapped.serviceID = rawServiceID.toLowerCase();
-      } else {
-        mapped.serviceID = rawServiceID;
-      }
-      
-      if (data.mobileNumber || data.phone || data.phone_number) {
-        mapped.mobileNumber = String(data.mobileNumber || data.phone || data.phone_number);
-      }
-      if (data.amount) mapped.amount = Number(data.amount);
-      if (data.quantity !== undefined) mapped.quantity = Number(data.quantity);
-      if (data.meterNum || data.meter_number) mapped.meterNum = String(data.meterNum || data.meter_number);
-      if (data.meterType !== undefined) mapped.meterType = (data.meterType === 'prepaid' || data.meterType === 1) ? 1 : 2;
-      if (data.iucNum || data.smartCardNumber || data.smartcard) mapped.iucNum = String(data.iucNum || data.smartCardNumber || data.smartcard);
-
-      fetchOptions.body = JSON.stringify(mapped);
-    }
-
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 28000);
-    fetchOptions.signal = controller.signal;
-
-    const apiResponse = await fetch(fullUrl, fetchOptions);
-    clearTimeout(timeout);
-    
-    const responseText = await apiResponse.text();
-    try {
-      const responseData = JSON.parse(responseText);
-      return res.status(200).json(responseData);
-    } catch {
-      return res.status(apiResponse.status).json({ 
-        status: 'error', 
-        message: responseText.includes('Fatal error') ? 'Server Error: Please try again later.' : 'Server Error.',
-        raw: responseText.substring(0, 150)
-      });
-    }
+    const result = await callServer1(endpoint, method, data);
+    return res.status(200).json(result);
   } catch (error: any) {
-    return res.status(504).json({ status: 'error', message: 'Server Connection Error.' });
+    return res.status(500).json({ status: 'error', message: error.message });
   }
 });
 
 // Ciptopup Proxy Route (Server 2)
 app.post('/api/proxy-server2', async (req, res) => {
   const { endpoint, method = 'GET', data } = req.body || {};
-  const apiKey = process.env.CIPTOPUP_API_KEY;
-  const baseUrl = 'https://api.ciptopup.ng/api'; 
-
-  if (!apiKey) {
-    return res.status(500).json({ status: 'error', message: 'Ciptopup API key not configured.' });
-  }
-
   try {
-    const cleanEndpoint = (endpoint || '').replace(/^\//, '');
-    let fullUrl = `${baseUrl}/${cleanEndpoint}`;
-    
-    // Handle GET parameters for Server 2
-    if (method.toUpperCase() === 'GET' && data) {
-       const params = new URLSearchParams();
-       Object.entries(data).forEach(([k, v]) => {
-         if (v !== undefined && v !== null && v !== '') {
-           params.append(k, String(v));
-         }
-       });
-       const qs = params.toString();
-       if (qs) fullUrl += (fullUrl.includes('?') ? '&' : '?') + qs;
-    }
-
-    console.log(`[Server 2 Proxy] Requesting: ${method} ${fullUrl}`);
-
-    const headers: any = {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      'x-api-key': apiKey
-    };
-
-    const fetchOptions: any = {
-      method: method.toUpperCase(),
-      headers,
-    };
-
-    if (method.toUpperCase() !== 'GET' && data) {
-      const payload: any = { ...data };
-      
-      // Mapping for Ciptopup specific endpoints
-      if (cleanEndpoint === 'data/buy') {
-        if (data.serviceID) payload.plan_id = data.serviceID;
-        if (data.mobileNumber) payload.phone_number = data.mobileNumber;
-      }
-
-      fetchOptions.body = JSON.stringify(payload);
-    }
-    console.log(`[Server 2 Proxy] Fetch Options:`, fetchOptions);
-
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 28000);
-    fetchOptions.signal = controller.signal;
-
-    const apiResponse = await fetch(fullUrl, fetchOptions);
-    clearTimeout(timeout);
-    
-    const responseText = await apiResponse.text();
-    console.log(`[Server 2 Proxy] Raw API Response Text:`, responseText);
-    try {
-      const responseData = JSON.parse(responseText);
-      console.log(`[Server 2 Proxy] Parsed API Response Data:`, responseData);
-      return res.status(200).json(responseData);
-    } catch {
-      console.error(`[Server 2 Proxy] Failed to parse JSON. Raw text: ${responseText.substring(0, 150)}`);
-      return res.status(apiResponse.status).json({ 
-        status: 'error', 
-        message: 'Server Error.',
-        raw: responseText.substring(0, 150)
-      });
-    }
+    const result = await callServer2(endpoint, method, data);
+    return res.status(200).json(result);
   } catch (error: any) {
-    console.error(`[Server 2 Proxy] Exception during fetch:`, error);
-    return res.status(504).json({ status: 'error', message: 'Server Connection Error.' });
+    return res.status(500).json({ status: 'error', message: error.message });
   }
 });
 
@@ -368,35 +395,43 @@ async function processScheduledTransactions() {
           continue;
         }
 
-        // 2. Execute Transaction (Simplified - calling Server 1 by default for scheduler)
-        // In a real production app, this would use the same logic as the proxy routes
-        // For this demo, we'll simulate the API call or use a simplified version
-        
+        // 2. Execute Transaction
         // Update status to PROCESSING to avoid double execution
         await doc.ref.update({ status: 'PROCESSING' });
 
-        // Deduct balance
-        await userRef.update({
-          walletBalance: admin.firestore.FieldValue.increment(-amount)
+        const result = await callServer1(service === 'data' ? 'data' : 'airtime', 'POST', {
+          serviceID: network.toLowerCase(),
+          plan_id: planId,
+          amount: amount,
+          mobileNumber: recipient
         });
 
-        // Log transaction
-        await db.collection('transactions').add({
-          userId,
-          userEmail: data.userEmail,
-          type: service.toUpperCase(),
-          amount,
-          source: `${network} ${service} (Scheduled)`,
-          remarks: `Automated payment for ${recipient}`,
-          status: 'SUCCESS',
-          date_created: admin.firestore.FieldValue.serverTimestamp()
-        });
+        if (result.status === 'success' || result.status === true) {
+          // Deduct balance
+          await userRef.update({
+            walletBalance: admin.firestore.FieldValue.increment(-amount)
+          });
 
-        // Mark as completed
-        await doc.ref.update({ 
-          status: 'COMPLETED',
-          updatedAt: admin.firestore.FieldValue.serverTimestamp()
-        });
+          // Log transaction
+          await db.collection('transactions').add({
+            userId,
+            userEmail: data.userEmail,
+            type: service.toUpperCase(),
+            amount,
+            source: `${network} ${service} (Scheduled)`,
+            remarks: `Automated payment for ${recipient}`,
+            status: 'SUCCESS',
+            date_created: admin.firestore.FieldValue.serverTimestamp()
+          });
+
+          // Mark as completed
+          await doc.ref.update({ 
+            status: 'COMPLETED',
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+          });
+        } else {
+          throw new Error(result.message || 'Provider rejected scheduled request');
+        }
 
       } catch (err: any) {
         console.error(`Error processing scheduled doc ${doc.id}:`, err);
