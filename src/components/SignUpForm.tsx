@@ -12,6 +12,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ onSubmit, onGoogleSignUp, isLoa
   const [formData, setFormData] = useState({
     username: '',
     email: '',
+    phoneNumber: '',
     password: '',
     confirmPassword: '',
     referralCode: ''
@@ -49,6 +50,11 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ onSubmit, onGoogleSignUp, isLoa
         <div>
           <label htmlFor="email" className="block text-gray-700 text-[10px] font-black uppercase tracking-widest mb-2">Email Address</label>
           <input type="email" id="email" className="w-full py-4 px-5 bg-gray-50 border border-gray-100 rounded-xl" placeholder="Enter your email" value={formData.email} onChange={handleChange} required disabled={isLoading} />
+        </div>
+
+        <div>
+          <label htmlFor="phoneNumber" className="block text-gray-700 text-[10px] font-black uppercase tracking-widest mb-2">WhatsApp Phone Number</label>
+          <input type="tel" id="phoneNumber" className="w-full py-4 px-5 bg-gray-50 border border-gray-100 rounded-xl" placeholder="e.g. 08123456789" value={formData.phoneNumber} onChange={handleChange} required disabled={isLoading} />
         </div>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

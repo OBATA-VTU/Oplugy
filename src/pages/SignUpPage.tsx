@@ -17,8 +17,8 @@ const SignUpPage: React.FC = () => {
 
   const handleSignUpSubmit = async (payload: any): Promise<boolean> => {
     setAuthError(undefined);
-    // signup now correctly expects 4 arguments after AuthContext fix
-    const success = await signup(payload.email, payload.password, payload.username, payload.referralCode);
+    // signup now correctly expects 5 arguments after AuthContext fix
+    const success = await signup(payload.email, payload.password, payload.username, payload.referralCode, payload.phoneNumber);
     return success;
   };
 

@@ -10,6 +10,7 @@ import { Smartphone, Wifi, CheckCircle2, Receipt, ArrowRight, Zap, ChevronDown }
 import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import { AIRTIME_NETWORKS } from '../constants';
+import { adminService } from '../services/adminService';
 
 
 const DataPage: React.FC = () => {
@@ -39,11 +40,19 @@ const DataPage: React.FC = () => {
     setIsLoading(true);
     setLoadingMessage('Syncing Networks...');
     try {
-      const res = await vtuService.getDataNetworks(server);
+      const [res, logosRes] = await Promise.all([
+        vtuService.getDataNetworks(server),
+        adminService.getNetworkLogos()
+      ]);
+
       if (res.status) {
+        const customLogos = logosRes.status && logosRes.data ? logosRes.data : {};
         const mapped = (res.data || []).map((n: any) => {
           const constant = AIRTIME_NETWORKS.find(c => c.name.toUpperCase() === n.name.toUpperCase());
-          return { ...n, image: constant?.image };
+          return { 
+            ...n, 
+            image: customLogos[n.name] || constant?.image || 'https://cdn-icons-png.flaticon.com/512/8112/8112396.png'
+          };
         });
         setNetworks(mapped);
       } else {

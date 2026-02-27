@@ -98,9 +98,9 @@ export const authService = {
     }
   },
 
-  async signup(payload: { email: string, password: string, username: string, referralCode?: string }): Promise<ApiResponse<any>> {
+  async signup(payload: { email: string, password: string, username: string, referralCode?: string, phone: string }): Promise<ApiResponse<any>> {
     try {
-      const { email, password, username, referralCode } = payload;
+      const { email, password, username, referralCode, phone } = payload;
       
       // Strict check for unique username
       const usernameLower = username.toLowerCase().trim();
@@ -109,6 +109,13 @@ export const authService = {
       
       if (!querySnapshot.empty) {
         return { status: false, message: "This username is already taken. Please pick another one." };
+      }
+
+      // Check for unique phone number
+      const phoneQ = query(collection(db, "users"), where("phone", "==", phone.trim()));
+      const phoneSnap = await getDocs(phoneQ);
+      if (!phoneSnap.empty) {
+        return { status: false, message: "This phone number is already registered." };
       }
 
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -132,6 +139,7 @@ export const authService = {
         email,
         fullName: usernameLower, // We use username as the display name now
         username: usernameLower,
+        phone: phone.trim(),
         walletBalance: 0,
         role: 'user',
         status: 'active',

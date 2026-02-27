@@ -1,8 +1,11 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNotifications } from '../hooks/useNotifications';
+import { db } from '../firebase/config';
+import { doc, updateDoc } from 'firebase/firestore';
 import Spinner from '../components/Spinner';
 import PinSetupModal from '../components/PinSetupModal';
+import PhoneSetupModal from '../components/PhoneSetupModal';
 import ReceiptModal from '../components/ReceiptModal';
 import PinPromptModal from '../components/PinPromptModal';
 import { adminService } from '../services/adminService';
@@ -12,7 +15,7 @@ import { TransactionResponse } from '../types';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { 
-  Smartphone, Wifi, Zap, Tv, GraduationCap, History, 
+  Smartphone, Wifi, Zap, Tv, History, 
   Wallet, ShieldCheck, Zap as Bolt, ArrowUpRight, 
   MessageSquare, Bell, ChevronRight, Copy, Check
 } from 'lucide-react';
@@ -23,6 +26,7 @@ const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const [announcement, setAnnouncement] = useState<string>('');
   const [showPinModal, setShowPinModal] = useState(false);
+  const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [showPinPrompt, setShowPinPrompt] = useState(false);
   const [recentTransactions, setRecentTransactions] = useState<TransactionResponse[]>([]);
   const [isHistoryLoading, setIsHistoryLoading] = useState(true);
@@ -48,7 +52,10 @@ const DashboardPage: React.FC = () => {
 
   useEffect(() => {
     fetchDashboardData();
-    if (user && !user.isPinSet) setShowPinModal(true);
+    if (user) {
+      if (!user.isPinSet) setShowPinModal(true);
+      if (!user.phone) setShowPhoneModal(true);
+    }
   }, [fetchDashboardData, user]);
 
   const copyReferral = () => {
@@ -98,6 +105,17 @@ const DashboardPage: React.FC = () => {
     }
   };
 
+  const handlePhoneSuccess = async (phone: string) => {
+    try {
+      const userRef = doc(db, "users", user!.id);
+      await updateDoc(userRef, { phone: phone.trim() });
+      addNotification("Phone number saved successfully!", "success");
+      setShowPhoneModal(false);
+    } catch (error) {
+      throw new Error("Failed to save phone number.");
+    }
+  };
+
   const openReceipt = (tx: TransactionResponse) => {
     setSelectedTx(tx);
     setIsReceiptOpen(true);
@@ -108,6 +126,7 @@ const DashboardPage: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto space-y-12 pb-24 px-4 sm:px-6 lg:px-8">
       {showPinModal && <PinSetupModal onSuccess={handlePinSuccess} />}
+      {showPhoneModal && <PhoneSetupModal onSuccess={handlePhoneSuccess} />}
       <PinPromptModal 
         isOpen={showPinPrompt} 
         onClose={() => setShowPinPrompt(false)} 
@@ -230,7 +249,7 @@ const DashboardPage: React.FC = () => {
            <QuickAction to="/data" icon={<Wifi />} label="Data" color="bg-blue-50 text-blue-600" />
            <QuickAction to="/bills" icon={<Zap />} label="Power" color="bg-yellow-50 text-yellow-600" />
            <QuickAction to="/cable" icon={<Tv />} label="Cable" color="bg-indigo-50 text-indigo-600" />
-           <QuickAction to="/education" icon={<GraduationCap />} label="Exams" color="bg-purple-50 text-purple-600" />
+           <QuickAction to="/whatsapp-bot" icon={<MessageSquare />} label="Bot" color="bg-green-50 text-green-600" />
            <QuickAction to="/history" icon={<History />} label="History" color="bg-gray-50 text-gray-900" />
         </div>
 

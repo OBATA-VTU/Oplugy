@@ -105,7 +105,7 @@ const AdminPricingPage: React.FC = () => {
                   network: provider.name,
                   type: 'cable',
                   manual_prices: manualDoc.exists() ? manualDoc.data() : null
-                };
+                } as ServicePlan;
               }));
               allPlans = [...allPlans, ...formatted];
             }

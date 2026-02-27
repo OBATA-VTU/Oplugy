@@ -174,7 +174,7 @@ app.post('/api/whatsapp/webhook', async (req, res) => {
     if (snapshot.empty) {
       return res.status(200).send(`
         <Response>
-          <Message>Welcome to Inlomax! Your phone number ${phoneNumber} is not registered on our website. Please register at ${process.env.APP_URL} to use this bot.</Message>
+          <Message>Welcome to OBATA VTU! Your phone number ${phoneNumber} is not registered on our website. Please register at ${process.env.APP_URL} to use this bot.</Message>
         </Response>
       `);
     }
@@ -255,7 +255,7 @@ Example: AIRTIME MTN 100 08012345678</Message>
       }
 
       if ((userData.walletBalance || 0) < amount) {
-        return res.status(200).send('<Response><Message>Insufficient balance. Please fund your wallet at oplugy.vercel.app</Message></Response>');
+        return res.status(200).send('<Response><Message>Insufficient balance. Please fund your wallet at obata-vtu.run.app</Message></Response>');
       }
 
       try {

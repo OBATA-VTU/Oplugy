@@ -22,8 +22,8 @@ const WhatsAppBotPage: React.FC = () => {
         <div className="inline-flex p-5 bg-green-50 text-green-600 rounded-[2.5rem] mb-4 shadow-inner">
           <Bot className="w-12 h-12" />
         </div>
-        <h1 className="text-5xl lg:text-7xl font-black text-gray-900 tracking-tighter leading-none">WhatsApp <br /><span className="text-green-600">Plug Bot.</span></h1>
-        <p className="text-gray-400 font-medium text-xl max-w-2xl mx-auto leading-relaxed">Connect your website to WhatsApp. Let your users purchase data, airtime, and check balance directly from their favorite chat app.</p>
+        <h1 className="text-5xl lg:text-7xl font-black text-gray-900 tracking-tighter leading-none">WhatsApp <br /><span className="text-green-600">OBATA Bot.</span></h1>
+        <p className="text-gray-400 font-medium text-xl max-w-2xl mx-auto leading-relaxed">Connect your website to WhatsApp. Let your users purchase data, airtime, and check balance directly from their favorite chat app using the OBATA VTU automated node.</p>
       </div>
 
       {/* Setup Steps */}
