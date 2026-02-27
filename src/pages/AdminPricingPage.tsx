@@ -6,6 +6,7 @@ import { useNotifications } from '../hooks/useNotifications';
 import Spinner from '../components/Spinner';
 import { ShieldCheckIcon } from '../components/Icons';
 import { vtuService } from '../services/vtuService';
+import { adminService } from '../services/adminService';
 import { getNetworkLogo } from '../constants';
 import { Smartphone, Wifi, Zap, Tv, BookOpen, Search, Settings2, Percent } from 'lucide-react';
 
@@ -28,6 +29,7 @@ const AdminPricingPage: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [filter, setFilter] = useState('');
   const [activeServer, setActiveServer] = useState<1 | 2>(1);
+  const [networkLogos, setNetworkLogos] = useState<Record<string, string>>({});
   
   // Percentage discounts for Airtime and Electricity
   const [discounts, setDiscounts] = useState({
@@ -37,15 +39,22 @@ const AdminPricingPage: React.FC = () => {
   const [isSavingDiscounts, setIsSavingDiscounts] = useState(false);
 
   const fetchDiscounts = useCallback(async () => {
-    const docRef = doc(db, "settings", "service_discounts");
-    const snap = await getDoc(docRef);
-    if (snap.exists()) {
-      setDiscounts(snap.data() as any);
+    const [discountsSnap, logosRes] = await Promise.all([
+      getDoc(doc(db, "settings", "service_discounts")),
+      adminService.getNetworkLogos()
+    ]);
+
+    if (discountsSnap.exists()) {
+      setDiscounts(discountsSnap.data() as any);
+    }
+    if (logosRes.status && logosRes.data) {
+      setNetworkLogos(logosRes.data);
     }
   }, []);
 
   const fetchPlans = useCallback(async () => {
     setLoading(true);
+    await fetchDiscounts();
     try {
       if (activeService === 'data') {
         if (activeServer === 1) {
@@ -113,7 +122,6 @@ const AdminPricingPage: React.FC = () => {
           setPlans(formatted);
         }
       } else if (activeService === 'airtime' || activeService === 'power') {
-        await fetchDiscounts();
         setPlans([]); // No individual plans for these
       }
     } catch (e) {
@@ -165,6 +173,11 @@ const AdminPricingPage: React.FC = () => {
       addNotification("Error uploading manual tariff to database.", "error");
     }
     setIsSaving(false);
+  };
+
+  const getLogo = (networkName: string) => {
+    const normalized = networkName.toUpperCase();
+    return networkLogos[normalized] || getNetworkLogo(networkName);
   };
 
   const filteredPlans = plans.filter(p => 
@@ -273,7 +286,7 @@ const AdminPricingPage: React.FC = () => {
                       {plan.network && (
                         <div className="w-12 h-12 rounded-2xl bg-gray-50 p-2 flex items-center justify-center border border-gray-100 shadow-inner overflow-hidden">
                           <img 
-                            src={getNetworkLogo(plan.network)} 
+                            src={getLogo(plan.network)} 
                             alt={plan.network} 
                             className="w-full h-full object-contain"
                             referrerPolicy="no-referrer"
