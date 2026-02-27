@@ -196,5 +196,24 @@ export const adminService = {
       console.error("Funding update error:", error);
       return { status: false, message: "Failed to update request" };
     }
+  },
+
+  // --- Network Logos ---
+  async getNetworkLogos(): Promise<ApiResponse<Record<string, string>>> {
+    try {
+      const logosDoc = await getDoc(doc(db, "settings", "network_logos"));
+      return { status: true, data: logosDoc.exists() ? logosDoc.data() : {} };
+    } catch (error: any) {
+      return { status: false, message: "Failed to fetch network logos" };
+    }
+  },
+
+  async updateNetworkLogos(logos: Record<string, string>): Promise<ApiResponse<void>> {
+    try {
+      await setDoc(doc(db, "settings", "network_logos"), logos, { merge: true });
+      return { status: true, message: "Network logos updated." };
+    } catch (error: any) {
+      return { status: false, message: "Failed to update network logos" };
+    }
   }
 };

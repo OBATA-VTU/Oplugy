@@ -3,7 +3,7 @@ import { adminService } from '../services/adminService';
 import { useNotifications } from '../hooks/useNotifications';
 import Spinner from '../components/Spinner';
 import { motion } from 'motion/react';
-import { Bell, DollarSign, Server, Save, Shield, Info } from 'lucide-react';
+import { Bell, DollarSign, Server, Save, Shield, Info, Image as ImageIcon, Plus, Trash2 } from 'lucide-react';
 
 const AdminSettingsPage: React.FC = () => {
   const { addNotification } = useNotifications();
@@ -15,15 +15,26 @@ const AdminSettingsPage: React.FC = () => {
     api_margin: 2,
     server1: { data_margin: 10, cable_margin: 100, electricity_margin: 50 }
   });
+  const [networkLogos, setNetworkLogos] = useState<Record<string, string>>({});
+  const [newNetwork, setNewNetwork] = useState({ name: '', url: '' });
   const [isUpdating, setIsUpdating] = useState(false);
 
   const fetchSettings = useCallback(async () => {
     setLoading(true);
-    const res = await adminService.getGlobalSettings();
-    if (res.status && res.data) {
-      setAnnouncement(res.data.announcement || '');
-      if (res.data.pricing) setPricing(prev => ({ ...prev, ...res.data.pricing }));
+    const [settingsRes, logosRes] = await Promise.all([
+      adminService.getGlobalSettings(),
+      adminService.getNetworkLogos()
+    ]);
+    
+    if (settingsRes.status && settingsRes.data) {
+      setAnnouncement(settingsRes.data.announcement || '');
+      if (settingsRes.data.pricing) setPricing(prev => ({ ...prev, ...settingsRes.data.pricing }));
     }
+    
+    if (logosRes.status && logosRes.data) {
+      setNetworkLogos(logosRes.data);
+    }
+    
     setLoading(false);
   }, []);
 
@@ -33,16 +44,32 @@ const AdminSettingsPage: React.FC = () => {
 
   const handleUpdate = async () => {
     setIsUpdating(true);
-    const res = await adminService.updateGlobalSettings({ 
-      announcement, 
-      pricing
-    });
-    if (res.status) {
+    const [settingsRes, logosRes] = await Promise.all([
+      adminService.updateGlobalSettings({ 
+        announcement, 
+        pricing
+      }),
+      adminService.updateNetworkLogos(networkLogos)
+    ]);
+
+    if (settingsRes.status && logosRes.status) {
       addNotification("System node settings synchronized.", "success");
     } else {
-      addNotification("Failed to save settings.", "error");
+      addNotification("Failed to save some settings.", "error");
     }
     setIsUpdating(false);
+  };
+
+  const addNetworkLogo = () => {
+    if (!newNetwork.name || !newNetwork.url) return;
+    setNetworkLogos(prev => ({ ...prev, [newNetwork.name.toUpperCase()]: newNetwork.url }));
+    setNewNetwork({ name: '', url: '' });
+  };
+
+  const removeNetworkLogo = (name: string) => {
+    const updated = { ...networkLogos };
+    delete updated[name];
+    setNetworkLogos(updated);
   };
 
   if (loading) return (
@@ -155,6 +182,76 @@ const AdminSettingsPage: React.FC = () => {
                   </div>
                </div>
                <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600/10 rounded-full blur-[120px] group-hover:bg-blue-600/20 transition-all duration-1000"></div>
+            </motion.div>
+
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="bg-white p-12 lg:p-16 rounded-[4rem] shadow-2xl border border-gray-50 mt-10"
+            >
+               <div className="flex items-center space-x-4 mb-12">
+                  <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center shadow-inner">
+                     <ImageIcon className="w-6 h-6" />
+                  </div>
+                  <h3 className="text-4xl font-black text-gray-900 tracking-tighter">Network Logos</h3>
+               </div>
+
+               <div className="space-y-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-8 bg-gray-50 rounded-[3rem] border border-dashed border-gray-200">
+                     <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4">Network Name (e.g. MTN)</label>
+                        <input 
+                          type="text" 
+                          className="w-full p-6 bg-white border border-gray-100 rounded-2xl font-bold outline-none focus:border-emerald-500 transition-all"
+                          value={newNetwork.name}
+                          onChange={(e) => setNewNetwork({...newNetwork, name: e.target.value})}
+                          placeholder="MTN"
+                        />
+                     </div>
+                     <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4">Logo URL</label>
+                        <div className="flex gap-4">
+                           <input 
+                             type="text" 
+                             className="flex-1 p-6 bg-white border border-gray-100 rounded-2xl font-bold outline-none focus:border-emerald-500 transition-all"
+                             value={newNetwork.url}
+                             onChange={(e) => setNewNetwork({...newNetwork, url: e.target.value})}
+                             placeholder="https://..."
+                           />
+                           <button 
+                             onClick={addNetworkLogo}
+                             className="p-6 bg-emerald-600 text-white rounded-2xl hover:bg-emerald-700 transition-all shadow-lg"
+                           >
+                              <Plus className="w-6 h-6" />
+                           </button>
+                        </div>
+                     </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                     {Object.entries(networkLogos).map(([name, url]) => (
+                        <div key={name} className="flex items-center justify-between p-6 bg-gray-50 rounded-3xl border border-gray-100 group">
+                           <div className="flex items-center space-x-4">
+                              <div className="w-12 h-12 rounded-xl bg-white p-2 flex items-center justify-center border border-gray-100 shadow-sm overflow-hidden">
+                                 <img src={url} alt={name} className="w-full h-full object-contain" referrerPolicy="no-referrer" />
+                              </div>
+                              <div>
+                                 <p className="font-black text-gray-900 tracking-tight">{name}</p>
+                                 <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest truncate max-w-[150px]">{url}</p>
+                              </div>
+                           </div>
+                           <button 
+                             onClick={() => removeNetworkLogo(name)}
+                             className="p-3 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                           >
+                              <Trash2 className="w-4 h-4" />
+                           </button>
+                        </div>
+                     ))}
+                  </div>
+               </div>
+            </motion.div>
             </motion.div>
          </div>
       </div>

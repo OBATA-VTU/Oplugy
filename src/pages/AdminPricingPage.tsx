@@ -6,6 +6,7 @@ import { useNotifications } from '../hooks/useNotifications';
 import Spinner from '../components/Spinner';
 import { ShieldCheckIcon } from '../components/Icons';
 import { vtuService } from '../services/vtuService';
+import { getNetworkLogo } from '../constants';
 import { Smartphone, Wifi, Zap, Tv, BookOpen, Search, Settings2, Percent } from 'lucide-react';
 
 interface ServicePlan {
@@ -268,10 +269,24 @@ const AdminPricingPage: React.FC = () => {
               {filteredPlans.map(plan => (
                 <div key={plan.id} className={`bg-white p-10 rounded-[3.5rem] border-2 transition-all group relative overflow-hidden ${plan.manual_prices ? 'border-blue-100 bg-blue-50/10' : 'border-gray-50 hover:border-blue-100 hover:shadow-2xl'}`}>
                   <div className="flex justify-between items-start mb-10">
-                    <div className="space-y-3">
-                      {plan.network && <span className="bg-gray-100 text-gray-500 px-4 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest">{plan.network}</span>}
-                      <h4 className="text-2xl font-black text-gray-900 tracking-tighter leading-none group-hover:text-blue-600 transition-colors">{plan.name}</h4>
-                      <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest">ID: {plan.id}</p>
+                    <div className="flex items-center space-x-4">
+                      {plan.network && (
+                        <div className="w-12 h-12 rounded-2xl bg-gray-50 p-2 flex items-center justify-center border border-gray-100 shadow-inner overflow-hidden">
+                          <img 
+                            src={getNetworkLogo(plan.network)} 
+                            alt={plan.network} 
+                            className="w-full h-full object-contain"
+                            referrerPolicy="no-referrer"
+                          />
+                        </div>
+                      )}
+                      <div className="space-y-1">
+                        <h4 className="text-2xl font-black text-gray-900 tracking-tighter leading-none group-hover:text-blue-600 transition-colors">{plan.name}</h4>
+                        <div className="flex items-center space-x-2">
+                          {plan.network && <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">{plan.network}</span>}
+                          <span className="text-[9px] font-black text-gray-300 uppercase tracking-widest">• ID: {plan.id}</span>
+                        </div>
+                      </div>
                     </div>
                     <div className="text-right">
                       <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Cost</p>
