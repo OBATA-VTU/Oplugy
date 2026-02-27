@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNotifications } from '../hooks/useNotifications';
 import { Wallet, CreditCard, Landmark, Copy, Zap, ShieldCheck, Info, ArrowRight, Upload, CheckCircle2, ChevronLeft } from 'lucide-react';
@@ -60,14 +60,14 @@ const FundingPage: React.FC = () => {
       });
 
       if (res.status) {
-        addNotification(res.message, 'success');
+        addNotification(res.message || 'Request submitted successfully', 'success');
         setStep(1);
         setAmount('');
         setReceiptFile(null);
         setReceiptPreview(null);
         setFundingMethod(null);
       } else {
-        addNotification(res.message, 'error');
+        addNotification(res.message || 'Failed to submit request', 'error');
       }
     } catch (err: any) {
       addNotification(err.message || "Failed to submit request.", "error");
@@ -83,7 +83,7 @@ const FundingPage: React.FC = () => {
     }
 
     setIsProcessing(true);
-    const publicKey = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY;
+    const publicKey = process.env.REACT_APP_PAYSTACK_PUBLIC_KEY;
     
     if (!publicKey) {
       addNotification("Payment configuration missing. Contact admin.", "error");

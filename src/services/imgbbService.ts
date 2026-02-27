@@ -1,8 +1,8 @@
 
 export const uploadToImgBB = async (file: File | string): Promise<string> => {
-  const apiKey = import.meta.env.VITE_IMGBB_API_KEY;
+  const apiKey = process.env.REACT_APP_IMGBB_API_KEY;
   if (!apiKey) {
-    throw new Error('ImgBB API key is missing. Please configure VITE_IMGBB_API_KEY.');
+    throw new Error('ImgBB API key is missing. Please configure REACT_APP_IMGBB_API_KEY.');
   }
 
   const formData = new FormData();
