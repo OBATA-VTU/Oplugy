@@ -37,10 +37,10 @@ const AdminFundingRequestsPage: React.FC = () => {
 
     const res = await adminService.updateFundingRequestStatus(requestId, status);
     if (res.status) {
-      addNotification(res.message, 'success');
+      addNotification(res.message || "Request updated successfully", 'success');
       fetchRequests();
     } else {
-      addNotification(res.message, 'error');
+      addNotification(res.message || "Failed to update request", 'error');
     }
   };
 

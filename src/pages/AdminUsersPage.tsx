@@ -78,6 +78,13 @@ const AdminUsersPage: React.FC = () => {
     if (!selectedUser || !finAmount || isProcessing) return;
     setIsProcessing(true);
     const amount = parseFloat(finAmount);
+    
+    if (finType === 'DEBIT' && amount > (selectedUser.walletBalance || 0)) {
+      addNotification("Insufficient user balance for this debit.", "warning");
+      setIsProcessing(false);
+      return;
+    }
+
     const res = finType === 'CREDIT' 
       ? await adminService.creditUser(selectedUser.id, amount)
       : await adminService.debitUser(selectedUser.id, amount);

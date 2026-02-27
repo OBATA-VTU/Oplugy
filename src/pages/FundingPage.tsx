@@ -1,18 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNotifications } from '../hooks/useNotifications';
 import { Wallet, CreditCard, Landmark, Copy, Zap, ShieldCheck, Info, ArrowRight, Upload, CheckCircle2, ChevronLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { uploadToImgBB } from '../services/imgbbService';
 import { vtuService } from '../services/vtuService';
+import { useSearchParams } from 'react-router-dom';
 
 declare const PaystackPop: any;
 
 const FundingPage: React.FC = () => {
   const { user, fetchWalletBalance } = useAuth();
   const { addNotification } = useNotifications();
+  const [searchParams] = useSearchParams();
   const [step, setStep] = useState<1 | 2 | 3>(1);
-  const [amount, setAmount] = useState('');
+  const [amount, setAmount] = useState(searchParams.get('amount') || '');
   const [isProcessing, setIsProcessing] = useState(false);
   const [fundingMethod, setFundingMethod] = useState<'AUTO' | 'MANUAL' | null>(null);
   const [receiptFile, setReceiptFile] = useState<File | null>(null);

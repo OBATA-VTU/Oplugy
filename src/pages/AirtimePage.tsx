@@ -129,7 +129,7 @@ const AirtimePage: React.FC = () => {
         onClose={() => setShowInsufficientModal(false)}
         requiredAmount={numericAmount}
         currentBalance={walletBalance || 0}
-        onPayRemaining={() => navigate('/funding')}
+        onPayRemaining={() => navigate(`/funding?amount=${numericAmount - (walletBalance || 0)}`)}
       />
 
       <div className="flex flex-col items-center text-center space-y-6">

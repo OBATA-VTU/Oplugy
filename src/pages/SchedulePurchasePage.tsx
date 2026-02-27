@@ -29,9 +29,26 @@ const SchedulePurchasePage: React.FC = () => {
   const [isScheduling, setIsScheduling] = useState(false);
 
   const fetchNetworks = useCallback(async () => {
-    const res = await vtuService.getDataNetworks(1);
-    if (res.status) setNetworks(res.data || []);
-  }, []);
+    setNetworks([]);
+    setDetails(prev => ({ ...prev, network: '', type: '', planId: '', amount: '' }));
+    
+    let res;
+    if (service === 'airtime') {
+      res = await vtuService.getAirtimeOperators();
+    } else if (service === 'data') {
+      res = await vtuService.getDataNetworks(1);
+    } else if (service === 'power') {
+      res = await vtuService.getElectricityOperators();
+    } else if (service === 'tv') {
+      res = await vtuService.getCableProviders();
+    }
+
+    if (res && res.status) {
+      setNetworks(res.data || []);
+    } else {
+      addNotification(`Failed to load ${service} providers.`, "error");
+    }
+  }, [service, addNotification]);
 
   useEffect(() => {
     fetchNetworks();
@@ -44,6 +61,12 @@ const SchedulePurchasePage: React.FC = () => {
         if (res.status) setDataTypes(res.data || []);
       };
       fetchCats();
+    } else if (service === 'tv' && details.network) {
+      const fetchTvPlans = async () => {
+        const res = await vtuService.getCablePlans(details.network);
+        if (res.status) setDataPlans(res.data || []);
+      };
+      fetchTvPlans();
     }
   }, [details.network, service]);
 
@@ -160,9 +183,9 @@ const SchedulePurchasePage: React.FC = () => {
               </div>
             )}
 
-            {service === 'data' && dataPlans.length > 0 && (
+            {(service === 'data' || service === 'tv') && dataPlans.length > 0 && (
               <div className="space-y-3">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">2c. Pick a Data Plan</label>
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">2c. Pick a {service === 'data' ? 'Data' : 'TV'} Plan</label>
                 <div className="relative">
                   <select 
                     className="w-full p-6 bg-gray-50 rounded-[2rem] font-bold text-lg border-2 border-transparent focus:border-blue-600 focus:bg-white outline-none transition-all appearance-none"
