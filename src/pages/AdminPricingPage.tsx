@@ -63,7 +63,7 @@ const AdminPricingPage: React.FC = () => {
             const formatted = await Promise.all((res.data.dataPlans as any[]).map(async (p) => {
               const manualDoc = await getDoc(doc(db, "manual_pricing", String(p.serviceID)));
               return {
-                id: String(p.serviceID),
+                id: `s1-${p.network}-${p.serviceID}`,
                 name: `${p.dataPlan} ${p.dataType}`,
                 base_price: Number(String(p.amount).replace(/,/g, '')),
                 network: p.network,
@@ -76,13 +76,17 @@ const AdminPricingPage: React.FC = () => {
         } else {
           const res = await cipApiClient<any>('data/plans', { method: 'GET', server: 2 });
           if (res.status && Array.isArray(res.data)) {
-            setPlans(res.data.map((p: any) => ({
-              id: String(p.id || p.plan_id || p.serviceID),
-              name: String(p.name || p.plan_name || 'Data Plan'),
-              base_price: Number(p.price || p.amount || 0) / 100,
-              network: String(p.network || p.network_name || 'Unknown'),
-              type: String(p.type || p.dataType || 'Unknown')
-            })));
+            setPlans(res.data.map((p: any) => {
+              const id = String(p.id || p.plan_id || p.serviceID);
+              const network = String(p.network || p.network_name || 'Unknown');
+              return {
+                id: `s2-${network}-${id}`,
+                name: String(p.name || p.plan_name || 'Data Plan'),
+                base_price: Number(p.price || p.amount || 0) / 100,
+                network: network,
+                type: String(p.type || p.dataType || 'Unknown')
+              };
+            }));
           }
         }
       } else if (activeService === 'cable') {
@@ -95,10 +99,11 @@ const AdminPricingPage: React.FC = () => {
               const formatted = await Promise.all(plansRes.data.map(async (p) => {
                 const manualDoc = await getDoc(doc(db, "manual_pricing", p.id));
                 return {
-                  id: p.id,
+                  id: `${provider.id}-${p.id}`,
                   name: `${provider.name} - ${p.name}`,
                   base_price: p.amount,
                   network: provider.name,
+                  type: 'cable',
                   manual_prices: manualDoc.exists() ? manualDoc.data() : null
                 };
               }));
@@ -116,6 +121,8 @@ const AdminPricingPage: React.FC = () => {
               id: p.id,
               name: p.name,
               base_price: p.price,
+              network: 'Education',
+              type: 'education',
               manual_prices: manualDoc.exists() ? manualDoc.data() : null
             };
           }));

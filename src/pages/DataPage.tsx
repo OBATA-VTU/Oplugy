@@ -360,7 +360,7 @@ const DataPage: React.FC = () => {
               <button 
                 disabled={!selectedPlan || phoneNumber.length !== 11 || isPurchasing}
                 onClick={() => {
-                  if (walletBalance !== null && selectedPlan.amount > walletBalance) {
+                  if (selectedPlan && walletBalance !== null && selectedPlan.amount > walletBalance) {
                     setShowInsufficientModal(true);
                     return;
                   }
