@@ -70,6 +70,28 @@ const DataPage: React.FC = () => {
     fetchNetworks(selectedServer);
   }, [selectedServer, fetchNetworks]);
 
+  const fetchPlans = useCallback(async (net: string, type: string) => {
+    setIsLoading(true);
+    setLoadingMessage('Syncing Plans...');
+    try {
+      const res = await vtuService.getDataPlans({ 
+        network: net, 
+        type, 
+        userRole: user?.role || 'user',
+        server: selectedServer
+      });
+      if (res.status && res.data) {
+        setDataPlans(res.data);
+      } else {
+        addNotification(res.message || 'Plan sync failed.', 'error');
+      }
+    } catch (e) {
+      addNotification("Connection error.", "error");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [selectedServer, user?.role, addNotification]);
+
   useEffect(() => {
     if (selectedOperator) {
       const fetchCats = async () => {
@@ -95,35 +117,13 @@ const DataPage: React.FC = () => {
       setDataTypes([]);
       setDataPlans([]);
     }
-  }, [selectedOperator, selectedServer, addNotification]);
+  }, [selectedOperator, selectedServer, addNotification, fetchPlans]);
 
   useEffect(() => {
     if (selectedOperator && (selectedType || dataTypes.length === 0)) {
       fetchPlans(selectedOperator, selectedType);
     }
-  }, [selectedOperator, selectedType, selectedServer]);
-
-  const fetchPlans = async (net: string, type: string) => {
-    setIsLoading(true);
-    setLoadingMessage('Syncing Plans...');
-    try {
-      const res = await vtuService.getDataPlans({ 
-        network: net, 
-        type, 
-        userRole: user?.role || 'user',
-        server: selectedServer
-      });
-      if (res.status && res.data) {
-        setDataPlans(res.data);
-      } else {
-        addNotification(res.message || 'Plan sync failed.', 'error');
-      }
-    } catch (e) {
-      addNotification("Connection error.", "error");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  }, [selectedOperator, selectedType, selectedServer, dataTypes.length, fetchPlans]);
 
   useEffect(() => {
     const plan = dataPlans.find(p => p.id === selectedPlanId);
