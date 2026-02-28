@@ -351,6 +351,76 @@ app.post('/api/proxy-server2', async (req, res) => {
   }
 });
 
+// Ciptopup Webhook Route
+app.post('/api/webhooks/ciptopup', async (req, res) => {
+  const secret = process.env.CIPTOPUP_WEBHOOK_SECRET;
+  const receivedSecret = req.headers['x-webhook-secret'] || req.headers['authorization'];
+
+  if (secret && receivedSecret !== secret) {
+    return res.status(401).json({ message: 'Unauthorized' });
+  }
+
+  const payload = req.body;
+  console.log('Ciptopup Webhook Received:', payload);
+  
+  // Logic to update transaction status in Firestore
+  if (admin.apps.length) {
+    try {
+      const db = admin.firestore();
+      const { status, reference, request_id } = payload;
+      const txRef = reference || request_id;
+
+      if ((status === 'success' || status === 'completed') && txRef) {
+        const txQuery = await db.collection('transactions').where('reference', '==', txRef).limit(1).get();
+        if (!txQuery.empty) {
+          const txDoc = txQuery.docs[0];
+          if (txDoc.data().status === 'PENDING') {
+            await txDoc.ref.update({
+              status: 'SUCCESS',
+              date_updated: admin.firestore.FieldValue.serverTimestamp()
+            });
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Webhook DB Error:', e);
+    }
+  }
+
+  res.status(200).json({ status: 'received' });
+});
+
+// Inlomax Webhook Route
+app.post('/api/webhooks/inlomax', async (req, res) => {
+  const payload = req.body;
+  console.log('Inlomax Webhook Received:', payload);
+  
+  if (admin.apps.length) {
+    try {
+      const db = admin.firestore();
+      const { status, reference, request_id } = payload;
+      const txRef = reference || request_id;
+
+      if ((status === 'success' || status === 'completed' || status === 'successful') && txRef) {
+        const txQuery = await db.collection('transactions').where('reference', '==', txRef).limit(1).get();
+        if (!txQuery.empty) {
+          const txDoc = txQuery.docs[0];
+          if (txDoc.data().status === 'PENDING') {
+            await txDoc.ref.update({
+              status: 'SUCCESS',
+              date_updated: admin.firestore.FieldValue.serverTimestamp()
+            });
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Inlomax Webhook DB Error:', e);
+    }
+  }
+
+  res.status(200).json({ status: 'received' });
+});
+
 // Proxy all other requests to the CRA dev server
 app.use('/', createProxyMiddleware({
   target: `http://localhost:${CRA_PORT}`,
