@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import { createProxyMiddleware } from 'http-proxy-middleware';
 import * as admin from 'firebase-admin';
+import axios from 'axios';
 
 // Initialize Firebase Admin
 if (!admin.apps.length) {
@@ -39,13 +40,6 @@ async function callServer1(endpoint: string, method: string, data: any) {
   const cleanEndpoint = (endpoint || '').replace(/^\//, '');
   let fullUrl = `${baseUrl}/${cleanEndpoint}`;
   
-  if (method.toUpperCase() === 'GET' && data) {
-     const params = new URLSearchParams();
-     Object.entries(data).forEach(([k, v]) => params.append(k, String(v)));
-     const qs = params.toString();
-     if (qs) fullUrl += (fullUrl.includes('?') ? '&' : '?') + qs;
-  }
-
   const headers: any = {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
@@ -56,11 +50,7 @@ async function callServer1(endpoint: string, method: string, data: any) {
     headers['Authorization-Token'] = apiKey;
   }
 
-  const fetchOptions: any = {
-    method: method.toUpperCase(),
-    headers,
-  };
-
+  let body: any = undefined;
   if (method.toUpperCase() !== 'GET' && data) {
     const mapped: any = {};
     const rawServiceID = String(data.serviceID || data.plan_id || data.type || data.provider_id || data.network || '');
@@ -80,22 +70,19 @@ async function callServer1(endpoint: string, method: string, data: any) {
     if (data.meterType !== undefined) mapped.meterType = (data.meterType === 'prepaid' || data.meterType === 1) ? 1 : 2;
     if (data.iucNum || data.smartCardNumber || data.smartcard) mapped.iucNum = String(data.iucNum || data.smartCardNumber || data.smartcard);
 
-    fetchOptions.body = JSON.stringify(mapped);
+    body = mapped;
   }
 
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 28000);
-  fetchOptions.signal = controller.signal;
+  const response = await axios({
+    url: fullUrl,
+    method: method.toUpperCase(),
+    headers,
+    params: method.toUpperCase() === 'GET' ? data : undefined,
+    data: body,
+    timeout: 28000
+  });
 
-  const apiResponse = await fetch(fullUrl, fetchOptions);
-  clearTimeout(timeout);
-  
-  const responseText = await apiResponse.text();
-  try {
-    return JSON.parse(responseText);
-  } catch {
-    throw new Error(responseText.substring(0, 100));
-  }
+  return response.data;
 }
 
 async function callServer2(endpoint: string, method: string, data: any) {
@@ -109,50 +96,32 @@ async function callServer2(endpoint: string, method: string, data: any) {
   const cleanEndpoint = (endpoint || '').replace(/^\//, '');
   let fullUrl = `${baseUrl}/${cleanEndpoint}`;
   
-  if (method.toUpperCase() === 'GET' && data) {
-     const params = new URLSearchParams();
-     Object.entries(data).forEach(([k, v]) => {
-       if (v !== undefined && v !== null && v !== '') {
-         params.append(k, String(v));
-       }
-     });
-     const qs = params.toString();
-     if (qs) fullUrl += (fullUrl.includes('?') ? '&' : '?') + qs;
-  }
-
   const headers: any = {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
     'x-api-key': apiKey
   };
 
-  const fetchOptions: any = {
-    method: method.toUpperCase(),
-    headers,
-  };
-
+  let body: any = undefined;
   if (method.toUpperCase() !== 'GET' && data) {
     const payload: any = { ...data };
     if (cleanEndpoint === 'data/buy') {
       if (data.serviceID) payload.plan_id = data.serviceID;
       if (data.mobileNumber) payload.phone_number = data.mobileNumber;
     }
-    fetchOptions.body = JSON.stringify(payload);
+    body = payload;
   }
 
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 28000);
-  fetchOptions.signal = controller.signal;
+  const response = await axios({
+    url: fullUrl,
+    method: method.toUpperCase(),
+    headers,
+    params: method.toUpperCase() === 'GET' ? data : undefined,
+    data: body,
+    timeout: 28000
+  });
 
-  const apiResponse = await fetch(fullUrl, fetchOptions);
-  clearTimeout(timeout);
-  
-  const responseText = await apiResponse.text();
-  try {
-    return JSON.parse(responseText);
-  } catch {
-    throw new Error(responseText.substring(0, 100));
-  }
+  return response.data;
 }
 
 async function callOgaviral(action: string, data: any = {}) {
@@ -173,27 +142,17 @@ async function callOgaviral(action: string, data: any = {}) {
     }
   });
 
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 28000);
+  const response = await axios({
+    url: baseUrl,
+    method: 'POST',
+    data: params.toString(),
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    timeout: 28000
+  });
 
-  try {
-    const apiResponse = await fetch(baseUrl, {
-      method: 'POST',
-      body: params,
-      signal: controller.signal
-    });
-    clearTimeout(timeout);
-    
-    const responseText = await apiResponse.text();
-    try {
-      return JSON.parse(responseText);
-    } catch {
-      throw new Error(responseText.substring(0, 100));
-    }
-  } catch (err: any) {
-    clearTimeout(timeout);
-    throw err;
-  }
+  return response.data;
 }
 
 // WhatsApp Webhook

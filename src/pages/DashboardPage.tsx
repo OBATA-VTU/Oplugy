@@ -7,12 +7,11 @@ import Spinner from '../components/Spinner';
 import PinSetupModal from '../components/PinSetupModal';
 import PhoneSetupModal from '../components/PhoneSetupModal';
 import ReceiptModal from '../components/ReceiptModal';
-import PinPromptModal from '../components/PinPromptModal';
 import { adminService } from '../services/adminService';
 import { authService } from '../services/authService';
 import { vtuService } from '../services/vtuService';
 import { TransactionResponse } from '../types';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { 
   Smartphone, Wifi, Zap, Tv, History, 
@@ -22,13 +21,11 @@ import {
 } from 'lucide-react';
 
 const DashboardPage: React.FC = () => {
-  const { fetchWalletBalance, isLoading, user, walletBalance, updateWalletBalance } = useAuth();
+  const { fetchWalletBalance, isLoading, user, walletBalance } = useAuth();
   const { addNotification } = useNotifications();
-  const navigate = useNavigate();
   const [announcement, setAnnouncement] = useState<string>('');
   const [showPinModal, setShowPinModal] = useState(false);
   const [showPhoneModal, setShowPhoneModal] = useState(false);
-  const [showPinPrompt, setShowPinPrompt] = useState(false);
   const [recentTransactions, setRecentTransactions] = useState<TransactionResponse[]>([]);
   const [isHistoryLoading, setIsHistoryLoading] = useState(true);
   
@@ -97,13 +94,6 @@ const DashboardPage: React.FC = () => {
     <div className="max-w-7xl mx-auto space-y-8 pb-24 px-4 sm:px-6 lg:px-8">
       {showPinModal && <PinSetupModal onSuccess={handlePinSuccess} />}
       {showPhoneModal && <PhoneSetupModal onSuccess={handlePhoneSuccess} />}
-      <PinPromptModal 
-        isOpen={showPinPrompt} 
-        onClose={() => setShowPinPrompt(false)} 
-        onSuccess={() => executeUpgrade(false)}
-        title="Upgrade to Reseller"
-        description="Enter your PIN to pay the ₦1,200 upgrade fee from your wallet."
-      />
       <ReceiptModal 
         isOpen={isReceiptOpen} 
         onClose={() => setIsReceiptOpen(false)} 

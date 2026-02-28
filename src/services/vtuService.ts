@@ -442,6 +442,19 @@ export const vtuService = {
     } catch (error) { return { status: false, message: "History not available." }; }
   },
 
+  recordTransaction: async (tx: any): Promise<void> => {
+    try {
+      await addDoc(collection(db, "transactions"), {
+        ...tx,
+        server: 'Inlomax Node',
+        date_created: serverTimestamp(),
+        date_updated: serverTimestamp()
+      });
+    } catch (e) {
+      console.error("Manual record fail:", e);
+    }
+  },
+
   submitManualFundingRequest: async (payload: { amount: number; receiptUrl: string }): Promise<ApiResponse<any>> => {
     const user = auth.currentUser;
     if (!user) return { status: false, message: 'Auth required.' };
