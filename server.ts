@@ -155,6 +155,47 @@ async function callServer2(endpoint: string, method: string, data: any) {
   }
 }
 
+async function callOgaviral(action: string, data: any = {}) {
+  const apiKey = process.env.OGAVIRAL_API_KEY;
+  const baseUrl = 'https://ogaviral.com/api/v2';
+
+  if (!apiKey) {
+    throw new Error('Ogaviral API key not configured.');
+  }
+
+  const params = new URLSearchParams();
+  params.append('key', apiKey);
+  params.append('action', action);
+  
+  Object.entries(data).forEach(([k, v]) => {
+    if (v !== undefined && v !== null) {
+      params.append(k, String(v));
+    }
+  });
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 28000);
+
+  try {
+    const apiResponse = await fetch(baseUrl, {
+      method: 'POST',
+      body: params,
+      signal: controller.signal
+    });
+    clearTimeout(timeout);
+    
+    const responseText = await apiResponse.text();
+    try {
+      return JSON.parse(responseText);
+    } catch {
+      throw new Error(responseText.substring(0, 100));
+    }
+  } catch (err: any) {
+    clearTimeout(timeout);
+    throw err;
+  }
+}
+
 // WhatsApp Webhook
 app.post('/api/whatsapp/webhook', async (req, res) => {
   const { From, Body } = req.body; // Standard Twilio format
@@ -345,6 +386,17 @@ app.post('/api/proxy-server2', async (req, res) => {
   const { endpoint, method = 'GET', data } = req.body || {};
   try {
     const result = await callServer2(endpoint, method, data);
+    return res.status(200).json(result);
+  } catch (error: any) {
+    return res.status(500).json({ status: 'error', message: error.message });
+  }
+});
+
+// Ogaviral Proxy Route (SMM)
+app.post('/api/proxy-smm', async (req, res) => {
+  const { action, data } = req.body || {};
+  try {
+    const result = await callOgaviral(action, data);
     return res.status(200).json(result);
   } catch (error: any) {
     return res.status(500).json({ status: 'error', message: error.message });

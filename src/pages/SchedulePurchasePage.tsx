@@ -96,7 +96,7 @@ const SchedulePurchasePage: React.FC = () => {
     setIsScheduling(true);
     try {
       await addDoc(collection(db, "scheduled_transactions"), {
-        userId: user.uid,
+        userId: user.id,
         userEmail: user.email,
         service,
         ...details,
