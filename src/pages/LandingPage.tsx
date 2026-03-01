@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import Logo from '../components/Logo';
 import Footer from '../components/Footer';
 import { motion, useScroll, useTransform } from 'motion/react';
-import { Rocket, Smartphone, ArrowRight, Globe, CreditCard, Sun, Moon, Wifi, Bell } from 'lucide-react';
+import { Rocket, Smartphone, ArrowRight, Globe, CreditCard, Sun, Moon } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 
 const LandingPage: React.FC = () => {
@@ -22,132 +22,133 @@ const LandingPage: React.FC = () => {
   return (
     <div className="bg-[#000] text-white overflow-hidden selection:bg-blue-600 selection:text-white scroll-smooth font-sans">
       {/* Navigation */}
-      <nav className={`fixed w-full z-[100] transition-all duration-1000 ${scrolled ? 'bg-black/90 backdrop-blur-3xl py-4 border-b border-white/5' : 'bg-transparent py-10'}`}>
-        <div className="max-w-[1800px] mx-auto px-6 lg:px-16 flex justify-between items-center">
+      <nav className={`fixed w-full z-[100] transition-all duration-700 ${scrolled ? 'bg-black/80 backdrop-blur-2xl py-4 border-b border-white/5' : 'bg-transparent py-8'}`}>
+        <div className="max-w-[1400px] mx-auto px-6 lg:px-12 flex justify-between items-center">
           <Logo />
-          <div className="hidden lg:flex items-center space-x-16">
-            <nav className="flex items-center space-x-12">
-              <a href="#services" className="text-[11px] font-black uppercase tracking-[0.4em] text-white/40 hover:text-white transition-all">Services</a>
-              <a href="#how-it-works" className="text-[11px] font-black uppercase tracking-[0.4em] text-white/40 hover:text-white transition-all">Protocol</a>
-              <Link to="/pricing" className="text-[11px] font-black uppercase tracking-[0.4em] text-white/40 hover:text-white transition-all">Pricing</Link>
+          <div className="hidden lg:flex items-center space-x-12">
+            <nav className="flex items-center space-x-10">
+              <a href="#services" className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/40 hover:text-white transition-all">Services</a>
+              <a href="#how-it-works" className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/40 hover:text-white transition-all">Protocol</a>
+              <Link to="/pricing" className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/40 hover:text-white transition-all">Pricing</Link>
             </nav>
-            <div className="flex items-center space-x-6">
+            <div className="h-4 w-px bg-white/10"></div>
+            <div className="flex items-center space-x-8">
               <button 
                 onClick={toggleTheme}
-                className="p-3 bg-white/5 border border-white/10 rounded-2xl text-white/60 hover:text-white transition-all"
+                className="text-white/40 hover:text-white transition-all"
               >
-                {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+                {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
               </button>
-              <Link to="/login" className="text-[11px] font-black uppercase tracking-[0.4em] text-white/60 hover:text-white transition-all">Login</Link>
-              <Link to="/signup" className="bg-blue-600 text-white px-10 py-4 rounded-full text-[11px] font-black uppercase tracking-[0.4em] hover:bg-white hover:text-black transition-all shadow-2xl shadow-blue-600/20">Join Now</Link>
+              <Link to="/login" className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/40 hover:text-white transition-all">Login</Link>
+              <Link to="/signup" className="bg-white text-black px-8 py-3 rounded-full text-[10px] font-bold uppercase tracking-[0.3em] hover:bg-blue-600 hover:text-white transition-all shadow-xl">Join Now</Link>
             </div>
           </div>
           <div className="lg:hidden flex items-center space-x-4">
             <button 
               onClick={toggleTheme}
-              className="p-4 bg-white/5 border border-white/10 rounded-2xl text-white/60 hover:text-white transition-all"
+              className="p-3 bg-white/5 border border-white/10 rounded-xl text-white/60"
             >
               {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
             </button>
-            <Link to="/login" className="bg-white/5 p-4 rounded-2xl border border-white/10">
-              <ArrowRight className="w-6 h-6" />
+            <Link to="/login" className="bg-white/5 p-3 rounded-xl border border-white/10">
+              <ArrowRight className="w-5 h-5" />
             </Link>
           </div>
         </div>
       </nav>
 
       {/* HERO SECTION */}
-      <section className="relative min-h-screen flex flex-col justify-center pt-40 pb-20 px-6 lg:px-16 overflow-hidden">
-        <motion.div style={{ opacity, y }} className="max-w-[1800px] mx-auto w-full relative z-10">
-          <div className="flex flex-col lg:flex-row items-center lg:items-end justify-between mb-20 gap-20">
-            <div className="max-w-5xl text-center lg:text-left">
+      <section className="relative min-h-screen flex flex-col justify-center pt-32 pb-20 px-6 lg:px-12 overflow-hidden">
+        <motion.div style={{ opacity, y }} className="max-w-[1400px] mx-auto w-full relative z-10">
+          <div className="grid lg:grid-cols-2 gap-24 items-center">
+            <div className="text-center lg:text-left">
               <motion.div 
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="flex items-center justify-center lg:justify-start space-x-4 mb-10"
-              >
-                <div className="w-12 h-px bg-blue-600"></div>
-                <span className="text-[11px] font-black uppercase tracking-[0.5em] text-blue-500">The Future of Digital Commerce</span>
-              </motion.div>
-              <motion.h1 
-                initial={{ opacity: 0, y: 100 }}
+                initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-                className="text-[16vw] lg:text-[12vw] font-black leading-[0.82] tracking-[-0.04em] uppercase"
+                className="inline-flex items-center space-x-3 px-4 py-2 bg-white/5 border border-white/10 rounded-full mb-12"
               >
-                Oplug <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-600">Digital.</span>
-              </motion.h1>
+                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                <span className="text-[9px] font-bold uppercase tracking-[0.4em] text-blue-400">v2.0 Protocol Active</span>
+              </motion.div>
               
-              <motion.div 
+              <motion.h1 
+                initial={{ opacity: 0, y: 60 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                className="text-[14vw] lg:text-[9vw] font-black leading-[0.85] tracking-[-0.05em] uppercase mb-12"
+              >
+                Digital <br />
+                <span className="text-transparent bg-clip-text bg-gradient-to-br from-white via-white to-white/20">Ascension.</span>
+              </motion.h1>
+
+              <motion.p 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 1.2 }}
-                className="mt-12 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-6"
+                transition={{ delay: 0.4 }}
+                className="text-xl lg:text-2xl text-white/40 font-medium max-w-xl mb-16 leading-relaxed"
               >
-                <Link to="/signup" className="w-full sm:w-auto bg-blue-600 text-white px-12 py-6 rounded-full text-xl font-black hover:bg-white hover:text-black transition-all shadow-2xl shadow-blue-600/20">Get Started Now</Link>
-                <Link to="/pricing" className="w-full sm:w-auto border border-white/10 text-white px-12 py-6 rounded-full text-xl font-black hover:bg-white/5 transition-all">View Pricing</Link>
+                The most advanced infrastructure for digital commerce in Nigeria. Instant fulfillment, surgical precision.
+              </motion.p>
+              
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6 }}
+                className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-6"
+              >
+                <Link to="/signup" className="w-full sm:w-auto bg-blue-600 text-white px-12 py-6 rounded-full text-lg font-black hover:bg-white hover:text-black transition-all shadow-2xl shadow-blue-600/40">Start Building</Link>
+                <Link to="/pricing" className="w-full sm:w-auto border border-white/10 text-white px-12 py-6 rounded-full text-lg font-black hover:bg-white/5 transition-all">Network Rates</Link>
               </motion.div>
             </div>
 
-            <div className="relative w-full lg:w-1/2 h-[500px] lg:h-[700px]">
-              {/* Floating UI Elements */}
-              <motion.div 
-                animate={{ y: [0, -20, 0], rotate: [0, 2, 0] }}
-                transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-                className="absolute top-0 right-0 w-64 h-80 bg-white/5 backdrop-blur-3xl rounded-[3rem] border border-white/10 p-8 shadow-2xl z-20 hidden sm:block"
-              >
-                <div className="w-12 h-12 bg-blue-600 rounded-2xl mb-6 flex items-center justify-center">
-                  <Wifi className="text-white" size={24} />
+            <div className="relative hidden lg:block">
+              <div className="relative aspect-square">
+                <motion.div 
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
+                  className="absolute inset-0 border border-white/5 rounded-full"
+                ></motion.div>
+                <motion.div 
+                  animate={{ rotate: -360 }}
+                  transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
+                  className="absolute inset-12 border border-white/10 border-dashed rounded-full"
+                ></motion.div>
+                
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <motion.div 
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ duration: 1.5, ease: "easeOut" }}
+                    className="w-[80%] h-[80%] bg-gradient-to-br from-blue-600/20 to-purple-600/20 rounded-[4rem] backdrop-blur-3xl border border-white/10 overflow-hidden shadow-2xl"
+                  >
+                    <img 
+                      src="https://picsum.photos/seed/oplug_tech/1000/1000"
+                      alt="Oplug Technology"
+                      className="w-full h-full object-cover opacity-50 grayscale mix-blend-overlay"
+                      referrerPolicy="no-referrer"
+                    />
+                  </motion.div>
                 </div>
-                <div className="space-y-4">
-                  <div className="h-2 w-full bg-white/10 rounded-full"></div>
-                  <div className="h-2 w-2/3 bg-white/10 rounded-full"></div>
-                  <div className="h-2 w-1/2 bg-white/10 rounded-full"></div>
-                </div>
-                <div className="mt-12 pt-8 border-t border-white/5">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-2">Transaction</p>
-                  <p className="text-2xl font-black tracking-tighter text-emerald-500">+₦25,000</p>
-                </div>
-              </motion.div>
 
-              <motion.div 
-                animate={{ y: [0, 20, 0], rotate: [0, -2, 0] }}
-                transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-                className="absolute bottom-20 left-0 w-72 h-48 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-[2.5rem] p-8 shadow-2xl z-30"
-              >
-                <div className="flex justify-between items-start mb-8">
-                  <CreditCard size={32} />
-                  <div className="w-10 h-10 bg-white/20 rounded-full"></div>
-                </div>
-                <p className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1">Wallet Balance</p>
-                <p className="text-3xl font-black tracking-tighter">₦1,240,500</p>
-              </motion.div>
+                {/* Floating Stats */}
+                <motion.div 
+                  animate={{ y: [0, -20, 0] }}
+                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                  className="absolute -top-10 -right-10 bg-white text-black p-8 rounded-[2.5rem] shadow-2xl z-20"
+                >
+                  <p className="text-[10px] font-black uppercase tracking-widest opacity-40 mb-2">Uptime</p>
+                  <p className="text-3xl font-black tracking-tighter">99.99%</p>
+                </motion.div>
 
-              {/* Floating Image without background */}
-              <motion.img 
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 1.5 }}
-                src="https://picsum.photos/seed/oplug_hero/1200/1200"
-                className="w-full h-full object-cover rounded-[5rem] opacity-40 grayscale group-hover:grayscale-0 transition-all duration-1000"
-                referrerPolicy="no-referrer"
-              />
-              
-              {/* Floating "Email" or Notification element */}
-              <motion.div 
-                animate={{ x: [0, 15, 0], y: [0, -10, 0] }}
-                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                className="absolute -top-10 left-20 bg-white text-black p-6 rounded-3xl shadow-2xl z-40 flex items-center space-x-4"
-              >
-                <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white">
-                  <Bell size={20} />
-                </div>
-                <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest opacity-40">Notification</p>
-                  <p className="text-sm font-black tracking-tight">Data Delivered Successfully</p>
-                </div>
-              </motion.div>
+                <motion.div 
+                  animate={{ y: [0, 20, 0] }}
+                  transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+                  className="absolute -bottom-10 -left-10 bg-blue-600 text-white p-8 rounded-[2.5rem] shadow-2xl z-20"
+                >
+                  <p className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-2">Latency</p>
+                  <p className="text-3xl font-black tracking-tighter">14ms</p>
+                </motion.div>
+              </div>
             </div>
           </div>
         </motion.div>

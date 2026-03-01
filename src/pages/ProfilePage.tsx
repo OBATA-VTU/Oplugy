@@ -88,61 +88,82 @@ const ProfilePage: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto space-y-12 pb-32 px-4 sm:px-6 lg:px-8">
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-8">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-10 border-b border-gray-100 pb-12">
         <div>
-          <div className="flex items-center space-x-3 mb-3">
-            <div className="w-2 h-2 rounded-full bg-blue-600"></div>
-            <span className="text-[10px] font-black uppercase tracking-[0.4em] text-blue-600">Identity Protocol</span>
+          <div className="inline-flex items-center space-x-2 px-3 py-1 bg-gray-50 rounded-full mb-6">
+            <div className="w-1.5 h-1.5 rounded-full bg-blue-600"></div>
+            <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">System Identity</span>
           </div>
-          <h1 className="text-5xl lg:text-7xl font-black tracking-tighter leading-none">
-            User <span className="text-gray-400">Profile.</span>
+          <h1 className="text-6xl lg:text-8xl font-black tracking-tighter leading-[0.85] uppercase">
+            Account <br />
+            <span className="text-gray-200">Settings.</span>
           </h1>
         </div>
-        <div className="flex bg-white border border-gray-100 p-1.5 rounded-2xl shadow-sm overflow-x-auto no-scrollbar">
+        <div className="flex bg-gray-50 p-1.5 rounded-2xl border border-gray-100 shadow-inner">
            {(['ACCOUNT', 'SECURITY', 'DEVELOPER'] as const).map((tab) => (
              <button 
               key={tab} 
               onClick={() => setActiveTab(tab)}
-              className={`px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === tab ? 'bg-gray-950 text-white shadow-xl' : 'text-gray-400 hover:text-gray-950'}`}
+              className={`px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === tab ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-400 hover:text-gray-900'}`}
              >
-                {tab === 'DEVELOPER' ? 'API' : tab === 'SECURITY' ? 'Security' : 'Account'}
+                {tab === 'DEVELOPER' ? 'API' : tab === 'SECURITY' ? 'Security' : 'Profile'}
              </button>
            ))}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
         {/* Left Sidebar */}
-        <div className="lg:col-span-4 space-y-6">
-          <div className="bg-white border border-gray-100 rounded-[2.5rem] p-10 shadow-xl relative overflow-hidden group">
-            <div className="relative z-10 text-center space-y-8">
-              <div className="w-32 h-32 bg-gray-50 text-gray-900 rounded-[2.5rem] flex items-center justify-center mx-auto text-5xl font-black shadow-inner group-hover:scale-105 transition-transform duration-500">
-                {user?.fullName?.charAt(0).toUpperCase() || user?.username?.charAt(0).toUpperCase()}
-              </div>
-              <div>
-                <h3 className="text-3xl font-black tracking-tighter">@{user?.username}</h3>
-                <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest mt-2">{user?.role || 'CUSTOMER'} ACCESS</p>
+        <div className="lg:col-span-4 space-y-8">
+          <div className="bg-white border border-gray-100 rounded-[3rem] p-12 shadow-2xl shadow-gray-100/50 relative overflow-hidden group">
+            <div className="relative z-10 space-y-10">
+              <div className="flex items-center space-x-6">
+                <div className="w-24 h-24 bg-gray-950 text-white rounded-[2rem] flex items-center justify-center text-4xl font-black shadow-2xl">
+                  {user?.fullName?.charAt(0).toUpperCase() || user?.username?.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <h3 className="text-3xl font-black tracking-tighter">@{user?.username}</h3>
+                  <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest mt-1">{user?.role || 'CUSTOMER'}</p>
+                </div>
               </div>
               
-              <div className="grid grid-cols-2 gap-4 pt-8 border-t border-gray-50">
-                <MetricCard label="Balance" value={`₦${user?.walletBalance?.toLocaleString() || '0.00'}`} />
-                <MetricCard label="Referrals" value={`${user?.referralCount || 0}`} />
+              <div className="space-y-6 pt-10 border-t border-gray-50">
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Wallet Balance</span>
+                  <span className="text-2xl font-black tracking-tighter text-gray-900">₦{user?.walletBalance?.toLocaleString() || '0.00'}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Network Referrals</span>
+                  <span className="text-2xl font-black tracking-tighter text-gray-900">{user?.referralCount || 0}</span>
+                </div>
+              </div>
+
+              <div className="pt-6">
+                <button 
+                  onClick={logout}
+                  className="w-full py-5 bg-red-50 text-red-600 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] flex items-center justify-center space-x-3 hover:bg-red-600 hover:text-white transition-all"
+                >
+                  <LogOut size={16} />
+                  <span>Terminate Session</span>
+                </button>
               </div>
             </div>
+            <div className="absolute top-0 right-0 w-32 h-32 bg-gray-50 rounded-full -translate-y-1/2 translate-x-1/2 -z-10"></div>
           </div>
-
-          <button 
-            onClick={logout}
-            className="w-full p-6 bg-red-50 text-red-600 rounded-3xl font-black text-[11px] uppercase tracking-widest flex items-center justify-center space-x-3 hover:bg-red-600 hover:text-white transition-all group"
-          >
-            <LogOut size={18} className="group-hover:-translate-x-1 transition-transform" />
-            <span>Terminate Session</span>
-          </button>
+          
+          <div className="bg-gray-950 p-10 rounded-[3rem] text-white shadow-2xl shadow-blue-900/20 relative overflow-hidden">
+             <div className="relative z-10">
+                <Shield className="text-blue-500 mb-6" size={32} />
+                <h4 className="text-xl font-black tracking-tight mb-2">Security Protocol</h4>
+                <p className="text-white/40 text-sm font-medium leading-relaxed">Your account is protected by industry-standard encryption and 2FA authorization.</p>
+             </div>
+             <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-blue-600/20 rounded-full blur-3xl"></div>
+          </div>
         </div>
 
         {/* Main Content Area */}
         <div className="lg:col-span-8">
-          <div className="bg-white border border-gray-100 rounded-[2.5rem] p-10 lg:p-16 shadow-xl min-h-[600px]">
+          <div className="bg-white border border-gray-100 rounded-[3rem] p-12 lg:p-20 shadow-2xl shadow-gray-100/50 min-h-[700px]">
             <AnimatePresence mode="wait">
               {activeTab === 'ACCOUNT' && (
                 <motion.div 
@@ -301,13 +322,6 @@ const SectionHeader = ({ title, desc }: { title: string, desc: string }) => (
   <div>
     <h3 className="text-4xl font-black tracking-tighter uppercase mb-2">{title}</h3>
     <p className="text-gray-400 font-medium">{desc}</p>
-  </div>
-);
-
-const MetricCard = ({ label, value }: { label: string, value: string }) => (
-  <div className="text-center">
-    <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">{label}</p>
-    <p className="text-xl font-black tracking-tighter">{value}</p>
   </div>
 );
 

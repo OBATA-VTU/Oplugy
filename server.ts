@@ -9,12 +9,17 @@ if (!admin.apps.length) {
   try {
     const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT || '{}');
     if (serviceAccount.project_id) {
+      console.log(`Initializing Firebase Admin with project: ${serviceAccount.project_id}`);
       admin.initializeApp({
         credential: admin.credential.cert(serviceAccount)
       });
     } else {
       admin.initializeApp();
       console.warn('FIREBASE_SERVICE_ACCOUNT not configured. Using default credentials.');
+      try {
+        const app = admin.app();
+        console.log(`Default Firebase project ID: ${app.options.projectId || 'unknown'}`);
+      } catch (e) {}
     }
   } catch (e) {
     console.error('Error initializing Firebase Admin:', e);
@@ -560,7 +565,19 @@ async function processScheduledTransactions() {
 }
 
 // Run scheduler every 60 seconds
-setInterval(processScheduledTransactions, 60000);
+const startScheduler = async () => {
+  try {
+    const db = admin.firestore();
+    // Test connection
+    await db.collection('settings').limit(1).get();
+    console.log('Firestore connection successful. Starting scheduler...');
+    setInterval(processScheduledTransactions, 60000);
+  } catch (error: any) {
+    console.error('Failed to connect to Firestore. Scheduler will not run:', error.message);
+  }
+};
+
+startScheduler();
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`API Gateway running on http://0.0.0.0:${PORT}`);

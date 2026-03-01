@@ -7,6 +7,7 @@ import Spinner from '../components/Spinner';
 import { ShieldCheckIcon } from '../components/Icons';
 import { vtuService } from '../services/vtuService';
 import { adminService } from '../services/adminService';
+import { smmService } from '../services/smmService';
 import { getNetworkLogo } from '../constants';
 import { Smartphone, Wifi, Zap, Tv, BookOpen, Search, Settings2, Percent, Globe } from 'lucide-react';
 
@@ -60,33 +61,40 @@ const AdminPricingPage: React.FC = () => {
         if (activeServer === 1) {
           const res = await cipApiClient<any>('services', { method: 'GET', server: 1 });
           if (res.status && res.data?.dataPlans) {
-            const formatted = await Promise.all((res.data.dataPlans as any[]).map(async (p) => {
+            const planMap = new Map<string, any>();
+            await Promise.all((res.data.dataPlans as any[]).map(async (p) => {
+              const id = `s1-${p.network}-${p.serviceID}`;
+              if (planMap.has(id)) return;
               const manualDoc = await getDoc(doc(db, "manual_pricing", String(p.serviceID)));
-              return {
-                id: `s1-${p.network}-${p.serviceID}`,
+              planMap.set(id, {
+                id,
                 name: `${p.dataPlan} ${p.dataType}`,
                 base_price: Number(String(p.amount).replace(/,/g, '')),
                 network: p.network,
                 type: p.dataType,
                 manual_prices: manualDoc.exists() ? manualDoc.data() : null
-              };
+              });
             }));
-            setPlans(formatted);
+            setPlans(Array.from(planMap.values()));
           }
         } else {
           const res = await cipApiClient<any>('data/plans', { method: 'GET', server: 2 });
           if (res.status && Array.isArray(res.data)) {
-            setPlans(res.data.map((p: any) => {
+            const planMap = new Map<string, any>();
+            res.data.forEach((p: any) => {
               const id = String(p.id || p.plan_id || p.serviceID);
               const network = String(p.network || p.network_name || 'Unknown');
-              return {
-                id: `s2-${network}-${id}`,
+              const fullId = `s2-${network}-${id}`;
+              if (planMap.has(fullId)) return;
+              planMap.set(fullId, {
+                id: fullId,
                 name: String(p.name || p.plan_name || 'Data Plan'),
                 base_price: Number(p.price || p.amount || 0) / 100,
                 network: network,
                 type: String(p.type || p.dataType || 'Unknown')
-              };
-            }));
+              });
+            });
+            setPlans(Array.from(planMap.values()));
           }
         }
       } else if (activeService === 'cable') {
