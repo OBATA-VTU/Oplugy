@@ -13,7 +13,8 @@ if (!admin.apps.length) {
         credential: admin.credential.cert(serviceAccount)
       });
     } else {
-      console.warn('FIREBASE_SERVICE_ACCOUNT not configured. WhatsApp bot will have limited functionality.');
+      admin.initializeApp();
+      console.warn('FIREBASE_SERVICE_ACCOUNT not configured. Using default credentials.');
     }
   } catch (e) {
     console.error('Error initializing Firebase Admin:', e);
@@ -454,13 +455,17 @@ async function processScheduledTransactions() {
       .limit(10)
       .get();
 
-    if (snapshot.empty) return;
+    if (snapshot.empty) {
+      console.log('No pending scheduled transactions found.');
+      return;
+    }
 
     console.log(`Processing ${snapshot.size} scheduled transactions...`);
 
     for (const doc of snapshot.docs) {
       const data = doc.data();
       const { userId, service, amount, recipient, network, planId, type } = data;
+      console.log(`Processing scheduled transaction ${doc.id} for user ${userId} - ${service} to ${recipient}`);
 
       try {
         // 1. Check user balance
@@ -480,12 +485,38 @@ async function processScheduledTransactions() {
         // Update status to PROCESSING to avoid double execution
         await doc.ref.update({ status: 'PROCESSING' });
 
-        const result = await callServer1(service === 'data' ? 'data' : 'airtime', 'POST', {
-          serviceID: network.toLowerCase(),
-          plan_id: planId,
+        let endpoint = '';
+        let payload: any = {
           amount: amount,
           mobileNumber: recipient
-        });
+        };
+
+        switch (service.toLowerCase()) {
+          case 'data':
+            endpoint = 'data';
+            payload.serviceID = planId;
+            break;
+          case 'airtime':
+            endpoint = 'airtime';
+            payload.serviceID = network.toLowerCase();
+            break;
+          case 'cable':
+            endpoint = 'subcable';
+            payload.serviceID = planId;
+            payload.iucNum = recipient;
+            break;
+          case 'power':
+            endpoint = 'payelectric';
+            payload.serviceID = network.toLowerCase();
+            payload.meterNum = recipient;
+            payload.meterType = data.meterType || 1;
+            break;
+          default:
+            endpoint = service.toLowerCase();
+            payload.serviceID = planId || network.toLowerCase();
+        }
+
+        const result = await callServer1(endpoint, 'POST', payload);
 
         if (result.status === 'success' || result.status === true) {
           // Deduct balance

@@ -96,7 +96,7 @@ const Layout: React.FC = () => {
         <NavItem to="/smm" icon={<Globe className="w-5 h-5" />} onClick={closeSidebar}>Social Boost</NavItem>
         <NavItem to="/bills" icon={<Zap className="w-5 h-5" />} onClick={closeSidebar}>Light Bills</NavItem>
         <NavItem to="/cable" icon={<Tv className="w-5 h-5" />} onClick={closeSidebar}>TV Subscription</NavItem>
-        <NavItem to="/education" icon={<Gamepad2 className="w-5 h-5" />} onClick={closeSidebar}>School Fees</NavItem>
+        <NavItem to="/education" icon={<Gamepad2 className="w-5 h-5" />} onClick={closeSidebar}>Education</NavItem>
 
         <div className="px-6 py-4 mt-8 text-[9px] font-bold uppercase tracking-[0.5em] text-gray-400 dark:text-white/20">My Account</div>
         <NavItem to="/referrals" icon={<Users className="w-5 h-5" />} onClick={closeSidebar}>Invite Friends</NavItem>
@@ -163,8 +163,8 @@ const Layout: React.FC = () => {
           </div>
           
           <div className="flex items-center space-x-4 lg:space-x-8">
-             <div className="hidden md:flex items-center space-x-3">
-                <div className="relative group">
+             <div className="flex items-center space-x-3">
+                <div className="hidden md:relative md:group">
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors" size={18} />
                   <input 
                     type="text" 
@@ -183,7 +183,7 @@ const Layout: React.FC = () => {
                 
                 <button 
                   onClick={() => setNotificationsEnabled(!notificationsEnabled)}
-                  className={`p-4 rounded-2xl transition-all transform active:scale-90 ${notificationsEnabled ? 'bg-blue-50 text-blue-600 dark:bg-blue-500/10' : 'bg-gray-100 text-gray-400 dark:bg-white/5'}`}
+                  className={`hidden md:p-4 rounded-2xl transition-all transform active:scale-90 ${notificationsEnabled ? 'bg-blue-50 text-blue-600 dark:bg-blue-500/10' : 'bg-gray-100 text-gray-400 dark:bg-white/5'}`}
                   title="Toggle Notifications"
                 >
                   <Bell className="w-5 h-5" />

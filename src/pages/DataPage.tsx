@@ -52,7 +52,7 @@ const DataPage: React.FC = () => {
           const constant = AIRTIME_NETWORKS.find(c => c.name.toUpperCase() === n.name.toUpperCase());
           return { 
             ...n, 
-            image: customLogos[n.name] || constant?.image || 'https://cdn-icons-png.flaticon.com/512/8112/8112396.png'
+            image: customLogos[n.name.toUpperCase()] || constant?.image || 'https://cdn-icons-png.flaticon.com/512/8112/8112396.png'
           };
         });
         setNetworks(mapped);

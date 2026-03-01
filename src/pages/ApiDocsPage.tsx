@@ -16,7 +16,7 @@ const ApiDocsPage: React.FC = () => {
           <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Protocol v2.1.0</span>
         </motion.div>
         <h1 className="text-6xl lg:text-[100px] font-black text-gray-900 tracking-tighter leading-[0.85]">Developer <br /><span className="text-blue-600">Gateway.</span></h1>
-        <p className="mt-8 text-gray-400 font-medium text-xl max-w-3xl mx-auto leading-relaxed">Connect your infrastructure to the Obata high-velocity digital utility network. Our RESTful API provides low-latency access to airtime, data, and utility fulfillment.</p>
+        <p className="mt-8 text-gray-400 font-medium text-xl max-w-3xl mx-auto leading-relaxed">Connect your infrastructure to the Oplug high-velocity digital utility network. Our RESTful API provides low-latency access to airtime, data, and utility fulfillment.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -26,7 +26,7 @@ const ApiDocsPage: React.FC = () => {
                 <Globe className="w-6 h-6" />
               </div>
               <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-2">Base Endpoint</p>
-              <p className="font-mono text-sm break-all">https://obata.com/api/v1</p>
+              <p className="font-mono text-sm break-all">{window.location.origin}/api/v1</p>
             </div>
             <div className="absolute top-0 right-0 w-32 h-32 bg-blue-600/10 rounded-full blur-3xl group-hover:bg-blue-600/20 transition-all"></div>
          </div>
@@ -56,32 +56,56 @@ const ApiDocsPage: React.FC = () => {
             <p className="mb-8 text-lg">All requests must be authenticated using your secret API key. Include it in the `Authorization` header as a Bearer token. Never expose this key in client-side code.</p>
             <CodeBlock 
               title="Authentication Header"
-              code={`curl -X GET "https://obata.com/api/v1/user/balance" \\ \n -H "Authorization: Bearer {YOUR_SECRET_KEY}"`} 
+              code={`curl -X GET "${window.location.origin}/api/v1/user/balance" \\ \n -H "Authorization: Bearer {YOUR_SECRET_KEY}"`} 
             />
          </DocSection>
 
-         <DocSection title="Data Fulfillment" icon={<Zap className="w-8 h-8" />}>
-            <p className="mb-8 text-lg">Post a fulfillment request to the data endpoint. Our system will automatically route it to the fastest available node.</p>
+         <DocSection title="User Balance" icon={<ShieldCheck className="w-8 h-8" />}>
+            <p className="mb-8 text-lg">Check your current wallet balance to ensure you have enough funds for transactions.</p>
+            <CodeBlock 
+              title="GET /user/balance"
+              code={`{ \n  "status": "success", \n  "balance": 5000.50, \n  "currency": "NGN" \n}`} 
+            />
+         </DocSection>
+
+         <DocSection title="Airtime & Data" icon={<Zap className="w-8 h-8" />}>
+            <p className="mb-8 text-lg">Purchase airtime or data plans for any supported network. Use the network name (MTN, GLO, AIRTEL, 9MOBILE) and the appropriate plan ID.</p>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <div className="space-y-4">
                 <h4 className="text-sm font-black uppercase tracking-widest text-gray-900">Request Payload</h4>
                 <CodeBlock 
-                  title="POST /data/purchase"
-                  code={`{ \n  "network": "MTN", \n  "plan_id": "1001", \n  "phone": "08142452729", \n  "webhook_url": "https://yoursite.com/cb" \n}`} 
+                  title="POST /purchase"
+                  code={`{ \n  "type": "data", \n  "network": "MTN", \n  "plan_id": "1001", \n  "phone": "08142452729" \n}`} 
                 />
               </div>
               <div className="space-y-4">
                 <h4 className="text-sm font-black uppercase tracking-widest text-gray-900">Success Response</h4>
                 <CodeBlock 
                   title="HTTP 200 OK"
-                  code={`{ \n  "status": "success", \n  "transaction_id": "OBT_9921X", \n  "message": "Fulfillment initiated" \n}`} 
+                  code={`{ \n  "status": "success", \n  "transaction_id": "OBT_9921X", \n  "message": "Transaction successful" \n}`} 
                 />
               </div>
             </div>
          </DocSection>
 
+         <DocSection title="Bills & Utilities" icon={<Zap className="w-8 h-8" />}>
+            <p className="mb-8 text-lg">Pay for Cable TV (DSTV, GOTV, STARTIMES) or Electricity bills. Meter validation is recommended before payment.</p>
+            <CodeBlock 
+              title="POST /bill/pay"
+              code={`{ \n  "type": "cable", \n  "provider": "GOTV", \n  "plan_id": "gotv-max", \n  "recipient": "7012345678" \n}`} 
+            />
+         </DocSection>
+
+         <DocSection title="Social Boost (SMM)" icon={<Globe className="w-8 h-8" />}>
+            <p className="mb-8 text-lg">Automate your social media growth. Access hundreds of services for Instagram, TikTok, Facebook, and more.</p>
+            <CodeBlock 
+              title="POST /smm/order"
+              code={`{ \n  "service": "123", \n  "link": "https://instagram.com/p/...", \n  "quantity": 1000 \n}`} 
+            />
+         </DocSection>
+
          <DocSection title="Webhooks" icon={<Globe className="w-8 h-8" />}>
-            <p className="mb-8 text-lg">Obata uses webhooks to notify your application when a transaction's status changes. We will send a POST request with a JSON payload to your configured URL.</p>
+            <p className="mb-8 text-lg">Oplug uses webhooks to notify your application when a transaction's status changes. We will send a POST request with a JSON payload to your configured URL.</p>
             <CodeBlock 
               title="Webhook Payload"
               code={`{ \n  "event": "transaction.updated", \n  "data": { \n    "id": "OBT_9921X", \n    "status": "COMPLETED", \n    "amount": 500, \n    "recipient": "08142452729" \n  } \n}`} 

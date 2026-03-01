@@ -3,7 +3,8 @@ import { adminService } from '../services/adminService';
 import { useNotifications } from '../hooks/useNotifications';
 import Spinner from '../components/Spinner';
 import { motion } from 'motion/react';
-import { Bell, DollarSign, Server, Save, Shield, Info, Image as ImageIcon, Plus, Trash2 } from 'lucide-react';
+import { Bell, DollarSign, Server, Save, Shield, Info, Image as ImageIcon, Plus, Trash2, Upload } from 'lucide-react';
+import { uploadToImgBB } from '../services/imgbbService';
 
 const AdminSettingsPage: React.FC = () => {
   const { addNotification } = useNotifications();
@@ -18,6 +19,22 @@ const AdminSettingsPage: React.FC = () => {
   const [networkLogos, setNetworkLogos] = useState<Record<string, string>>({});
   const [newNetwork, setNewNetwork] = useState({ name: '', url: '' });
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    setIsUploading(true);
+    try {
+      const url = await uploadToImgBB(file);
+      setNewNetwork(prev => ({ ...prev, url }));
+      addNotification("Logo uploaded successfully. Now add the network name.", "success");
+    } catch (err: any) {
+      addNotification(err.message || "Failed to upload logo.", "error");
+    }
+    setIsUploading(false);
+  };
 
   const fetchSettings = useCallback(async () => {
     setLoading(true);
@@ -53,7 +70,7 @@ const AdminSettingsPage: React.FC = () => {
     ]);
 
     if (settingsRes.status && logosRes.status) {
-      addNotification("System node settings synchronized.", "success");
+      addNotification("Settings saved successfully.", "success");
     } else {
       addNotification("Failed to save some settings.", "error");
     }
@@ -75,7 +92,7 @@ const AdminSettingsPage: React.FC = () => {
   if (loading) return (
     <div className="flex flex-col h-[60vh] items-center justify-center space-y-6">
       <Spinner />
-      <p className="text-[11px] font-black text-gray-400 uppercase tracking-[0.5em] animate-pulse">Loading Settings...</p>
+      <p className="text-[11px] font-black text-gray-400 uppercase tracking-[0.5em] animate-pulse">Loading...</p>
     </div>
   );
 
@@ -83,15 +100,15 @@ const AdminSettingsPage: React.FC = () => {
     <div className="max-w-7xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-1000 pb-24">
       <div className="flex flex-col lg:flex-row justify-between lg:items-end gap-10">
         <div className="space-y-4">
-          <h2 className="text-[11px] font-black text-blue-600 uppercase tracking-[0.5em]">System Settings</h2>
-          <h1 className="text-5xl lg:text-8xl font-black text-gray-900 tracking-tighter leading-[0.85]">System <br /><span className="text-blue-600">Config.</span></h1>
+          <h2 className="text-[11px] font-black text-blue-600 uppercase tracking-[0.5em]">Admin Control Panel</h2>
+          <h1 className="text-5xl lg:text-8xl font-black text-gray-900 tracking-tighter leading-[0.85]">Website <br /><span className="text-blue-600">Settings.</span></h1>
         </div>
         <button 
           onClick={handleUpdate} 
           disabled={isUpdating}
           className="flex items-center space-x-4 bg-gray-950 text-white px-10 py-6 rounded-[2rem] shadow-2xl text-[11px] font-black uppercase tracking-widest hover:bg-blue-600 transition-all transform active:scale-95 group"
         >
-          {isUpdating ? <Spinner /> : <><Save className="w-4 h-4 group-hover:scale-110 transition-transform" /> <span>Save All Settings</span></>}
+          {isUpdating ? <Spinner /> : <><Save className="w-4 h-4 group-hover:scale-110 transition-transform" /> <span>Save All Changes</span></>}
         </button>
       </div>
 
@@ -107,12 +124,12 @@ const AdminSettingsPage: React.FC = () => {
                      <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center shadow-inner">
                         <DollarSign className="w-6 h-6" />
                      </div>
-                     <h3 className="text-4xl font-black text-gray-900 tracking-tighter">Profit Margins</h3>
+                     <h3 className="text-4xl font-black text-gray-900 tracking-tighter">Profit Settings</h3>
                   </div>
                   <div className="space-y-6">
-                     <MarginInput label="Standard User Profit" value={pricing.user_margin} onChange={(val: number) => setPricing({...pricing, user_margin: val})} />
-                     <MarginInput label="Reseller Profit" value={pricing.reseller_margin} onChange={(val: number) => setPricing({...pricing, reseller_margin: val})} />
-                     <MarginInput label="API Merchant Profit" value={pricing.api_margin} onChange={(val: number) => setPricing({...pricing, api_margin: val})} />
+                     <MarginInput label="Profit from Normal Users (₦)" value={pricing.user_margin} onChange={(val: number) => setPricing({...pricing, user_margin: val})} />
+                     <MarginInput label="Profit from Resellers (₦)" value={pricing.reseller_margin} onChange={(val: number) => setPricing({...pricing, reseller_margin: val})} />
+                     <MarginInput label="Profit from API Users (₦)" value={pricing.api_margin} onChange={(val: number) => setPricing({...pricing, api_margin: val})} />
                   </div>
                </div>
                <div className="absolute top-0 right-0 w-64 h-64 bg-blue-50/50 rounded-full translate-x-1/2 -translate-y-1/2 blur-3xl"></div>
@@ -128,18 +145,18 @@ const AdminSettingsPage: React.FC = () => {
                   <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center shadow-inner">
                      <Bell className="w-6 h-6" />
                   </div>
-                  <h3 className="text-4xl font-black text-gray-900 tracking-tighter">System Notice</h3>
+                  <h3 className="text-4xl font-black text-gray-900 tracking-tighter">Dashboard Notice</h3>
                </div>
                <div className="space-y-6">
                   <textarea 
                     className="w-full p-10 bg-gray-50 border-2 border-transparent rounded-[3rem] font-bold text-lg min-h-[200px] focus:ring-8 focus:ring-blue-50 focus:bg-white focus:border-blue-100 transition-all outline-none" 
-                    placeholder="Enter message for all users..." 
+                    placeholder="Write a message for your users here..." 
                     value={announcement} 
                     onChange={(e) => setAnnouncement(e.target.value)} 
                   />
                   <div className="flex items-center space-x-3 text-gray-400 px-6">
                      <Info className="w-4 h-4" />
-                     <p className="text-[10px] font-black uppercase tracking-widest">This message will be shown to all users on their dashboard.</p>
+                     <p className="text-[10px] font-black uppercase tracking-widest">This message will appear at the top of every user's dashboard.</p>
                   </div>
                </div>
             </motion.div>
@@ -156,28 +173,28 @@ const AdminSettingsPage: React.FC = () => {
                      <div className="w-12 h-12 bg-white/10 text-blue-500 rounded-2xl flex items-center justify-center shadow-inner">
                         <Server className="w-6 h-6" />
                      </div>
-                     <h3 className="text-4xl font-black mb-2 tracking-tighter">Server Settings</h3>
+                     <h3 className="text-4xl font-black mb-2 tracking-tighter">Service Charges</h3>
                   </div>
                   
                   <div className="space-y-12">
                      <div className="space-y-8">
                        <div className="flex items-center justify-between">
-                          <p className="text-[11px] font-black text-blue-400 uppercase tracking-[0.4em]">Primary Server: INLOMAX</p>
+                          <p className="text-[11px] font-black text-blue-400 uppercase tracking-[0.4em]">Provider Connection</p>
                           <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.5)]"></div>
                        </div>
                        <div className="space-y-6">
-                          <MarginInput dark label="Data Profit" value={pricing.server1.data_margin} onChange={(v: number) => setPricing({...pricing, server1: {...pricing.server1, data_margin: v}})} />
-                          <MarginInput dark label="Cable TV Profit" value={pricing.server1.cable_margin} onChange={(v: number) => setPricing({...pricing, server1: {...pricing.server1, cable_margin: v}})} />
-                          <MarginInput dark label="Electricity Profit" value={pricing.server1.electricity_margin} onChange={(v: number) => setPricing({...pricing, server1: {...pricing.server1, electricity_margin: v}})} />
+                          <MarginInput dark label="Extra Fee for Data (₦)" value={pricing.server1.data_margin} onChange={(v: number) => setPricing({...pricing, server1: {...pricing.server1, data_margin: v}})} />
+                          <MarginInput dark label="Extra Fee for Cable TV (₦)" value={pricing.server1.cable_margin} onChange={(v: number) => setPricing({...pricing, server1: {...pricing.server1, cable_margin: v}})} />
+                          <MarginInput dark label="Extra Fee for Electricity (₦)" value={pricing.server1.electricity_margin} onChange={(v: number) => setPricing({...pricing, server1: {...pricing.server1, electricity_margin: v}})} />
                        </div>
                      </div>
 
                      <div className="p-10 bg-white/5 rounded-[2.5rem] border border-white/10">
                         <div className="flex items-center space-x-4 mb-4">
                            <Shield className="w-5 h-5 text-blue-500" />
-                           <h4 className="text-[11px] font-black uppercase tracking-widest">Security Note</h4>
+                           <h4 className="text-[11px] font-black uppercase tracking-widest">Important Note</h4>
                         </div>
-                        <p className="text-white/40 text-sm leading-relaxed font-medium">These settings apply to all services. Be careful when changing these during busy hours.</p>
+                        <p className="text-white/40 text-sm leading-relaxed font-medium">These extra charges are added to the price your provider gives you. Be careful when changing these.</p>
                      </div>
                   </div>
                </div>
@@ -198,7 +215,7 @@ const AdminSettingsPage: React.FC = () => {
                </div>
 
                <div className="space-y-8">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-8 bg-gray-50 rounded-[3rem] border border-dashed border-gray-200">
+                  <div className="grid grid-cols-1 gap-6 p-8 bg-gray-50 rounded-[3rem] border border-dashed border-gray-200">
                      <div className="space-y-2">
                         <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4">Network Name (e.g. MTN)</label>
                         <input 
@@ -210,15 +227,21 @@ const AdminSettingsPage: React.FC = () => {
                         />
                      </div>
                      <div className="space-y-2">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4">Logo URL</label>
+                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4">Logo Image</label>
                         <div className="flex gap-4">
-                           <input 
-                             type="text" 
-                             className="flex-1 p-6 bg-white border border-gray-100 rounded-2xl font-bold outline-none focus:border-emerald-500 transition-all"
-                             value={newNetwork.url}
-                             onChange={(e) => setNewNetwork({...newNetwork, url: e.target.value})}
-                             placeholder="https://..."
-                           />
+                           <div className="flex-1 relative">
+                             <input 
+                               type="text" 
+                               className="w-full p-6 bg-white border border-gray-100 rounded-2xl font-bold outline-none focus:border-emerald-500 transition-all pr-16"
+                               value={newNetwork.url}
+                               onChange={(e) => setNewNetwork({...newNetwork, url: e.target.value})}
+                               placeholder="Paste URL or upload..."
+                             />
+                             <label className="absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer p-3 bg-gray-50 rounded-xl hover:bg-emerald-50 hover:text-emerald-600 transition-all">
+                               <input type="file" className="hidden" accept="image/*" onChange={handleLogoUpload} disabled={isUploading} />
+                               {isUploading ? <Spinner /> : <Upload className="w-4 h-4" />}
+                             </label>
+                           </div>
                            <button 
                              onClick={addNetworkLogo}
                              className="p-6 bg-emerald-600 text-white rounded-2xl hover:bg-emerald-700 transition-all shadow-lg"

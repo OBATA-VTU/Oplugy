@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNotifications } from '../hooks/useNotifications';
-import { Shield, LogOut, Copy, Check, User, Lock, Terminal, CreditCard } from 'lucide-react';
+import { Shield, LogOut, Copy, Check, User, Lock, Terminal, CreditCard, Eye, EyeOff, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { authService } from '../services/authService';
+import { db } from '../firebase/config';
+import { doc, updateDoc } from 'firebase/firestore';
 import Spinner from '../components/Spinner';
 
 const ProfilePage: React.FC = () => {
@@ -15,7 +17,45 @@ const ProfilePage: React.FC = () => {
   
   const [pinForm, setPinForm] = useState({ oldPin: '', newPin: '', confirmPin: '' });
   const [webhookUrl, setWebhookUrl] = useState(user?.webhookUrl || '');
-  const [apiKey] = useState(user?.apiKey || `sk_inlomax_${Math.random().toString(36).substring(7).toUpperCase()}`);
+  const [showApiKey, setShowApiKey] = useState(false);
+  const [apiKey, setApiKey] = useState(user?.apiKey || '');
+
+  const generateLongApiKey = () => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let result = 'op_live_';
+    for (let i = 0; i < 48; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+  };
+
+  const handleRegenerateKey = async () => {
+    if (!user) return;
+    const newKey = generateLongApiKey();
+    setIsUpdating(true);
+    try {
+      const userRef = doc(db, "users", user.id);
+      await updateDoc(userRef, { apiKey: newKey });
+      setApiKey(newKey);
+      addNotification("New API Key generated and saved.", "success");
+    } catch (e) {
+      addNotification("Failed to regenerate API Key.", "error");
+    }
+    setIsUpdating(false);
+  };
+
+  const handleSaveConfig = async () => {
+    if (!user) return;
+    setIsUpdating(true);
+    try {
+      const userRef = doc(db, "users", user.id);
+      await updateDoc(userRef, { webhookUrl });
+      addNotification("Developer configuration saved.", "success");
+    } catch (e) {
+      addNotification("Failed to save configuration.", "error");
+    }
+    setIsUpdating(false);
+  };
 
   const handleUpdatePin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -191,10 +231,37 @@ const ProfilePage: React.FC = () => {
                   
                   <div className="space-y-10">
                     <div className="bg-gray-50 p-8 rounded-3xl border border-gray-100">
-                      <label className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-2">API Secret Key</label>
+                      <div className="flex justify-between items-center mb-4 ml-2">
+                        <label className="block text-[9px] font-black text-gray-400 uppercase tracking-widest">API Secret Key</label>
+                        <button 
+                          onClick={handleRegenerateKey}
+                          disabled={isUpdating}
+                          className="flex items-center space-x-2 text-[9px] font-black text-blue-600 uppercase tracking-widest hover:text-gray-950 disabled:opacity-50 transition-colors"
+                        >
+                          <RefreshCw size={12} className={isUpdating ? 'animate-spin' : ''} />
+                          <span>Regenerate Key</span>
+                        </button>
+                      </div>
                       <div className="flex items-center gap-4">
-                        <input type="password" value={apiKey} readOnly className="flex-1 bg-white border border-gray-200 p-4 rounded-xl font-mono text-xs tracking-widest outline-none" />
-                        <button onClick={() => copyToClipboard(apiKey, "API Key")} className={`p-4 rounded-xl transition-all shadow-sm ${copied === "API Key" ? 'bg-emerald-500 text-white' : 'bg-gray-950 text-white hover:bg-blue-600'}`}>
+                        <div className="relative flex-1">
+                          <input 
+                            type={showApiKey ? "text" : "password"} 
+                            value={apiKey || 'Click regenerate to create a key'} 
+                            readOnly 
+                            className="w-full bg-white border border-gray-200 p-4 rounded-xl font-mono text-xs tracking-widest outline-none pr-12" 
+                          />
+                          <button 
+                            onClick={() => setShowApiKey(!showApiKey)}
+                            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-600 transition-colors"
+                          >
+                            {showApiKey ? <EyeOff size={18} /> : <Eye size={18} />}
+                          </button>
+                        </div>
+                        <button 
+                          onClick={() => apiKey && copyToClipboard(apiKey, "API Key")} 
+                          disabled={!apiKey}
+                          className={`p-4 rounded-xl transition-all shadow-sm ${copied === "API Key" ? 'bg-emerald-500 text-white' : 'bg-gray-950 text-white hover:bg-blue-600 disabled:opacity-50'}`}
+                        >
                           {copied === "API Key" ? <Check size={18} /> : <Copy size={18} />}
                         </button>
                       </div>
@@ -212,7 +279,13 @@ const ProfilePage: React.FC = () => {
                       />
                     </div>
                     
-                    <button className="bg-gray-950 text-white px-10 py-4 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-600 transition-all shadow-lg">Save Configuration</button>
+                    <button 
+                      onClick={handleSaveConfig}
+                      disabled={isUpdating}
+                      className="bg-gray-950 text-white px-10 py-4 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-600 transition-all shadow-lg disabled:opacity-50"
+                    >
+                      {isUpdating ? 'Saving...' : 'Save Configuration'}
+                    </button>
                   </div>
                 </motion.div>
               )}

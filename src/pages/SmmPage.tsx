@@ -18,6 +18,11 @@ interface SmmService {
   max: string;
   refill: boolean;
   cancel: boolean;
+  manual_prices?: {
+    user_price?: number;
+    reseller_price?: number;
+    api_price?: number;
+  };
 }
 
 const SmmPage: React.FC = () => {
@@ -71,7 +76,21 @@ const SmmPage: React.FC = () => {
 
   const calculatePrice = () => {
     if (!selectedService || !details.quantity) return 0;
-    const rate = parseFloat(selectedService.rate);
+    
+    let rate = parseFloat(selectedService.rate);
+    
+    // Check for manual pricing based on role
+    if (selectedService.manual_prices) {
+      const role = user?.role || 'CUSTOMER';
+      if (role === 'ADMIN' || role === 'CUSTOMER') {
+        rate = selectedService.manual_prices.user_price || rate;
+      } else if (role === 'AGENT') {
+        rate = selectedService.manual_prices.reseller_price || rate;
+      } else if (role === 'API') {
+        rate = selectedService.manual_prices.api_price || rate;
+      }
+    }
+    
     const qty = parseInt(details.quantity);
     // Rate is per 1000
     return (rate / 1000) * qty;
@@ -220,7 +239,18 @@ const SmmPage: React.FC = () => {
                            </div>
                            <div>
                               <p className={`font-bold text-sm ${selectedService?.service === s.service ? "text-purple-900" : "text-gray-700"}`}>{s.name}</p>
-                              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">₦{(parseFloat(s.rate)).toLocaleString()} per 1k</p>
+                              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                                ₦{(() => {
+                                  let rate = parseFloat(s.rate);
+                                  if (s.manual_prices) {
+                                    const role = user?.role || 'CUSTOMER';
+                                    if (role === 'ADMIN' || role === 'CUSTOMER') rate = s.manual_prices.user_price || rate;
+                                    else if (role === 'AGENT') rate = s.manual_prices.reseller_price || rate;
+                                    else if (role === 'API') rate = s.manual_prices.api_price || rate;
+                                  }
+                                  return rate.toLocaleString();
+                                })()} per 1k
+                              </p>
                            </div>
                         </div>
                         <ChevronRight className={`w-5 h-5 transition-transform ${selectedService?.service === s.service ? "text-purple-600 translate-x-0" : "text-gray-300 -translate-x-2 opacity-0 group-hover:opacity-100 group-hover:translate-x-0"}`} />

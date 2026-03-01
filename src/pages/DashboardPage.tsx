@@ -17,7 +17,7 @@ import {
   Smartphone, Wifi, Zap, Tv, History, 
   Wallet, ShieldCheck, 
   MessageSquare, Bell, ChevronRight, Copy, Check, Globe,
-  Activity, TrendingUp, Users
+  TrendingUp, Users
 } from 'lucide-react';
 
 const DashboardPage: React.FC = () => {
@@ -108,23 +108,9 @@ const DashboardPage: React.FC = () => {
         {/* Header Section */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
           <div>
-            <div className="flex items-center space-x-3 mb-2">
-              <div className="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></div>
-              <span className="text-[10px] font-black uppercase tracking-[0.4em] text-blue-600">Terminal Active</span>
-            </div>
             <h1 className="text-4xl lg:text-6xl font-black tracking-tighter leading-none">
-              Hello, <span className="text-gray-400">{user?.username}.</span>
+              Welcome back, <span className="text-gray-400">{user?.username}.</span>
             </h1>
-          </div>
-          <div className="flex items-center bg-white border border-gray-100 p-2 rounded-2xl shadow-sm">
-            <div className="px-4 py-2 border-r border-gray-100">
-              <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Server Time</p>
-              <p className="text-xs font-black font-mono">{new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
-            </div>
-            <div className="px-4 py-2">
-              <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Network</p>
-              <p className="text-xs font-black text-emerald-500 uppercase">Optimal</p>
-            </div>
           </div>
         </div>
 
@@ -151,7 +137,6 @@ const DashboardPage: React.FC = () => {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-8 pt-10 border-t border-white/5">
                 <Stat label="Account" value={user?.role || 'User'} icon={<ShieldCheck size={14} className="text-blue-500" />} />
                 <Stat label="Referral" value={user?.referralCode || '---'} icon={<Users size={14} className="text-purple-500" />} />
-                <Stat label="Uptime" value="99.9%" icon={<Activity size={14} className="text-emerald-500" />} />
                 <div className="flex items-center justify-end">
                   <button onClick={copyReferral} className="p-3 bg-white/5 rounded-xl hover:bg-white/10 transition-all">
                     {copied ? <Check size={16} className="text-emerald-500" /> : <Copy size={16} className="text-white/40" />}
@@ -168,12 +153,12 @@ const DashboardPage: React.FC = () => {
               <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-all">
                 <MessageSquare size={28} />
               </div>
-              <h3 className="text-3xl font-black tracking-tighter uppercase">Support <br />Protocol</h3>
-              <p className="text-gray-400 font-medium leading-relaxed">Direct access to our technical support team via encrypted channel.</p>
+              <h3 className="text-3xl font-black tracking-tighter uppercase">Need Help?</h3>
+              <p className="text-gray-400 font-medium leading-relaxed">Chat with our support team instantly on WhatsApp for any assistance.</p>
             </div>
             <a href="https://wa.me/2348142452729" target="_blank" rel="noopener noreferrer" className="mt-10 w-full bg-emerald-500 text-white py-5 rounded-2xl font-black text-[11px] uppercase tracking-widest flex items-center justify-center space-x-3 hover:bg-gray-950 transition-all shadow-lg shadow-emerald-100">
               <Smartphone size={18} />
-              <span>Open WhatsApp</span>
+              <span>Contact Support</span>
             </a>
           </div>
         </div>
@@ -253,23 +238,14 @@ const DashboardPage: React.FC = () => {
             <div className="bg-gray-950 rounded-[2.5rem] p-10 text-white shadow-2xl relative overflow-hidden group">
               <div className="relative z-10 space-y-8">
                 <TrendingUp className="text-blue-500" size={32} />
-                <h3 className="text-3xl font-black tracking-tighter uppercase">Growth <br />Protocol</h3>
-                <p className="text-white/40 font-medium leading-relaxed">Earn ₦500 for every successful network onboarding.</p>
+                <h3 className="text-3xl font-black tracking-tighter uppercase">Refer & <br />Earn</h3>
+                <p className="text-white/40 font-medium leading-relaxed">Invite your friends to Oplug and get rewarded for every successful signup.</p>
                 <Link to="/referrals" className="inline-flex items-center space-x-3 bg-white text-gray-950 px-8 py-4 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all">
-                  <span>Invite Now</span>
+                  <span>Start Earning</span>
                   <ChevronRight size={14} />
                 </Link>
               </div>
               <div className="absolute top-0 right-0 w-40 h-40 bg-blue-600/20 rounded-full blur-3xl"></div>
-            </div>
-
-            <div className="bg-white border border-gray-100 rounded-[2.5rem] p-10 shadow-xl">
-              <h3 className="text-xl font-black tracking-tighter uppercase mb-8">System Status</h3>
-              <div className="space-y-4">
-                <StatusItem label="Data" active={true} />
-                <StatusItem label="Airtime" active={true} />
-                <StatusItem label="Payment" active={true} />
-              </div>
             </div>
           </div>
         </div>
@@ -297,16 +273,5 @@ const ServiceItem = ({ to, icon, label, color }: any) => (
   </Link>
 );
 
-const StatusItem = ({ label, active }: any) => (
-  <div className="flex justify-between items-center p-4 bg-gray-50 rounded-2xl">
-    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{label}</span>
-    <div className="flex items-center space-x-3">
-      <div className={`w-2 h-2 rounded-full ${active ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-orange-500'}`}></div>
-      <span className={`text-[9px] font-black uppercase tracking-widest ${active ? 'text-emerald-500' : 'text-orange-500'}`}>
-        {active ? 'Online' : 'Offline'}
-      </span>
-    </div>
-  </div>
-);
 
 export default DashboardPage;

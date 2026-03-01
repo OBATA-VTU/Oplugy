@@ -7,6 +7,7 @@ import PinPromptModal from '../components/PinPromptModal';
 import InsufficientBalanceModal from '../components/InsufficientBalanceModal';
 import LoadingScreen from '../components/LoadingScreen';
 import { AIRTIME_NETWORKS } from '../constants';
+import { adminService } from '../services/adminService';
 import { Zap, CheckCircle2, Receipt, ArrowRight, Smartphone, ShieldCheck } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
@@ -32,18 +33,27 @@ const AirtimePage: React.FC = () => {
     const fetchOperators = async () => {
       setIsLoading(true);
       setLoadingMessage('Syncing Networks...');
-      const res = await vtuService.getAirtimeOperators();
+      const [res, logosRes] = await Promise.all([
+        vtuService.getAirtimeOperators(),
+        adminService.getNetworkLogos()
+      ]);
+      
+      const customLogos = logosRes.status && logosRes.data ? logosRes.data : {};
+      
       if (res.status && res.data) {
         const mapped = res.data.map(op => {
           const constant = AIRTIME_NETWORKS.find(c => c.name.toUpperCase() === op.name.toUpperCase());
           return {
             ...op,
-            image: constant?.image || 'https://cdn-icons-png.flaticon.com/512/8112/8112396.png'
+            image: customLogos[op.name.toUpperCase()] || constant?.image || 'https://cdn-icons-png.flaticon.com/512/8112/8112396.png'
           };
         });
         setOperators(mapped);
       } else {
-        setOperators(AIRTIME_NETWORKS);
+        setOperators(AIRTIME_NETWORKS.map(op => ({
+          ...op,
+          image: customLogos[op.name.toUpperCase()] || op.image
+        })));
       }
       setTimeout(() => setIsLoading(false), 800);
     };

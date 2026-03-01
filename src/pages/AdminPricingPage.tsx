@@ -8,7 +8,7 @@ import { ShieldCheckIcon } from '../components/Icons';
 import { vtuService } from '../services/vtuService';
 import { adminService } from '../services/adminService';
 import { getNetworkLogo } from '../constants';
-import { Smartphone, Wifi, Zap, Tv, BookOpen, Search, Settings2, Percent } from 'lucide-react';
+import { Smartphone, Wifi, Zap, Tv, BookOpen, Search, Settings2, Percent, Globe } from 'lucide-react';
 
 interface ServicePlan {
   id: string;
@@ -21,7 +21,7 @@ interface ServicePlan {
 
 const AdminPricingPage: React.FC = () => {
   const { addNotification } = useNotifications();
-  const [activeService, setActiveService] = useState<'data' | 'airtime' | 'cable' | 'power' | 'education'>('data');
+  const [activeService, setActiveService] = useState<'data' | 'airtime' | 'cable' | 'power' | 'education' | 'smm'>('data');
   const [plans, setPlans] = useState<ServicePlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingPlan, setEditingPlan] = useState<ServicePlan | null>(null);
@@ -128,6 +128,22 @@ const AdminPricingPage: React.FC = () => {
           }));
           setPlans(formatted);
         }
+      } else if (activeService === 'smm') {
+        const res = await smmService.getServices();
+        if (Array.isArray(res)) {
+          const formatted = await Promise.all(res.map(async (p: any) => {
+            const manualDoc = await getDoc(doc(db, "manual_pricing", String(p.service)));
+            return {
+              id: String(p.service),
+              name: p.name.replace(/Ogaviral/gi, 'Oplug'),
+              base_price: parseFloat(p.rate),
+              network: p.category,
+              type: 'smm',
+              manual_prices: manualDoc.exists() ? manualDoc.data() : null
+            };
+          }));
+          setPlans(formatted);
+        }
       } else if (activeService === 'airtime' || activeService === 'power') {
         setPlans([]); // No individual plans for these
       }
@@ -197,7 +213,7 @@ const AdminPricingPage: React.FC = () => {
       <div className="flex flex-col lg:flex-row justify-between lg:items-end gap-10">
         <div className="space-y-4">
           <h2 className="text-[11px] font-black text-blue-600 uppercase tracking-[0.5em]">Management</h2>
-          <h1 className="text-5xl lg:text-8xl font-black text-gray-900 tracking-tighter leading-[0.85]">Pricing <br /><span className="text-blue-600">Control.</span></h1>
+          <h1 className="text-5xl lg:text-8xl font-black text-gray-900 tracking-tighter leading-[0.85]">Service <br /><span className="text-blue-600">Pricing.</span></h1>
         </div>
         
         <div className="flex gap-2 p-2 bg-white rounded-[2rem] shadow-xl border border-gray-50 overflow-x-auto">
@@ -217,6 +233,13 @@ const AdminPricingPage: React.FC = () => {
               <span className="hidden md:inline">{s.label}</span>
             </button>
           ))}
+          <button
+            onClick={() => setActiveService('smm')}
+            className={`flex items-center space-x-3 px-6 py-4 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeService === 'smm' ? 'bg-gray-950 text-white shadow-xl' : 'text-gray-400 hover:bg-gray-50'}`}
+          >
+            <Globe className="w-4 h-4" />
+            <span className="hidden md:inline">Social Boost</span>
+          </button>
         </div>
       </div>
 
@@ -234,17 +257,17 @@ const AdminPricingPage: React.FC = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
             <DiscountInput 
-              label="Standard User (%)" 
+              label="Regular User Discount (%)" 
               value={discounts[activeService as 'airtime' | 'power'].user} 
               onChange={(v) => setDiscounts({...discounts, [activeService]: {...discounts[activeService as 'airtime' | 'power'], user: v}})} 
             />
             <DiscountInput 
-              label="Reseller (%)" 
+              label="Agent Discount (%)" 
               value={discounts[activeService as 'airtime' | 'power'].reseller} 
               onChange={(v) => setDiscounts({...discounts, [activeService]: {...discounts[activeService as 'airtime' | 'power'], reseller: v}})} 
             />
             <DiscountInput 
-              label="API Merchant (%)" 
+              label="API Developer Discount (%)" 
               value={discounts[activeService as 'airtime' | 'power'].api} 
               onChange={(v) => setDiscounts({...discounts, [activeService]: {...discounts[activeService as 'airtime' | 'power'], api: v}})} 
             />
@@ -282,7 +305,7 @@ const AdminPricingPage: React.FC = () => {
           {loading ? (
             <div className="py-32 flex flex-col items-center justify-center space-y-6">
               <Spinner />
-              <p className="text-[11px] font-black text-gray-400 uppercase tracking-[0.5em] animate-pulse">Synchronizing Plans...</p>
+              <p className="text-[11px] font-black text-gray-400 uppercase tracking-[0.5em] animate-pulse">Loading Services...</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -324,7 +347,7 @@ const AdminPricingPage: React.FC = () => {
                     onClick={() => handleEdit(plan)}
                     className="w-full py-6 bg-gray-50 text-gray-900 rounded-[2rem] font-black text-[10px] uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all shadow-sm group-hover:shadow-xl"
                   >
-                    Set Manual Rates
+                    Set Your Price
                   </button>
                 </div>
               ))}
@@ -340,14 +363,14 @@ const AdminPricingPage: React.FC = () => {
               <div className="w-20 h-20 bg-blue-50 text-blue-600 rounded-[2rem] flex items-center justify-center mx-auto mb-8 shadow-inner">
                 <ShieldCheckIcon />
               </div>
-              <h3 className="text-4xl font-black text-gray-900 tracking-tighter mb-2">Set Manual Rates</h3>
-              <p className="text-gray-400 font-medium text-lg">Configuring rates for <span className="text-blue-600 font-black">{editingPlan.name}</span></p>
+              <h3 className="text-4xl font-black text-gray-900 tracking-tighter mb-2">Set Your Prices</h3>
+              <p className="text-gray-400 font-medium text-lg">Setting prices for <span className="text-blue-600 font-black">{editingPlan.name}</span></p>
             </div>
             
             <div className="space-y-8">
-              <PriceField label="Standard User Price" value={prices.user} onChange={(v) => setPrices({...prices, user: v})} base={editingPlan.base_price} />
-              <PriceField label="Reseller Price" value={prices.reseller} onChange={(v) => setPrices({...prices, reseller: v})} base={editingPlan.base_price} />
-              <PriceField label="API Merchant Price" value={prices.api} onChange={(v) => setPrices({...prices, api: v})} base={editingPlan.base_price} />
+              <PriceField label="Regular User Price" value={prices.user} onChange={(v) => setPrices({...prices, user: v})} base={editingPlan.base_price} />
+              <PriceField label="Agent Price" value={prices.reseller} onChange={(v) => setPrices({...prices, reseller: v})} base={editingPlan.base_price} />
+              <PriceField label="API Developer Price" value={prices.api} onChange={(v) => setPrices({...prices, api: v})} base={editingPlan.base_price} />
               
               <div className="pt-10 flex gap-6">
                 <button onClick={() => setEditingPlan(null)} className="flex-1 py-6 rounded-[2rem] font-black text-[10px] uppercase tracking-widest text-gray-400 bg-gray-50 hover:bg-gray-100 transition-all">Cancel</button>
@@ -356,7 +379,7 @@ const AdminPricingPage: React.FC = () => {
                   disabled={isSaving || !prices.user}
                   className="flex-[2] py-6 rounded-[2rem] font-black text-[10px] uppercase tracking-widest bg-blue-600 text-white shadow-2xl shadow-blue-100 hover:bg-gray-950 transition-all transform active:scale-95 flex items-center justify-center"
                 >
-                  {isSaving ? <Spinner /> : 'Apply Rates'}
+                  {isSaving ? <Spinner /> : 'Save Prices'}
                 </button>
               </div>
             </div>

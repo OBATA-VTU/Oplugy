@@ -3,9 +3,11 @@ import { Link } from 'react-router-dom';
 import Logo from '../components/Logo';
 import Footer from '../components/Footer';
 import { motion, useScroll, useTransform } from 'motion/react';
-import { Zap, Shield, Rocket, Smartphone, ArrowRight, Globe, CreditCard, Activity } from 'lucide-react';
+import { Rocket, Smartphone, ArrowRight, Globe, CreditCard, Sun, Moon, Wifi, Bell } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
 
 const LandingPage: React.FC = () => {
+  const { theme, toggleTheme } = useTheme();
   const [scrolled, setScrolled] = useState(false);
   const { scrollYProgress } = useScroll();
   const opacity = useTransform(scrollYProgress, [0, 0.1], [1, 0]);
@@ -30,98 +32,124 @@ const LandingPage: React.FC = () => {
               <Link to="/pricing" className="text-[11px] font-black uppercase tracking-[0.4em] text-white/40 hover:text-white transition-all">Pricing</Link>
             </nav>
             <div className="flex items-center space-x-6">
+              <button 
+                onClick={toggleTheme}
+                className="p-3 bg-white/5 border border-white/10 rounded-2xl text-white/60 hover:text-white transition-all"
+              >
+                {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+              </button>
               <Link to="/login" className="text-[11px] font-black uppercase tracking-[0.4em] text-white/60 hover:text-white transition-all">Login</Link>
               <Link to="/signup" className="bg-blue-600 text-white px-10 py-4 rounded-full text-[11px] font-black uppercase tracking-[0.4em] hover:bg-white hover:text-black transition-all shadow-2xl shadow-blue-600/20">Join Now</Link>
             </div>
           </div>
-          <Link to="/login" className="lg:hidden bg-white/5 p-4 rounded-2xl border border-white/10">
-            <ArrowRight className="w-6 h-6" />
-          </Link>
+          <div className="lg:hidden flex items-center space-x-4">
+            <button 
+              onClick={toggleTheme}
+              className="p-4 bg-white/5 border border-white/10 rounded-2xl text-white/60 hover:text-white transition-all"
+            >
+              {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+            </button>
+            <Link to="/login" className="bg-white/5 p-4 rounded-2xl border border-white/10">
+              <ArrowRight className="w-6 h-6" />
+            </Link>
+          </div>
         </div>
       </nav>
 
       {/* HERO SECTION */}
-      <section className="relative min-h-screen flex flex-col justify-center pt-40 pb-20 px-6 lg:px-16">
+      <section className="relative min-h-screen flex flex-col justify-center pt-40 pb-20 px-6 lg:px-16 overflow-hidden">
         <motion.div style={{ opacity, y }} className="max-w-[1800px] mx-auto w-full relative z-10">
-          <div className="flex flex-col lg:flex-row items-end justify-between mb-20 gap-10">
-            <div className="max-w-5xl">
+          <div className="flex flex-col lg:flex-row items-center lg:items-end justify-between mb-20 gap-20">
+            <div className="max-w-5xl text-center lg:text-left">
               <motion.div 
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="flex items-center space-x-4 mb-10"
+                className="flex items-center justify-center lg:justify-start space-x-4 mb-10"
               >
                 <div className="w-12 h-px bg-blue-600"></div>
-                <span className="text-[11px] font-black uppercase tracking-[0.5em] text-blue-500">Oplug Digital Suite v2.5</span>
+                <span className="text-[11px] font-black uppercase tracking-[0.5em] text-blue-500">The Future of Digital Commerce</span>
               </motion.div>
               <motion.h1 
                 initial={{ opacity: 0, y: 100 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-                className="text-[14vw] lg:text-[12vw] font-black leading-[0.82] tracking-[-0.04em] uppercase"
+                className="text-[16vw] lg:text-[12vw] font-black leading-[0.82] tracking-[-0.04em] uppercase"
               >
-                Digital <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-600">Velocity.</span>
+                Oplug <br />
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-600">Digital.</span>
               </motion.h1>
+              
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.2 }}
+                className="mt-12 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-6"
+              >
+                <Link to="/signup" className="w-full sm:w-auto bg-blue-600 text-white px-12 py-6 rounded-full text-xl font-black hover:bg-white hover:text-black transition-all shadow-2xl shadow-blue-600/20">Get Started Now</Link>
+                <Link to="/pricing" className="w-full sm:w-auto border border-white/10 text-white px-12 py-6 rounded-full text-xl font-black hover:bg-white/5 transition-all">View Pricing</Link>
+              </motion.div>
             </div>
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.5 }}
-              className="lg:max-w-sm text-right"
-            >
-              <p className="text-xl lg:text-2xl text-white/40 font-medium leading-tight mb-10">
-                The most advanced platform for instant recharges, data delivery, and social media growth in Nigeria.
-              </p>
-              <div className="flex justify-end space-x-4">
-                <div className="w-12 h-12 rounded-full border border-white/10 flex items-center justify-center text-white/20">
-                  <Activity size={20} />
-                </div>
-                <div className="w-12 h-12 rounded-full border border-white/10 flex items-center justify-center text-white/20">
-                  <Shield size={20} />
-                </div>
-              </div>
-            </motion.div>
-          </div>
 
-          <motion.div 
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8 }}
-            className="grid grid-cols-1 md:grid-cols-3 gap-6"
-          >
-            <Link to="/signup" className="group relative bg-white text-black p-12 rounded-[3rem] overflow-hidden transition-all hover:bg-blue-600 hover:text-white">
-              <div className="relative z-10 flex flex-col h-full justify-between">
-                <h3 className="text-4xl font-black tracking-tighter leading-none">Create <br />Account</h3>
-                <div className="flex justify-between items-end mt-20">
-                  <span className="text-[11px] font-black uppercase tracking-widest opacity-40">Get Started</span>
-                  <ArrowRight className="group-hover:translate-x-2 transition-transform" />
+            <div className="relative w-full lg:w-1/2 h-[500px] lg:h-[700px]">
+              {/* Floating UI Elements */}
+              <motion.div 
+                animate={{ y: [0, -20, 0], rotate: [0, 2, 0] }}
+                transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+                className="absolute top-0 right-0 w-64 h-80 bg-white/5 backdrop-blur-3xl rounded-[3rem] border border-white/10 p-8 shadow-2xl z-20 hidden sm:block"
+              >
+                <div className="w-12 h-12 bg-blue-600 rounded-2xl mb-6 flex items-center justify-center">
+                  <Wifi className="text-white" size={24} />
                 </div>
-              </div>
-            </Link>
-            <Link to="/quick-purchase" className="group relative bg-white/5 border border-white/10 p-12 rounded-[3rem] overflow-hidden transition-all hover:bg-white/10">
-              <div className="relative z-10 flex flex-col h-full justify-between">
-                <h3 className="text-4xl font-black tracking-tighter leading-none">Quick <br />Purchase</h3>
-                <div className="flex justify-between items-end mt-20">
-                  <span className="text-[11px] font-black uppercase tracking-widest opacity-40">No Login Needed</span>
-                  <Zap className="group-hover:scale-110 transition-transform text-blue-500" />
+                <div className="space-y-4">
+                  <div className="h-2 w-full bg-white/10 rounded-full"></div>
+                  <div className="h-2 w-2/3 bg-white/10 rounded-full"></div>
+                  <div className="h-2 w-1/2 bg-white/10 rounded-full"></div>
                 </div>
-              </div>
-            </Link>
-            <div className="relative bg-white/5 border border-white/10 p-12 rounded-[3rem] overflow-hidden group">
-              <div className="relative z-10 flex flex-col h-full justify-between">
-                <div className="flex justify-between items-start">
-                  <h3 className="text-4xl font-black tracking-tighter leading-none">System <br />Status</h3>
-                  <div className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_15px_rgba(16,185,129,0.5)]"></div>
+                <div className="mt-12 pt-8 border-t border-white/5">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-2">Transaction</p>
+                  <p className="text-2xl font-black tracking-tighter text-emerald-500">+₦25,000</p>
                 </div>
-                <div className="mt-20">
-                  <p className="text-[11px] font-black uppercase tracking-widest text-white/40 mb-2">Uptime 99.9%</p>
-                  <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
-                    <div className="h-full bg-emerald-500 w-[99%]"></div>
-                  </div>
+              </motion.div>
+
+              <motion.div 
+                animate={{ y: [0, 20, 0], rotate: [0, -2, 0] }}
+                transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+                className="absolute bottom-20 left-0 w-72 h-48 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-[2.5rem] p-8 shadow-2xl z-30"
+              >
+                <div className="flex justify-between items-start mb-8">
+                  <CreditCard size={32} />
+                  <div className="w-10 h-10 bg-white/20 rounded-full"></div>
                 </div>
-              </div>
+                <p className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1">Wallet Balance</p>
+                <p className="text-3xl font-black tracking-tighter">₦1,240,500</p>
+              </motion.div>
+
+              {/* Floating Image without background */}
+              <motion.img 
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 1.5 }}
+                src="https://picsum.photos/seed/oplug_hero/1200/1200"
+                className="w-full h-full object-cover rounded-[5rem] opacity-40 grayscale group-hover:grayscale-0 transition-all duration-1000"
+                referrerPolicy="no-referrer"
+              />
+              
+              {/* Floating "Email" or Notification element */}
+              <motion.div 
+                animate={{ x: [0, 15, 0], y: [0, -10, 0] }}
+                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                className="absolute -top-10 left-20 bg-white text-black p-6 rounded-3xl shadow-2xl z-40 flex items-center space-x-4"
+              >
+                <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white">
+                  <Bell size={20} />
+                </div>
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest opacity-40">Notification</p>
+                  <p className="text-sm font-black tracking-tight">Data Delivered Successfully</p>
+                </div>
+              </motion.div>
             </div>
-          </motion.div>
+          </div>
         </motion.div>
 
         {/* Background Elements */}
