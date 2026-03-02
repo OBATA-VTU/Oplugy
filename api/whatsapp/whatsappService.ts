@@ -54,6 +54,131 @@ export const whatsappService = {
   },
 
   /**
+   * Send interactive buttons
+   */
+  sendInteractiveButtons: async (to: string, bodyText: string, buttons: { id: string, title: string }[]) => {
+    if (!WHATSAPP_TOKEN || !WHATSAPP_PHONE_NUMBER_ID) return;
+
+    try {
+      await axios.post(
+        `https://graph.facebook.com/v17.0/${WHATSAPP_PHONE_NUMBER_ID}/messages`,
+        {
+          messaging_product: 'whatsapp',
+          to: to,
+          type: 'interactive',
+          interactive: {
+            type: 'button',
+            body: { text: bodyText },
+            action: {
+              buttons: buttons.map(b => ({
+                type: 'reply',
+                reply: { id: b.id, title: b.title }
+              }))
+            }
+          }
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${WHATSAPP_TOKEN}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+    } catch (error: any) {
+      console.error('Error sending interactive buttons:', error.response?.data || error.message);
+    }
+  },
+
+  /**
+   * Send interactive list
+   */
+  sendInteractiveList: async (to: string, bodyText: string, buttonLabel: string, sections: { title: string, rows: { id: string, title: string, description?: string }[] }[]) => {
+    if (!WHATSAPP_TOKEN || !WHATSAPP_PHONE_NUMBER_ID) return;
+
+    try {
+      await axios.post(
+        `https://graph.facebook.com/v17.0/${WHATSAPP_PHONE_NUMBER_ID}/messages`,
+        {
+          messaging_product: 'whatsapp',
+          to: to,
+          type: 'interactive',
+          interactive: {
+            type: 'list',
+            body: { text: bodyText },
+            action: {
+              button: buttonLabel,
+              sections: sections
+            }
+          }
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${WHATSAPP_TOKEN}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+    } catch (error: any) {
+      console.error('Error sending interactive list:', error.response?.data || error.message);
+    }
+  },
+
+  /**
+   * Initialize Paystack Payment
+   */
+  initializePaystackPayment: async (email: string, amount: number, metadata: any = {}) => {
+    const secretKey = process.env.PAYSTACK_SECRET_KEY;
+    if (!secretKey) throw new Error('Paystack Secret Key not configured.');
+
+    try {
+      const response = await axios.post(
+        'https://api.paystack.co/transaction/initialize',
+        {
+          email,
+          amount: Math.round(amount * 100), // convert to kobo
+          metadata: {
+            ...metadata,
+            source: 'whatsapp_bot'
+          },
+          callback_url: `${process.env.APP_URL}/api/webhooks/paystack`
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${secretKey}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      return response.data;
+    } catch (error: any) {
+      console.error('Paystack initialization error:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  /**
+   * Session Management
+   */
+  getSession: async (phone: string) => {
+    const db = admin.firestore();
+    const doc = await db.collection('whatsapp_sessions').doc(phone).get();
+    return doc.exists ? doc.data() : null;
+  },
+
+  updateSession: async (phone: string, data: any) => {
+    const db = admin.firestore();
+    await db.collection('whatsapp_sessions').doc(phone).set({
+      ...data,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+  },
+
+  clearSession: async (phone: string) => {
+    const db = admin.firestore();
+    await db.collection('whatsapp_sessions').doc(phone).delete();
+  },
+
+  /**
    * Find user by phone number in Firestore
    */
   getUserByPhone: async (phone: string) => {
@@ -77,13 +202,9 @@ export const whatsappService = {
     const db = admin.firestore();
     const normalizedNetwork = network.toUpperCase();
     
-    // In a real app, we'd fetch from the VTU provider API too.
-    // For now, we'll fetch manual pricing to see what's set.
     const pricingSnap = await db.collection('manual_pricing').get();
     const manualPricing = pricingSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
     
-    // Filter plans for the requested network
-    // Note: This is a simplified version. In a real app, you'd fetch the full plan list from the provider.
     const networkPlans = manualPricing.filter((p: any) => 
       p.planId && p.planId.includes(normalizedNetwork)
     );
@@ -94,7 +215,6 @@ export const whatsappService = {
 
     let message = `*Available ${normalizedNetwork} Plans:*\n\n`;
     networkPlans.forEach((p: any) => {
-      // Extract the numeric ID from the planId (e.g., "s1-MTN-123" -> "123")
       const idParts = p.planId.split('-');
       const displayId = idParts[idParts.length - 1];
       message += `• *ID:* ${displayId}\n  *Price:* ₦${p.user_price}\n\n`;
@@ -116,7 +236,6 @@ export const whatsappService = {
     if (!userData) throw new Error('User not found.');
     if (userData.walletBalance < details.amount) throw new Error('Insufficient balance.');
 
-    // Call Inlomax API (Server 1)
     const headers: any = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
@@ -137,12 +256,10 @@ export const whatsappService = {
     const result = response.data;
 
     if (result.status === 'success' || result.status === true) {
-      // Deduct balance
       await userRef.update({
         walletBalance: admin.firestore.FieldValue.increment(-details.amount)
       });
 
-      // Record transaction
       await db.collection('transactions').add({
         userId,
         userEmail: userData.email,

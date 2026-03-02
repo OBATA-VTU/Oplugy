@@ -9,10 +9,8 @@ export default async function handler(req: any, res: any) {
     const challenge = req.query['hub.challenge'];
 
     if (mode === 'subscribe' && token === process.env.WHATSAPP_VERIFY_TOKEN) {
-      console.log('Meta Webhook Verified.');
       return res.status(200).send(challenge);
     } else {
-      console.error('Meta Webhook Verification Failed.');
       return res.status(403).json({ error: 'Verification failed' });
     }
   }
@@ -21,157 +19,161 @@ export default async function handler(req: any, res: any) {
   if (req.method === 'POST') {
     const body = req.body;
 
-    // Check if it's a WhatsApp event
     if (body.object === 'whatsapp_business_account') {
       const entry = body.entry?.[0];
       const changes = entry?.changes?.[0];
       const value = changes?.value;
       const message = value?.messages?.[0];
 
-      if (message && message.type === 'text') {
-        const from = message.from; // User's WhatsApp ID (phone number)
+      if (!message) return res.status(200).json({ status: 'ok' });
+
+      const from = message.from;
+      const userName = value.contacts?.[0]?.profile?.name || 'User';
+
+      // Handle Text Messages
+      if (message.type === 'text') {
         const text = message.text.body.trim().toUpperCase();
-        const userName = value.contacts?.[0]?.profile?.name || 'User';
+        const session = await whatsappService.getSession(from);
 
-        console.log(`Received message from ${from}: ${text}`);
+        // Handle Ongoing Session (Account Creation)
+        if (session?.step === 'AWAITING_USERNAME') {
+          await whatsappService.updateSession(from, { username: text, step: 'AWAITING_EMAIL' });
+          await whatsappService.sendMessage(from, `Great! Now please provide your *Email Address* to complete your registration.`);
+          return res.status(200).json({ status: 'ok' });
+        }
 
-        try {
-          const user = await whatsappService.getUserByPhone(from);
-
-          if (!user) {
-            await whatsappService.sendMessage(
-              from,
-              `Welcome to Oplug, ${userName}! 👋\n\nYour phone number (${from}) is not registered on our website. Please register at ${process.env.APP_URL} to use this bot.`
-            );
+        if (session?.step === 'AWAITING_EMAIL') {
+          const email = text.toLowerCase();
+          // Simple email validation
+          if (!email.includes('@')) {
+            await whatsappService.sendMessage(from, `❌ Invalid email format. Please provide a valid email address.`);
             return res.status(200).json({ status: 'ok' });
           }
 
-          const [cmd, ...args] = text.split(' ');
-
-          if (cmd === 'BALANCE') {
-            await whatsappService.sendMessage(
-              from,
-              `Hello ${user.username}, your current wallet balance is ₦${user.walletBalance?.toLocaleString()}.`
-            );
-            return res.status(200).json({ status: 'ok' });
+          try {
+            const db = admin.firestore();
+            await db.collection('users').add({
+              username: session.username,
+              email: email,
+              phone: from,
+              walletBalance: 0,
+              role: 'User',
+              isPinSet: false,
+              createdAt: admin.firestore.FieldValue.serverTimestamp()
+            });
+            await whatsappService.clearSession(from);
+            await whatsappService.sendMessage(from, `🎉 *Account Created Successfully!*\n\nWelcome to Oplug, ${session.username}. You can now fund your wallet and start purchasing services.`);
+            await sendWelcomeMenu(from, session.username, 0);
+          } catch (e: any) {
+            await whatsappService.sendMessage(from, `❌ Error creating account: ${e.message}`);
           }
+          return res.status(200).json({ status: 'ok' });
+        }
 
-          if (cmd === 'PLANS') {
-            const network = args[0] || 'MTN';
-            const plansMessage = await whatsappService.getAvailablePlans(network);
-            await whatsappService.sendMessage(from, plansMessage);
-            return res.status(200).json({ status: 'ok' });
-          }
-
-          if (cmd === 'DATA') {
-            if (args.length < 3) {
-              await whatsappService.sendMessage(
-                from,
-                `To buy data, use format:\n*DATA [NETWORK] [PLAN_ID] [PHONE]*\n\nExample: *DATA MTN 1000 08012345678*\n\nReply with *PLANS [NETWORK]* to see available plan IDs.`
-              );
-              return res.status(200).json({ status: 'ok' });
-            }
-
-            const [network, planId, targetPhone] = args;
-            
-            try {
-              // In a real app, we'd fetch the actual price for this planId from Firestore
-              const db = admin.firestore();
-              const planDoc = await db.collection('manual_pricing').doc(`s1-${network}-${planId}`).get();
-              
-              if (!planDoc.exists) {
-                await whatsappService.sendMessage(from, `Plan ID ${planId} not found for ${network}. Please check *PLANS ${network}*.`);
-                return res.status(200).json({ status: 'ok' });
-              }
-
-              const planData = planDoc.data();
-              const amount = planData?.user_price || 0;
-
-              const result = await whatsappService.executePurchase(user.id, 'data', {
-                network,
-                amount,
-                payload: {
-                  serviceID: planId,
-                  mobileNumber: targetPhone
-                }
-              });
-
-              if (result.status) {
-                await whatsappService.sendMessage(
-                  from,
-                  `✅ *Success!* Data bundle has been sent to ${targetPhone}.`
-                );
-              }
-            } catch (err: any) {
-              await whatsappService.sendMessage(from, `❌ *Failed:* ${err.message}`);
-            }
-            return res.status(200).json({ status: 'ok' });
-          }
-
-          if (cmd === 'AIRTIME') {
-            if (args.length < 3) {
-              await whatsappService.sendMessage(
-                from,
-                `To buy airtime, use format:\n*AIRTIME [NETWORK] [AMOUNT] [PHONE]*\n\nExample: *AIRTIME MTN 100 08012345678*`
-              );
-              return res.status(200).json({ status: 'ok' });
-            }
-            
-            const [network, amountStr, targetPhone] = args;
-            const amount = parseFloat(amountStr);
-
-            if (isNaN(amount) || amount < 50) {
-              await whatsappService.sendMessage(from, '❌ Invalid amount. Minimum airtime is ₦50.');
-              return res.status(200).json({ status: 'ok' });
-            }
-
-            try {
-              const result = await whatsappService.executePurchase(user.id, 'airtime', {
-                network,
-                amount,
-                payload: {
-                  serviceID: network.toLowerCase(),
-                  amount: amount,
-                  mobileNumber: targetPhone
-                }
-              });
-
-              if (result.status) {
-                await whatsappService.sendMessage(
-                  from,
-                  `✅ *Success!* ₦${amount} ${network} airtime has been sent to ${targetPhone}.`
-                );
-              }
-            } catch (err: any) {
-              await whatsappService.sendMessage(from, `❌ *Failed:* ${err.message}`);
-            }
-            return res.status(200).json({ status: 'ok' });
-          }
-
-          if (cmd === 'HELP' || text === 'MENU') {
-            await whatsappService.sendMessage(
-              from,
-              `*Oplug Bot Menu:*\n\n• *BALANCE:* Check wallet\n• *PLANS [NET]:* See data plans\n• *DATA [NET] [ID] [PHONE]:* Buy data\n• *AIRTIME [NET] [AMT] [PHONE]:* Buy airtime\n• *HELP:* Show this menu`
-            );
-            return res.status(200).json({ status: 'ok' });
-          }
-
-          // Default Response
-          await whatsappService.sendMessage(
-            from,
-            `Hi ${user.username}! 👋 I didn't recognize that command. Type *HELP* to see what I can do.`
-          );
-
-        } catch (error) {
-          console.error('WhatsApp Webhook Error:', error);
-          await whatsappService.sendMessage(from, '❌ Sorry, an error occurred. Please try again later.');
+        // Default Greeting / Menu
+        const user = await whatsappService.getUserByPhone(from);
+        if (user) {
+          await sendWelcomeMenu(from, user.username, user.walletBalance, user.phone);
+        } else {
+          await sendGuestMenu(from);
         }
       }
+
+      // Handle Interactive Responses
+      if (message.type === 'interactive') {
+        const interactive = message.interactive;
+        
+        // Button Replies
+        if (interactive.type === 'button_reply') {
+          const buttonId = interactive.button_reply.id;
+
+          if (buttonId === 'CREATE_ACCOUNT') {
+            await whatsappService.updateSession(from, { step: 'AWAITING_USERNAME' });
+            await whatsappService.sendMessage(from, `Awesome! Let's get you started.\n\nWhat would you like your *Username* to be?`);
+          }
+
+          if (buttonId === 'GUEST_PURCHASE') {
+            await sendServiceList(from, "Guest Purchase");
+          }
+
+          if (buttonId === 'CHOOSE_SERVICE') {
+            await sendServiceList(from, "Select a Service");
+          }
+        }
+
+        // List Replies
+        if (interactive.type === 'list_reply') {
+          const listId = interactive.list_reply.id;
+
+          if (listId === 'FUND_WALLET') {
+            await handleFunding(from);
+          } else if (listId === 'SUPPORT') {
+            await whatsappService.sendMessage(from, `👨‍💻 *Oplug Support*\n\nFor any issues or inquiries, please contact our support team on WhatsApp: https://wa.me/2348142452729`);
+          } else {
+            // Handle specific services (Airtime, Data, etc.)
+            await whatsappService.sendMessage(from, `You selected: *${interactive.list_reply.title}*\n\nTo proceed, please use the command format:\n*${listId} [NETWORK] [PLAN_ID/AMOUNT] [PHONE]*\n\nExample: *DATA MTN 1000 08012345678*`);
+          }
+        }
+      }
+
       return res.status(200).json({ status: 'ok' });
-    } else {
-      return res.status(404).json({ error: 'Not a WhatsApp event' });
     }
   }
 
   return res.status(405).json({ error: 'Method not allowed' });
+}
+
+async function sendWelcomeMenu(from: string, username: string, balance: number, phone?: string) {
+  const body = `Welcome to Oplug 🌟\n\n👤 *${username}*\n📱 ${phone || from}\n💰 *Balance:* ₦${balance.toLocaleString()}\n\nChoose a service:`;
+  await whatsappService.sendInteractiveButtons(from, body, [
+    { id: 'CHOOSE_SERVICE', title: 'Select a Service' }
+  ]);
+}
+
+async function sendGuestMenu(from: string) {
+  const body = `Welcome to Oplug 🌟\n\n👤 *User not found on database*\n\nPlease choose an option:`;
+  await whatsappService.sendInteractiveButtons(from, body, [
+    { id: 'CREATE_ACCOUNT', title: 'Create Account' },
+    { id: 'GUEST_PURCHASE', title: 'Guest Purchase' }
+  ]);
+}
+
+async function sendServiceList(from: string, title: string) {
+  const sections = [
+    {
+      title: "Main Services",
+      rows: [
+        { id: 'AIRTIME', title: 'Airtime', description: 'Top up airtime for all networks' },
+        { id: 'DATA', title: 'Data Bundle', description: 'Cheap data for MTN, Airtel, Glo, 9mobile' },
+        { id: 'CABLE', title: 'Cable TV', description: 'DSTV, GOTV, Startimes' },
+        { id: 'POWER', title: 'Electricity', description: 'Prepaid & Postpaid bills' }
+      ]
+    },
+    {
+      title: "Others",
+      rows: [
+        { id: 'EDUCATION', title: 'Education', description: 'WAEC & NECO Result Pins' },
+        { id: 'SMM', title: 'Social Boost', description: 'Followers, Likes, Views' },
+        { id: 'FUND_WALLET', title: 'Fund Wallet', description: 'Add money to your Oplug wallet' },
+        { id: 'SUPPORT', title: 'Any Issue/Support', description: 'Chat with our team' }
+      ]
+    }
+  ];
+  await whatsappService.sendInteractiveList(from, title, "View Services", sections);
+}
+
+async function handleFunding(from: string) {
+  const user = await whatsappService.getUserByPhone(from);
+  const email = user?.email || `${from}@oplug.bot`;
+  
+  try {
+    // Initialize a small amount for guest or ask for amount? 
+    // For now, let's provide instructions and a link.
+    const payment = await whatsappService.initializePaystackPayment(email, 1000, { phone: from });
+    const checkoutUrl = payment.data.authorization_url;
+    
+    await whatsappService.sendMessage(from, `💳 *Fund Your Wallet*\n\nTo fund your wallet via Bank Transfer or Card, use the link below:\n\n🔗 ${checkoutUrl}\n\n*Bank Transfer Details:*\nOnce you open the link, select "Transfer" to see your dedicated virtual account number.\n\n_Payment is confirmed instantly!_`);
+  } catch (e) {
+    await whatsappService.sendMessage(from, `❌ Sorry, could not generate payment link. Please fund via our website: ${process.env.APP_URL}/funding`);
+  }
 }
