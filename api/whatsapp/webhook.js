@@ -1,136 +1,102 @@
-import { oplugService } from './oplugService.js';
+import admin from 'firebase-admin';
 
-const sessions = new Map();
+if (!admin.apps.length) {
+  try {
+    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT || '{}');
+    admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
+  } catch (e) { console.error('Firebase Init Error:', e); }
+}
+const db = admin.firestore();
 
-export default async function handler(req, res) {
-  // 1. Webhook Verification (GET)
-  if (req.method === 'GET') {
-    const token = req.query['hub.verify_token'];
-    if (token === process.env.WHATSAPP_VERIFY_TOKEN) return res.status(200).send(req.query['hub.challenge']);
-    return res.status(403).send('Forbidden');
-  }
+export const oplugService = {
+  // 1. DYNAMIC USER LOOKUP
+  async lookupUser(whatsappPhone) {
+    const localPhone = whatsappPhone.startsWith('234') ? '0' + whatsappPhone.substring(3) : whatsappPhone;
+    const snapshot = await db.collection('users').where('phone', 'in', [whatsappPhone, localPhone]).limit(1).get();
+    if (snapshot.empty) return { exists: false };
+    const data = snapshot.docs[0].data();
+    return { 
+      exists: true, 
+      uid: snapshot.docs[0].id, 
+      name: data.username || data.name || "User", 
+      balance: parseFloat(data.walletBalance || 0),
+      email: data.email
+    };
+  },
 
-  // 2. Incoming Messages (POST)
-  if (req.method === 'POST') {
+  // 2. FETCH REAL-TIME PLANS & PRICES
+  async getDynamicPlans(network) {
     try {
-      const body = req.body;
-      const message = body.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
-      if (!message) return res.status(200).send('OK');
-
-      const from = message.from;
-      const text = message.text?.body?.trim() || "";
+      // Fetch from your Provider (Inlomax as default)
+      const apiKey = process.env.INLOMAX_API_KEY;
+      const response = await fetch(`https://inlomax.com/api/data/`, {
+        headers: { 'Authorization': `Token ${apiKey}` }
+      });
+      const apiData = await response.json();
       
-      if (!sessions.has(from)) sessions.set(from, { state: 'IDLE', data: {} });
-      const session = sessions.get(from);
-      const user = await oplugService.lookupUser(from);
+      // Filter for requested network and merge with your Firestore overrides
+      const priceSnapshot = await db.collection('prices').where('network', '==', network.toLowerCase()).get();
+      const overrides = {};
+      priceSnapshot.forEach(doc => { overrides[doc.id] = doc.data().amount; });
 
-      // --- 1. GREETING (USING LIST MENU) ---
-      const greetings = ['hi', 'hello', 'menu', 'start', 'wassup', 'good morning', 'good evening', 'good night'];
-      if (greetings.includes(text.toLowerCase())) {
-        session.state = 'IDLE';
-        
-        const welcome = user.exists 
-          ? `👋 *Hi ${user.name}!* \n\nWelcome back to *Oplug*. \n💰 Wallet: *₦${user.balance.toLocaleString()}*`
-          : `🔌 *Welcome to Oplug!* \n\nThe fastest way to buy Airtime, Data, Cable & more.`;
+      // Assuming API returns a list of plans
+      return (apiData.plans || []).filter(p => p.network.toLowerCase() === network.toLowerCase()).map(p => ({
+        id: p.id,
+        label: `${p.name} - ₦${(overrides[p.id] || p.price).toLocaleString()}`,
+        price: overrides[p.id] || p.price,
+        provider: "server1"
+      }));
+    } catch (e) { return []; }
+  },
 
-        await sendWhatsAppList(from, welcome, "Select Service", [
-          { id: "buy_airtime", title: "💸 Buy Airtime", desc: "Top up your phone instantly" },
-          { id: "buy_data", title: "📶 Buy Data", desc: "Cheap data for all networks" },
-          { id: "buy_cable", title: "📺 Cable TV", desc: "DSTV, GOTV, Startimes" },
-          { id: "pay_electricity", title: "💡 Electricity", desc: "Pay for IKEDC, EKEDC, etc." },
-          { id: "buy_smm", title: "🚀 SMM Booster", desc: "Followers, Likes & Views" },
-          { id: "check_balance", title: "💰 Check Balance", desc: "View your wallet balance" }
-        ]);
-        
-        return res.status(200).send('OK');
+  // 3. REAL VENDING & TRANSACTION LOGGING
+  async processVending(type, details, user) {
+    try {
+      const isServer2 = details.provider === "server2";
+      const baseUrl = isServer2 ? 'https://api.ciptopup.ng/api' : 'https://inlomax.com/api';
+      const apiKey = isServer2 ? process.env.CIPTOPUP_API_KEY : process.env.INLOMAX_API_KEY;
+      const endpoint = isServer2 ? 'data/buy' : (type === 'airtime' ? 'airtime' : 'data');
+
+      // Mapping from your Server.ts
+      const mapped = isServer2 
+        ? { plan_id: details.plan_id, phone_number: details.phone, amount: details.amount }
+        : { serviceID: String(details.plan_id || details.network).toLowerCase(), mobileNumber: String(details.phone), amount: Number(details.amount) };
+
+      const headers = { 'Content-Type': 'application/json', 'Accept': 'application/json' };
+      if (isServer2) headers['x-api-key'] = apiKey;
+      else { headers['Authorization'] = `Token ${apiKey}`; headers['Authorization-Token'] = apiKey; }
+
+      const response = await fetch(`${baseUrl}/${endpoint}`, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(mapped)
+      });
+
+      const result = await response.json();
+
+      if (result.status === "success" || result.code === "success") {
+        // A. DEDUCT BALANCE
+        await db.collection('users').doc(user.uid).update({
+          walletBalance: admin.firestore.FieldValue.increment(-details.price)
+        });
+
+        // B. LOG TO TRANSACTION HISTORY (For Website Receipt)
+        const txRef = result.transaction_id || result.id || `BOT-${Date.now()}`;
+        await db.collection('transactions').add({
+          userId: user.uid,
+          userEmail: user.email,
+          type: type.toUpperCase(),
+          amount: details.price,
+          source: `${details.network} ${type} (via WhatsApp)`,
+          remarks: `Purchase for ${details.phone}`,
+          status: 'SUCCESS',
+          reference: txRef,
+          date_created: admin.firestore.FieldValue.serverTimestamp()
+        });
+
+        return { success: true, orderId: txRef };
       }
-
-      // --- 2. INTERACTIVE HANDLER (BUTTONS & LISTS) ---
-      if (message.type === 'interactive') {
-        // Handle both Button clicks and List selections
-        const id = message.interactive.button_reply?.id || message.interactive.list_reply?.id;
-        console.log(`--- [DEBUG] Interactive ID: ${id}`);
-
-        if (id === 'check_balance') {
-          const balMsg = user.exists 
-            ? `💰 *Your Balance:* ₦${user.balance.toLocaleString()}` 
-            : "❌ You don't have an account yet. Register at oplug.vercel.app";
-          await sendWhatsAppMessage(from, balMsg);
-        } 
-        else if (id === 'buy_airtime') {
-          session.state = 'AWAITING_AIRTIME_NETWORK';
-          await sendWhatsAppMessage(from, "💸 *Airtime*\nSelect Network:\n1. MTN\n2. Airtel\n3. Glo\n4. 9mobile");
-        } 
-        else if (id === 'buy_data') {
-          session.state = 'AWAITING_DATA_NETWORK';
-          await sendWhatsAppMessage(from, "📶 *Data Bundle*\nSelect Network:\n1. MTN\n2. Airtel\n3. Glo\n4. 9mobile");
-        }
-        else if (id === 'buy_cable') {
-          session.state = 'AWAITING_CABLE_TYPE';
-          await sendWhatsAppMessage(from, "📺 *Cable TV*\nSelect Provider:\n1. DSTV\n2. GOTV\n3. Startimes");
-        }
-        else if (id === 'pay_electricity') {
-          session.state = 'AWAITING_ELEC_DISCO';
-          await sendWhatsAppMessage(from, "💡 *Electricity*\nSelect Disco (e.g. IKEDC, EKEDC, AEDC):");
-        }
-        else if (id === 'buy_smm') {
-          session.state = 'AWAITING_SMM_SERVICE';
-          await sendWhatsAppMessage(from, "🚀 *SMM Booster*\nWhat do you need?\n1. Followers\n2. Likes\n3. Views");
-        }
-        
-        return res.status(200).send('OK');
-      }
-
-      // ... (Rest of your flow logic)
-
-      return res.status(200).send('OK');
-    } catch (err) { 
-      console.error("--- [DEBUG] Webhook Error:", err);
-      return res.status(200).send('OK'); 
-    }
+      return { success: false, message: result.message || "Provider error" };
+    } catch (e) { return { success: false, message: "Connection error" }; }
   }
-}
-
-// --- UPDATED HELPERS ---
-
-async function sendWhatsAppMessage(to, text) {
-  await fetch(`https://graph.facebook.com/v21.0/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`, {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${process.env.WHATSAPP_TOKEN}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ messaging_product: "whatsapp", to, type: "text", text: { body: text } })
-  });
-}
-
-/**
- * NEW: Send WhatsApp List Message
- */
-async function sendWhatsAppList(to, bodyText, buttonText, rows) {
-  const formattedRows = rows.map(r => ({
-    id: r.id,
-    title: r.title,
-    description: r.desc || ""
-  }));
-
-  await fetch(`https://graph.facebook.com/v21.0/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`, {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${process.env.WHATSAPP_TOKEN}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      messaging_product: "whatsapp",
-      to: to,
-      type: "interactive",
-      interactive: {
-        type: "list",
-        body: { text: bodyText },
-        action: {
-          button: buttonText,
-          sections: [
-            {
-              title: "Our Services",
-              rows: formattedRows
-            }
-          ]
-        }
-      }
-    })
-  });
-}
+};
