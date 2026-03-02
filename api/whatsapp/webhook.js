@@ -21,17 +21,18 @@ export default async function handler(req, res) {
       const session = sessions.get(from);
       const user = await oplugService.lookupUser(from);
 
-      // --- BEAUTIFIED BOT FLOW ---
+      // --- BEAUTIFIED FLOW ---
 
-      if (['hi', 'hello', 'menu'].includes(text.toLowerCase())) {
+      if (['hi', 'hello', 'menu', 'start'].includes(text.toLowerCase())) {
         session.state = 'IDLE';
         const msg = user.exists 
           ? `👋 *Hi ${user.name}!* \n\n💰 Wallet: *₦${user.balance.toLocaleString()}*\n⚡ Status: *Verified*\n\nWhat would you like to buy today?`
-          : `🔌 *Welcome to Oplug!* \n\nBuy Airtime & Data at the lowest rates in Nigeria. \n\nSelect an option below:`;
+          : `🔌 *Welcome to Oplug!* \n\nBuy Airtime & Data at the lowest rates. \n\nSelect an option:`;
         await sendWhatsAppButtons(from, msg);
-      } 
+        return res.status(200).send('OK');
+      }
 
-      else if (message.type === 'interactive') {
+      if (message.type === 'interactive') {
         const id = message.interactive.button_reply?.id;
         if (id === 'buy_airtime') {
           session.state = 'AWAITING_AIRTIME_NETWORK';
@@ -40,40 +41,40 @@ export default async function handler(req, res) {
           session.state = 'AWAITING_DATA_NETWORK';
           await sendWhatsAppMessage(from, "📶 *Data Bundle*\n\nSelect Network:\n1️⃣ MTN\n2️⃣ Airtel\n3️⃣ Glo\n4️⃣ 9mobile");
         }
+        return res.status(200).send('OK');
       }
 
-      // ... (Flow logic for Airtime/Data using oplugService.processOrder)
+      // Fulfillment Logic (Using your Proxy Helpers)
+      if (session.state === 'AWAITING_DATA_PLAN') {
+        const plans = [/* Fetch from your DB or API */]; 
+        const choice = parseInt(text);
+        if (choice > 0) {
+          const plan = plans[choice-1];
+          if (user.exists) {
+            await sendWhatsAppMessage(from, `⏳ *Processing...*`);
+            // Call Server 1 or 2 based on your logic
+            const result = await oplugService.callServer1('data', { ...session.data, plan_id: plan.id });
+            if (result.status === 'success') {
+               // Deduct balance in Firestore
+               await admin.firestore().collection('users').doc(user.uid).update({
+                 walletBalance: admin.firestore.FieldValue.increment(-plan.price)
+               });
+               await sendWhatsAppMessage(from, `✅ *Success!* \n\nYour data has been delivered.`);
+            } else {
+               await sendWhatsAppMessage(from, `❌ *Failed:* ${result.message}`);
+            }
+          } else {
+            // Paystack Guest Flow
+            const pay = await oplugService.generatePaymentDetails({ ...session.data, amount: plan.price });
+            await sendWhatsAppMessage(from, `💳 *Payment Required*\n\nTransfer *₦${pay.amount}* to:\n🏦 Bank: *${pay.bank}*\n🔢 Acc: *${pay.account}*`);
+          }
+          session.state = 'IDLE';
+        }
+      }
 
       return res.status(200).send('OK');
     } catch (err) { return res.status(200).send('OK'); }
   }
 }
 
-// --- HELPERS ---
-async function sendWhatsAppMessage(to, text) {
-  await fetch(`https://graph.facebook.com/v21.0/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`, {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${process.env.WHATSAPP_TOKEN}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ messaging_product: "whatsapp", to, type: "text", text: { body: text } })
-  });
-}
-
-async function sendWhatsAppButtons(to, bodyText) {
-  await fetch(`https://graph.facebook.com/v21.0/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`, {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${process.env.WHATSAPP_TOKEN}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      messaging_product: "whatsapp", to, type: "interactive",
-      interactive: {
-        type: "button", body: { text: bodyText },
-        action: {
-          buttons: [
-            { type: "reply", reply: { id: "buy_airtime", title: "Buy Airtime" } },
-            { type: "reply", reply: { id: "buy_data", title: "Buy Data" } },
-            { type: "reply", reply: { id: "check_balance", title: "Balance" } }
-          ]
-        }
-      }
-    })
-  });
-}
+// (Helpers sendWhatsAppMessage and sendWhatsAppButtons at the bottom)
