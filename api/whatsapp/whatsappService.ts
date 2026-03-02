@@ -140,7 +140,7 @@ export const whatsappService = {
             ...metadata,
             source: 'whatsapp_bot'
           },
-          callback_url: `${process.env.APP_URL}/api/webhooks/paystack`
+          callback_url: `${process.env.APP_URL}/payment/verify`
         },
         {
           headers: {
@@ -222,6 +222,48 @@ export const whatsappService = {
     
     message += `To buy: *DATA ${normalizedNetwork} [ID] [PHONE]*`;
     return message;
+  },
+
+  /**
+   * Get plans for interactive list
+   */
+  getPlansForList: async (network: string, type: 'DATA' | 'AIRTIME' | 'CABLE' | 'POWER') => {
+    const db = admin.firestore();
+    const normalizedNetwork = network.toUpperCase();
+    
+    if (type === 'DATA') {
+      const pricingSnap = await db.collection('manual_pricing').get();
+      const manualPricing = pricingSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
+      
+      const networkPlans = manualPricing.filter((p: any) => 
+        p.planId && p.planId.includes(normalizedNetwork)
+      );
+
+      return networkPlans.map((p: any) => {
+        const idParts = p.planId.split('-');
+        const displayId = idParts[idParts.length - 1];
+        return {
+          id: `PLAN_${p.planId}`,
+          title: `${p.plan_name || 'Data Plan'}`,
+          description: `Price: ₦${p.user_price} | ID: ${displayId}`
+        };
+      });
+    }
+    
+    // For Airtime, we might just need a text input for amount, but let's provide common amounts
+    if (type === 'AIRTIME') {
+      return [
+        { id: 'AMT_100', title: '₦100', description: 'Top up ₦100' },
+        { id: 'AMT_200', title: '₦200', description: 'Top up ₦200' },
+        { id: 'AMT_500', title: '₦500', description: 'Top up ₦500' },
+        { id: 'AMT_1000', title: '₦1,000', description: 'Top up ₦1,000' },
+        { id: 'AMT_2000', title: '₦2,000', description: 'Top up ₦2,000' },
+        { id: 'AMT_5000', title: '₦5,000', description: 'Top up ₦5,000' },
+        { id: 'AMT_CUSTOM', title: 'Custom Amount', description: 'Enter amount manually' }
+      ];
+    }
+
+    return [];
   },
 
   /**

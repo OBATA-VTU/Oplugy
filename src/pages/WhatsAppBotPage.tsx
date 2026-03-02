@@ -110,7 +110,7 @@ const WhatsAppBotPage: React.FC = () => {
                 "Set your Verify Token to match WHATSAPP_VERIFY_TOKEN.",
                 "Subscribe to 'messages' in the Webhook fields.",
                 "Get your Permanent Access Token and Phone Number ID.",
-                "Set the Paystack Webhook URL to: https://oplug.vercel.app/api/webhooks/paystack"
+                "Set the Paystack Webhook URL to: https://oplug.vercel.app/api/paystack-webhook"
               ].map((step, i) => (
                 <li key={i} className="flex items-start space-x-4">
                   <div className="w-6 h-6 bg-gray-50 rounded-full flex items-center justify-center text-[10px] font-black text-gray-400 border border-gray-100 mt-1 shrink-0">{i+1}</div>

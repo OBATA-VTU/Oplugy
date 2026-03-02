@@ -7,8 +7,8 @@
       "destination": "/api/paystack-proxy"
     },
     {
-      "source": "/api/webhooks/paystack",
-      "destination": "/api/webhooks/paystack"
+      "source": "/api/paystack-webhook",
+      "destination": "/api/paystack-webhook"
     },
     {
       "source": "/api/:path*",

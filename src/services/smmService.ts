@@ -14,6 +14,7 @@ export const smmService = {
       ]);
 
       const data = await apiResponse.json();
+      console.log('SMM Proxy Response Data:', data);
       const manualPrices: Record<string, any> = {};
       manualPricingSnap.forEach(doc => {
         manualPrices[doc.id] = doc.data();

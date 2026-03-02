@@ -3,6 +3,7 @@ import cors from 'cors';
 import { createProxyMiddleware } from 'http-proxy-middleware';
 import * as admin from 'firebase-admin';
 import axios from 'axios';
+import { handleWebhook as handleWhatsAppWebhook } from './api/whatsapp/webhook';
 
 // Initialize Firebase Admin
 if (!admin.apps.length) {
@@ -161,6 +162,9 @@ async function callOgaviral(action: string, data: any = {}) {
   return response.data;
 }
 
+// WhatsApp Webhook
+app.post('/api/whatsapp/webhook', handleWhatsAppWebhook);
+
 // Inlomax Proxy Route (Server 1)
 app.post('/api/proxy-server1', async (req, res) => {
   const { endpoint, method = 'GET', data } = req.body || {};
@@ -186,10 +190,13 @@ app.post('/api/proxy-server2', async (req, res) => {
 // Ogaviral Proxy Route (SMM)
 app.post('/api/proxy-smm', async (req, res) => {
   const { action, data } = req.body || {};
+  console.log(`SMM Proxy Request: action=${action}`, data);
   try {
     const result = await callOgaviral(action, data);
+    console.log(`SMM Proxy Response:`, result);
     return res.status(200).json(result);
   } catch (error: any) {
+    console.error(`SMM Proxy Error:`, error.message);
     return res.status(500).json({ status: 'error', message: error.message });
   }
 });

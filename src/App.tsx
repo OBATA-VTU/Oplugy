@@ -28,6 +28,7 @@ import QuickBuyData from './pages/quick-buy/QuickBuyData';
 import QuickBuyElectricity from './pages/quick-buy/QuickBuyElectricity';
 import QuickBuyCable from './pages/quick-buy/QuickBuyCable';
 import QuickBuyCheckout from './pages/quick-buy/QuickBuyCheckout';
+import PaymentVerifyPage from './pages/PaymentVerifyPage';
 import ApiDocsPage from './pages/ApiDocsPage';
 import SupportPage from './pages/SupportPage';
 import FAQPage from './pages/FAQPage';
@@ -66,6 +67,7 @@ const App: React.FC = () => {
               <Route path="/quick-purchase/electricity" element={<QuickBuyElectricity />} />
               <Route path="/quick-purchase/cable" element={<QuickBuyCable />} />
               <Route path="/quick-purchase/checkout" element={<QuickBuyCheckout />} />
+              <Route path="/payment/verify" element={<PaymentVerifyPage />} />
 
               {/* ROUTES WITH SIDEBAR (Layout) */}
               <Route element={<Layout />}>

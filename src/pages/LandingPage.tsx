@@ -20,27 +20,27 @@ const LandingPage: React.FC = () => {
   }, []);
 
   return (
-    <div className="bg-[#000] text-white overflow-hidden selection:bg-blue-600 selection:text-white scroll-smooth font-sans">
+    <div className="bg-slate-950 text-slate-50 overflow-hidden selection:bg-blue-600 selection:text-white scroll-smooth font-sans">
       {/* Navigation */}
-      <nav className={`fixed w-full z-[100] transition-all duration-700 ${scrolled ? 'bg-black/80 backdrop-blur-2xl py-4 border-b border-white/5' : 'bg-transparent py-8'}`}>
+      <nav className={`fixed w-full z-[100] transition-all duration-700 ${scrolled ? 'bg-slate-950/90 backdrop-blur-2xl py-4 border-b border-white/5' : 'bg-transparent py-8'}`}>
         <div className="max-w-[1400px] mx-auto px-6 lg:px-12 flex justify-between items-center">
           <Logo />
           <div className="hidden lg:flex items-center space-x-12">
             <nav className="flex items-center space-x-10">
-              <a href="#services" className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/40 hover:text-white transition-all">Services</a>
-              <a href="#how-it-works" className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/40 hover:text-white transition-all">How it Works</a>
-              <Link to="/pricing" className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/40 hover:text-white transition-all">Pricing</Link>
+              <a href="#services" className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-500 hover:text-white transition-all">Services</a>
+              <a href="#how-it-works" className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-500 hover:text-white transition-all">Protocol</a>
+              <Link to="/pricing" className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-500 hover:text-white transition-all">Pricing</Link>
             </nav>
             <div className="h-4 w-px bg-white/10"></div>
             <div className="flex items-center space-x-8">
               <button 
                 onClick={toggleTheme}
-                className="text-white/40 hover:text-white transition-all"
+                className="text-slate-500 hover:text-white transition-all"
               >
                 {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
               </button>
-              <Link to="/login" className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/40 hover:text-white transition-all">Login</Link>
-              <Link to="/signup" className="bg-white text-black px-8 py-3 rounded-full text-[10px] font-bold uppercase tracking-[0.3em] hover:bg-blue-600 hover:text-white transition-all shadow-xl">Join Now</Link>
+              <Link to="/login" className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-500 hover:text-white transition-all">Login</Link>
+              <Link to="/signup" className="bg-blue-600 text-white px-10 py-4 rounded-full text-[10px] font-black uppercase tracking-[0.4em] hover:bg-white hover:text-black transition-all shadow-2xl shadow-blue-600/20">Get Started</Link>
             </div>
           </div>
           <div className="lg:hidden flex items-center space-x-4">
@@ -51,7 +51,7 @@ const LandingPage: React.FC = () => {
               {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
             </button>
             <Link to="/login" className="bg-white/5 p-3 rounded-xl border border-white/10">
-              <ArrowRight className="w-5 h-5" />
+              <ArrowRight className="w-5 h-5 text-white" />
             </Link>
           </div>
         </div>
@@ -65,29 +65,29 @@ const LandingPage: React.FC = () => {
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="inline-flex items-center space-x-3 px-4 py-2 bg-white/5 border border-white/10 rounded-full mb-12"
+                className="inline-flex items-center space-x-3 px-5 py-2.5 bg-blue-600/10 border border-blue-600/20 rounded-full mb-12"
               >
                 <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                <span className="text-[9px] font-bold uppercase tracking-[0.4em] text-blue-400">System Online</span>
+                <span className="text-[10px] font-black uppercase tracking-[0.4em] text-blue-400">Network Status: Operational</span>
               </motion.div>
               
               <motion.h1 
                 initial={{ opacity: 0, y: 60 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-                className="text-[14vw] lg:text-[9vw] font-black leading-[0.85] tracking-[-0.05em] uppercase mb-12"
+                transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+                className="text-[16vw] lg:text-[10vw] font-black leading-[0.8] tracking-[-0.06em] uppercase mb-12 text-white"
               >
                 Digital <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-br from-white via-white to-white/20">Success.</span>
+                <span className="text-transparent bg-clip-text bg-gradient-to-br from-blue-400 via-blue-600 to-blue-900">Dominance.</span>
               </motion.h1>
 
               <motion.p 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.4 }}
-                className="text-xl lg:text-2xl text-white/40 font-medium max-w-xl mb-16 leading-relaxed"
+                className="text-xl lg:text-3xl text-slate-400 font-medium max-w-2xl mb-16 leading-tight tracking-tight"
               >
-                The most advanced infrastructure for digital commerce in Nigeria. Instant fulfilment, high accuracy.
+                The most advanced infrastructure for digital commerce in Nigeria. Instant fulfilment, military-grade accuracy.
               </motion.p>
               
               <motion.div 
@@ -96,8 +96,8 @@ const LandingPage: React.FC = () => {
                 transition={{ delay: 0.6 }}
                 className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-6"
               >
-                <Link to="/signup" className="w-full sm:w-auto bg-blue-600 text-white px-12 py-6 rounded-full text-lg font-black hover:bg-white hover:text-black transition-all shadow-2xl shadow-blue-600/40">Start Building</Link>
-                <Link to="/pricing" className="w-full sm:w-auto border border-white/10 text-white px-12 py-6 rounded-full text-lg font-black hover:bg-white/5 transition-all">Network Rates</Link>
+                <Link to="/signup" className="w-full sm:w-auto bg-blue-600 text-white px-14 py-7 rounded-full text-xl font-black hover:bg-white hover:text-black transition-all shadow-2xl shadow-blue-600/40">Launch Dashboard</Link>
+                <Link to="/pricing" className="w-full sm:w-auto border border-white/10 text-white px-14 py-7 rounded-full text-xl font-black hover:bg-white/5 transition-all">View Rates</Link>
               </motion.div>
             </div>
 
@@ -119,12 +119,12 @@ const LandingPage: React.FC = () => {
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ duration: 1.5, ease: "easeOut" }}
-                    className="w-[80%] h-[80%] bg-gradient-to-br from-blue-600/20 to-purple-600/20 rounded-[4rem] backdrop-blur-3xl border border-white/10 overflow-hidden shadow-2xl"
+                    className="w-[85%] h-[85%] bg-gradient-to-br from-blue-600/30 to-purple-600/30 rounded-[5rem] backdrop-blur-3xl border border-white/10 overflow-hidden shadow-2xl"
                   >
                     <img 
-                      src="https://picsum.photos/seed/oplug_tech/1000/1000"
+                      src="https://picsum.photos/seed/oplug_tech/1200/1200"
                       alt="Oplug Technology"
-                      className="w-full h-full object-cover opacity-50 grayscale mix-blend-overlay"
+                      className="w-full h-full object-cover opacity-60 grayscale mix-blend-overlay"
                       referrerPolicy="no-referrer"
                     />
                   </motion.div>
@@ -134,19 +134,19 @@ const LandingPage: React.FC = () => {
                 <motion.div 
                   animate={{ y: [0, -20, 0] }}
                   transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                  className="absolute -top-10 -right-10 bg-white text-black p-8 rounded-[2.5rem] shadow-2xl z-20"
+                  className="absolute -top-10 -right-10 bg-white text-black p-10 rounded-[3rem] shadow-2xl z-20"
                 >
-                  <p className="text-[10px] font-black uppercase tracking-widest opacity-40 mb-2">Uptime</p>
-                  <p className="text-3xl font-black tracking-tighter">99.99%</p>
+                  <p className="text-[11px] font-black uppercase tracking-widest opacity-40 mb-2">Network Uptime</p>
+                  <p className="text-4xl font-black tracking-tighter">99.99%</p>
                 </motion.div>
 
                 <motion.div 
                   animate={{ y: [0, 20, 0] }}
                   transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-                  className="absolute -bottom-10 -left-10 bg-blue-600 text-white p-8 rounded-[2.5rem] shadow-2xl z-20"
+                  className="absolute -bottom-10 -left-10 bg-blue-600 text-white p-10 rounded-[3rem] shadow-2xl z-20"
                 >
-                  <p className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-2">Latency</p>
-                  <p className="text-3xl font-black tracking-tighter">14ms</p>
+                  <p className="text-[11px] font-black uppercase tracking-widest opacity-60 mb-2">Global Latency</p>
+                  <p className="text-4xl font-black tracking-tighter">14ms</p>
                 </motion.div>
               </div>
             </div>
@@ -154,19 +154,19 @@ const LandingPage: React.FC = () => {
         </motion.div>
 
         {/* Background Elements */}
-        <div className="absolute top-0 right-0 w-[80vw] h-[80vw] bg-blue-600/10 rounded-full blur-[200px] -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
+        <div className="absolute top-0 right-0 w-[80vw] h-[80vw] bg-blue-600/20 rounded-full blur-[200px] -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
         <div className="absolute bottom-0 left-0 w-[50vw] h-[50vw] bg-purple-600/10 rounded-full blur-[200px] translate-y-1/2 -translate-x-1/2 pointer-events-none"></div>
       </section>
 
       {/* MARQUEE TRUST */}
-      <section className="py-20 border-y border-white/5 overflow-hidden">
+      <section className="py-24 border-y border-white/5 overflow-hidden bg-slate-900/50">
         <div className="flex whitespace-nowrap animate-marquee">
           {[...Array(10)].map((_, i) => (
-            <div key={i} className="flex items-center space-x-20 px-10">
-              <span className="text-4xl font-black tracking-tighter text-white/10 uppercase">MTN NIGERIA</span>
-              <span className="text-4xl font-black tracking-tighter text-white/10 uppercase">AIRTEL</span>
-              <span className="text-4xl font-black tracking-tighter text-white/10 uppercase">9MOBILE</span>
-              <span className="text-4xl font-black tracking-tighter text-white/10 uppercase">GLO WORLD</span>
+            <div key={i} className="flex items-center space-x-24 px-12">
+              <span className="text-5xl font-black tracking-tighter text-white/5 uppercase">MTN NIGERIA</span>
+              <span className="text-5xl font-black tracking-tighter text-white/5 uppercase">AIRTEL AFRICA</span>
+              <span className="text-5xl font-black tracking-tighter text-white/5 uppercase">9MOBILE</span>
+              <span className="text-5xl font-black tracking-tighter text-white/5 uppercase">GLO WORLD</span>
             </div>
           ))}
         </div>
@@ -177,62 +177,68 @@ const LandingPage: React.FC = () => {
         <div className="max-w-[1800px] mx-auto">
           <div className="flex flex-col lg:flex-row justify-between items-end mb-32 gap-10">
             <div className="max-w-4xl">
-              <p className="text-blue-500 text-[11px] font-black uppercase tracking-[0.5em] mb-8">Our Services</p>
-              <h2 className="text-7xl lg:text-[100px] font-black tracking-[-0.04em] leading-[0.85] uppercase">
-                Engineered for <br />
-                <span className="text-white/20">Performance.</span>
+              <p className="text-blue-500 text-[12px] font-black uppercase tracking-[0.6em] mb-8">Service Protocol</p>
+              <h2 className="text-7xl lg:text-[120px] font-black tracking-[-0.05em] leading-[0.8] uppercase text-white">
+                Built for <br />
+                <span className="text-slate-800">Scale.</span>
               </h2>
             </div>
-            <div className="lg:max-w-xs">
-              <p className="text-lg text-white/40 font-medium leading-relaxed">
-                We've built a robust infrastructure that ensures your transactions are processed in milliseconds, not minutes.
+            <div className="lg:max-w-sm">
+              <p className="text-xl text-slate-500 font-medium leading-relaxed">
+                We've engineered a robust infrastructure that ensures your transactions are processed in milliseconds, not minutes.
               </p>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
-            <div className="md:col-span-8 bg-white/5 border border-white/10 rounded-[4rem] p-16 relative overflow-hidden group">
-              <div className="relative z-10 max-w-md">
-                <Rocket className="text-blue-500 mb-10" size={48} />
-                <h3 className="text-5xl font-black tracking-tighter mb-8 uppercase">Instant <br />Fulfilment</h3>
-                <p className="text-xl text-white/40 font-medium leading-relaxed">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-10">
+            <div className="md:col-span-8 bg-slate-900/50 border border-white/5 rounded-[5rem] p-20 relative overflow-hidden group hover:border-blue-500/30 transition-all duration-700">
+              <div className="relative z-10 max-w-lg">
+                <div className="w-20 h-20 bg-blue-600/10 rounded-3xl flex items-center justify-center mb-12 border border-blue-600/20">
+                  <Rocket className="text-blue-500" size={40} />
+                </div>
+                <h3 className="text-6xl font-black tracking-tighter mb-8 uppercase text-white">Instant <br />Fulfilment</h3>
+                <p className="text-2xl text-slate-500 font-medium leading-snug">
                   Our automated delivery system ensures that 98% of orders are completed in under 5 seconds.
                 </p>
               </div>
-              <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-blue-600/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
+              <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-blue-600/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
             </div>
 
-            <div className="md:col-span-4 bg-blue-600 rounded-[4rem] p-16 flex flex-col justify-between group hover:bg-white hover:text-black transition-all duration-700">
-              <Globe size={64} className="mb-10" />
+            <div className="md:col-span-4 bg-blue-600 rounded-[5rem] p-20 flex flex-col justify-between group hover:bg-white hover:text-black transition-all duration-700 shadow-2xl shadow-blue-600/20">
+              <Globe size={80} className="mb-12" />
               <div>
-                <h3 className="text-4xl font-black tracking-tighter mb-6 uppercase">Social <br />Growth</h3>
-                <p className="text-lg font-medium opacity-70 mb-10">
+                <h3 className="text-5xl font-black tracking-tighter mb-8 uppercase">Social <br />Growth</h3>
+                <p className="text-xl font-medium opacity-80 mb-12 leading-relaxed">
                   Boost your social presence with our premium SMM panel. Real results, real fast.
                 </p>
-                <Link to="/smm" className="inline-flex items-center space-x-3 text-[11px] font-black uppercase tracking-widest">
+                <Link to="/smm" className="inline-flex items-center space-x-4 text-[12px] font-black uppercase tracking-[0.3em] group-hover:translate-x-4 transition-transform">
                   <span>Explore SMM</span>
-                  <ArrowRight size={16} />
+                  <ArrowRight size={20} />
                 </Link>
               </div>
             </div>
 
-            <div className="md:col-span-4 bg-white/5 border border-white/10 rounded-[4rem] p-16 group hover:border-white/30 transition-all">
-              <Smartphone className="text-purple-500 mb-10" size={48} />
-              <h3 className="text-4xl font-black tracking-tighter mb-6 uppercase">Mobile <br />First</h3>
-              <p className="text-lg text-white/40 font-medium leading-relaxed">
-                A seamless experience across all devices. Manage your business on the go.
+            <div className="md:col-span-4 bg-slate-900/50 border border-white/5 rounded-[5rem] p-20 group hover:border-purple-500/30 transition-all duration-700">
+              <div className="w-20 h-20 bg-purple-600/10 rounded-3xl flex items-center justify-center mb-12 border border-purple-600/20">
+                <Smartphone className="text-purple-500" size={40} />
+              </div>
+              <h3 className="text-5xl font-black tracking-tighter mb-8 uppercase text-white">Mobile <br />First</h3>
+              <p className="text-xl text-slate-500 font-medium leading-relaxed">
+                A seamless experience across all devices. Manage your business on the go with our responsive app.
               </p>
             </div>
 
-            <div className="md:col-span-8 bg-[#111] border border-white/5 rounded-[4rem] p-16 flex flex-col md:flex-row items-center gap-16 group">
+            <div className="md:col-span-8 bg-slate-900/50 border border-white/5 rounded-[5rem] p-20 flex flex-col md:flex-row items-center gap-20 group hover:border-emerald-500/30 transition-all duration-700">
               <div className="flex-1">
-                <CreditCard className="text-emerald-500 mb-10" size={48} />
-                <h3 className="text-4xl font-black tracking-tighter mb-6 uppercase">Secure <br />Payments</h3>
-                <p className="text-lg text-white/40 font-medium leading-relaxed">
-                  Multiple funding options including bank transfer and card payments, all protected by industry-standard encryption.
+                <div className="w-20 h-20 bg-emerald-600/10 rounded-3xl flex items-center justify-center mb-12 border border-emerald-600/20">
+                  <CreditCard className="text-emerald-500" size={40} />
+                </div>
+                <h3 className="text-5xl font-black tracking-tighter mb-8 uppercase text-white">Secure <br />Payments</h3>
+                <p className="text-xl text-slate-500 font-medium leading-relaxed">
+                  Multiple funding options including bank transfer and card payments, all protected by encryption.
                 </p>
               </div>
-              <div className="flex-1 w-full h-64 bg-white/5 rounded-[2rem] border border-white/10 flex items-center justify-center group-hover:scale-105 transition-transform duration-700">
+              <div className="flex-1 w-full h-80 bg-slate-950 rounded-[3rem] border border-white/5 flex items-center justify-center group-hover:scale-105 transition-all duration-700 shadow-2xl">
                 <Logo />
               </div>
             </div>
@@ -241,26 +247,26 @@ const LandingPage: React.FC = () => {
       </section>
 
       {/* PROTOCOL SECTION */}
-      <section id="how-it-works" className="py-40 lg:py-60 bg-white text-black rounded-[5rem] lg:rounded-[8rem] mx-4 lg:mx-10">
+      <section id="how-it-works" className="py-40 lg:py-60 bg-white text-slate-950 rounded-[5rem] lg:rounded-[10rem] mx-4 lg:mx-10 shadow-2xl">
         <div className="max-w-[1800px] mx-auto px-6 lg:px-16">
           <div className="grid lg:grid-cols-2 gap-32 items-start">
             <div className="lg:sticky lg:top-40">
-              <p className="text-blue-600 text-[11px] font-black uppercase tracking-[0.5em] mb-10">How it Works</p>
-              <h2 className="text-[10vw] lg:text-[8vw] font-black leading-[0.82] tracking-[-0.04em] uppercase mb-12">
+              <p className="text-blue-600 text-[12px] font-black uppercase tracking-[0.6em] mb-12">The Protocol</p>
+              <h2 className="text-[12vw] lg:text-[9vw] font-black leading-[0.8] tracking-[-0.05em] uppercase mb-16">
                 Simple. <br />
                 Direct. <br />
-                <span className="text-gray-300">Fast.</span>
+                <span className="text-slate-200">Fast.</span>
               </h2>
-              <Link to="/signup" className="inline-flex items-center space-x-6 bg-black text-white px-12 py-6 rounded-full text-xl font-black hover:bg-blue-600 transition-all">
-                <span>Join the Network</span>
-                <ArrowRight />
+              <Link to="/signup" className="inline-flex items-center space-x-8 bg-slate-950 text-white px-16 py-8 rounded-full text-2xl font-black hover:bg-blue-600 transition-all shadow-2xl shadow-slate-950/20">
+                <span>Join Network</span>
+                <ArrowRight size={32} />
               </Link>
             </div>
 
-              <div className="space-y-32">
-                <Step number="01" title="Registration" desc="Create your secure account in seconds. No complex forms, just the essentials." />
-                <Step number="02" title="Funding" desc="Fund your wallet through our secure payment gateways. Instant reflection, zero delays." />
-                <Step number="03" title="Purchase" desc="Select your service and buy. Our system handles the rest with high accuracy." />
+              <div className="space-y-40">
+                <Step number="01" title="Registration" desc="Create your secure account in seconds. No complex forms, just the essentials for your digital success." />
+                <Step number="02" title="Funding" desc="Fund your wallet through our secure payment gateways. Instant reflection, zero delays, 100% security." />
+                <Step number="03" title="Purchase" desc="Select your service and buy. Our system handles the rest with high accuracy and instant delivery." />
               </div>
           </div>
         </div>
@@ -272,17 +278,17 @@ const LandingPage: React.FC = () => {
           <motion.h2 
             initial={{ opacity: 0, scale: 0.9 }}
             whileInView={{ opacity: 1, scale: 1 }}
-            className="text-[15vw] font-black leading-[0.75] tracking-[-0.05em] uppercase mb-24"
+            className="text-[18vw] font-black leading-[0.7] tracking-[-0.06em] uppercase mb-32 text-white"
           >
             Ready to <br />
             <span className="text-blue-600">Succeed?</span>
           </motion.h2>
-          <div className="flex flex-col sm:flex-row justify-center gap-10">
-            <Link to="/signup" className="bg-white text-black px-20 py-10 rounded-full text-3xl font-black hover:bg-blue-600 hover:text-white transition-all transform hover:-translate-y-4 shadow-2xl">Get Started</Link>
-            <Link to="/support" className="border border-white/10 text-white px-20 py-10 rounded-full text-3xl font-black hover:bg-white/5 transition-all transform hover:-translate-y-4">Contact Us</Link>
+          <div className="flex flex-col sm:flex-row justify-center gap-12">
+            <Link to="/signup" className="bg-white text-slate-950 px-24 py-12 rounded-full text-4xl font-black hover:bg-blue-600 hover:text-white transition-all transform hover:-translate-y-6 shadow-2xl shadow-white/10">Get Started</Link>
+            <Link to="/support" className="border border-white/10 text-white px-24 py-12 rounded-full text-4xl font-black hover:bg-white/5 transition-all transform hover:-translate-y-6">Contact Us</Link>
           </div>
         </div>
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120vw] h-[120vw] bg-blue-600/5 rounded-full blur-[200px] -z-10"></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120vw] h-[120vw] bg-blue-600/10 rounded-full blur-[200px] -z-10"></div>
       </section>
 
       <Footer />
@@ -292,19 +298,19 @@ const LandingPage: React.FC = () => {
 
 const Step = ({ number, title, desc }: any) => (
   <motion.div 
-    initial={{ opacity: 0, y: 40 }}
+    initial={{ opacity: 0, y: 60 }}
     whileInView={{ opacity: 1, y: 0 }}
     viewport={{ once: true }}
     className="group"
   >
-    <div className="flex items-baseline space-x-8 mb-8">
-      <span className="text-4xl font-black text-blue-600 tracking-tighter">{number}</span>
-      <h3 className="text-6xl font-black tracking-tighter uppercase">{title}</h3>
+    <div className="flex items-baseline space-x-10 mb-10">
+      <span className="text-5xl font-black text-blue-600 tracking-tighter">{number}</span>
+      <h3 className="text-7xl font-black tracking-tighter uppercase text-slate-950">{title}</h3>
     </div>
-    <p className="text-2xl text-gray-500 font-medium leading-relaxed max-w-xl">
+    <p className="text-3xl text-slate-500 font-medium leading-tight max-w-2xl tracking-tight">
       {desc}
     </p>
-    <div className="mt-12 h-px w-full bg-gray-100 group-hover:bg-blue-600 transition-colors duration-700"></div>
+    <div className="mt-16 h-px w-full bg-slate-100 group-hover:bg-blue-600 transition-colors duration-700"></div>
   </motion.div>
 );
 
