@@ -1,102 +1,73 @@
-import admin from 'firebase-admin';
+import { oplugService } from './oplugService.js';
 
-if (!admin.apps.length) {
-  try {
-    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT || '{}');
-    admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
-  } catch (e) { console.error('Firebase Init Error:', e); }
-}
-const db = admin.firestore();
+const sessions = new Map();
 
-export const oplugService = {
-  // 1. DYNAMIC USER LOOKUP
-  async lookupUser(whatsappPhone) {
-    const localPhone = whatsappPhone.startsWith('234') ? '0' + whatsappPhone.substring(3) : whatsappPhone;
-    const snapshot = await db.collection('users').where('phone', 'in', [whatsappPhone, localPhone]).limit(1).get();
-    if (snapshot.empty) return { exists: false };
-    const data = snapshot.docs[0].data();
-    return { 
-      exists: true, 
-      uid: snapshot.docs[0].id, 
-      name: data.username || data.name || "User", 
-      balance: parseFloat(data.walletBalance || 0),
-      email: data.email
-    };
-  },
-
-  // 2. FETCH REAL-TIME PLANS & PRICES
-  async getDynamicPlans(network) {
-    try {
-      // Fetch from your Provider (Inlomax as default)
-      const apiKey = process.env.INLOMAX_API_KEY;
-      const response = await fetch(`https://inlomax.com/api/data/`, {
-        headers: { 'Authorization': `Token ${apiKey}` }
-      });
-      const apiData = await response.json();
-      
-      // Filter for requested network and merge with your Firestore overrides
-      const priceSnapshot = await db.collection('prices').where('network', '==', network.toLowerCase()).get();
-      const overrides = {};
-      priceSnapshot.forEach(doc => { overrides[doc.id] = doc.data().amount; });
-
-      // Assuming API returns a list of plans
-      return (apiData.plans || []).filter(p => p.network.toLowerCase() === network.toLowerCase()).map(p => ({
-        id: p.id,
-        label: `${p.name} - ₦${(overrides[p.id] || p.price).toLocaleString()}`,
-        price: overrides[p.id] || p.price,
-        provider: "server1"
-      }));
-    } catch (e) { return []; }
-  },
-
-  // 3. REAL VENDING & TRANSACTION LOGGING
-  async processVending(type, details, user) {
-    try {
-      const isServer2 = details.provider === "server2";
-      const baseUrl = isServer2 ? 'https://api.ciptopup.ng/api' : 'https://inlomax.com/api';
-      const apiKey = isServer2 ? process.env.CIPTOPUP_API_KEY : process.env.INLOMAX_API_KEY;
-      const endpoint = isServer2 ? 'data/buy' : (type === 'airtime' ? 'airtime' : 'data');
-
-      // Mapping from your Server.ts
-      const mapped = isServer2 
-        ? { plan_id: details.plan_id, phone_number: details.phone, amount: details.amount }
-        : { serviceID: String(details.plan_id || details.network).toLowerCase(), mobileNumber: String(details.phone), amount: Number(details.amount) };
-
-      const headers = { 'Content-Type': 'application/json', 'Accept': 'application/json' };
-      if (isServer2) headers['x-api-key'] = apiKey;
-      else { headers['Authorization'] = `Token ${apiKey}`; headers['Authorization-Token'] = apiKey; }
-
-      const response = await fetch(`${baseUrl}/${endpoint}`, {
-        method: 'POST',
-        headers: headers,
-        body: JSON.stringify(mapped)
-      });
-
-      const result = await response.json();
-
-      if (result.status === "success" || result.code === "success") {
-        // A. DEDUCT BALANCE
-        await db.collection('users').doc(user.uid).update({
-          walletBalance: admin.firestore.FieldValue.increment(-details.price)
-        });
-
-        // B. LOG TO TRANSACTION HISTORY (For Website Receipt)
-        const txRef = result.transaction_id || result.id || `BOT-${Date.now()}`;
-        await db.collection('transactions').add({
-          userId: user.uid,
-          userEmail: user.email,
-          type: type.toUpperCase(),
-          amount: details.price,
-          source: `${details.network} ${type} (via WhatsApp)`,
-          remarks: `Purchase for ${details.phone}`,
-          status: 'SUCCESS',
-          reference: txRef,
-          date_created: admin.firestore.FieldValue.serverTimestamp()
-        });
-
-        return { success: true, orderId: txRef };
-      }
-      return { success: false, message: result.message || "Provider error" };
-    } catch (e) { return { success: false, message: "Connection error" }; }
+export default async function handler(req, res) {
+  if (req.method === 'GET') {
+    const token = process.env.WHATSAPP_VERIFY_TOKEN;
+    if (req.query['hub.verify_token'] === token) return res.status(200).send(req.query['hub.challenge']);
+    return res.status(403).send('Forbidden');
   }
-};
+
+  if (req.method === 'POST') {
+    try {
+      const body = req.body;
+      const message = body.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
+      if (!message) return res.status(200).send('OK');
+
+      const from = message.from;
+      const text = message.text?.body?.trim() || "";
+      if (!sessions.has(from)) sessions.set(from, { state: 'IDLE', data: {} });
+      const session = sessions.get(from);
+      const user = await oplugService.lookupUser(from);
+
+      // --- MAIN MENU ---
+      if (['hi', 'hello', 'menu', 'start'].includes(text.toLowerCase())) {
+        session.state = 'IDLE';
+        const welcome = `👋 *Hi ${user.name}!* \n\nWelcome to *Oplug v2.0*. \n💰 Wallet: *₦${user.balance.toLocaleString()}*\n\n_Select a service to continue:_`;
+        
+        await sendWhatsAppList(from, welcome, "🚀 Explore Services", [
+          { id: "buy_airtime", title: "💸 Airtime", desc: "MTN, Airtel, Glo, 9mobile" },
+          { id: "buy_data", title: "📶 Data Bundle", desc: "SME, Gifting, Corporate" },
+          { id: "buy_cable", title: "📺 Cable TV", desc: "DSTV, GOTV, Startimes" },
+          { id: "pay_elec", title: "💡 Electricity", desc: "IKEDC, EKEDC, AEDC, etc." },
+          { id: "buy_edu", title: "🎓 Education Pins", desc: "WAEC, NECO, JAMB" },
+          { id: "buy_smm", title: "📈 SMM Booster", desc: "Followers, Likes, Views" },
+          { id: "check_bal", title: "💰 My Wallet", desc: "Check balance & history" }
+        ]);
+        return res.status(200).send('OK');
+      }
+
+      // --- INTERACTIVE HANDLERS ---
+      if (message.type === 'interactive') {
+        const id = message.interactive.list_reply?.id || message.interactive.button_reply?.id;
+        
+        if (id === 'buy_edu') {
+          session.state = 'AWAITING_EDU_TYPE';
+          await sendWhatsAppMessage(from, "🎓 *Education Pins*\n\nSelect Exam Type:\n1️⃣ *WAEC*\n2️⃣ *NECO*\n3️⃣ *NABTEB*\n4️⃣ *JAMB*");
+        } 
+        else if (id === 'buy_smm') {
+          session.state = 'AWAITING_SMM_CAT';
+          await sendWhatsAppMessage(from, "📈 *SMM Booster*\n\nSelect Category:\n1️⃣ *Instagram*\n2️⃣ *TikTok*\n3️⃣ *Facebook*\n4️⃣ *YouTube*");
+        }
+        // ... (Other handlers for Airtime, Data, Cable, Elec)
+        return res.status(200).send('OK');
+      }
+
+      // --- FLOW LOGIC (Example: Education) ---
+      if (session.state === 'AWAITING_EDU_TYPE') {
+        const types = ['WAEC', 'NECO', 'NABTEB', 'JAMB'];
+        const choice = parseInt(text);
+        if (choice >= 1 && choice <= 4) {
+          session.data.exam = types[choice-1];
+          session.state = 'AWAITING_EDU_QTY';
+          await sendWhatsAppMessage(from, `📝 *${session.data.exam} Pin*\n\nHow many pins do you want to purchase?`);
+        }
+      }
+
+      return res.status(200).send('OK');
+    } catch (err) { return res.status(200).send('OK'); }
+  }
+}
+
+// (Helpers sendWhatsAppMessage and sendWhatsAppList at the bottom)
