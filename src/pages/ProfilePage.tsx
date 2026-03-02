@@ -48,11 +48,16 @@ const ProfilePage: React.FC = () => {
     if (!user) return;
     setIsUpdating(true);
     try {
+      if (webhookUrl && !/^https?:\/\/.+/.test(webhookUrl)) {
+        addNotification("Please enter a valid URL (starting with http:// or https://).", "warning");
+        setIsUpdating(false);
+        return;
+      }
       const userRef = doc(db, "users", user.id);
       await updateDoc(userRef, { webhookUrl });
-      addNotification("Developer configuration saved.", "success");
+      addNotification("Developer settings saved.", "success");
     } catch (e) {
-      addNotification("Failed to save configuration.", "error");
+      addNotification("Failed to save settings.", "error");
     }
     setIsUpdating(false);
   };
@@ -92,7 +97,7 @@ const ProfilePage: React.FC = () => {
         <div>
           <div className="inline-flex items-center space-x-2 px-3 py-1 bg-gray-50 rounded-full mb-6">
             <div className="w-1.5 h-1.5 rounded-full bg-blue-600"></div>
-            <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">System Identity</span>
+            <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">Account Details</span>
           </div>
           <h1 className="text-6xl lg:text-8xl font-black tracking-tighter leading-[0.85] uppercase">
             Account <br />
@@ -144,7 +149,7 @@ const ProfilePage: React.FC = () => {
                   className="w-full py-5 bg-red-50 text-red-600 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] flex items-center justify-center space-x-3 hover:bg-red-600 hover:text-white transition-all"
                 >
                   <LogOut size={16} />
-                  <span>Terminate Session</span>
+                  <span>Logout</span>
                 </button>
               </div>
             </div>
@@ -154,8 +159,8 @@ const ProfilePage: React.FC = () => {
           <div className="bg-gray-950 p-10 rounded-[3rem] text-white shadow-2xl shadow-blue-900/20 relative overflow-hidden">
              <div className="relative z-10">
                 <Shield className="text-blue-500 mb-6" size={32} />
-                <h4 className="text-xl font-black tracking-tight mb-2">Security Protocol</h4>
-                <p className="text-white/40 text-sm font-medium leading-relaxed">Your account is protected by industry-standard encryption and 2FA authorization.</p>
+                <h4 className="text-xl font-black tracking-tight mb-2">Security Settings</h4>
+                <p className="text-white/40 text-sm font-medium leading-relaxed">Your account is protected by industry-standard encryption and secure login.</p>
              </div>
              <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-blue-600/20 rounded-full blur-3xl"></div>
           </div>
@@ -192,7 +197,7 @@ const ProfilePage: React.FC = () => {
                       <Shield size={24} />
                     </div>
                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-relaxed">
-                      For sensitive data modifications, please contact our administrative protocol.
+                      For sensitive data changes, please contact our support team.
                     </p>
                   </div>
                 </motion.div>
@@ -206,7 +211,7 @@ const ProfilePage: React.FC = () => {
                   exit={{ opacity: 0, y: -10 }}
                   className="space-y-12"
                 >
-                  <SectionHeader title="Security Protocol" desc="Manage your 5-digit transaction authorization PIN." />
+                  <SectionHeader title="Security Settings" desc="Manage your 5-digit transaction PIN." />
                   <form onSubmit={handleUpdatePin} className="space-y-8 max-w-md">
                     <InputField 
                       label="Current PIN" 
@@ -248,7 +253,7 @@ const ProfilePage: React.FC = () => {
                   exit={{ opacity: 0, y: -10 }}
                   className="space-y-12"
                 >
-                  <SectionHeader title="API Infrastructure" desc="Integrate our digital services into your external systems." />
+                  <SectionHeader title="API Settings" desc="Integrate our digital services into your external systems." />
                   
                   <div className="space-y-10">
                     <div className="bg-gray-50 p-8 rounded-3xl border border-gray-100">

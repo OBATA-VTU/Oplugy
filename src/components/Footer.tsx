@@ -65,10 +65,6 @@ const Footer: React.FC = () => {
               </div>
 
               <div className="pt-4">
-                 <div className="inline-flex items-center space-x-3 px-5 py-2.5 bg-white/5 rounded-full border border-white/10">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                    <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-white/80">System is working well</span>
-                 </div>
               </div>
             </div>
           </div>
@@ -86,7 +82,7 @@ const Footer: React.FC = () => {
           </div>
           <p className="text-white/10 text-[8px] font-bold uppercase tracking-[0.3em] flex items-center gap-2">
             <Shield size={10} />
-            Secure and safe system
+            Secure and safe platform
           </p>
         </div>
       </div>

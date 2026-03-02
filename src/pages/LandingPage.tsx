@@ -28,7 +28,7 @@ const LandingPage: React.FC = () => {
           <div className="hidden lg:flex items-center space-x-12">
             <nav className="flex items-center space-x-10">
               <a href="#services" className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/40 hover:text-white transition-all">Services</a>
-              <a href="#how-it-works" className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/40 hover:text-white transition-all">Protocol</a>
+              <a href="#how-it-works" className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/40 hover:text-white transition-all">How it Works</a>
               <Link to="/pricing" className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/40 hover:text-white transition-all">Pricing</Link>
             </nav>
             <div className="h-4 w-px bg-white/10"></div>
@@ -68,7 +68,7 @@ const LandingPage: React.FC = () => {
                 className="inline-flex items-center space-x-3 px-4 py-2 bg-white/5 border border-white/10 rounded-full mb-12"
               >
                 <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                <span className="text-[9px] font-bold uppercase tracking-[0.4em] text-blue-400">v2.0 Protocol Active</span>
+                <span className="text-[9px] font-bold uppercase tracking-[0.4em] text-blue-400">System Online</span>
               </motion.div>
               
               <motion.h1 
@@ -78,7 +78,7 @@ const LandingPage: React.FC = () => {
                 className="text-[14vw] lg:text-[9vw] font-black leading-[0.85] tracking-[-0.05em] uppercase mb-12"
               >
                 Digital <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-br from-white via-white to-white/20">Ascension.</span>
+                <span className="text-transparent bg-clip-text bg-gradient-to-br from-white via-white to-white/20">Success.</span>
               </motion.h1>
 
               <motion.p 
@@ -87,7 +87,7 @@ const LandingPage: React.FC = () => {
                 transition={{ delay: 0.4 }}
                 className="text-xl lg:text-2xl text-white/40 font-medium max-w-xl mb-16 leading-relaxed"
               >
-                The most advanced infrastructure for digital commerce in Nigeria. Instant fulfillment, surgical precision.
+                The most advanced infrastructure for digital commerce in Nigeria. Instant fulfilment, high accuracy.
               </motion.p>
               
               <motion.div 
@@ -177,7 +177,7 @@ const LandingPage: React.FC = () => {
         <div className="max-w-[1800px] mx-auto">
           <div className="flex flex-col lg:flex-row justify-between items-end mb-32 gap-10">
             <div className="max-w-4xl">
-              <p className="text-blue-500 text-[11px] font-black uppercase tracking-[0.5em] mb-8">Our Capabilities</p>
+              <p className="text-blue-500 text-[11px] font-black uppercase tracking-[0.5em] mb-8">Our Services</p>
               <h2 className="text-7xl lg:text-[100px] font-black tracking-[-0.04em] leading-[0.85] uppercase">
                 Engineered for <br />
                 <span className="text-white/20">Performance.</span>
@@ -194,7 +194,7 @@ const LandingPage: React.FC = () => {
             <div className="md:col-span-8 bg-white/5 border border-white/10 rounded-[4rem] p-16 relative overflow-hidden group">
               <div className="relative z-10 max-w-md">
                 <Rocket className="text-blue-500 mb-10" size={48} />
-                <h3 className="text-5xl font-black tracking-tighter mb-8 uppercase">Instant <br />Fulfillment</h3>
+                <h3 className="text-5xl font-black tracking-tighter mb-8 uppercase">Instant <br />Fulfilment</h3>
                 <p className="text-xl text-white/40 font-medium leading-relaxed">
                   Our automated delivery system ensures that 98% of orders are completed in under 5 seconds.
                 </p>
@@ -245,7 +245,7 @@ const LandingPage: React.FC = () => {
         <div className="max-w-[1800px] mx-auto px-6 lg:px-16">
           <div className="grid lg:grid-cols-2 gap-32 items-start">
             <div className="lg:sticky lg:top-40">
-              <p className="text-blue-600 text-[11px] font-black uppercase tracking-[0.5em] mb-10">The Protocol</p>
+              <p className="text-blue-600 text-[11px] font-black uppercase tracking-[0.5em] mb-10">How it Works</p>
               <h2 className="text-[10vw] lg:text-[8vw] font-black leading-[0.82] tracking-[-0.04em] uppercase mb-12">
                 Simple. <br />
                 Direct. <br />
@@ -257,11 +257,11 @@ const LandingPage: React.FC = () => {
               </Link>
             </div>
 
-            <div className="space-y-32">
-              <Step number="01" title="Onboarding" desc="Create your secure digital identity in seconds. No complex forms, just the essentials." />
-              <Step number="02" title="Capitalization" desc="Fund your wallet through our secure payment gateways. Instant reflection, zero delays." />
-              <Step number="03" title="Execution" desc="Select your service and execute. Our system handles the rest with surgical precision." />
-            </div>
+              <div className="space-y-32">
+                <Step number="01" title="Registration" desc="Create your secure account in seconds. No complex forms, just the essentials." />
+                <Step number="02" title="Funding" desc="Fund your wallet through our secure payment gateways. Instant reflection, zero delays." />
+                <Step number="03" title="Purchase" desc="Select your service and buy. Our system handles the rest with high accuracy." />
+              </div>
           </div>
         </div>
       </section>
@@ -275,7 +275,7 @@ const LandingPage: React.FC = () => {
             className="text-[15vw] font-black leading-[0.75] tracking-[-0.05em] uppercase mb-24"
           >
             Ready to <br />
-            <span className="text-blue-600">Ascend?</span>
+            <span className="text-blue-600">Succeed?</span>
           </motion.h2>
           <div className="flex flex-col sm:flex-row justify-center gap-10">
             <Link to="/signup" className="bg-white text-black px-20 py-10 rounded-full text-3xl font-black hover:bg-blue-600 hover:text-white transition-all transform hover:-translate-y-4 shadow-2xl">Get Started</Link>

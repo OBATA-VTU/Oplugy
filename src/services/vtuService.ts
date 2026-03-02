@@ -29,7 +29,7 @@ async function logTransaction(userId: string, type: TransactionResponse['type'],
       source,
       remarks,
       status,
-      server: 'Inlomax Node',
+      server: 'Oplug Main Server',
       ...extraData,
       date_created: serverTimestamp(),
       date_updated: serverTimestamp()
@@ -446,7 +446,7 @@ export const vtuService = {
     try {
       await addDoc(collection(db, "transactions"), {
         ...tx,
-        server: 'Inlomax Node',
+        server: 'Oplug Main Server',
         date_created: serverTimestamp(),
         date_updated: serverTimestamp()
       });

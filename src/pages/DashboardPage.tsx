@@ -121,7 +121,7 @@ const DashboardPage: React.FC = () => {
             <div className="relative z-10 flex flex-col h-full justify-between space-y-12">
               <div className="flex justify-between items-start">
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/40 mb-4">Available Capital</p>
+                  <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/40 mb-4">Wallet Balance</p>
                   <div className="flex items-baseline">
                     <span className="text-2xl font-bold text-white/20 mr-2">₦</span>
                     <h2 className="text-6xl lg:text-8xl font-black tracking-tighter leading-none">
@@ -170,7 +170,7 @@ const DashboardPage: React.FC = () => {
               <Bell size={24} />
             </div>
             <div className="flex-1">
-              <p className="text-[9px] font-black uppercase tracking-widest opacity-50 mb-1">System Broadcast</p>
+              <p className="text-[9px] font-black uppercase tracking-widest opacity-50 mb-1">Important Notice</p>
               <p className="text-lg font-black tracking-tight">{announcement}</p>
             </div>
           </div>

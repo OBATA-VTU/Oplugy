@@ -64,7 +64,7 @@ const PricingPage: React.FC = () => {
         <div>
           <div className="inline-flex items-center space-x-2 px-3 py-1 bg-blue-50 rounded-full mb-6">
             <div className="w-1.5 h-1.5 rounded-full bg-blue-600"></div>
-            <span className="text-[9px] font-black uppercase tracking-widest text-blue-600">Network Rates</span>
+            <span className="text-[9px] font-black uppercase tracking-widest text-blue-600">Service Rates</span>
           </div>
           <h1 className="text-6xl lg:text-8xl font-black tracking-tighter leading-[0.85] uppercase">
             Service <br />
@@ -161,7 +161,7 @@ const PricingPage: React.FC = () => {
           {loading ? (
             <div className="py-32 flex flex-col items-center justify-center space-y-8 bg-white border border-gray-100 rounded-[3rem] shadow-xl shadow-gray-100/50">
                <Spinner />
-               <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.5em] animate-pulse">Synchronizing Rates...</p>
+               <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.5em] animate-pulse">Updating Prices...</p>
             </div>
           ) : (
             <div className="bg-white rounded-[3rem] shadow-2xl shadow-gray-100/50 border border-gray-50 overflow-hidden">
@@ -171,8 +171,8 @@ const PricingPage: React.FC = () => {
                       <thead className="bg-gray-50/50 text-[9px] font-black uppercase tracking-[0.2em] text-gray-400 border-b border-gray-100">
                         <tr>
                             <th className="px-10 py-6">Service Plan</th>
-                            <th className="px-10 py-6 text-center">Protocol</th>
-                            <th className="px-10 py-6 text-right">Execution Rate</th>
+                            <th className="px-10 py-6 text-center">Server</th>
+                            <th className="px-10 py-6 text-right">Price</th>
                             <th className="px-10 py-6 text-right">Validity</th>
                         </tr>
                       </thead>
@@ -233,7 +233,7 @@ const PricingPage: React.FC = () => {
                             </div>
                             <div>
                                <h4 className="text-2xl font-black text-gray-900 tracking-tighter mb-1 uppercase">{op.name}</h4>
-                               <p className="text-[10px] font-black uppercase tracking-widest text-emerald-500">Active Protocol</p>
+                               <p className="text-[10px] font-black uppercase tracking-widest text-emerald-500">Service Active</p>
                             </div>
                          </div>
                          <div className="absolute top-0 right-0 w-32 h-32 bg-blue-600/5 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform duration-1000"></div>
