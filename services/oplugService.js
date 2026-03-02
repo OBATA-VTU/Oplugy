@@ -1,86 +1,85 @@
-/**
- * Oplug API Service (v2.1.0)
- * Handles balance checks, data plans, and purchase fulfillment.
- */
-const OPLUG_API_URL = "https://oplug.vercel.app/api/v1"; 
-const OPLUG_API_KEY = process.env.OPLUG_API_KEY; // Set this in your Vercel Env Vars
+import admin from 'firebase-admin';
+
+// Initialize Firebase Admin (Ensure you have your service account config)
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT))
+  });
+}
+
+const db = admin.firestore();
 
 export const oplugService = {
-  // Check if user exists and get balance
+  // 1. Check Firestore for the user
   async lookupUser(phoneNumber) {
     try {
-      const response = await fetch(`${OPLUG_API_URL}/user/balance`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${OPLUG_API_KEY}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      if (!response.ok) return { exists: false };
-      const data = await response.json();
-      if (data.status === "success") {
-        return { exists: true, name: "User", balance: data.balance };
-      }
-      return { exists: false };
-    } catch (error) {
-      return { exists: false };
-    }
-  },
+      // Assuming your users collection uses phone numbers as IDs or has a 'phone' field
+      const userRef = db.collection('users').where('phone', '==', phoneNumber).limit(1);
+      const snapshot = await userRef.get();
 
-  // Available Data Plans (IDs match your /purchase endpoint)
-  async getDataPlans(network) {
-    const plans = {
-      "MTN": [{ id: "1001", label: "500MB - ₦150" }, { id: "1002", label: "1GB - ₦250" }, { id: "1003", label: "2GB - ₦500" }],
-      "Airtel": [{ id: "2001", label: "750MB - ₦200" }, { id: "2002", label: "1.5GB - ₦300" }],
-      "Glo": [{ id: "3001", label: "1GB - ₦200" }, { id: "3002", label: "2GB - ₦400" }],
-      "9mobile": [{ id: "4001", label: "1GB - ₦300" }]
-    };
-    return plans[network] || [];
-  },
+      if (snapshot.empty) return { exists: false };
 
-  // Process Airtime or Data Purchase
-  async processOrder(type, details) {
-    try {
-      const response = await fetch(`${OPLUG_API_URL}/purchase`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${OPLUG_API_KEY}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          type: type, // 'data' or 'airtime'
-          network: details.network,
-          plan_id: details.plan_id, // For data
-          amount: details.amount,   // For airtime
-          phone: details.phone
-        })
-      });
-      const data = await response.json();
+      const userData = snapshot.docs[0].data();
       return { 
-        success: data.status === "success", 
-        orderId: data.transaction_id, 
-        message: data.message 
+        exists: true, 
+        name: userData.username || "User", 
+        balance: userData.balance || 0,
+        uid: snapshot.docs[0].id
       };
     } catch (error) {
-      return { success: false, error: "Connection to Oplug failed" };
+      console.error("Firestore Lookup Error:", error);
+      return { exists: false };
     }
   },
 
-  // Generate Paystack Transfer details for Guest Users
-  async generatePaymentDetails(details) {
+  // 2. Data Plans with Provider Routing
+  async getDataPlans(network) {
+    // You can fetch these from Firestore too, but here is the hardcoded version
+    return {
+      "MTN": [
+        { id: "mtn_s1_1gb", label: "1GB (Server 1) - ₦250", provider: "Inlomax" },
+        { id: "mtn_s2_1gb", label: "1GB (Server 2) - ₦240", provider: "CIPTOPUP" }
+      ],
+      "Airtel": [{ id: "airtel_1gb", label: "1GB - ₦300", provider: "Inlomax" }],
+      "Glo": [{ id: "glo_1gb", label: "1GB - ₦200", provider: "Inlomax" }],
+      "9mobile": [{ id: "9mobile_1gb", label: "1GB - ₦400", provider: "Inlomax" }]
+    };
+  },
+
+  // 3. Process Order (Deducts from Firestore + Calls Provider)
+  async processOrder(type, details, user) {
     try {
-      const response = await fetch(`${OPLUG_API_URL}/payment/generate-transfer`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${OPLUG_API_KEY}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(details)
-      });
-      if (!response.ok) return null;
-      return await response.json();
+      // A. Get Price (Check Firestore overrides first)
+      let price = details.amount || 0; 
+      const priceDoc = await db.collection('prices').doc(details.plan_id || 'airtime').get();
+      if (priceDoc.exists) price = priceDoc.data().value;
+
+      // B. Check Balance
+      if (user.balance < price) return { success: false, message: "Insufficient Balance" };
+
+      // C. Call the correct Provider
+      let providerResult;
+      if (details.provider === "CIPTOPUP") {
+        providerResult = await this.callCIPTOPUP(details);
+      } else {
+        providerResult = await this.callInlomax(details);
+      }
+
+      if (providerResult.success) {
+        // D. Deduct from Firestore
+        await db.collection('users').doc(user.uid).update({
+          balance: admin.firestore.FieldValue.increment(-price)
+        });
+        return { success: true, orderId: providerResult.id };
+      }
+      
+      return { success: false, message: providerResult.error };
     } catch (error) {
-      return null;
+      return { success: false, error: "System Error" };
     }
-  }
+  },
+
+  // Provider API Wrappers
+  async callInlomax(details) { /* Add your Inlomax API logic here */ return { success: true, id: "INL_123" }; },
+  async callCIPTOPUP(details) { /* Add your CIPTOPUP API logic here */ return { success: true, id: "CIP_123" }; }
 };
