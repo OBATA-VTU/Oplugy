@@ -1,6 +1,5 @@
 import admin from 'firebase-admin';
 
-// Initialize Firebase Admin
 if (!admin.apps.length) {
   try {
     admin.initializeApp({
@@ -11,25 +10,24 @@ if (!admin.apps.length) {
 const db = admin.firestore();
 
 export const oplugService = {
-  // Find user in Firestore (checks 234... and 0... formats)
+  // 1. Firestore User Lookup (Handles both 234 and 0 formats)
   async lookupUser(whatsappPhone) {
-    try {
-      const localPhone = whatsappPhone.startsWith('234') ? '0' + whatsappPhone.substring(3) : whatsappPhone;
-      let snapshot = await db.collection('users').where('phone', '==', whatsappPhone).limit(1).get();
-      if (snapshot.empty) snapshot = await db.collection('users').where('phone', '==', localPhone).limit(1).get();
-      
-      if (snapshot.empty) return { exists: false };
-      const userData = snapshot.docs[0].data();
-      return { exists: true, uid: snapshot.docs[0].id, name: userData.username || "User", balance: parseFloat(userData.balance) || 0 };
-    } catch (error) { return { exists: false }; }
+    const localPhone = whatsappPhone.startsWith('234') ? '0' + whatsappPhone.substring(3) : whatsappPhone;
+    const snapshot = await db.collection('users').where('phone', 'in', [whatsappPhone, localPhone]).limit(1).get();
+    if (snapshot.empty) return { exists: false };
+    const data = snapshot.docs[0].data();
+    return { exists: true, uid: snapshot.docs[0].id, name: data.username, balance: parseFloat(data.balance) || 0 };
   },
 
-  // Real Paystack Integration
+  // 2. Dynamic Paystack Initialization (Using your Proxy Logic)
   async generatePaymentDetails(details) {
     try {
       const response = await fetch("https://api.paystack.co/transaction/initialize", {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${process.env.PAYSTACK_SECRET_KEY}`, 'Content-Type': 'application/json' },
+        headers: {
+          'Authorization': `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+          'Content-Type': 'application/json'
+        },
         body: JSON.stringify({
           email: `guest_${details.phone}@oplug.com`,
           amount: details.amount * 100,
@@ -37,32 +35,63 @@ export const oplugService = {
           metadata: { phone: details.phone, plan_id: details.plan_id }
         })
       });
-      const data = await response.json();
-      if (data.status) {
+      const res = await response.json();
+      if (res.status) {
         return {
           amount: details.amount,
-          bank: data.data.bank_transfer_details?.bank_name || "Paystack",
-          account: data.data.bank_transfer_details?.account_number || "Checkout Link",
-          url: data.data.authorization_url
+          bank: res.data.bank_transfer_details?.bank_name || "Paystack Transfer",
+          account: res.data.bank_transfer_details?.account_number || "Click Link",
+          url: res.data.authorization_url
         };
       }
       return null;
-    } catch (error) { return null; }
+    } catch (e) { return null; }
   },
 
-  // Data Plans
-  async getDataPlans(network) {
-    const plans = {
-      "MTN": [{ id: "mtn_1gb", label: "1GB - ₦250", price: 250, provider: "Inlomax" }],
-      "Airtel": [{ id: "airtel_1gb", label: "1GB - ₦300", price: 300, provider: "Inlomax" }],
-      "Glo": [{ id: "glo_1gb", label: "1GB - ₦200", price: 200, provider: "Inlomax" }],
-      "9mobile": [{ id: "9mobile_1gb", label: "1GB - ₦400", price: 400, provider: "Inlomax" }]
-    };
-    return plans[network] || [];
-  },
-
+  // 3. Dynamic Fulfillment (Using your Server 1 & Server 2 Proxy Logic)
   async processOrder(type, details, user) {
-    // Placeholder for your provider logic (Inlomax/CIPTOPUP)
-    return { success: true, orderId: "OPL-" + Math.random().toString(36).toUpperCase().substring(2, 10) };
+    try {
+      const isServer2 = details.provider === "server2";
+      const baseUrl = isServer2 ? 'https://api.ciptopup.ng/api' : 'https://inlomax.com/api';
+      const apiKey = isServer2 ? process.env.CIPTOPUP_API_KEY : process.env.INLOMAX_API_KEY;
+      const endpoint = isServer2 ? 'data/buy' : (type === 'airtime' ? 'airtime' : 'data');
+
+      // Mapping logic from your Proxy
+      const mapped = {};
+      if (isServer2) {
+        mapped.plan_id = details.plan_id;
+        mapped.phone_number = details.phone;
+        mapped.amount = details.amount;
+      } else {
+        // Inlomax strict mapping
+        mapped.serviceID = String(details.plan_id || details.network || '').toLowerCase();
+        mapped.mobileNumber = String(details.phone);
+        if (details.amount) mapped.amount = Number(details.amount);
+      }
+
+      const headers = { 'Content-Type': 'application/json', 'Accept': 'application/json' };
+      if (isServer2) headers['x-api-key'] = apiKey;
+      else {
+        headers['Authorization'] = `Token ${apiKey}`;
+        headers['Authorization-Token'] = apiKey;
+      }
+
+      const response = await fetch(`${baseUrl}/${endpoint}`, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(mapped)
+      });
+
+      const result = await response.json();
+
+      // Deduct balance if successful
+      if (result.status === "success" || result.code === "success") {
+        await db.collection('users').doc(user.uid).update({
+          balance: admin.firestore.FieldValue.increment(-details.price)
+        });
+        return { success: true, orderId: result.transaction_id || result.id };
+      }
+      return { success: false, message: result.message || "Provider error" };
+    } catch (e) { return { success: false, message: "Connection failed" }; }
   }
 };
