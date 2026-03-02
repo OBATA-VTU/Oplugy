@@ -34,7 +34,7 @@ const WhatsAppBotPage: React.FC = () => {
               <div className="w-14 h-14 bg-green-600 text-white rounded-3xl flex items-center justify-center font-black text-xl shadow-lg">1</div>
               <h3 className="text-3xl font-black text-gray-900 tracking-tight">Configure Webhook</h3>
             </div>
-            <p className="text-gray-500 font-medium text-lg leading-relaxed">Copy this URL and paste it into your WhatsApp API provider (e.g., Twilio or Meta) as the "Incoming Message" webhook URL.</p>
+            <p className="text-gray-500 font-medium text-lg leading-relaxed">Copy this URL and paste it into your Meta Developer Dashboard as the "Callback URL" for the WhatsApp product.</p>
             
             <div className="bg-gray-50 p-8 rounded-[2.5rem] border border-gray-100 group relative">
               <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.4em] mb-4 ml-4">Your Webhook URL</label>
@@ -57,17 +57,13 @@ const WhatsAppBotPage: React.FC = () => {
               <div className="w-14 h-14 bg-blue-600 text-white rounded-3xl flex items-center justify-center font-black text-xl shadow-lg">2</div>
               <h3 className="text-3xl font-black text-gray-900 tracking-tight">Environment Setup</h3>
             </div>
-            <p className="text-gray-500 font-medium text-lg leading-relaxed">To allow the bot to verify users, you must add your Firebase Service Account JSON to your environment variables.</p>
+            <p className="text-gray-500 font-medium text-lg leading-relaxed">Add these environment variables to your Vercel dashboard to enable the WhatsApp node.</p>
             
-            <div className="space-y-6">
-              <div className="flex items-start space-x-4 p-6 bg-blue-50 rounded-3xl border border-blue-100">
-                <Terminal className="w-6 h-6 text-blue-600 mt-1 shrink-0" />
-                <div className="space-y-2">
-                  <p className="text-[11px] font-black text-blue-600 uppercase tracking-widest">Variable Name</p>
-                  <code className="text-lg font-black text-gray-900">FIREBASE_SERVICE_ACCOUNT</code>
-                </div>
-              </div>
-              <p className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] ml-4">Paste the entire JSON content from your Firebase console.</p>
+            <div className="space-y-4">
+              <EnvVar label="WHATSAPP_TOKEN" value="Permanent Access Token from Meta" />
+              <EnvVar label="WHATSAPP_PHONE_NUMBER_ID" value="Phone Number ID from Meta" />
+              <EnvVar label="WHATSAPP_VERIFY_TOKEN" value="Your custom verification string" />
+              <EnvVar label="FIREBASE_SERVICE_ACCOUNT" value="Firebase Admin JSON content" />
             </div>
           </section>
         </div>
@@ -85,13 +81,14 @@ const WhatsAppBotPage: React.FC = () => {
               <div className="space-y-4 pt-4">
                 {[
                   { cmd: 'BALANCE', desc: 'Check wallet balance' },
-                  { cmd: 'DATA', desc: 'Buy data plans' },
-                  { cmd: 'AIRTIME', desc: 'Buy airtime' },
+                  { cmd: 'PLANS [NET]', desc: 'See data plan IDs' },
+                  { cmd: 'DATA [NET] [ID] [PHONE]', desc: 'Buy data bundle' },
+                  { cmd: 'AIRTIME [NET] [AMT] [PHONE]', desc: 'Buy airtime' },
                   { cmd: 'HELP', desc: 'Show menu' }
                 ].map((item, i) => (
                   <div key={i} className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/10">
-                    <code className="text-green-400 font-black tracking-widest">{item.cmd}</code>
-                    <span className="text-white/40 text-sm font-medium">{item.desc}</span>
+                    <code className="text-green-400 font-black tracking-widest text-[10px]">{item.cmd}</code>
+                    <span className="text-white/40 text-[10px] font-medium">{item.desc}</span>
                   </div>
                 ))}
               </div>
@@ -104,14 +101,15 @@ const WhatsAppBotPage: React.FC = () => {
               <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center shadow-sm">
                 <Settings className="w-6 h-6" />
               </div>
-              <h4 className="text-xl font-black text-gray-900 tracking-tight">Manual Steps</h4>
+              <h4 className="text-xl font-black text-gray-900 tracking-tight">Meta Dashboard Steps</h4>
             </div>
             <ul className="space-y-6">
               {[
-                "Create a Twilio account and get a WhatsApp Sandbox number.",
-                "Go to Twilio Console > Messaging > Try it Out > WhatsApp Sandbox.",
-                "Set the Sandbox Webhook URL to your Webhook URL above.",
-                "Invite users to message your WhatsApp number to start."
+                "Create a Meta App and add the WhatsApp product.",
+                "Go to Configuration > Webhooks and paste the Webhook URL above.",
+                "Set your Verify Token to match WHATSAPP_VERIFY_TOKEN.",
+                "Subscribe to 'messages' in the Webhook fields.",
+                "Get your Permanent Access Token and Phone Number ID."
               ].map((step, i) => (
                 <li key={i} className="flex items-start space-x-4">
                   <div className="w-6 h-6 bg-gray-50 rounded-full flex items-center justify-center text-[10px] font-black text-gray-400 border border-gray-100 mt-1 shrink-0">{i+1}</div>
@@ -125,5 +123,15 @@ const WhatsAppBotPage: React.FC = () => {
     </div>
   );
 };
+
+const EnvVar = ({ label, value }: { label: string, value: string }) => (
+  <div className="flex items-start space-x-4 p-5 bg-gray-50 rounded-2xl border border-gray-100">
+    <Terminal className="w-5 h-5 text-blue-600 mt-1 shrink-0" />
+    <div className="space-y-1">
+      <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest">{label}</p>
+      <p className="text-xs font-medium text-gray-400">{value}</p>
+    </div>
+  </div>
+);
 
 export default WhatsAppBotPage;

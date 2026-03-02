@@ -3,7 +3,6 @@ import cors from 'cors';
 import { createProxyMiddleware } from 'http-proxy-middleware';
 import * as admin from 'firebase-admin';
 import axios from 'axios';
-import { handleWebhook as handleWhatsAppWebhook } from './api/whatsapp/webhook';
 
 // Initialize Firebase Admin
 if (!admin.apps.length) {
@@ -161,9 +160,6 @@ async function callOgaviral(action: string, data: any = {}) {
 
   return response.data;
 }
-
-// WhatsApp Webhook
-app.post('/api/whatsapp/webhook', handleWhatsAppWebhook);
 
 // Inlomax Proxy Route (Server 1)
 app.post('/api/proxy-server1', async (req, res) => {
