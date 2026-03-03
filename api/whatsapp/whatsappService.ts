@@ -157,6 +157,44 @@ export const whatsappService = {
   },
 
   /**
+   * Generate Virtual Account via Billstack
+   */
+  generateVirtualAccount: async (payload: { 
+    email: string; 
+    firstName: string; 
+    lastName: string; 
+    phone: string; 
+    reference: string;
+  }) => {
+    const secretKey = process.env.BILLSTACK_SECRET_KEY;
+    if (!secretKey) throw new Error('Billstack Secret Key not configured.');
+
+    try {
+      const response = await axios.post(
+        'https://api.billstack.co/v2/thirdparty/generateVirtualAccount',
+        {
+          email: payload.email,
+          firstName: payload.firstName,
+          lastName: payload.lastName,
+          phone: payload.phone,
+          bank: 'PALMPAY',
+          reference: payload.reference
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${secretKey}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      return response.data;
+    } catch (error: any) {
+      console.error('Billstack generation error:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  /**
    * Session Management
    */
   getSession: async (phone: string) => {

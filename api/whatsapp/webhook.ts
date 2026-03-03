@@ -205,6 +205,52 @@ export default async function handler(req: any, res: any) {
             await handleExecutePurchase(from, session);
           }
 
+          if (buttonId === 'GENERATE_VA') {
+            const user = await whatsappService.getUserByPhone(from);
+            if (!user) return;
+            await whatsappService.sendMessage(from, `⏳ Generating your dedicated virtual account...`);
+            try {
+              const res = await (whatsappService as any).generateVirtualAccount({
+                email: user.email,
+                firstName: user.username,
+                lastName: 'Oplug',
+                phone: user.phone || from,
+                reference: `REF-${user.id}-${Date.now()}`
+              });
+
+              if (res.status && res.data) {
+                const account = res.data.account[0];
+                const db = admin.firestore();
+                await db.collection('users').doc(user.id).update({
+                  virtualAccount: {
+                    account_number: account.account_number,
+                    account_name: account.account_name,
+                    bank_name: account.bank_name,
+                    bank_id: account.bank_id,
+                    reference: res.data.reference
+                  }
+                });
+                await handleFunding(from);
+              } else {
+                await whatsappService.sendMessage(from, `❌ Failed to generate account: ${res.message || 'Unknown error'}`);
+              }
+            } catch (e: any) {
+              await whatsappService.sendMessage(from, `❌ Error: ${e.message}`);
+            }
+          }
+
+          if (buttonId === 'PAYSTACK_LINK') {
+            const user = await whatsappService.getUserByPhone(from);
+            const email = user?.email || `${from}@oplug.bot`;
+            try {
+              const payment = await whatsappService.initializePaystackPayment(email, 1000, { phone: from });
+              const checkoutUrl = payment.data.authorization_url;
+              await whatsappService.sendMessage(from, `🔗 *Paystack Payment Link*\n\n${checkoutUrl}\n\n_Use this link to pay via Card or one-time Bank Transfer._`);
+            } catch (e) {
+              await whatsappService.sendMessage(from, `❌ Failed to generate link.`);
+            }
+          }
+
           if (buttonId === 'CANCEL_PURCHASE') {
             await whatsappService.clearSession(from);
             await whatsappService.sendMessage(from, `❌ Transaction cancelled.`);
@@ -412,14 +458,23 @@ async function sendServiceList(from: string, title: string) {
 
 async function handleFunding(from: string) {
   const user = await whatsappService.getUserByPhone(from);
-  const email = user?.email || `${from}@oplug.bot`;
-  
-  try {
-    const payment = await whatsappService.initializePaystackPayment(email, 1000, { phone: from });
-    const checkoutUrl = payment.data.authorization_url;
-    
-    await whatsappService.sendMessage(from, `💳 *Fund Your Wallet*\n\nTo fund your wallet via Bank Transfer or Card, use the link below:\n\n🔗 ${checkoutUrl}\n\n*Bank Transfer Details:*\nOnce you open the link, select "Transfer" to see your dedicated virtual account number.\n\n_Payment is confirmed instantly!_`);
-  } catch (e) {
-    await whatsappService.sendMessage(from, `❌ Sorry, could not generate payment link. Please fund via our website: ${process.env.APP_URL}/funding`);
+  if (!user) {
+    await whatsappService.sendMessage(from, `❌ You need an account to fund your wallet. Please use the "Create Account" button.`);
+    return;
   }
+
+  // If user has a virtual account, show it
+  if (user.virtualAccount) {
+    const va = user.virtualAccount;
+    const body = `🏦 *Your Dedicated Virtual Account*\n\nBank: *${va.bank_name}*\nAccount Number: *${va.account_number}*\nAccount Name: *${va.account_name}*\n\n_Transfer any amount to this account to fund your wallet instantly!_`;
+    await whatsappService.sendMessage(from, body);
+    return;
+  }
+
+  // Otherwise, offer to generate one or use Paystack
+  const body = `💳 *Fund Your Wallet*\n\nYou don't have a dedicated virtual account yet. Would you like to generate one or use a one-time payment link?`;
+  await whatsappService.sendInteractiveButtons(from, body, [
+    { id: 'GENERATE_VA', title: 'Generate Virtual A/C' },
+    { id: 'PAYSTACK_LINK', title: 'Paystack Link' }
+  ]);
 }
