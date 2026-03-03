@@ -50,7 +50,7 @@ export default async function handler(req: any, res: any) {
         // Handle Ongoing Session (Account Creation)
         if (session?.step === 'AWAITING_USERNAME') {
           await whatsappService.updateSession(from, { username: text, step: 'AWAITING_EMAIL' });
-          await whatsappService.sendMessage(from, `Great! Now please provide your *Email Address* to complete your registration.`);
+          await whatsappService.sendMessage(from, `✨ *Great!* Now please provide your *Email Address* to complete your registration.`);
           return res.status(200).json({ status: 'ok' });
         }
 
@@ -85,12 +85,34 @@ export default async function handler(req: any, res: any) {
         if (session?.step === 'AWAITING_PHONE') {
           const phone = text.replace(/\s+/g, '');
           if (phone.length < 10) {
-            await whatsappService.sendMessage(from, `❌ Invalid phone number. Please provide a valid 11-digit phone number.`);
+            await whatsappService.sendMessage(from, `❌ *Invalid phone number.*\n\nPlease provide a valid 11-digit phone number.`);
             return res.status(200).json({ status: 'ok' });
           }
           
-          await whatsappService.updateSession(from, { phone: phone, step: 'AWAITING_CONFIRMATION' });
-          const summary = `*Order Confirmation*\n\nService: *${session.service}*\nNetwork: *${session.network}*\nPlan: *${session.planName}*\nPhone: *${phone}*\nPrice: *₦${session.price}*\n\nProceed with purchase?`;
+          if (session.service === 'AIRTIME') {
+            await whatsappService.updateSession(from, { phone: phone, step: 'AWAITING_AIRTIME_AMOUNT' });
+            await whatsappService.sendMessage(from, `💰 *Enter Amount*\n\nHow much *${session.network}* airtime do you want to purchase for *${phone}*?\n\n_Minimum: ₦50, Maximum: ₦50,000_`);
+          } else {
+            await whatsappService.updateSession(from, { phone: phone, step: 'AWAITING_CONFIRMATION' });
+            const summary = `📝 *Order Confirmation*\n\n🔹 *Service:* ${session.service}\n🔹 *Network:* ${session.network}\n🔹 *Plan:* ${session.planName}\n🔹 *Phone:* ${phone}\n💰 *Price:* ₦${session.price}\n\nProceed with purchase?`;
+            await whatsappService.sendInteractiveButtons(from, summary, [
+              { id: 'CONFIRM_PURCHASE', title: 'Confirm ✅' },
+              { id: 'CANCEL_PURCHASE', title: 'Cancel ❌' }
+            ]);
+          }
+          return res.status(200).json({ status: 'ok' });
+        }
+
+        // Handle Airtime Amount Input
+        if (session?.step === 'AWAITING_AIRTIME_AMOUNT') {
+          const amount = parseFloat(text);
+          if (isNaN(amount) || amount < 50 || amount > 50000) {
+            await whatsappService.sendMessage(from, `❌ *Invalid Amount*\n\nPlease enter a valid amount between ₦50 and ₦50,000.`);
+            return res.status(200).json({ status: 'ok' });
+          }
+
+          await whatsappService.updateSession(from, { price: amount, planName: `${session.network} Airtime`, step: 'AWAITING_CONFIRMATION' });
+          const summary = `📝 *Order Confirmation*\n\n🔹 *Service:* AIRTIME\n🔹 *Network:* ${session.network}\n🔹 *Phone:* ${session.phone}\n💰 *Amount:* ₦${amount}\n\nProceed with purchase?`;
           await whatsappService.sendInteractiveButtons(from, summary, [
             { id: 'CONFIRM_PURCHASE', title: 'Confirm ✅' },
             { id: 'CANCEL_PURCHASE', title: 'Cancel ❌' }
@@ -111,7 +133,7 @@ export default async function handler(req: any, res: any) {
               await whatsappService.sendMessage(from, `👤 *Customer:* ${customerName}\n\nSelect a plan for your *${session.network}* subscription:`);
               await whatsappService.sendInteractiveList(from, `Select ${session.network} Plan`, "View Plans", [{ title: "Plans", rows: plans.slice(0, 10) }]);
             } else {
-              await whatsappService.sendMessage(from, `❌ Verification failed: ${verification.message || 'Invalid IUC Number'}. Please try again.`);
+              await whatsappService.sendMessage(from, `❌ *Verification Failed*\n\n${verification.message || 'Invalid IUC Number'}. Please check and try again.`);
             }
           } catch (e: any) {
             await whatsappService.sendMessage(from, `❌ Error verifying IUC: ${e.message}. Please try again.`);
@@ -130,7 +152,7 @@ export default async function handler(req: any, res: any) {
               await whatsappService.updateSession(from, { phone: meter, customerName, step: 'AWAITING_AMOUNT' });
               await whatsappService.sendMessage(from, `👤 *Customer:* ${customerName}\n\nHow much *${session.network}* electricity do you want to buy? (₦)`);
             } else {
-              await whatsappService.sendMessage(from, `❌ Verification failed: ${verification.message || 'Invalid Meter Number'}. Please try again.`);
+              await whatsappService.sendMessage(from, `❌ *Verification Failed*\n\n${verification.message || 'Invalid Meter Number'}. Please check and try again.`);
             }
           } catch (e: any) {
             await whatsappService.sendMessage(from, `❌ Error verifying Meter: ${e.message}. Please try again.`);
@@ -147,7 +169,7 @@ export default async function handler(req: any, res: any) {
           }
           
           await whatsappService.updateSession(from, { price: amount, planName: `${session.network} Electricity`, step: 'AWAITING_CONFIRMATION' });
-          const summary = `*Order Confirmation*\n\nService: *${session.service}*\nProvider: *${session.network}*\nCustomer: *${session.customerName}*\nMeter: *${session.phone}*\nAmount: *₦${amount}*\n\nProceed with purchase?`;
+          const summary = `📝 *Order Confirmation*\n\n🔹 *Service:* ${session.service}\n🔹 *Provider:* ${session.network}\n🔹 *Customer:* ${session.customerName}\n🔹 *Meter:* ${session.phone}\n💰 *Amount:* ₦${amount}\n\nProceed with purchase?`;
           await whatsappService.sendInteractiveButtons(from, summary, [
             { id: 'CONFIRM_PURCHASE', title: 'Confirm ✅' },
             { id: 'CANCEL_PURCHASE', title: 'Cancel ❌' }
@@ -175,7 +197,7 @@ export default async function handler(req: any, res: any) {
 
           if (buttonId === 'CREATE_ACCOUNT') {
             await whatsappService.updateSession(from, { step: 'AWAITING_USERNAME' });
-            await whatsappService.sendMessage(from, `Awesome! Let's get you started.\n\nWhat would you like your *Username* to be?`);
+            await whatsappService.sendMessage(from, `🚀 *Awesome! Let's get you started.*\n\nWhat would you like your *Username* to be?`);
           }
 
           if (buttonId === 'GUEST_PURCHASE' || buttonId === 'CHOOSE_SERVICE') {
@@ -253,7 +275,7 @@ export default async function handler(req: any, res: any) {
 
           if (buttonId === 'CANCEL_PURCHASE') {
             await whatsappService.clearSession(from);
-            await whatsappService.sendMessage(from, `❌ Transaction cancelled.`);
+            await whatsappService.sendMessage(from, `❌ *Transaction Cancelled.*`);
             const user = await whatsappService.getUserByPhone(from);
             if (user) await sendWelcomeMenu(from, user.username, user.walletBalance, user.phone);
             else await sendGuestMenu(from);
@@ -319,7 +341,7 @@ export default async function handler(req: any, res: any) {
 
             if (session?.service === 'CABLE') {
               await whatsappService.updateSession(from, { planId, price, planName, step: 'AWAITING_CONFIRMATION' });
-              const summary = `*Order Confirmation*\n\nService: *${session.service}*\nProvider: *${session.network}*\nCustomer: *${session.customerName}*\nIUC: *${session.phone}*\nPlan: *${planName}*\nPrice: *₦${price}*\n\nProceed with purchase?`;
+              const summary = `📝 *Order Confirmation*\n\n🔹 *Service:* ${session.service}\n🔹 *Provider:* ${session.network}\n🔹 *Customer:* ${session.customerName}\n🔹 *IUC:* ${session.phone}\n🔹 *Plan:* ${planName}\n💰 *Price:* ₦${price}\n\nProceed with purchase?`;
               await whatsappService.sendInteractiveButtons(from, summary, [
                 { id: 'CONFIRM_PURCHASE', title: 'Confirm ✅' },
                 { id: 'CANCEL_PURCHASE', title: 'Cancel ❌' }
@@ -331,7 +353,7 @@ export default async function handler(req: any, res: any) {
                 price: price,
                 step: 'AWAITING_PHONE' 
               });
-              await whatsappService.sendMessage(from, `Please enter the *Phone Number* to receive the ${session?.service}:`);
+              await whatsappService.sendMessage(from, `✨ *Great!* You've selected *${planName}* (₦${price}).\n\nPlease enter the *Phone Number* you want to fund:`);
             }
           } else if (listId.startsWith('AMT_')) {
             const amount = parseInt(listId.replace('AMT_', ''));
@@ -366,7 +388,7 @@ async function handleExecutePurchase(from: string, session: any) {
     let payload: any = {};
     
     if (session.service === 'DATA') {
-      serviceType = 'paydata';
+      serviceType = 'data';
       payload = {
         network: session.network,
         plan: session.planId,
@@ -374,7 +396,7 @@ async function handleExecutePurchase(from: string, session: any) {
         Ported_number: true
       };
     } else if (session.service === 'AIRTIME') {
-      serviceType = 'payairtime';
+      serviceType = 'airtime';
       payload = {
         network: session.network,
         amount: session.price,
@@ -383,14 +405,14 @@ async function handleExecutePurchase(from: string, session: any) {
         airtime_type: 'VTU'
       };
     } else if (session.service === 'CABLE') {
-      serviceType = 'subcable';
+      serviceType = 'cable';
       payload = {
         serviceID: session.network.toLowerCase(),
         plan: session.planId,
         iucNum: session.phone
       };
     } else if (session.service === 'POWER') {
-      serviceType = 'payelectric';
+      serviceType = 'electricity';
       payload = {
         serviceID: session.network.toLowerCase(),
         meterNum: session.phone,
@@ -406,29 +428,30 @@ async function handleExecutePurchase(from: string, session: any) {
     });
 
     if (result.status) {
-      await whatsappService.sendMessage(from, `✅ *Purchase Successful!*\n\nYour order for ${session.planName} on ${session.phone} has been completed.`);
+      const newBalance = user.walletBalance - session.price;
+      await whatsappService.sendMessage(from, `✅ *Transaction Successful!*\n\nYour *${session.service}* order for *${session.phone}* has been processed successfully.\n\n💰 *New Balance:* ₦${newBalance.toLocaleString()}\n\n_Powered by OBA TECHNOLOGIES ❤️_`);
       await whatsappService.clearSession(from);
       const updatedUser = await whatsappService.getUserByPhone(from);
-      await sendWelcomeMenu(from, updatedUser.username, updatedUser.walletBalance, updatedUser.phone);
+      if (updatedUser) await sendWelcomeMenu(from, updatedUser.username, updatedUser.walletBalance, updatedUser.phone);
     }
   } catch (e: any) {
-    await whatsappService.sendMessage(from, `❌ *Transaction Failed*\n\nReason: ${e.message}`);
+    await whatsappService.sendMessage(from, `❌ *Transaction Failed*\n\nReason: ${e.message}\n\n_Please try again or contact support._`);
     await whatsappService.clearSession(from);
   }
 }
 
 async function sendWelcomeMenu(from: string, username: string, balance: number, phone?: string) {
-  const body = `Welcome to Oplug 🌟\n\n👤 *${username}*\n📱 ${phone || from}\n💰 *Balance:* ₦${balance.toLocaleString()}\n\nChoose a service:`;
+  const body = `Welcome to *Oplug* 🌟\n\n👤 *${username}*\n📱 ${phone || from}\n💰 *Balance:* ₦${balance.toLocaleString()}\n\n_Choose a service to get started:_`;
   await whatsappService.sendInteractiveButtons(from, body, [
-    { id: 'CHOOSE_SERVICE', title: 'Select a Service' }
+    { id: 'CHOOSE_SERVICE', title: 'Select a Service 🛒' }
   ]);
 }
 
 async function sendGuestMenu(from: string) {
-  const body = `Welcome to Oplug 🌟\n\n👤 *User not found on database*\n\nPlease choose an option:`;
+  const body = `Welcome to *Oplug* 🌟\n\n👤 *User not found*\n\nIt seems you don't have an account with us yet. Please choose an option below:`;
   await whatsappService.sendInteractiveButtons(from, body, [
-    { id: 'CREATE_ACCOUNT', title: 'Create Account' },
-    { id: 'GUEST_PURCHASE', title: 'Guest Purchase' }
+    { id: 'CREATE_ACCOUNT', title: 'Create Account 🚀' },
+    { id: 'GUEST_PURCHASE', title: 'Guest Purchase 🛒' }
   ]);
 }
 
@@ -459,14 +482,14 @@ async function sendServiceList(from: string, title: string) {
 async function handleFunding(from: string) {
   const user = await whatsappService.getUserByPhone(from);
   if (!user) {
-    await whatsappService.sendMessage(from, `❌ You need an account to fund your wallet. Please use the "Create Account" button.`);
+    await whatsappService.sendMessage(from, `❌ *Account Required*\n\nYou need an account to fund your wallet. Please use the "Create Account" button.`);
     return;
   }
 
   // If user has a virtual account, show it
   if (user.virtualAccount) {
     const va = user.virtualAccount;
-    const body = `🏦 *Your Dedicated Virtual Account*\n\nBank: *${va.bank_name}*\nAccount Number: *${va.account_number}*\nAccount Name: *${va.account_name}*\n\n_Transfer any amount to this account to fund your wallet instantly!_`;
+    const body = `🏦 *Your Dedicated Virtual Account*\n\n🏛️ *Bank:* ${va.bank_name}\n🔢 *Account Number:* ${va.account_number}\n👤 *Account Name:* ${va.account_name}\n\n_Transfer any amount to this account to fund your wallet instantly!_`;
     await whatsappService.sendMessage(from, body);
     return;
   }
@@ -474,7 +497,7 @@ async function handleFunding(from: string) {
   // Otherwise, offer to generate one or use Paystack
   const body = `💳 *Fund Your Wallet*\n\nYou don't have a dedicated virtual account yet. Would you like to generate one or use a one-time payment link?`;
   await whatsappService.sendInteractiveButtons(from, body, [
-    { id: 'GENERATE_VA', title: 'Generate Virtual A/C' },
-    { id: 'PAYSTACK_LINK', title: 'Paystack Link' }
+    { id: 'GENERATE_VA', title: 'Generate Account 🏦' },
+    { id: 'PAYSTACK_LINK', title: 'Payment Link 🔗' }
   ]);
 }

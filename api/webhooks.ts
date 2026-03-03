@@ -111,11 +111,17 @@ async function handleBillstackWebhook(req: VercelRequest, res: VercelResponse) {
     const reference = data.reference;
 
     let userRef;
-    // Try finding by merchant_reference (which we should set as userId during account creation)
-    const userDoc = await db.collection('users').doc(merchantReference).get();
-    if (userDoc.exists) {
-      userRef = userDoc.ref;
-    } else {
+    // Try finding by merchant_reference (which contains the userId)
+    if (merchantReference && merchantReference.startsWith('REF-')) {
+      const parts = merchantReference.split('-');
+      if (parts.length >= 2) {
+        const userId = parts[1];
+        const userDoc = await db.collection('users').doc(userId).get();
+        if (userDoc.exists) userRef = userDoc.ref;
+      }
+    }
+
+    if (!userRef) {
       // Fallback: Find by account number
       const accountNumber = data.account?.account_number;
       const snapshot = await db.collection('users').where('virtualAccount.account_number', '==', accountNumber).limit(1).get();
