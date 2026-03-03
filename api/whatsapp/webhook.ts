@@ -98,6 +98,63 @@ export default async function handler(req: any, res: any) {
           return res.status(200).json({ status: 'ok' });
         }
 
+        // Handle IUC Input for Cable
+        if (session?.step === 'AWAITING_IUC') {
+          const iuc = text.replace(/\s+/g, '');
+          await whatsappService.sendMessage(from, `🔍 Verifying IUC Number *${iuc}*...`);
+          try {
+            const verification = await (whatsappService as any).verifyNumber('CABLE', session.network, iuc);
+            if (verification.status) {
+              const customerName = verification.customerName || verification.data?.customerName || 'Unknown Customer';
+              await whatsappService.updateSession(from, { phone: iuc, customerName, step: 'AWAITING_PLAN' });
+              const plans = await (whatsappService as any).getPlansForList(session.network, 'CABLE');
+              await whatsappService.sendMessage(from, `👤 *Customer:* ${customerName}\n\nSelect a plan for your *${session.network}* subscription:`);
+              await whatsappService.sendInteractiveList(from, `Select ${session.network} Plan`, "View Plans", [{ title: "Plans", rows: plans.slice(0, 10) }]);
+            } else {
+              await whatsappService.sendMessage(from, `❌ Verification failed: ${verification.message || 'Invalid IUC Number'}. Please try again.`);
+            }
+          } catch (e: any) {
+            await whatsappService.sendMessage(from, `❌ Error verifying IUC: ${e.message}. Please try again.`);
+          }
+          return res.status(200).json({ status: 'ok' });
+        }
+
+        // Handle Meter Input for Power
+        if (session?.step === 'AWAITING_METER') {
+          const meter = text.replace(/\s+/g, '');
+          await whatsappService.sendMessage(from, `🔍 Verifying Meter Number *${meter}*...`);
+          try {
+            const verification = await (whatsappService as any).verifyNumber('POWER', session.network, meter);
+            if (verification.status) {
+              const customerName = verification.customerName || verification.data?.customerName || 'Unknown Customer';
+              await whatsappService.updateSession(from, { phone: meter, customerName, step: 'AWAITING_AMOUNT' });
+              await whatsappService.sendMessage(from, `👤 *Customer:* ${customerName}\n\nHow much *${session.network}* electricity do you want to buy? (₦)`);
+            } else {
+              await whatsappService.sendMessage(from, `❌ Verification failed: ${verification.message || 'Invalid Meter Number'}. Please try again.`);
+            }
+          } catch (e: any) {
+            await whatsappService.sendMessage(from, `❌ Error verifying Meter: ${e.message}. Please try again.`);
+          }
+          return res.status(200).json({ status: 'ok' });
+        }
+
+        // Handle Amount Input for Power
+        if (session?.step === 'AWAITING_AMOUNT') {
+          const amount = parseFloat(text);
+          if (isNaN(amount) || amount < 500) {
+            await whatsappService.sendMessage(from, `❌ Invalid amount. Minimum is ₦500.`);
+            return res.status(200).json({ status: 'ok' });
+          }
+          
+          await whatsappService.updateSession(from, { price: amount, planName: `${session.network} Electricity`, step: 'AWAITING_CONFIRMATION' });
+          const summary = `*Order Confirmation*\n\nService: *${session.service}*\nProvider: *${session.network}*\nCustomer: *${session.customerName}*\nMeter: *${session.phone}*\nAmount: *₦${amount}*\n\nProceed with purchase?`;
+          await whatsappService.sendInteractiveButtons(from, summary, [
+            { id: 'CONFIRM_PURCHASE', title: 'Confirm ✅' },
+            { id: 'CANCEL_PURCHASE', title: 'Cancel ❌' }
+          ]);
+          return res.status(200).json({ status: 'ok' });
+        }
+
         // Default Greeting / Menu
         const user = await whatsappService.getUserByPhone(from);
         if (user) {
@@ -162,21 +219,26 @@ export default async function handler(req: any, res: any) {
           const listId = interactive.list_reply.id;
           const listTitle = interactive.list_reply.title;
 
-          // Handle Network Selection (from List Reply now)
-          if (['MTN', 'AIRTEL', 'GLO', '9MOBILE'].includes(listId)) {
+          // Handle Network/Provider Selection
+          if (['MTN', 'AIRTEL', 'GLO', '9MOBILE', 'DSTV', 'GOTV', 'STARTIMES', 'IKEJA-ELECTRIC', 'EKO-ELECTRIC', 'KANO-ELECTRIC', 'PORTHARCOURT-ELECTRIC', 'JOS-ELECTRIC', 'IBADAN-ELECTRIC', 'KADUNA-ELECTRIC', 'ABUJA-ELECTRIC', 'ENUGU-ELECTRIC', 'BENIN-ELECTRIC'].includes(listId)) {
             const service = session?.service;
             if (service === 'DATA') {
               const plans = await (whatsappService as any).getPlansForList(listId, 'DATA');
               if (plans.length > 0) {
-                await whatsappService.updateSession(from, { network: listId });
-                await whatsappService.sendInteractiveList(from, `Select an ${listId} Data Plan`, "View Plans", [{ title: "Available Plans", rows: plans.slice(0, 10) }]);
+                await whatsappService.updateSession(from, { network: listId, step: 'AWAITING_PHONE' });
+                await whatsappService.sendMessage(from, `Please enter the *Phone Number* for the ${listId} Data:`);
               } else {
                 await whatsappService.sendMessage(from, `❌ No plans found for ${listId} at the moment.`);
               }
             } else if (service === 'AIRTIME') {
-              const plans = await (whatsappService as any).getPlansForList(listId, 'AIRTIME');
-              await whatsappService.updateSession(from, { network: listId });
-              await whatsappService.sendInteractiveList(from, `Select ${listId} Airtime Amount`, "View Amounts", [{ title: "Amounts", rows: plans }]);
+              await whatsappService.updateSession(from, { network: listId, step: 'AWAITING_PHONE' });
+              await whatsappService.sendMessage(from, `Please enter the *Phone Number* for the ${listId} Airtime:`);
+            } else if (service === 'CABLE') {
+              await whatsappService.updateSession(from, { network: listId, step: 'AWAITING_IUC' });
+              await whatsappService.sendMessage(from, `Please enter your *${listId} IUC Number*:`);
+            } else if (service === 'POWER') {
+              await whatsappService.updateSession(from, { network: listId, step: 'AWAITING_METER' });
+              await whatsappService.sendMessage(from, `Please enter your *${listId} Meter Number*:`);
             }
           } else if (listId === 'FUND_WALLET') {
             await handleFunding(from);
@@ -184,13 +246,20 @@ export default async function handler(req: any, res: any) {
             await whatsappService.sendMessage(from, `👨‍💻 *Oplug Support*\n\nFor any issues or inquiries, please contact our support team on WhatsApp: https://wa.me/2348142452729`);
           } else if (['AIRTIME', 'DATA', 'CABLE', 'POWER'].includes(listId)) {
             await whatsappService.updateSession(from, { service: listId, step: 'AWAITING_NETWORK' });
-            const networks = [
-              { id: 'MTN', title: 'MTN', description: 'MTN Nigeria' },
-              { id: 'AIRTEL', title: 'Airtel', description: 'Airtel Africa' },
-              { id: 'GLO', title: 'Glo', description: 'Globacom' },
-              { id: '9MOBILE', title: '9mobile', description: '9mobile Nigeria' }
-            ];
-            await whatsappService.sendInteractiveList(from, `Select your *${listId}* Network:`, "View Networks", [{ title: "Networks", rows: networks }]);
+            let providers: any[] = [];
+            if (listId === 'AIRTIME' || listId === 'DATA') {
+              providers = [
+                { id: 'MTN', title: 'MTN', description: 'MTN Nigeria' },
+                { id: 'AIRTEL', title: 'Airtel', description: 'Airtel Africa' },
+                { id: 'GLO', title: 'Glo', description: 'Globacom' },
+                { id: '9MOBILE', title: '9mobile', description: '9mobile Nigeria' }
+              ];
+            } else if (listId === 'CABLE') {
+              providers = await (whatsappService as any).getCableProviders();
+            } else if (listId === 'POWER') {
+              providers = await (whatsappService as any).getElectricityProviders();
+            }
+            await whatsappService.sendInteractiveList(from, `Select your *${listId}* Provider:`, "View Providers", [{ title: "Providers", rows: providers }]);
           } else if (listId.startsWith('PLAN_')) {
             const planId = listId.replace('PLAN_', '');
             // Extract price from description if possible or fetch from DB
@@ -199,13 +268,25 @@ export default async function handler(req: any, res: any) {
             const planDoc = await db.collection('manual_pricing').doc(planId).get();
             const planData = planDoc.data();
             
-            await whatsappService.updateSession(from, { 
-              planId: planId, 
-              planName: planData?.plan_name || listTitle,
-              price: planData?.user_price || 0,
-              step: 'AWAITING_PHONE' 
-            });
-            await whatsappService.sendMessage(from, `Please enter the *Phone Number* to receive the ${session?.service}:`);
+            const price = planData?.user_price || 0;
+            const planName = planData?.plan_name || listTitle;
+
+            if (session?.service === 'CABLE') {
+              await whatsappService.updateSession(from, { planId, price, planName, step: 'AWAITING_CONFIRMATION' });
+              const summary = `*Order Confirmation*\n\nService: *${session.service}*\nProvider: *${session.network}*\nCustomer: *${session.customerName}*\nIUC: *${session.phone}*\nPlan: *${planName}*\nPrice: *₦${price}*\n\nProceed with purchase?`;
+              await whatsappService.sendInteractiveButtons(from, summary, [
+                { id: 'CONFIRM_PURCHASE', title: 'Confirm ✅' },
+                { id: 'CANCEL_PURCHASE', title: 'Cancel ❌' }
+              ]);
+            } else {
+              await whatsappService.updateSession(from, { 
+                planId: planId, 
+                planName: planName,
+                price: price,
+                step: 'AWAITING_PHONE' 
+              });
+              await whatsappService.sendMessage(from, `Please enter the *Phone Number* to receive the ${session?.service}:`);
+            }
           } else if (listId.startsWith('AMT_')) {
             const amount = parseInt(listId.replace('AMT_', ''));
             await whatsappService.updateSession(from, { 
@@ -254,6 +335,21 @@ async function handleExecutePurchase(from: string, session: any) {
         mobile_number: session.phone,
         Ported_number: true,
         airtime_type: 'VTU'
+      };
+    } else if (session.service === 'CABLE') {
+      serviceType = 'subcable';
+      payload = {
+        serviceID: session.network.toLowerCase(),
+        plan: session.planId,
+        iucNum: session.phone
+      };
+    } else if (session.service === 'POWER') {
+      serviceType = 'payelectric';
+      payload = {
+        serviceID: session.network.toLowerCase(),
+        meterNum: session.phone,
+        meterType: 1,
+        amount: session.price
       };
     }
 

@@ -5,6 +5,7 @@ import { Wallet, CreditCard, Landmark, Copy, Zap, ShieldCheck, Info, ArrowRight,
 import { motion, AnimatePresence } from 'motion/react';
 import { uploadToImgBB } from '../services/imgbbService';
 import { vtuService } from '../services/vtuService';
+import { billstackService } from '../services/billstackService';
 import { useSearchParams } from 'react-router-dom';
 
 declare const PaystackPop: any;
@@ -16,7 +17,7 @@ const FundingPage: React.FC = () => {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [amount, setAmount] = useState(searchParams.get('amount') || '');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [fundingMethod, setFundingMethod] = useState<'AUTO' | 'MANUAL' | null>(null);
+  const [fundingMethod, setFundingMethod] = useState<'AUTO' | 'MANUAL' | 'VIRTUAL' | null>(null);
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
 
@@ -115,6 +116,54 @@ const FundingPage: React.FC = () => {
     }
   };
 
+  const handleGenerateVirtualAccount = async () => {
+    if (!user) return;
+    setIsProcessing(true);
+    try {
+      const res = await billstackService.generateVirtualAccount({
+        email: user.email,
+        firstName: user.username,
+        lastName: 'Oplug',
+        phone: user.phone || '',
+        reference: `REF-${user.id}-${Date.now()}`
+      });
+
+      if (res.status && res.data) {
+        const account = res.data.account[0];
+        await vtuService.recordTransaction({
+          userId: user.id,
+          userEmail: user.email,
+          type: 'SYSTEM',
+          amount: 0,
+          source: 'Virtual Account Generation',
+          remarks: `Generated ${account.bank_name} account: ${account.account_number}`,
+          status: 'SUCCESS'
+        });
+        
+        // Update user doc with virtual account info
+        const { doc, updateDoc } = await import('firebase/firestore');
+        const { db } = await import('../firebase/config');
+        await updateDoc(doc(db, "users", user.id), {
+          virtualAccount: {
+            account_number: account.account_number,
+            account_name: account.account_name,
+            bank_name: account.bank_name,
+            bank_id: account.bank_id,
+            reference: res.data.reference
+          }
+        });
+
+        addNotification("Virtual account generated successfully!", "success");
+      } else {
+        addNotification(res.message || "Failed to generate virtual account.", "error");
+      }
+    } catch (err: any) {
+      addNotification(err.message || "An error occurred.", "error");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   const nextStep = () => {
     if (step === 1) {
       if (!amount || numAmount < 100) {
@@ -206,7 +255,20 @@ const FundingPage: React.FC = () => {
                 <div className="w-14" />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <button 
+                  onClick={() => setFundingMethod('VIRTUAL')}
+                  className={`p-8 rounded-[2.5rem] border-4 transition-all text-left space-y-4 ${fundingMethod === 'VIRTUAL' ? 'border-blue-600 bg-blue-50/50' : 'border-gray-50 bg-gray-50 hover:border-blue-200'}`}
+                >
+                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${fundingMethod === 'VIRTUAL' ? 'bg-blue-600 text-white' : 'bg-white text-blue-600 shadow-sm'}`}>
+                    <Landmark className="w-8 h-8" />
+                  </div>
+                  <div>
+                    <h4 className="text-xl font-black text-gray-900 tracking-tight">Virtual Account</h4>
+                    <p className="text-gray-400 text-sm font-medium">Auto-funding via transfer. Most prominent.</p>
+                  </div>
+                </button>
+
                 <button 
                   onClick={() => setFundingMethod('AUTO')}
                   className={`p-8 rounded-[2.5rem] border-4 transition-all text-left space-y-4 ${fundingMethod === 'AUTO' ? 'border-blue-600 bg-blue-50/50' : 'border-gray-50 bg-gray-50 hover:border-blue-200'}`}
@@ -215,8 +277,8 @@ const FundingPage: React.FC = () => {
                     <Zap className="w-8 h-8" />
                   </div>
                   <div>
-                    <h4 className="text-xl font-black text-gray-900 tracking-tight">Automated Payment</h4>
-                    <p className="text-gray-400 text-sm font-medium">Instant funding. 2% service fee applies.</p>
+                    <h4 className="text-xl font-black text-gray-900 tracking-tight">Paystack (Card)</h4>
+                    <p className="text-gray-400 text-sm font-medium">Instant funding via Paystack gateway.</p>
                   </div>
                 </button>
 
@@ -225,11 +287,11 @@ const FundingPage: React.FC = () => {
                   className={`p-8 rounded-[2.5rem] border-4 transition-all text-left space-y-4 ${fundingMethod === 'MANUAL' ? 'border-blue-600 bg-blue-50/50' : 'border-gray-50 bg-gray-50 hover:border-blue-200'}`}
                 >
                   <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${fundingMethod === 'MANUAL' ? 'bg-blue-600 text-white' : 'bg-white text-blue-600 shadow-sm'}`}>
-                    <Landmark className="w-8 h-8" />
+                    <ArrowRight className="w-8 h-8" />
                   </div>
                   <div>
                     <h4 className="text-xl font-black text-gray-900 tracking-tight">Manual Transfer</h4>
-                    <p className="text-gray-400 text-sm font-medium">No fees. Requires admin approval (5-30 mins).</p>
+                    <p className="text-gray-400 text-sm font-medium">No fees. Requires admin approval.</p>
                   </div>
                 </button>
               </div>
@@ -257,12 +319,66 @@ const FundingPage: React.FC = () => {
                   <ChevronLeft className="w-6 h-6" />
                 </button>
                 <h3 className="text-2xl font-black text-gray-900 tracking-tight">
-                  {fundingMethod === 'AUTO' ? 'Complete Payment' : 'Transfer Details'}
+                  {fundingMethod === 'AUTO' ? 'Complete Payment' : fundingMethod === 'VIRTUAL' ? 'Your Virtual Account' : 'Transfer Details'}
                 </h3>
                 <div className="w-14" />
               </div>
 
-              {fundingMethod === 'AUTO' ? (
+              {fundingMethod === 'VIRTUAL' ? (
+                <div className="space-y-8">
+                  {user?.virtualAccount ? (
+                    <div className="p-8 bg-blue-600 rounded-[2.5rem] text-white space-y-6 shadow-2xl relative overflow-hidden">
+                      <div className="absolute top-0 right-0 p-8 opacity-10">
+                        <Landmark className="w-32 h-32" />
+                      </div>
+                      <div className="flex justify-between items-start relative z-10">
+                        <div className="space-y-1">
+                          <p className="text-[10px] font-black text-white/50 uppercase tracking-widest">Bank Name</p>
+                          <p className="text-xl font-black tracking-tight">{user.virtualAccount.bank_name}</p>
+                        </div>
+                        <div className="px-3 py-1 bg-white/20 rounded-full text-[10px] font-bold uppercase tracking-widest">Reserved</div>
+                      </div>
+                      
+                      <div className="space-y-1 relative z-10">
+                        <p className="text-[10px] font-black text-white/50 uppercase tracking-widest">Account Number</p>
+                        <div className="flex items-center justify-between">
+                          <p className="text-4xl font-black tracking-tighter">{user.virtualAccount.account_number}</p>
+                          <button onClick={() => handleCopy(user.virtualAccount!.account_number, 'Account Number')} className="p-3 bg-white/10 rounded-xl hover:bg-white/20 transition-all">
+                            <Copy className="w-5 h-5" />
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="space-y-1 relative z-10">
+                        <p className="text-[10px] font-black text-white/50 uppercase tracking-widest">Account Name</p>
+                        <p className="text-lg font-bold tracking-tight">{user.virtualAccount.account_name}</p>
+                      </div>
+
+                      <div className="pt-4 border-t border-white/10 flex items-center space-x-2 text-[10px] font-medium text-white/70">
+                        <Info className="w-3 h-3" />
+                        <p>Funds sent to this account will be credited to your wallet instantly.</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center space-y-6 py-10">
+                      <div className="w-20 h-20 bg-blue-50 text-blue-600 rounded-3xl flex items-center justify-center mx-auto">
+                        <Zap className="w-10 h-10" />
+                      </div>
+                      <div className="space-y-2">
+                        <h4 className="text-2xl font-black text-gray-900 tracking-tight">No Virtual Account Found</h4>
+                        <p className="text-gray-400 font-medium">Generate a dedicated account number to fund your wallet instantly via bank transfer.</p>
+                      </div>
+                      <button 
+                        onClick={handleGenerateVirtualAccount}
+                        disabled={isProcessing}
+                        className="px-10 py-5 bg-blue-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-gray-950 transition-all disabled:opacity-50"
+                      >
+                        {isProcessing ? 'Generating...' : 'Generate Account Now'}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : fundingMethod === 'AUTO' ? (
                 <div className="space-y-8">
                   <div className="bg-gray-50 p-8 rounded-[2.5rem] space-y-4 border border-gray-100">
                     <div className="flex justify-between items-center">

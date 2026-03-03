@@ -19,6 +19,13 @@ export interface User {
   transactionPin?: string;
   webhookUrl?: string;
   apiKey?: string;
+  virtualAccount?: {
+    account_number: string;
+    account_name: string;
+    bank_name: string;
+    bank_id: string;
+    reference: string;
+  };
 }
 
 export interface ManualPrice {

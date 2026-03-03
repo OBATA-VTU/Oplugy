@@ -3,12 +3,36 @@
   "cleanUrls": true,
   "rewrites": [
     {
-      "source": "/api/paystack",
-      "destination": "/api/paystack-proxy"
+      "source": "/api/proxy-server1",
+      "destination": "/api/proxy?server=1"
+    },
+    {
+      "source": "/api/proxy-server2",
+      "destination": "/api/proxy?server=2"
+    },
+    {
+      "source": "/api/proxy-smm",
+      "destination": "/api/proxy?server=smm"
+    },
+    {
+      "source": "/api/auth/:path*",
+      "destination": "/api/auth?path=:path*"
     },
     {
       "source": "/api/paystack-webhook",
-      "destination": "/api/paystack-webhook"
+      "destination": "/api/webhooks?provider=paystack"
+    },
+    {
+      "source": "/api/billstack-webhook",
+      "destination": "/api/webhooks?provider=billstack"
+    },
+    {
+      "source": "/api/webhooks/ciptopup",
+      "destination": "/api/webhooks?provider=ciptopup"
+    },
+    {
+      "source": "/api/webhooks/inlomax",
+      "destination": "/api/webhooks?provider=inlomax"
     },
     {
       "source": "/api/:path*",

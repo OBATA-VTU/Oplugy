@@ -225,6 +225,65 @@ export const whatsappService = {
   },
 
   /**
+   * Fetch Cable providers
+   */
+  getCableProviders: async () => {
+    const db = admin.firestore();
+    const pricingSnap = await db.collection('manual_pricing').get();
+    const manualPricing = pricingSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
+    
+    const cablePlans = manualPricing.filter((p: any) => p.planId && p.planId.includes('CABLE'));
+    const providers = Array.from(new Set(cablePlans.map((p: any) => p.planId.split('-')[1]))).map(name => ({
+      id: name,
+      title: name,
+      description: `${name} TV Subscription`
+    }));
+    return providers;
+  },
+
+  /**
+   * Fetch Electricity providers
+   */
+  getElectricityProviders: async () => {
+    const db = admin.firestore();
+    const pricingSnap = await db.collection('manual_pricing').get();
+    const manualPricing = pricingSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
+    
+    const powerPlans = manualPricing.filter((p: any) => p.planId && p.planId.includes('POWER'));
+    const providers = Array.from(new Set(powerPlans.map((p: any) => p.planId.split('-')[1]))).map(name => ({
+      id: name,
+      title: name,
+      description: `${name} Electricity`
+    }));
+    return providers;
+  },
+
+  /**
+   * Verify IUC or Meter Number
+   */
+  verifyNumber: async (type: 'CABLE' | 'POWER', provider: string, number: string) => {
+    const secretKey = process.env.INLOMAX_API_KEY;
+    const endpoint = type === 'CABLE' ? 'validatecable' : 'validatemeter';
+    const payload = type === 'CABLE' 
+      ? { serviceID: provider.toLowerCase(), iucNum: number }
+      : { serviceID: provider.toLowerCase(), meterNum: number, meterType: 1 }; // Default to prepaid
+
+    try {
+      const response = await axios.post(`${INLOMAX_BASE_URL}/${endpoint}`, payload, {
+        headers: {
+          'Authorization': `Token ${secretKey}`,
+          'Authorization-Token': secretKey,
+          'Content-Type': 'application/json'
+        }
+      });
+      return response.data;
+    } catch (error: any) {
+      console.error(`Verification error (${type}):`, error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  /**
    * Get plans for interactive list
    */
   getPlansForList: async (network: string, type: 'DATA' | 'AIRTIME' | 'CABLE' | 'POWER') => {
@@ -261,6 +320,23 @@ export const whatsappService = {
         { id: 'AMT_5000', title: '₦5,000', description: 'Top up ₦5,000' },
         { id: 'AMT_CUSTOM', title: 'Custom Amount', description: 'Enter amount manually' }
       ];
+    }
+
+    if (type === 'CABLE') {
+      const pricingSnap = await db.collection('manual_pricing').get();
+      const manualPricing = pricingSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
+      
+      const cablePlans = manualPricing.filter((p: any) => 
+        p.planId && p.planId.includes('CABLE') && p.planId.includes(normalizedNetwork)
+      );
+
+      return cablePlans.map((p: any) => {
+        return {
+          id: `PLAN_${p.planId}`,
+          title: `${p.plan_name || 'Cable Plan'}`,
+          description: `Price: ₦${p.user_price}`
+        };
+      });
     }
 
     return [];
