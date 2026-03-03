@@ -16,7 +16,7 @@ import { motion } from 'motion/react';
 import { 
   Smartphone, Wifi, Zap, Tv, History, 
   Wallet, ShieldCheck, 
-  MessageSquare, Bell, ChevronRight, Copy, Check, Globe,
+  Bell, ChevronRight, Copy, Check, Globe,
   TrendingUp, Users
 } from 'lucide-react';
 
@@ -117,49 +117,92 @@ const DashboardPage: React.FC = () => {
         {/* Main Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Wallet Card */}
-          <div className="lg:col-span-8 bg-gray-950 rounded-[2.5rem] p-10 text-white relative overflow-hidden group shadow-2xl">
-            <div className="relative z-10 flex flex-col h-full justify-between space-y-12">
+          <div className="lg:col-span-8 bg-gradient-to-br from-[#0A0A0B] to-[#161618] rounded-[3rem] p-12 text-white relative overflow-hidden group shadow-2xl border border-white/5">
+            <div className="relative z-10 flex flex-col h-full justify-between space-y-16">
               <div className="flex justify-between items-start">
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/40 mb-4">Wallet Balance</p>
+                  <p className="text-[11px] font-black uppercase tracking-[0.5em] text-white/30 mb-6">Total Balance</p>
                   <div className="flex items-baseline">
-                    <span className="text-2xl font-bold text-white/20 mr-2">₦</span>
-                    <h2 className="text-6xl lg:text-8xl font-black tracking-tighter leading-none">
+                    <span className="text-4xl font-black text-blue-500 mr-4">₦</span>
+                    <h2 className="text-7xl lg:text-9xl font-black tracking-tighter leading-none bg-gradient-to-b from-white to-white/50 bg-clip-text text-transparent">
                       {walletBalance !== null ? walletBalance.toLocaleString('en-US', { minimumFractionDigits: 2 }) : '0.00'}
                     </h2>
                   </div>
                 </div>
-                <Link to="/funding" className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center hover:scale-110 transition-all shadow-xl shadow-blue-600/20 active:scale-95">
-                  <Wallet className="w-7 h-7" />
+                <Link to="/funding" className="w-20 h-20 bg-blue-600 rounded-[2rem] flex items-center justify-center hover:scale-110 transition-all shadow-2xl shadow-blue-600/40 active:scale-95 group/btn">
+                  <Wallet className="w-8 h-8 group-hover/btn:rotate-12 transition-transform" />
                 </Link>
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-8 pt-10 border-t border-white/5">
-                <Stat label="Account" value={user?.role || 'User'} icon={<ShieldCheck size={14} className="text-blue-500" />} />
-                <Stat label="Referral" value={user?.referralCode || '---'} icon={<Users size={14} className="text-purple-500" />} />
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-12 pt-12 border-t border-white/5">
+                <Stat label="Account Status" value={user?.role || 'User'} icon={<ShieldCheck size={16} className="text-blue-500" />} />
+                <Stat label="Referral Code" value={user?.referralCode || '---'} icon={<Users size={16} className="text-blue-500" />} />
                 <div className="flex items-center justify-end">
-                  <button onClick={copyReferral} className="p-3 bg-white/5 rounded-xl hover:bg-white/10 transition-all">
-                    {copied ? <Check size={16} className="text-emerald-500" /> : <Copy size={16} className="text-white/40" />}
+                  <button onClick={copyReferral} className="p-4 bg-white/5 rounded-2xl hover:bg-white/10 transition-all border border-white/5 group/copy">
+                    {copied ? <Check size={20} className="text-emerald-400" /> : <Copy size={20} className="text-white/20 group-hover/copy:text-white transition-colors" />}
                   </button>
                 </div>
               </div>
             </div>
-            <div className="absolute -bottom-20 -right-20 w-80 h-80 bg-blue-600/10 rounded-full blur-[100px]"></div>
+            
+            {/* Immersive Background Elements */}
+            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-600/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-[120px]"></div>
+            <div className="absolute bottom-0 left-0 w-80 h-80 bg-indigo-600/10 rounded-full translate-y-1/2 -translate-x-1/2 blur-[100px]"></div>
           </div>
 
-          {/* Support Card */}
-          <div className="lg:col-span-4 bg-white border border-gray-100 rounded-[2.5rem] p-10 flex flex-col justify-between shadow-xl group">
-            <div className="space-y-6">
-              <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-all">
-                <MessageSquare size={28} />
+          {/* Virtual Account Card */}
+          <div className="lg:col-span-4 bg-white border border-gray-100 rounded-[2.5rem] p-10 flex flex-col justify-between shadow-xl group relative overflow-hidden">
+            {user?.virtualAccount ? (
+              <div className="space-y-6 relative z-10">
+                <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center">
+                  <Zap size={28} />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black tracking-widest uppercase text-gray-400 mb-4">Dedicated Account</h3>
+                  <div className="space-y-4">
+                    <div>
+                      <p className="text-[10px] font-black uppercase text-gray-300 tracking-widest">Bank Name</p>
+                      <p className="text-xl font-black tracking-tight text-gray-900">{user.virtualAccount.bank_name}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black uppercase text-gray-300 tracking-widest">Account Number</p>
+                      <div className="flex items-center justify-between">
+                        <p className="text-3xl font-black tracking-tighter text-blue-600">{user.virtualAccount.account_number}</p>
+                        <button 
+                          onClick={() => {
+                            navigator.clipboard.writeText(user.virtualAccount!.account_number);
+                            addNotification("Account number copied!", "success");
+                          }}
+                          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                        >
+                          <Copy size={16} className="text-gray-400" />
+                        </button>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black uppercase text-gray-300 tracking-widest">Account Name</p>
+                      <p className="text-sm font-bold text-gray-600">{user.virtualAccount.account_name}</p>
+                    </div>
+                  </div>
+                </div>
+                <p className="text-[10px] font-medium text-gray-400 italic">* Funds sent here credit your wallet instantly.</p>
               </div>
-              <h3 className="text-3xl font-black tracking-tighter uppercase">Need Help?</h3>
-              <p className="text-gray-400 font-medium leading-relaxed">Chat with our support team instantly on WhatsApp for any assistance.</p>
-            </div>
-            <a href="https://wa.me/2348142452729" target="_blank" rel="noopener noreferrer" className="mt-10 w-full bg-emerald-500 text-white py-5 rounded-2xl font-black text-[11px] uppercase tracking-widest flex items-center justify-center space-x-3 hover:bg-gray-950 transition-all shadow-lg shadow-emerald-100">
-              <Smartphone size={18} />
-              <span>Contact Support</span>
-            </a>
+            ) : (
+              <div className="space-y-6 relative z-10 h-full flex flex-col justify-between">
+                <div className="space-y-6">
+                  <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-all">
+                    <Wallet size={28} />
+                  </div>
+                  <h3 className="text-3xl font-black tracking-tighter uppercase">Automated Funding</h3>
+                  <p className="text-gray-400 font-medium leading-relaxed">Generate a dedicated virtual account to fund your wallet instantly via bank transfer.</p>
+                </div>
+                <Link to="/funding" className="w-full bg-gray-950 text-white py-5 rounded-2xl font-black text-[11px] uppercase tracking-widest flex items-center justify-center space-x-3 hover:bg-blue-600 transition-all shadow-lg">
+                  <span>Generate Account</span>
+                  <ChevronRight size={18} />
+                </Link>
+              </div>
+            )}
+            <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-gray-50 rounded-full blur-3xl"></div>
           </div>
         </div>
 
@@ -177,13 +220,12 @@ const DashboardPage: React.FC = () => {
         )}
 
         {/* Services Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
            <ServiceItem to="/airtime" icon={<Smartphone />} label="Airtime" color="bg-orange-50 text-orange-600" />
            <ServiceItem to="/data" icon={<Wifi />} label="Data" color="bg-blue-50 text-blue-600" />
            <ServiceItem to="/smm" icon={<Globe />} label="Social" color="bg-purple-50 text-purple-600" />
            <ServiceItem to="/bills" icon={<Zap />} label="Power" color="bg-yellow-50 text-yellow-600" />
            <ServiceItem to="/cable" icon={<Tv />} label="Cable" color="bg-indigo-50 text-indigo-600" />
-           <ServiceItem to="/whatsapp-bot" icon={<MessageSquare />} label="Bot" color="bg-green-50 text-green-600" />
            <ServiceItem to="/funding" icon={<Wallet />} label="Fund" color="bg-emerald-50 text-emerald-600" />
            <ServiceItem to="/history" icon={<History />} label="History" color="bg-gray-50 text-gray-900" />
         </div>

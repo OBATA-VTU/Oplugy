@@ -245,7 +245,8 @@ async function handleServer2(req: VercelRequest, res: VercelResponse, endpoint: 
     const headers: any = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
-      'x-api-key': apiKey
+      'x-api-key': apiKey,
+      'Authorization': `Bearer ${apiKey}`
     };
 
     const fetchOptions: any = {

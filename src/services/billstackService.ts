@@ -29,7 +29,7 @@ export const billstackService = {
     firstName: string; 
     lastName: string; 
     phone: string; 
-    bank?: '9PSB' | 'SAFEHAVEN' | 'PROVIDUS' | 'BANKLY' | 'PALMPAY';
+    bank?: '9PSB' | 'PALMPAY';
     reference: string;
   }): Promise<ApiResponse<BillstackResponse>> => {
     try {
