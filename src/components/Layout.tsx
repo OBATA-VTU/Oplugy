@@ -1,9 +1,8 @@
 import React, { useState, ReactNode } from 'react';
-import { NavLink, useNavigate, useLocation, Outlet } from 'react-router-dom';
+import { NavLink, useNavigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../context/ThemeContext';
 import Logo from './Logo';
-import ChatBubble from './ChatBubble';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Home, Smartphone, Wifi, Zap, Tv, 
@@ -40,7 +39,6 @@ const Layout: React.FC = () => {
   const { user, walletBalance, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
-  const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
 
@@ -211,7 +209,6 @@ const Layout: React.FC = () => {
 
         <main className="flex-1 p-6 lg:p-16 w-full max-w-[1600px] mx-auto relative no-scrollbar">
           <Outlet />
-          {location.pathname !== '/admin' && <ChatBubble />}
         </main>
       </div>
     </div>

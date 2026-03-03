@@ -117,37 +117,42 @@ const DashboardPage: React.FC = () => {
         {/* Main Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Wallet Card */}
-          <div className="lg:col-span-8 bg-gradient-to-br from-[#0A0A0B] to-[#161618] rounded-[3rem] p-12 text-white relative overflow-hidden group shadow-2xl border border-white/5">
+          <div className="lg:col-span-8 bg-[#0A0A0B] rounded-[3.5rem] p-12 text-white relative overflow-hidden group shadow-2xl border border-white/5">
             <div className="relative z-10 flex flex-col h-full justify-between space-y-16">
               <div className="flex justify-between items-start">
-                <div>
-                  <p className="text-[11px] font-black uppercase tracking-[0.5em] text-white/30 mb-6">Total Balance</p>
+                <div className="space-y-4">
+                  <div className="inline-flex items-center space-x-3 px-4 py-2 bg-white/5 rounded-full border border-white/10">
+                    <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
+                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white/50">Active Balance</span>
+                  </div>
                   <div className="flex items-baseline">
-                    <span className="text-4xl font-black text-blue-500 mr-4">₦</span>
-                    <h2 className="text-7xl lg:text-9xl font-black tracking-tighter leading-none bg-gradient-to-b from-white to-white/50 bg-clip-text text-transparent">
+                    <span className="text-5xl font-black text-blue-600 mr-6">₦</span>
+                    <h2 className="text-8xl lg:text-[10rem] font-black tracking-tighter leading-none bg-gradient-to-b from-white via-white to-white/20 bg-clip-text text-transparent">
                       {walletBalance !== null ? walletBalance.toLocaleString('en-US', { minimumFractionDigits: 2 }) : '0.00'}
                     </h2>
                   </div>
                 </div>
-                <Link to="/funding" className="w-20 h-20 bg-blue-600 rounded-[2rem] flex items-center justify-center hover:scale-110 transition-all shadow-2xl shadow-blue-600/40 active:scale-95 group/btn">
-                  <Wallet className="w-8 h-8 group-hover/btn:rotate-12 transition-transform" />
+                <Link to="/funding" className="w-24 h-24 bg-blue-600 rounded-[2.5rem] flex items-center justify-center hover:scale-110 transition-all shadow-2xl shadow-blue-600/40 active:scale-95 group/btn">
+                  <Wallet className="w-10 h-10 group-hover/btn:rotate-12 transition-transform" />
                 </Link>
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-12 pt-12 border-t border-white/5">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-12 pt-12 border-t border-white/5 items-center">
                 <Stat label="Account Status" value={user?.role || 'User'} icon={<ShieldCheck size={16} className="text-blue-500" />} />
                 <Stat label="Referral Code" value={user?.referralCode || '---'} icon={<Users size={16} className="text-blue-500" />} />
-                <div className="flex items-center justify-end">
-                  <button onClick={copyReferral} className="p-4 bg-white/5 rounded-2xl hover:bg-white/10 transition-all border border-white/5 group/copy">
-                    {copied ? <Check size={20} className="text-emerald-400" /> : <Copy size={20} className="text-white/20 group-hover/copy:text-white transition-colors" />}
+                <div className="md:col-span-2 flex items-center justify-end space-x-4">
+                  <button onClick={copyReferral} className="flex items-center space-x-4 px-8 py-4 bg-white/5 rounded-2xl hover:bg-white/10 transition-all border border-white/5 group/copy">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-white/40 group-hover/copy:text-white transition-colors">Copy Code</span>
+                    {copied ? <Check size={18} className="text-emerald-400" /> : <Copy size={18} className="text-white/20 group-hover/copy:text-white transition-colors" />}
                   </button>
                 </div>
               </div>
             </div>
             
             {/* Immersive Background Elements */}
-            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-600/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-[120px]"></div>
-            <div className="absolute bottom-0 left-0 w-80 h-80 bg-indigo-600/10 rounded-full translate-y-1/2 -translate-x-1/2 blur-[100px]"></div>
+            <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-600/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-[150px] group-hover:bg-blue-600/20 transition-all duration-1000"></div>
+            <div className="absolute bottom-0 left-0 w-96 h-96 bg-indigo-600/10 rounded-full translate-y-1/2 -translate-x-1/2 blur-[120px]"></div>
+            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-[0.03] pointer-events-none"></div>
           </div>
 
           {/* Virtual Account Card */}

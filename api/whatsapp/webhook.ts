@@ -106,8 +106,8 @@ export default async function handler(req: any, res: any) {
         // Handle Airtime Amount Input
         if (session?.step === 'AWAITING_AIRTIME_AMOUNT') {
           const amount = parseFloat(text);
-          if (isNaN(amount) || amount < 50 || amount > 50000) {
-            await whatsappService.sendMessage(from, `❌ *Invalid Amount*\n\nPlease enter a valid amount between ₦50 and ₦50,000.`);
+          if (isNaN(amount) || amount < 100 || amount > 50000) {
+            await whatsappService.sendMessage(from, `❌ *Invalid Amount*\n\nPlease enter a valid amount between ₦100 and ₦50,000.`);
             return res.status(200).json({ status: 'ok' });
           }
 
@@ -204,6 +204,18 @@ export default async function handler(req: any, res: any) {
             await sendServiceList(from, "Select a Service");
           }
 
+          if (buttonId === 'SERVER_1' || buttonId === 'SERVER_2') {
+            const server = buttonId === 'SERVER_1' ? 1 : 2;
+            await whatsappService.updateSession(from, { server, step: 'AWAITING_NETWORK' });
+            const providers = [
+              { id: 'MTN', title: 'MTN', description: 'MTN Nigeria' },
+              { id: 'AIRTEL', title: 'Airtel', description: 'Airtel Africa' },
+              { id: 'GLO', title: 'Glo', description: 'Globacom' },
+              { id: '9MOBILE', title: '9mobile', description: '9mobile Nigeria' }
+            ];
+            await whatsappService.sendInteractiveList(from, `Select your Data Provider (Server ${server}):`, "View Providers", [{ title: "Providers", rows: providers }]);
+          }
+
           // Handle Network Selection
           if (['MTN', 'AIRTEL', 'GLO', '9MOBILE'].includes(buttonId)) {
             const service = session?.service;
@@ -230,10 +242,17 @@ export default async function handler(req: any, res: any) {
           if (buttonId === 'GENERATE_VA') {
             const user = await whatsappService.getUserByPhone(from);
             if (!user) return;
+            
+            const email = user.email || user.emailAddress;
+            if (!email) {
+              await whatsappService.sendMessage(from, `❌ *Email Missing*\n\nWe couldn't find an email address for your account. Please update your profile on our website first.`);
+              return;
+            }
+
             await whatsappService.sendMessage(from, `⏳ Generating your dedicated virtual account...`);
             try {
               const res = await (whatsappService as any).generateVirtualAccount({
-                email: user.email,
+                email: email,
                 firstName: user.username,
                 lastName: 'Oplug',
                 phone: user.phone || from,
@@ -263,13 +282,24 @@ export default async function handler(req: any, res: any) {
 
           if (buttonId === 'PAYSTACK_LINK') {
             const user = await whatsappService.getUserByPhone(from);
-            const email = user?.email || `${from}@oplug.bot`;
+            const email = user?.email || user?.emailAddress || `${from}@oplug.bot`;
             try {
+              await whatsappService.sendMessage(from, `⏳ Generating payment details...`);
               const payment = await whatsappService.initializePaystackPayment(email, 1000, { phone: from });
-              const checkoutUrl = payment.data.authorization_url;
-              await whatsappService.sendMessage(from, `🔗 *Paystack Payment Link*\n\n${checkoutUrl}\n\n_Use this link to pay via Card or one-time Bank Transfer._`);
+              
+              if (payment.data?.status === 'send_birthday' || payment.data?.status === 'send_otp' || payment.data?.status === 'open_url') {
+                 const checkoutUrl = payment.data.authorization_url;
+                 await whatsappService.sendMessage(from, `🔗 *Paystack Payment Link*\n\n${checkoutUrl}\n\n_Use this link to pay via Card or Bank Transfer._`);
+              } else if (payment.data?.bank?.account_number) {
+                 const bank = payment.data.bank;
+                 const body = `🏦 *Bank Transfer Details*\n\n🏛️ *Bank:* ${bank.name}\n🔢 *Account Number:* ${bank.account_number}\n👤 *Account Name:* Oplug / Paystack\n💰 *Amount:* ₦1,000\n\n_Please make the transfer within 30 minutes. Your wallet will be credited automatically._`;
+                 await whatsappService.sendMessage(from, body);
+              } else {
+                 const checkoutUrl = payment.data.authorization_url || `https://checkout.paystack.com/${payment.data.access_code}`;
+                 await whatsappService.sendMessage(from, `🔗 *Paystack Payment Link*\n\n${checkoutUrl}\n\n_Use this link to pay securely._`);
+              }
             } catch (e) {
-              await whatsappService.sendMessage(from, `❌ Failed to generate link.`);
+              await whatsappService.sendMessage(from, `❌ Failed to generate payment details.`);
             }
           }
 
@@ -291,12 +321,12 @@ export default async function handler(req: any, res: any) {
           if (['MTN', 'AIRTEL', 'GLO', '9MOBILE', 'DSTV', 'GOTV', 'STARTIMES', 'IKEJA-ELECTRIC', 'EKO-ELECTRIC', 'KANO-ELECTRIC', 'PORTHARCOURT-ELECTRIC', 'JOS-ELECTRIC', 'IBADAN-ELECTRIC', 'KADUNA-ELECTRIC', 'ABUJA-ELECTRIC', 'ENUGU-ELECTRIC', 'BENIN-ELECTRIC'].includes(listId)) {
             const service = session?.service;
             if (service === 'DATA') {
-              const plans = await (whatsappService as any).getPlansForList(listId, 'DATA');
+              const plans = await (whatsappService as any).getPlansForList(listId, 'DATA', session.server || 1);
               if (plans.length > 0) {
                 await whatsappService.updateSession(from, { network: listId, step: 'AWAITING_PHONE' });
-                await whatsappService.sendMessage(from, `Please enter the *Phone Number* for the ${listId} Data:`);
+                await whatsappService.sendMessage(from, `Please enter the *Phone Number* for the ${listId} Data (Server ${session.server || 1}):`);
               } else {
-                await whatsappService.sendMessage(from, `❌ No plans found for ${listId} at the moment.`);
+                await whatsappService.sendMessage(from, `❌ No plans found for ${listId} on Server ${session.server || 1}.`);
               }
             } else if (service === 'AIRTIME') {
               await whatsappService.updateSession(from, { network: listId, step: 'AWAITING_PHONE' });
@@ -314,8 +344,17 @@ export default async function handler(req: any, res: any) {
             await whatsappService.sendMessage(from, `👨‍💻 *Oplug Support*\n\nFor any issues or inquiries, please contact our support team on WhatsApp: https://wa.me/2348142452729`);
           } else if (['AIRTIME', 'DATA', 'CABLE', 'POWER'].includes(listId)) {
             await whatsappService.updateSession(from, { service: listId, step: 'AWAITING_NETWORK' });
+            
+            if (listId === 'DATA') {
+              await whatsappService.sendInteractiveButtons(from, `🚀 *Select Data Server*\n\nChoose which server to use for your data purchase:`, [
+                { id: 'SERVER_1', title: 'Server 1 (Inlomax)' },
+                { id: 'SERVER_2', title: 'Server 2 (Ciptopup)' }
+              ]);
+              return;
+            }
+
             let providers: any[] = [];
-            if (listId === 'AIRTIME' || listId === 'DATA') {
+            if (listId === 'AIRTIME') {
               providers = [
                 { id: 'MTN', title: 'MTN', description: 'MTN Nigeria' },
                 { id: 'AIRTEL', title: 'Airtel', description: 'Airtel Africa' },
@@ -328,7 +367,8 @@ export default async function handler(req: any, res: any) {
               providers = await (whatsappService as any).getElectricityProviders();
             }
             await whatsappService.sendInteractiveList(from, `Select your *${listId}* Provider:`, "View Providers", [{ title: "Providers", rows: providers }]);
-          } else if (listId.startsWith('PLAN_')) {
+          }
+ else if (listId.startsWith('PLAN_')) {
             const planId = listId.replace('PLAN_', '');
             // Extract price from description if possible or fetch from DB
             // For now, let's assume we store it in the session or fetch it again
@@ -424,6 +464,7 @@ async function handleExecutePurchase(from: string, session: any) {
     const result = await whatsappService.executePurchase(user.id, serviceType, {
       amount: session.price,
       network: session.network,
+      server: session.server || 1,
       payload
     });
 
