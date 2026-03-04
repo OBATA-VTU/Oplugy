@@ -3,7 +3,8 @@ import cors from 'cors';
 import { createProxyMiddleware } from 'http-proxy-middleware';
 import * as admin from 'firebase-admin';
 import axios from 'axios';
-import { handleWebhook as handleWhatsAppWebhook } from './api/whatsapp/webhook';
+import crypto from 'crypto';
+import handleWhatsAppWebhook from './src/whatsapp/webhook';
 
 // Initialize Firebase Admin
 if (!admin.apps.length) {
@@ -123,8 +124,64 @@ async function callOgaviral(action: string, data: any = {}) {
   return response.data;
 }
 
-// WhatsApp Webhook
-app.post('/api/whatsapp/webhook', handleWhatsAppWebhook);
+// --- Auth Endpoints ---
+app.post('/api/auth/login', async (req, res) => {
+  const { email } = req.body;
+  const db = admin.firestore();
+  const snapshot = await db.collection('users').where('email', '==', email).limit(1).get();
+  if (snapshot.empty) {
+    return res.status(404).json({ status: false, message: 'User not found.' });
+  }
+  const userData = snapshot.docs[0].data();
+  return res.status(200).json({ status: true, data: { id: snapshot.docs[0].id, ...userData } });
+});
+
+app.post('/api/auth/signup', async (req, res) => {
+  const userData = req.body;
+  const db = admin.firestore();
+  const existing = await db.collection('users').where('email', '==', userData.email).limit(1).get();
+  if (!existing.empty) {
+    return res.status(400).json({ status: false, message: 'User already exists.' });
+  }
+  const newUser = {
+    ...userData,
+    walletBalance: 0,
+    role: 'User',
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    updatedAt: admin.firestore.FieldValue.serverTimestamp()
+  };
+  const docRef = await db.collection('users').add(newUser);
+  return res.status(201).json({ status: true, data: { id: docRef.id, ...newUser } });
+});
+
+app.get('/api/auth/me', async (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ status: false, message: 'Unauthorized' });
+  }
+  const idToken = authHeader.split('Bearer ')[1];
+  try {
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    const db = admin.firestore();
+    const userDoc = await db.collection('users').doc(decodedToken.uid).get();
+    if (!userDoc.exists) {
+      const userRecord = await admin.auth().getUser(decodedToken.uid);
+      const newUser = {
+        username: userRecord.displayName || userRecord.email?.split('@')[0] || 'User',
+        email: userRecord.email,
+        phone: userRecord.phoneNumber || '',
+        walletBalance: 0,
+        role: 'User',
+        createdAt: admin.firestore.FieldValue.serverTimestamp()
+      };
+      await db.collection('users').doc(decodedToken.uid).set(newUser);
+      return res.status(200).json({ status: true, data: { id: decodedToken.uid, ...newUser } });
+    }
+    return res.status(200).json({ status: true, data: { id: userDoc.id, ...userDoc.data() } });
+  } catch (error) {
+    return res.status(401).json({ status: false, message: 'Invalid token' });
+  }
+});
 
 // --- Service Sync Endpoint ---
 app.post("/api/admin/sync-services", async (req, res) => {
@@ -234,14 +291,45 @@ app.post("/api/vtu/purchase", async (req, res) => {
   }
 });
 
-// Inlomax Proxy Route (Server 1)
-app.post('/api/proxy-server1', async (req, res) => {
-  const { endpoint, method = 'GET', data } = req.body || {};
+// --- General Proxy Endpoint ---
+app.all('/api/proxy', async (req, res) => {
+  const { server: serverQuery } = req.query;
+  const payload = req.method === 'POST' ? req.body : req.query;
+  const { endpoint, method = 'GET', data, server: serverBody } = payload || {};
+  const server = serverQuery || serverBody || '1';
+
   try {
-    const result = await callServer1(endpoint, method, data);
-    return res.status(200).json(result);
+    let result;
+    if (server === '1') {
+      result = await callServer1(endpoint, method, data);
+    } else if (server === 'smm') {
+      result = await callOgaviral(endpoint || 'services', data);
+    } else if (server === 'paystack') {
+      const secretKey = process.env.PAYSTACK_SECRET_KEY;
+      const response = await axios({
+        url: `https://api.paystack.co/${(endpoint || '').replace(/^\//, '')}`,
+        method: method.toUpperCase(),
+        headers: { 'Authorization': `Bearer ${secretKey}`, 'Content-Type': 'application/json' },
+        data: method.toUpperCase() !== 'GET' ? data : undefined,
+        params: method.toUpperCase() === 'GET' ? data : undefined
+      });
+      result = response.data;
+    } else if (server === 'billstack') {
+      const secretKey = process.env.BILLSTACK_SECRET_KEY;
+      const response = await axios({
+        url: `https://api.billstack.co/${(endpoint || '').replace(/^\//, '')}`,
+        method: method.toUpperCase(),
+        headers: { 'Authorization': `Bearer ${secretKey}`, 'Content-Type': 'application/json' },
+        data: method.toUpperCase() !== 'GET' ? data : undefined,
+        params: method.toUpperCase() === 'GET' ? data : undefined
+      });
+      result = response.data;
+    } else {
+      return res.status(400).json({ status: false, message: 'Invalid server' });
+    }
+    res.json(result);
   } catch (error: any) {
-    return res.status(500).json({ status: 'error', message: error.message });
+    res.status(500).json({ status: false, message: error.message });
   }
 });
 
@@ -290,13 +378,67 @@ app.post('/api/webhooks/inlomax', async (req, res) => {
   res.status(200).json({ status: 'received' });
 });
 
-// Proxy all other requests to the CRA dev server
-app.use('/', createProxyMiddleware({
-  target: `http://localhost:${CRA_PORT}`,
-  changeOrigin: true,
-  ws: true, // support websockets for HMR
-  logLevel: 'error'
-}));
+// Paystack Webhook
+app.post('/api/paystack-webhook', async (req, res) => {
+  const secret = process.env.PAYSTACK_SECRET_KEY;
+  if (!secret) return res.status(500).json({ message: 'Paystack secret not configured' });
+  const hash = crypto.createHmac('sha512', secret).update(JSON.stringify(req.body)).digest('hex');
+  if (hash !== req.headers['x-paystack-signature']) return res.status(401).json({ message: 'Invalid signature' });
+  
+  const event = req.body;
+  if (event.event === 'charge.success') {
+    const data = event.data;
+    const amount = data.amount / 100;
+    const email = data.customer.email;
+    const db = admin.firestore();
+    const snapshot = await db.collection('users').where('email', '==', email).limit(1).get();
+    if (!snapshot.empty) {
+      const userRef = snapshot.docs[0].ref;
+      await userRef.update({ walletBalance: admin.firestore.FieldValue.increment(amount) });
+      await db.collection('transactions').add({
+        userId: userRef.id, userEmail: email, type: 'CREDIT', amount, source: 'Paystack', status: 'SUCCESS',
+        reference: data.reference, date_created: admin.firestore.FieldValue.serverTimestamp()
+      });
+    }
+  }
+  res.status(200).json({ status: 'received' });
+});
+
+// Billstack Webhook
+app.post('/api/billstack-webhook', async (req, res) => {
+  const secret = process.env.BILLSTACK_SECRET_KEY;
+  if (!secret) return res.status(500).json({ message: 'Billstack secret not configured' });
+  const expectedSignature = crypto.createHash('md5').update(secret).digest('hex');
+  if (req.headers['x-wiaxy-signature'] !== expectedSignature) return res.status(401).json({ message: 'Invalid signature' });
+
+  const payload = req.body;
+  if (payload.event === 'PAYMENT_NOTIFIFICATION' && payload.data?.type === 'RESERVED_ACCOUNT_TRANSACTION') {
+    const data = payload.data;
+    const amount = parseFloat(data.amount);
+    const db = admin.firestore();
+    const accountNumber = data.account?.account_number;
+    const snapshot = await db.collection('users').where('virtualAccount.account_number', '==', accountNumber).limit(1).get();
+    if (!snapshot.empty) {
+      const userRef = snapshot.docs[0].ref;
+      const userData = snapshot.docs[0].data();
+      await userRef.update({ walletBalance: admin.firestore.FieldValue.increment(amount) });
+      await db.collection('transactions').add({
+        userId: userRef.id, userEmail: userData.email, type: 'CREDIT', amount, source: 'Virtual Account', status: 'SUCCESS',
+        reference: data.reference, date_created: admin.firestore.FieldValue.serverTimestamp()
+      });
+    }
+  }
+  res.status(200).json({ status: 'received' });
+});
+
+// Proxy all other requests to the CRA dev server in development
+if (process.env.NODE_ENV !== 'production') {
+  app.use('/', createProxyMiddleware({
+    target: `http://localhost:${CRA_PORT}`,
+    changeOrigin: true,
+    ws: true // support websockets for HMR
+  }));
+}
 
 // Background Scheduler for Transactions
 async function processScheduledTransactions() {
@@ -434,3 +576,5 @@ startScheduler();
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`API Gateway running on http://0.0.0.0:${PORT}`);
 });
+
+export default app;
