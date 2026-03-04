@@ -332,14 +332,15 @@ export default async function handler(req: any, res: any) {
 
           // Handle Network/Provider Selection
           if (['MTN', 'AIRTEL', 'GLO', '9MOBILE', 'DSTV', 'GOTV', 'STARTIMES', 'IKEJA-ELECTRIC', 'EKO-ELECTRIC', 'KANO-ELECTRIC', 'PORTHARCOURT-ELECTRIC', 'JOS-ELECTRIC', 'IBADAN-ELECTRIC', 'KADUNA-ELECTRIC', 'ABUJA-ELECTRIC', 'ENUGU-ELECTRIC', 'BENIN-ELECTRIC'].includes(listId)) {
-            const service = session?.service;
+            if (!session) return res.status(200).json({ status: 'ok' });
+            const service = session.service;
             if (service === 'DATA') {
-              const plans = await (whatsappService as any).getPlansForList(listId, 'DATA', session.server || 1);
+              const plans = await (whatsappService as any).getPlansForList(listId, 'DATA', 1);
               if (plans.length > 0) {
                 await whatsappService.updateSession(from, { network: listId, step: 'AWAITING_PHONE' });
-                await whatsappService.sendMessage(from, `Please enter the *Phone Number* for the ${listId} Data (Server ${session.server || 1}):`);
+                await whatsappService.sendMessage(from, `Please enter the *Phone Number* for the ${listId} Data:`);
               } else {
-                await whatsappService.sendMessage(from, `❌ No plans found for ${listId} on Server ${session.server || 1}.`);
+                await whatsappService.sendMessage(from, `❌ No plans found for ${listId}.`);
               }
             } else if (service === 'AIRTIME') {
               await whatsappService.updateSession(from, { network: listId, step: 'AWAITING_PHONE' });
