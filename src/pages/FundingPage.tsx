@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNotifications } from '../hooks/useNotifications';
-import { Wallet, CreditCard, Landmark, Copy, Zap, ShieldCheck, Info, ArrowRight, Upload, CheckCircle2, ChevronLeft } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { CreditCard, Landmark, Copy, Zap, ShieldCheck, Info, ArrowRight, Upload, CheckCircle2 } from 'lucide-react';
+import { motion } from 'motion/react';
 import { uploadToImgBB } from '../services/imgbbService';
 import { vtuService } from '../services/vtuService';
 import { billstackService } from '../services/billstackService';
@@ -14,7 +14,6 @@ const FundingPage: React.FC = () => {
   const { user, fetchWalletBalance } = useAuth();
   const { addNotification } = useNotifications();
   const [searchParams] = useSearchParams();
-  const [step, setStep] = useState<1 | 2 | 3>(1);
   const [amount, setAmount] = useState(searchParams.get('amount') || '');
   const [isProcessing, setIsProcessing] = useState(false);
   const [fundingMethod, setFundingMethod] = useState<'AUTO' | 'MANUAL' | 'VIRTUAL' | null>(null);
@@ -62,7 +61,6 @@ const FundingPage: React.FC = () => {
 
       if (res.status) {
         addNotification(res.message || 'Request submitted successfully', 'success');
-        setStep(1);
         setAmount('');
         setReceiptFile(null);
         setReceiptPreview(null);
@@ -102,7 +100,6 @@ const FundingPage: React.FC = () => {
           addNotification('Payment successful! Syncing wallet...', 'success');
           await fetchWalletBalance();
           setAmount('');
-          setStep(1);
           setIsProcessing(false);
         },
         onClose: () => {
@@ -164,320 +161,214 @@ const FundingPage: React.FC = () => {
     }
   };
 
-  const nextStep = () => {
-    if (step === 1) {
-      if (!amount || numAmount < 100) {
-        addNotification("Minimum funding amount is ₦100.", "warning");
-        return;
-      }
-      setStep(2);
-    } else if (step === 2) {
-      if (!fundingMethod) {
-        addNotification("Please select a funding method.", "warning");
-        return;
-      }
-      setStep(3);
-    }
-  };
-
-  const prevStep = () => {
-    if (step > 1) setStep((step - 1) as any);
-  };
-
   return (
-    <div className="max-w-4xl mx-auto space-y-12 pb-32">
+    <div className="max-w-4xl mx-auto space-y-8 pb-32 px-4">
       <div className="text-center space-y-4">
-        <div className="inline-flex p-4 bg-blue-50 text-blue-600 rounded-[2rem] mb-4 shadow-inner">
-          <Wallet className="w-10 h-10" />
-        </div>
-        <h2 className="text-5xl lg:text-6xl font-black text-gray-900 tracking-tighter">Fund Wallet</h2>
-        <p className="text-gray-400 font-medium text-xl max-w-xl mx-auto">Add money to your wallet to start buying services.</p>
+        <h2 className="text-4xl lg:text-5xl font-black text-gray-900 tracking-tighter uppercase">Fund Wallet</h2>
+        <p className="text-gray-400 font-medium text-lg">Choose your preferred method to add funds.</p>
       </div>
 
-      <div className="bg-white p-10 rounded-[3.5rem] shadow-2xl shadow-blue-100/50 border border-gray-50 relative overflow-hidden">
-        {/* Progress Bar */}
-        <div className="absolute top-0 left-0 w-full h-2 bg-gray-100">
-          <motion.div 
-            className="h-full bg-blue-600"
-            initial={{ width: '0%' }}
-            animate={{ width: `${(step / 3) * 100}%` }}
-            transition={{ type: 'spring', stiffness: 50 }}
-          />
+      {/* Charges Notice */}
+      <div className="bg-blue-50 border border-blue-100 rounded-2xl p-6 flex items-start space-x-4">
+        <div className="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center flex-shrink-0">
+          <Info size={20} />
+        </div>
+        <div className="space-y-1">
+          <h4 className="text-sm font-black text-blue-900 uppercase tracking-widest">Transaction Charges</h4>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-1">
+            <p className="text-blue-800 text-xs font-medium">0.9% – Virtual Account (9PSB & PalmPay transfers)</p>
+            <p className="text-blue-800 text-xs font-medium">1.5% – Paystack payments</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Virtual Account Section */}
+      <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 space-y-8">
+        <div className="flex items-center space-x-4">
+          <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center">
+            <Landmark size={24} />
+          </div>
+          <div>
+            <h3 className="text-xl font-black text-gray-900 tracking-tight uppercase">Virtual Account</h3>
+            <p className="text-gray-400 text-xs font-medium">Automated funding via bank transfer.</p>
+          </div>
         </div>
 
-        <AnimatePresence mode="wait">
-          {step === 1 && (
-            <motion.div 
-              key="step1"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="space-y-10 pt-6"
-            >
-              <div className="space-y-4">
-                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-4">How much do you want to fund? (₦)</label>
-                <div className="relative">
-                  <input 
-                    type="number" 
-                    className="w-full p-10 bg-gray-50 border-4 border-transparent rounded-[2.5rem] text-5xl font-black tracking-tighter outline-none focus:border-blue-600 focus:bg-white transition-all text-center placeholder:text-gray-200" 
-                    placeholder="0.00" 
-                    value={amount} 
-                    onChange={(e) => setAmount(e.target.value)} 
-                  />
-                  <div className="absolute left-10 top-1/2 -translate-y-1/2 text-gray-300 font-black text-2xl">₦</div>
+        {user?.virtualAccount ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100 space-y-4">
+              <div className="space-y-1">
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Bank Name</p>
+                <p className="text-lg font-black text-gray-900">{user.virtualAccount.bank_name}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Account Number</p>
+                <div className="flex items-center justify-between">
+                  <p className="text-2xl font-black text-blue-600 tracking-tighter">{user.virtualAccount.account_number}</p>
+                  <button onClick={() => handleCopy(user.virtualAccount!.account_number, 'Account Number')} className="p-2 hover:bg-blue-50 text-blue-600 rounded-lg transition-all">
+                    <Copy size={18} />
+                  </button>
                 </div>
-                <p className="text-center text-gray-400 text-sm font-medium">Minimum funding amount is ₦100</p>
               </div>
+              <div className="space-y-1">
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Account Name</p>
+                <p className="text-sm font-bold text-gray-700">{user.virtualAccount.account_name}</p>
+              </div>
+            </div>
+            <div className="bg-emerald-50 p-6 rounded-2xl border border-emerald-100 flex flex-col justify-center items-center text-center space-y-4">
+              <CheckCircle2 className="text-emerald-600 w-12 h-12" />
+              <p className="text-emerald-900 text-xs font-bold leading-relaxed">
+                Funds sent to this account will be credited to your wallet instantly after 0.9% fee deduction.
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-gray-50 rounded-2xl p-10 text-center space-y-6">
+            <div className="w-20 h-20 bg-blue-50 text-blue-600 rounded-3xl flex items-center justify-center mx-auto">
+              <Zap className="w-10 h-10" />
+            </div>
+            <div className="space-y-2">
+              <h4 className="text-xl font-black text-gray-900 tracking-tight">No Virtual Account Found</h4>
+              <p className="text-gray-400 text-sm font-medium">Generate a dedicated account number to fund your wallet instantly via bank transfer.</p>
+            </div>
+            <button 
+              onClick={handleGenerateVirtualAccount}
+              disabled={isProcessing}
+              className="px-10 py-4 bg-blue-600 text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-gray-950 transition-all disabled:opacity-50 shadow-lg shadow-blue-100"
+            >
+              {isProcessing ? 'Generating...' : 'Generate Account Now'}
+            </button>
+          </div>
+        )}
+      </div>
 
-              <button 
-                onClick={nextStep}
-                className="w-full py-8 bg-blue-600 text-white rounded-[2.5rem] font-black text-[12px] uppercase tracking-[0.4em] shadow-2xl shadow-blue-100 hover:bg-gray-950 transition-all transform active:scale-95 flex items-center justify-center space-x-4"
-              >
-                <span>Continue</span>
-                <ArrowRight className="w-5 h-5" />
-              </button>
-            </motion.div>
+      {/* Paystack Section */}
+      <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 space-y-8">
+        <div className="flex items-center space-x-4">
+          <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center">
+            <CreditCard size={24} />
+          </div>
+          <div>
+            <h3 className="text-xl font-black text-gray-900 tracking-tight uppercase">Paystack (Card/Transfer)</h3>
+            <p className="text-gray-400 text-xs font-medium">Instant funding via Paystack secure gateway.</p>
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          <div className="space-y-4">
+            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2">Enter Amount (₦)</label>
+            <div className="relative">
+              <input 
+                type="number" 
+                className="w-full p-6 bg-gray-50 border-2 border-transparent rounded-2xl text-2xl font-black tracking-tighter outline-none focus:border-blue-600 focus:bg-white transition-all" 
+                placeholder="0.00" 
+                value={amount} 
+                onChange={(e) => setAmount(e.target.value)} 
+              />
+              <div className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-300 font-black text-xl">₦</div>
+            </div>
+          </div>
+
+          {numAmount > 0 && (
+            <div className="bg-gray-50 p-6 rounded-2xl space-y-3 border border-gray-100">
+              <div className="flex justify-between items-center text-xs">
+                <span className="font-bold text-gray-400 uppercase tracking-widest">Gateway Fee (1.5%)</span>
+                <span className="font-black text-red-500">₦{(numAmount * 0.015).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+              </div>
+              <div className="pt-3 border-t border-gray-200 flex justify-between items-center">
+                <span className="font-black text-gray-900 uppercase tracking-widest text-xs">Total to Pay</span>
+                <span className="font-black text-blue-600 text-2xl tracking-tight">₦{(numAmount * 1.015).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+              </div>
+            </div>
           )}
 
-          {step === 2 && (
-            <motion.div 
-              key="step2"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="space-y-10 pt-6"
-            >
+          <button 
+            onClick={handlePaystack}
+            disabled={isProcessing || numAmount < 100}
+            className="w-full py-6 bg-blue-600 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-blue-100 hover:bg-gray-950 transition-all disabled:opacity-30 flex items-center justify-center space-x-3"
+          >
+            <CreditCard size={18} />
+            <span>{isProcessing ? 'Processing...' : 'Pay with Paystack'}</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Manual Payment Section */}
+      <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 space-y-8">
+        <div className="flex items-center space-x-4">
+          <div className="w-12 h-12 bg-gray-900 text-white rounded-2xl flex items-center justify-center">
+            <ArrowRight size={24} />
+          </div>
+          <div>
+            <h3 className="text-xl font-black text-gray-900 tracking-tight uppercase">Manual Payment</h3>
+            <p className="text-gray-400 text-xs font-medium">No fees. Requires manual verification by admin.</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="bg-gray-900 rounded-2xl p-8 text-white space-y-6 relative overflow-hidden">
+            <div className="space-y-1 relative z-10">
+              <p className="text-[10px] font-black text-white/30 uppercase tracking-widest">Bank Name</p>
+              <p className="text-lg font-black tracking-tight">Palmpay</p>
+            </div>
+            <div className="space-y-1 relative z-10">
+              <p className="text-[10px] font-black text-white/30 uppercase tracking-widest">Account Number</p>
               <div className="flex items-center justify-between">
-                <button onClick={prevStep} className="p-4 bg-gray-50 rounded-2xl text-gray-400 hover:text-blue-600 transition-all">
-                  <ChevronLeft className="w-6 h-6" />
-                </button>
-                <h3 className="text-2xl font-black text-gray-900 tracking-tight">Select Payment Method</h3>
-                <div className="w-14" />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <button 
-                  onClick={() => setFundingMethod('VIRTUAL')}
-                  className={`p-8 rounded-[2.5rem] border-4 transition-all text-left space-y-4 ${fundingMethod === 'VIRTUAL' ? 'border-blue-600 bg-blue-50/50' : 'border-gray-50 bg-gray-50 hover:border-blue-200'}`}
-                >
-                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${fundingMethod === 'VIRTUAL' ? 'bg-blue-600 text-white' : 'bg-white text-blue-600 shadow-sm'}`}>
-                    <Landmark className="w-8 h-8" />
-                  </div>
-                  <div>
-                    <h4 className="text-xl font-black text-gray-900 tracking-tight">Virtual Account</h4>
-                    <p className="text-gray-400 text-sm font-medium">Auto-funding via transfer. Most prominent.</p>
-                  </div>
-                </button>
-
-                <button 
-                  onClick={() => setFundingMethod('AUTO')}
-                  className={`p-8 rounded-[2.5rem] border-4 transition-all text-left space-y-4 ${fundingMethod === 'AUTO' ? 'border-blue-600 bg-blue-50/50' : 'border-gray-50 bg-gray-50 hover:border-blue-200'}`}
-                >
-                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${fundingMethod === 'AUTO' ? 'bg-blue-600 text-white' : 'bg-white text-blue-600 shadow-sm'}`}>
-                    <Zap className="w-8 h-8" />
-                  </div>
-                  <div>
-                    <h4 className="text-xl font-black text-gray-900 tracking-tight">Paystack (Card)</h4>
-                    <p className="text-gray-400 text-sm font-medium">Instant funding via Paystack gateway.</p>
-                  </div>
-                </button>
-
-                <button 
-                  onClick={() => setFundingMethod('MANUAL')}
-                  className={`p-8 rounded-[2.5rem] border-4 transition-all text-left space-y-4 ${fundingMethod === 'MANUAL' ? 'border-blue-600 bg-blue-50/50' : 'border-gray-50 bg-gray-50 hover:border-blue-200'}`}
-                >
-                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${fundingMethod === 'MANUAL' ? 'bg-blue-600 text-white' : 'bg-white text-blue-600 shadow-sm'}`}>
-                    <ArrowRight className="w-8 h-8" />
-                  </div>
-                  <div>
-                    <h4 className="text-xl font-black text-gray-900 tracking-tight">Manual Transfer</h4>
-                    <p className="text-gray-400 text-sm font-medium">No fees. Requires admin approval.</p>
-                  </div>
+                <p className="text-3xl font-black tracking-tighter">8142452729</p>
+                <button onClick={() => handleCopy('8142452729', 'Account Number')} className="p-2 bg-white/10 rounded-lg hover:bg-white/20 transition-all">
+                  <Copy size={16} />
                 </button>
               </div>
+            </div>
+            <div className="space-y-1 relative z-10">
+              <p className="text-[10px] font-black text-white/30 uppercase tracking-widest">Account Name</p>
+              <p className="text-sm font-bold">Boluwatife Oluwapelumi Ayuba</p>
+            </div>
+            <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-blue-600/20 rounded-full blur-3xl"></div>
+          </div>
 
-              <button 
-                onClick={nextStep}
-                className="w-full py-8 bg-blue-600 text-white rounded-[2.5rem] font-black text-[12px] uppercase tracking-[0.4em] shadow-2xl shadow-blue-100 hover:bg-gray-950 transition-all transform active:scale-95 flex items-center justify-center space-x-4"
-              >
-                <span>Continue</span>
-                <ArrowRight className="w-5 h-5" />
-              </button>
-            </motion.div>
-          )}
-
-          {step === 3 && (
-            <motion.div 
-              key="step3"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="space-y-10 pt-6"
-            >
-              <div className="flex items-center justify-between">
-                <button onClick={prevStep} className="p-4 bg-gray-50 rounded-2xl text-gray-400 hover:text-blue-600 transition-all">
-                  <ChevronLeft className="w-6 h-6" />
-                </button>
-                <h3 className="text-2xl font-black text-gray-900 tracking-tight">
-                  {fundingMethod === 'AUTO' ? 'Complete Payment' : fundingMethod === 'VIRTUAL' ? 'Your Virtual Account' : 'Transfer Details'}
-                </h3>
-                <div className="w-14" />
-              </div>
-
-              {fundingMethod === 'VIRTUAL' ? (
-                <div className="space-y-8">
-                  {user?.virtualAccount ? (
-                    <div className="p-8 bg-blue-600 rounded-[2.5rem] text-white space-y-6 shadow-2xl relative overflow-hidden">
-                      <div className="absolute top-0 right-0 p-8 opacity-10">
-                        <Landmark className="w-32 h-32" />
-                      </div>
-                      <div className="flex justify-between items-start relative z-10">
-                        <div className="space-y-1">
-                          <p className="text-[10px] font-black text-white/50 uppercase tracking-widest">Bank Name</p>
-                          <p className="text-xl font-black tracking-tight">{user.virtualAccount.bank_name}</p>
-                        </div>
-                        <div className="px-3 py-1 bg-white/20 rounded-full text-[10px] font-bold uppercase tracking-widest">Reserved</div>
-                      </div>
-                      
-                      <div className="space-y-1 relative z-10">
-                        <p className="text-[10px] font-black text-white/50 uppercase tracking-widest">Account Number</p>
-                        <div className="flex items-center justify-between">
-                          <p className="text-4xl font-black tracking-tighter">{user.virtualAccount.account_number}</p>
-                          <button onClick={() => handleCopy(user.virtualAccount!.account_number, 'Account Number')} className="p-3 bg-white/10 rounded-xl hover:bg-white/20 transition-all">
-                            <Copy className="w-5 h-5" />
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className="space-y-1 relative z-10">
-                        <p className="text-[10px] font-black text-white/50 uppercase tracking-widest">Account Name</p>
-                        <p className="text-lg font-bold tracking-tight">{user.virtualAccount.account_name}</p>
-                      </div>
-
-                      <div className="pt-4 border-t border-white/10 flex items-center space-x-2 text-[10px] font-medium text-white/70">
-                        <Info className="w-3 h-3" />
-                        <p>Funds sent to this account will be credited to your wallet instantly.</p>
+          <div className="space-y-6">
+            <div className="space-y-4">
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2">Upload Proof of Payment</label>
+              <div className="relative group">
+                <input 
+                  type="file" 
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="hidden" 
+                  id="receipt-upload"
+                />
+                <label 
+                  htmlFor="receipt-upload"
+                  className="flex flex-col items-center justify-center w-full p-8 border-2 border-dashed border-gray-100 rounded-2xl hover:border-blue-600 hover:bg-blue-50 transition-all cursor-pointer group"
+                >
+                  {receiptPreview ? (
+                    <div className="relative w-full aspect-video rounded-xl overflow-hidden">
+                      <img src={receiptPreview} alt="Receipt Preview" className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <p className="text-white font-black text-[10px] uppercase tracking-widest">Change Image</p>
                       </div>
                     </div>
                   ) : (
-                    <div className="text-center space-y-6 py-10">
-                      <div className="w-20 h-20 bg-blue-50 text-blue-600 rounded-3xl flex items-center justify-center mx-auto">
-                        <Zap className="w-10 h-10" />
-                      </div>
-                      <div className="space-y-2">
-                        <h4 className="text-2xl font-black text-gray-900 tracking-tight">No Virtual Account Found</h4>
-                        <p className="text-gray-400 font-medium">Generate a dedicated account number to fund your wallet instantly via bank transfer.</p>
-                      </div>
-                      <button 
-                        onClick={handleGenerateVirtualAccount}
-                        disabled={isProcessing}
-                        className="px-10 py-5 bg-blue-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-gray-950 transition-all disabled:opacity-50"
-                      >
-                        {isProcessing ? 'Generating...' : 'Generate Account Now'}
-                      </button>
-                    </div>
+                    <>
+                      <Upload className="w-8 h-8 text-gray-300 mb-2 group-hover:text-blue-600 transition-colors" />
+                      <p className="text-gray-900 font-bold text-xs tracking-tight">Click to upload screenshot</p>
+                    </>
                   )}
-                </div>
-              ) : fundingMethod === 'AUTO' ? (
-                <div className="space-y-8">
-                  <div className="bg-gray-50 p-8 rounded-[2.5rem] space-y-4 border border-gray-100">
-                    <div className="flex justify-between items-center">
-                      <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Funding Amount</span>
-                      <span className="font-black text-gray-900 text-xl">₦{numAmount.toLocaleString()}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Gateway Fee (2%)</span>
-                      <span className="font-black text-red-500">₦{serviceFee.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-                    </div>
-                    <div className="pt-4 border-t border-gray-200 flex justify-between items-center">
-                      <span className="text-[10px] font-black text-gray-900 uppercase tracking-widest">Total to Pay</span>
-                      <span className="font-black text-blue-600 text-3xl tracking-tight">₦{totalCharge.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-                    </div>
-                  </div>
+                </label>
+              </div>
+            </div>
 
-                  <button 
-                    onClick={handlePaystack}
-                    disabled={isProcessing}
-                    className="w-full py-8 bg-blue-600 text-white rounded-[2.5rem] font-black text-[12px] uppercase tracking-[0.4em] shadow-2xl shadow-blue-100 hover:bg-gray-950 transition-all transform active:scale-95 disabled:opacity-30 flex items-center justify-center space-x-4"
-                  >
-                    <CreditCard className="w-5 h-5" />
-                    <span>{isProcessing ? 'Processing...' : 'Pay with Paystack'}</span>
-                  </button>
-                </div>
-              ) : (
-                <div className="space-y-8">
-                  <div className="p-8 bg-gray-900 rounded-[2.5rem] text-white space-y-6 shadow-2xl">
-                    <div className="flex justify-between items-start">
-                      <div className="space-y-1">
-                        <p className="text-[10px] font-black text-white/30 uppercase tracking-widest">Bank Name</p>
-                        <p className="text-xl font-black tracking-tight">Palmpay</p>
-                      </div>
-                      <Landmark className="text-blue-500 w-8 h-8" />
-                    </div>
-                    
-                    <div className="space-y-1">
-                      <p className="text-[10px] font-black text-white/30 uppercase tracking-widest">Account Number</p>
-                      <div className="flex items-center justify-between">
-                        <p className="text-4xl font-black tracking-tighter">8142452729</p>
-                        <button onClick={() => handleCopy('8142452729', 'Account Number')} className="p-3 bg-white/10 rounded-xl hover:bg-white/20 transition-all">
-                          <Copy className="w-5 h-5" />
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="space-y-1">
-                      <p className="text-[10px] font-black text-white/30 uppercase tracking-widest">Account Name</p>
-                      <p className="text-lg font-bold tracking-tight">Boluwatife Oluwapelumi Ayuba</p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-4">Upload Payment Receipt</label>
-                    <div className="relative group">
-                      <input 
-                        type="file" 
-                        accept="image/*"
-                        onChange={handleFileChange}
-                        className="hidden" 
-                        id="receipt-upload"
-                      />
-                      <label 
-                        htmlFor="receipt-upload"
-                        className="flex flex-col items-center justify-center w-full p-10 border-4 border-dashed border-gray-100 rounded-[2.5rem] hover:border-blue-600 hover:bg-blue-50 transition-all cursor-pointer group"
-                      >
-                        {receiptPreview ? (
-                          <div className="relative w-full aspect-video rounded-2xl overflow-hidden">
-                            <img src={receiptPreview} alt="Receipt Preview" className="w-full h-full object-cover" />
-                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                              <p className="text-white font-black text-xs uppercase tracking-widest">Change Image</p>
-                            </div>
-                          </div>
-                        ) : (
-                          <>
-                            <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center text-gray-400 mb-4 group-hover:bg-blue-600 group-hover:text-white transition-all">
-                              <Upload className="w-8 h-8" />
-                            </div>
-                            <p className="text-gray-900 font-black text-sm tracking-tight">Click to upload screenshot</p>
-                            <p className="text-gray-400 text-[10px] font-medium uppercase tracking-widest mt-2">JPG, PNG up to 5MB</p>
-                          </>
-                        )}
-                      </label>
-                    </div>
-                  </div>
-
-                  <button 
-                    onClick={handleManualSubmit}
-                    disabled={isProcessing || !receiptFile}
-                    className="w-full py-8 bg-blue-600 text-white rounded-[2.5rem] font-black text-[12px] uppercase tracking-[0.4em] shadow-2xl shadow-blue-100 hover:bg-gray-950 transition-all transform active:scale-95 disabled:opacity-30 flex items-center justify-center space-x-4"
-                  >
-                    <CheckCircle2 className="w-5 h-5" />
-                    <span>{isProcessing ? 'Submitting...' : 'Submit Proof'}</span>
-                  </button>
-                </div>
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
+            <button 
+              onClick={handleManualSubmit}
+              disabled={isProcessing || !receiptFile || numAmount < 100}
+              className="w-full py-5 bg-gray-950 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-600 transition-all disabled:opacity-30 flex items-center justify-center space-x-3"
+            >
+              <CheckCircle2 size={16} />
+              <span>{isProcessing ? 'Submitting...' : 'Submit Proof'}</span>
+            </button>
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">

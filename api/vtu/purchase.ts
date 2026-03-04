@@ -26,7 +26,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ status: false, message: 'Method not allowed' });
   }
 
-  const { userId, service, details, server = 1 } = req.body;
+  const { userId, service, details } = req.body;
 
   if (!userId || !service || !details) {
     return res.status(400).json({ status: false, message: 'Missing required parameters.' });
@@ -45,13 +45,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ status: false, message: 'Insufficient wallet balance.' });
     }
 
-    // Execute purchase based on server
-    let result;
-    if (server === 1) {
-      result = await executeInlomaxPurchase(service, details.payload);
-    } else {
-      result = await executeCiptopupPurchase(service, details.payload);
-    }
+    // Execute purchase via Inlomax (Server 1)
+    const result = await executeInlomaxPurchase(service, details.payload);
 
     if (result.status) {
       // Deduct balance
@@ -68,7 +63,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         source: `${details.network || 'VTU'} ${service} (Bot)`,
         status: 'SUCCESS',
         date_created: admin.firestore.FieldValue.serverTimestamp(),
-        server: `Server ${server}`
+        server: 'Inlomax'
       });
 
       return res.status(200).json({ status: true, message: 'Purchase successful', data: result.data });
@@ -117,46 +112,6 @@ async function executeInlomaxPurchase(service: string, payload: any) {
       return { status: true, data: response.data };
     }
     return { status: false, message: response.data.message || 'Inlomax error' };
-  } catch (error: any) {
-    return { status: false, message: error.response?.data?.message || error.message };
-  }
-}
-
-async function executeCiptopupPurchase(service: string, payload: any) {
-  const apiKey = process.env.CIPTOPUP_API_KEY;
-  const baseUrl = 'https://ciptopup.com/api/v1';
-
-  // Map service names to Ciptopup endpoints
-  const endpointMap: any = {
-    'data': 'data/buy',
-    'airtime': 'airtime/buy',
-    'cable': 'cable/buy',
-    'electricity': 'electricity/buy'
-  };
-
-  const endpoint = endpointMap[service] || service;
-  let mappedPayload = { ...payload };
-
-  // Ciptopup specific mapping
-  if (service === 'data') {
-    mappedPayload = { plan_id: payload.plan || payload.serviceID, mobile_number: payload.mobile_number || payload.mobileNumber };
-  } else if (service === 'airtime') {
-    mappedPayload = { network: payload.network, amount: payload.amount, mobile_number: payload.mobile_number || payload.mobileNumber };
-  }
-
-  try {
-    const response = await axios.post(`${baseUrl}/${endpoint}`, mappedPayload, {
-      headers: {
-        'x-api-key': apiKey,
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json'
-      }
-    });
-
-    if (response.data.status === 'success' || response.data.status === true) {
-      return { status: true, data: response.data };
-    }
-    return { status: false, message: response.data.message || 'Ciptopup error' };
   } catch (error: any) {
     return { status: false, message: error.response?.data?.message || error.message };
   }

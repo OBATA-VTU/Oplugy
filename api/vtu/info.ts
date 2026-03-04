@@ -22,14 +22,14 @@ if (!admin.apps.length) {
 const db = admin.firestore();
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  const { action, server = 1, network, type } = req.query;
+  const { action, network, type } = req.query;
 
   try {
     switch (action) {
       case 'networks':
-        return await getNetworks(res, Number(server));
+        return await getNetworks(res);
       case 'plans':
-        return await getPlans(res, Number(server), String(network), String(type || ''));
+        return await getPlans(res, String(network), String(type || ''));
       case 'providers':
         return await getProviders(res, String(type));
       default:
@@ -40,49 +40,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 }
 
-async function getNetworks(res: VercelResponse, server: number) {
-  if (server === 1) {
-    const apiKey = process.env.INLOMAX_API_KEY;
-    const response = await axios.get('https://inlomax.com/api/services', {
-      headers: { 'Authorization': `Token ${apiKey}` }
-    });
-    const plans = response.data.dataPlans || [];
-    const networks = Array.from(new Set(plans.map((p: any) => p.network))).filter(n => !!n);
-    return res.status(200).json({ status: true, data: networks });
-  } else {
-    const apiKey = process.env.CIPTOPUP_API_KEY;
-    const response = await axios.get('https://ciptopup.com/api/v1/data/plans', {
-      headers: { 'x-api-key': apiKey, 'Authorization': `Bearer ${apiKey}` }
-    });
-    const plans = response.data.data || [];
-    const networks = Array.from(new Set(plans.map((p: any) => p.network || p.operator))).filter(n => !!n);
-    return res.status(200).json({ status: true, data: networks });
-  }
+async function getNetworks(res: VercelResponse) {
+  const apiKey = process.env.INLOMAX_API_KEY;
+  const response = await axios.get('https://inlomax.com/api/services', {
+    headers: { 'Authorization': `Token ${apiKey}` }
+  });
+  const plans = response.data.dataPlans || [];
+  const networks = Array.from(new Set(plans.map((p: any) => p.network))).filter(n => !!n);
+  return res.status(200).json({ status: true, data: networks });
 }
 
-async function getPlans(res: VercelResponse, server: number, network: string, type: string) {
-  if (server === 1) {
-    const apiKey = process.env.INLOMAX_API_KEY;
-    const response = await axios.get('https://inlomax.com/api/services', {
-      headers: { 'Authorization': `Token ${apiKey}` }
-    });
-    const allPlans = response.data.dataPlans || [];
-    const filtered = allPlans.filter((p: any) => 
-      p.network && p.network.toUpperCase() === network.toUpperCase() &&
-      (!type || (p.dataType && p.dataType.toUpperCase() === type.toUpperCase()))
-    );
-    return res.status(200).json({ status: true, data: filtered });
-  } else {
-    const apiKey = process.env.CIPTOPUP_API_KEY;
-    const response = await axios.get(`https://ciptopup.com/api/v1/data/plans?network=${network}`, {
-      headers: { 'x-api-key': apiKey, 'Authorization': `Bearer ${apiKey}` }
-    });
-    const allPlans = response.data.data || [];
-    const filtered = allPlans.filter((p: any) => 
-      (!type || (p.type && p.type.toUpperCase() === type.toUpperCase()))
-    );
-    return res.status(200).json({ status: true, data: filtered });
-  }
+async function getPlans(res: VercelResponse, network: string, type: string) {
+  const apiKey = process.env.INLOMAX_API_KEY;
+  const response = await axios.get('https://inlomax.com/api/services', {
+    headers: { 'Authorization': `Token ${apiKey}` }
+  });
+  const allPlans = response.data.dataPlans || [];
+  const filtered = allPlans.filter((p: any) => 
+    p.network && p.network.toUpperCase() === network.toUpperCase() &&
+    (!type || (p.dataType && p.dataType.toUpperCase() === type.toUpperCase()))
+  );
+  return res.status(200).json({ status: true, data: filtered });
 }
 
 async function getProviders(res: VercelResponse, type: string) {

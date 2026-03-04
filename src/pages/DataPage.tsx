@@ -18,8 +18,6 @@ const DataPage: React.FC = () => {
   const { addNotification } = useNotifications();
   const { user, walletBalance, updateWalletBalance } = useAuth();
   
-  const [selectedServer, setSelectedServer] = useState<1 | 2>(1);
-  const [serverConfirmed, setServerConfirmed] = useState(false);
   const [selectedOperator, setSelectedOperator] = useState<string>('');
   const [selectedType, setSelectedType] = useState<string>('');
   const [selectedPlanId, setSelectedPlanId] = useState<string>('');
@@ -37,12 +35,12 @@ const DataPage: React.FC = () => {
   const [showInsufficientModal, setShowInsufficientModal] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
-  const fetchNetworks = useCallback(async (server: 1 | 2) => {
+  const fetchNetworks = useCallback(async () => {
     setIsLoading(true);
     setLoadingMessage('Syncing Networks...');
     try {
       const [res, logosRes] = await Promise.all([
-        vtuService.getDataNetworks(server),
+        vtuService.getDataNetworks(1),
         adminService.getNetworkLogos()
       ]);
 
@@ -67,8 +65,8 @@ const DataPage: React.FC = () => {
   }, [addNotification]);
 
   useEffect(() => {
-    fetchNetworks(selectedServer);
-  }, [selectedServer, fetchNetworks]);
+    fetchNetworks();
+  }, [fetchNetworks]);
 
   const fetchPlans = useCallback(async (net: string, type: string) => {
     setIsLoading(true);
@@ -78,7 +76,7 @@ const DataPage: React.FC = () => {
         network: net, 
         type, 
         userRole: user?.role || 'user',
-        server: selectedServer
+        server: 1
       });
       if (res.status && res.data) {
         setDataPlans(res.data);
@@ -90,7 +88,7 @@ const DataPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [selectedServer, user?.role, addNotification]);
+  }, [user?.role, addNotification]);
 
   useEffect(() => {
     if (selectedOperator) {
@@ -98,7 +96,7 @@ const DataPage: React.FC = () => {
         setIsLoading(true);
         setLoadingMessage('Fetching Categories...');
         try {
-          const res = await vtuService.getDataCategories(selectedOperator, selectedServer);
+          const res = await vtuService.getDataCategories(selectedOperator, 1);
           if (res.status && res.data) {
             setDataTypes(res.data);
             if (res.data.length === 0) {
@@ -117,13 +115,13 @@ const DataPage: React.FC = () => {
       setDataTypes([]);
       setDataPlans([]);
     }
-  }, [selectedOperator, selectedServer, addNotification, fetchPlans]);
+  }, [selectedOperator, addNotification, fetchPlans]);
 
   useEffect(() => {
     if (selectedOperator && (selectedType || dataTypes.length === 0)) {
       fetchPlans(selectedOperator, selectedType);
     }
-  }, [selectedOperator, selectedType, selectedServer, dataTypes.length, fetchPlans]);
+  }, [selectedOperator, selectedType, dataTypes.length, fetchPlans]);
 
   useEffect(() => {
     const plan = dataPlans.find(p => p.id === selectedPlanId);
@@ -144,7 +142,7 @@ const DataPage: React.FC = () => {
         amount: selectedPlan.amount,
         network: selectedOperator,
         plan_name: selectedPlan.name,
-        server: selectedServer
+        server: 1
       });
       
       if (res.status) {
@@ -236,10 +234,7 @@ const DataPage: React.FC = () => {
               
               <div className="flex flex-col sm:flex-row gap-6 justify-center pt-8">
                 <button 
-                  onClick={() => {
-                    resetAll();
-                    setServerConfirmed(false);
-                  }}
+                  onClick={resetAll}
                   className="px-12 py-8 bg-blue-600 text-white rounded-[2.5rem] font-black text-[12px] uppercase tracking-[0.3em] hover:bg-gray-950 transition-all shadow-2xl shadow-blue-100 flex items-center justify-center space-x-4 group"
                 >
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
@@ -254,53 +249,6 @@ const DataPage: React.FC = () => {
                 </button>
               </div>
             </motion.div>
-          ) : !serverConfirmed ? (
-            <motion.div 
-              key="server-select"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="space-y-12 py-10"
-            >
-              <div className="text-center space-y-4">
-                <h3 className="text-4xl font-black text-gray-900 tracking-tighter">Choose Your Server</h3>
-                <p className="text-gray-400 font-medium text-lg max-w-md mx-auto">
-                  Both servers offer the same high speed and reliability. Prices may vary slightly, so feel free to compare both to find the best deal for you.
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-                {[1, 2].map((srv) => (
-                  <button
-                    key={srv}
-                    onClick={() => setSelectedServer(srv as 1 | 2)}
-                    className={`p-10 rounded-[3rem] border-4 transition-all text-left relative overflow-hidden group ${selectedServer === srv ? 'border-blue-600 bg-blue-50/30' : 'border-gray-100 bg-gray-50/50 hover:border-blue-200'}`}
-                  >
-                    <div className="relative z-10 space-y-4">
-                      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center font-black text-xl ${selectedServer === srv ? 'bg-blue-600 text-white' : 'bg-white text-gray-400 border border-gray-100'}`}>
-                        {srv}
-                      </div>
-                      <div>
-                        <h4 className="text-2xl font-black text-gray-900 tracking-tight">Server {srv}</h4>
-                        <p className="text-gray-400 text-sm font-medium">Standard Delivery Node</p>
-                      </div>
-                    </div>
-                    {selectedServer === srv && (
-                      <div className="absolute top-6 right-6">
-                        <CheckCircle2 className="w-8 h-8 text-blue-600" />
-                      </div>
-                    )}
-                  </button>
-                ))}
-              </div>
-
-              <button 
-                onClick={() => setServerConfirmed(true)}
-                className="w-full py-10 bg-blue-600 text-white rounded-[3rem] font-black text-[14px] uppercase tracking-[0.4em] shadow-2xl shadow-blue-200 hover:bg-gray-950 transition-all transform active:scale-95 flex items-center justify-center space-x-4"
-              >
-                <span>Continue to Plans</span>
-                <ArrowRight className="w-5 h-5" />
-              </button>
-            </motion.div>
           ) : (
             <motion.div 
               key="form"
@@ -308,15 +256,6 @@ const DataPage: React.FC = () => {
               animate={{ opacity: 1 }}
               className="space-y-10"
             >
-              <div className="flex justify-between items-center mb-4">
-                <button 
-                  onClick={() => setServerConfirmed(false)}
-                  className="text-[10px] font-black text-blue-600 uppercase tracking-widest flex items-center gap-2 hover:text-gray-950 transition-colors"
-                >
-                  <ArrowRight className="w-3 h-3 rotate-180" />
-                  Change Server (Currently Server {selectedServer})
-                </button>
-              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Network Selection */}
                 <div className="space-y-4">

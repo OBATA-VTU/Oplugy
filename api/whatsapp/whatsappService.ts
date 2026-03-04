@@ -17,8 +17,8 @@ if (!admin.apps.length) {
   }
 }
 
-const WHATSAPP_TOKEN = process.env.WHATSAPPTOKEN;
-const WHATSAPP_PHOE_NUMBER_ID = process.env.WHATSAPP_PHONE_NUMBER_ID;
+const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN;
+const WHATSAPP_PHONE_NUMBER_ID = process.env.WHATSAPP_PHONE_NUMBER_ID;
 const INLOMAX_API_KEY = process.env.INLOMAX_API_KEY;
 const INLOMAX_BASE_URL = 'https://inlomax.com/api';
 
