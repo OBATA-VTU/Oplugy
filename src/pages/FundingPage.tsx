@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNotifications } from '../hooks/useNotifications';
 import { CreditCard, Landmark, Copy, Zap, ShieldCheck, Info, ArrowRight, Upload, CheckCircle2 } from 'lucide-react';
-import { motion } from 'motion/react';
 import { uploadToImgBB } from '../services/imgbbService';
 import { vtuService } from '../services/vtuService';
 import { billstackService } from '../services/billstackService';

@@ -6,42 +6,30 @@ import { doc, updateDoc } from 'firebase/firestore';
 import Spinner from '../components/Spinner';
 import PinSetupModal from '../components/PinSetupModal';
 import PhoneSetupModal from '../components/PhoneSetupModal';
-import ReceiptModal from '../components/ReceiptModal';
 import { adminService } from '../services/adminService';
 import { authService } from '../services/authService';
 import { vtuService } from '../services/vtuService';
-import { TransactionResponse } from '../types';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { 
   Smartphone, Wifi, Zap, Tv, 
-  Copy, Globe,
+  Copy,
   Users, Plus, ArrowLeftRight, GraduationCap, Gift
 } from 'lucide-react';
 
 const DashboardPage: React.FC = () => {
   const { fetchWalletBalance, isLoading, user, walletBalance } = useAuth();
   const { addNotification } = useNotifications();
-  const [announcement, setAnnouncement] = useState<string>('');
   const [showPinModal, setShowPinModal] = useState(false);
   const [showPhoneModal, setShowPhoneModal] = useState(false);
-  const [recentTransactions, setRecentTransactions] = useState<TransactionResponse[]>([]);
-  const [isHistoryLoading, setIsHistoryLoading] = useState(true);
-  
-  const [selectedTx, setSelectedTx] = useState<TransactionResponse | null>(null);
-  const [isReceiptOpen, setIsReceiptOpen] = useState(false);
 
   const fetchDashboardData = useCallback(async () => {
     if (user) {
       fetchWalletBalance();
-      setIsHistoryLoading(true);
-      const [settingsRes, historyRes] = await Promise.all([
+      await Promise.all([
         adminService.getGlobalSettings(),
         vtuService.getTransactionHistory()
       ]);
-      if (settingsRes.status && settingsRes.data?.announcement) setAnnouncement(settingsRes.data.announcement);
-      if (historyRes.status && historyRes.data) setRecentTransactions(historyRes.data.slice(0, 5));
-      setIsHistoryLoading(false);
     }
   }, [user, fetchWalletBalance]);
 
@@ -52,13 +40,6 @@ const DashboardPage: React.FC = () => {
       if (!user.phone) setShowPhoneModal(true);
     }
   }, [fetchDashboardData, user]);
-
-  const copyReferral = () => {
-    if (user?.referralCode) {
-      navigator.clipboard.writeText(user.referralCode);
-      addNotification("Referral code copied!", "success");
-    }
-  };
 
   const handlePinSuccess = async (pin: string) => {
     const res = await authService.setTransactionPin(user!.id, pin);
@@ -79,22 +60,12 @@ const DashboardPage: React.FC = () => {
     }
   };
 
-  const openReceipt = (tx: TransactionResponse) => {
-    setSelectedTx(tx);
-    setIsReceiptOpen(true);
-  };
-
   if (isLoading) return <div className="flex justify-center p-20"><Spinner /></div>;
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 pb-24 px-4">
       {showPinModal && <PinSetupModal onSuccess={handlePinSuccess} />}
       {showPhoneModal && <PhoneSetupModal onSuccess={handlePhoneSuccess} />}
-      <ReceiptModal 
-        isOpen={isReceiptOpen} 
-        onClose={() => setIsReceiptOpen(false)} 
-        transaction={selectedTx} 
-      />
       
       <motion.div 
         initial={{ opacity: 0, y: 10 }}
