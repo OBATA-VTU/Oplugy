@@ -218,17 +218,6 @@ export default async function handler(req: any, res: any) {
             await sendServiceList(from, "Select a Service");
           }
 
-          if (buttonId === 'SERVER_1') {
-            await whatsappService.updateSession(from, { server: 1, step: 'AWAITING_NETWORK' });
-            const providers = [
-              { id: 'MTN', title: 'MTN', description: 'MTN Nigeria' },
-              { id: 'AIRTEL', title: 'Airtel', description: 'Airtel Africa' },
-              { id: 'GLO', title: 'Glo', description: 'Globacom' },
-              { id: '9MOBILE', title: '9mobile', description: '9mobile Nigeria' }
-            ];
-            await whatsappService.sendInteractiveList(from, `Select your Data Provider:`, "View Providers", [{ title: "Providers", rows: providers }]);
-          }
-
           // Handle Network Selection
           if (['MTN', 'AIRTEL', 'GLO', '9MOBILE'].includes(buttonId)) {
             const service = session?.service;
@@ -357,20 +346,8 @@ export default async function handler(req: any, res: any) {
           } else if (listId === 'SUPPORT') {
             await whatsappService.sendMessage(from, `👨‍💻 *Oplug Support*\n\nFor any issues or inquiries, please contact our support team on WhatsApp: https://wa.me/2348142452729`);
           } else if (['AIRTIME', 'DATA', 'CABLE', 'POWER'].includes(listId)) {
-            await whatsappService.updateSession(from, { service: listId, step: 'AWAITING_NETWORK' });
+            await whatsappService.updateSession(from, { service: listId, server: 1, step: 'AWAITING_NETWORK' });
             
-            if (listId === 'DATA') {
-              await whatsappService.updateSession(from, { server: 1, step: 'AWAITING_NETWORK' });
-              const providers = [
-                { id: 'MTN', title: 'MTN', description: 'MTN Nigeria' },
-                { id: 'AIRTEL', title: 'Airtel', description: 'Airtel Africa' },
-                { id: 'GLO', title: 'Glo', description: 'Globacom' },
-                { id: '9MOBILE', title: '9mobile', description: '9mobile Nigeria' }
-              ];
-              await whatsappService.sendInteractiveList(from, `Select your Data Provider:`, "View Providers", [{ title: "Providers", rows: providers }]);
-              return;
-            }
-
             let providers: any[] = [];
             if (listId === 'AIRTIME') {
               providers = [
@@ -479,10 +456,10 @@ async function handleExecutePurchase(from: string, session: any) {
       };
     }
 
-    const result = await whatsappService.executePurchase(user.id, serviceType, {
+      const result = await whatsappService.executePurchase(user.id, serviceType, {
       amount: session.price,
       network: session.network,
-      server: session.server || 1,
+      server: 1,
       payload
     });
 

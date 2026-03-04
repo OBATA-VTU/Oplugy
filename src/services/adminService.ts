@@ -78,20 +78,16 @@ export const adminService = {
     }
   },
 
-  // --- Dual Provider Stats ---
-  async getProviderBalances(): Promise<{ srv1: number; srv2: number }> {
+  // --- Provider Stats ---
+  async getProviderBalances(): Promise<{ srv1: number }> {
     try {
-      const [res1, res2] = await Promise.all([
-        cipApiClient<any>('balance', { data: { server: 'server1' }, method: 'GET' }),
-        cipApiClient<any>('user/balance', { data: { server: 'server2' }, method: 'GET' })
-      ]);
+      const res1 = await cipApiClient<any>('balance', { data: { server: 'server1' }, method: 'GET' });
       
       return {
-        srv1: res1.status ? Number(res1.data?.funds || 0) : 0,
-        srv2: res2.status ? Number(res2.data?.balance || 0) / 100 : 0
+        srv1: res1.status ? Number(res1.data?.funds || 0) : 0
       };
     } catch (error) {
-      return { srv1: 0, srv2: 0 };
+      return { srv1: 0 };
     }
   },
 

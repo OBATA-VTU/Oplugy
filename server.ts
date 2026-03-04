@@ -92,45 +92,6 @@ async function callServer1(endpoint: string, method: string, data: any) {
   return response.data;
 }
 
-async function callServer2(endpoint: string, method: string, data: any) {
-  const apiKey = process.env.CIPTOPUP_API_KEY;
-  const baseUrl = 'https://api.ciptopup.ng/api'; 
-
-  if (!apiKey) {
-    throw new Error('Ciptopup API key not configured.');
-  }
-
-  const cleanEndpoint = (endpoint || '').replace(/^\//, '');
-  let fullUrl = `${baseUrl}/${cleanEndpoint}`;
-  
-  const headers: any = {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json',
-    'x-api-key': apiKey
-  };
-
-  let body: any = undefined;
-  if (method.toUpperCase() !== 'GET' && data) {
-    const payload: any = { ...data };
-    if (cleanEndpoint === 'data/buy') {
-      if (data.serviceID) payload.plan_id = data.serviceID;
-      if (data.mobileNumber) payload.phone_number = data.mobileNumber;
-    }
-    body = payload;
-  }
-
-  const response = await axios({
-    url: fullUrl,
-    method: method.toUpperCase(),
-    headers,
-    params: method.toUpperCase() === 'GET' ? data : undefined,
-    data: body,
-    timeout: 28000
-  });
-
-  return response.data;
-}
-
 async function callOgaviral(action: string, data: any = {}) {
   const apiKey = process.env.OGAVIRAL_API_KEY;
   const baseUrl = 'https://ogaviral.com/api/v2';
@@ -165,22 +126,119 @@ async function callOgaviral(action: string, data: any = {}) {
 // WhatsApp Webhook
 app.post('/api/whatsapp/webhook', handleWhatsAppWebhook);
 
+// --- Service Sync Endpoint ---
+app.post("/api/admin/sync-services", async (req, res) => {
+  try {
+    const apiKey = process.env.INLOMAX_API_KEY;
+    const response = await axios.get('https://inlomax.com/api/services', {
+      headers: { 
+        'Authorization': `Token ${apiKey}`, 
+        'Authorization-Token': apiKey,
+        'Accept': 'application/json'
+      }
+    });
+
+    if (response.data.status === 'success' && response.data.data?.dataPlans) {
+      const plans = response.data.data.dataPlans;
+      const db = admin.firestore();
+      const batch = db.batch();
+
+      for (const plan of plans) {
+        const planRef = db.collection('manual_pricing').doc(String(plan.serviceID));
+        batch.set(planRef, {
+          plan_id: String(plan.serviceID),
+          plan_name: plan.dataPlan,
+          network: plan.network,
+          type: plan.dataType,
+          base_price: Number(String(plan.amount).replace(/,/g, '')),
+          updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+      }
+
+      await batch.commit();
+      return res.json({ status: true, message: `Successfully synced ${plans.length} services.` });
+    }
+    res.status(400).json({ status: false, message: 'Failed to fetch services from provider.' });
+  } catch (error: any) {
+    console.error('Sync Error:', error.response?.data || error.message);
+    res.status(500).json({ status: false, message: error.message });
+  }
+});
+
+// --- Consolidated VTU Info Endpoint ---
+app.get("/api/vtu/info", async (req, res) => {
+  const { action, network, type, server } = req.query;
+  const selectedServer = Number(server) || 1;
+
+  try {
+    if (action === 'plans') {
+      if (selectedServer === 1) {
+        const apiKey = process.env.INLOMAX_API_KEY;
+        const response = await axios.get('https://inlomax.com/api/services', {
+          headers: { 
+            'Authorization': `Token ${apiKey}`, 
+            'Authorization-Token': apiKey,
+            'Accept': 'application/json'
+          }
+        });
+        if (response.data.status === 'success' && response.data.data?.dataPlans) {
+          let plans = response.data.data.dataPlans;
+          if (network) {
+            plans = plans.filter((p: any) => p.network?.toUpperCase() === String(network).toUpperCase());
+          }
+          return res.json({ status: true, data: plans });
+        }
+      }
+    }
+    res.status(400).json({ status: false, message: 'Invalid request' });
+  } catch (error: any) {
+    res.status(500).json({ status: false, message: error.message });
+  }
+});
+
+// --- Consolidated VTU Purchase Endpoint ---
+app.post("/api/vtu/purchase", async (req, res) => {
+  const { userId, service, details } = req.body;
+  if (!userId || !service || !details) {
+    return res.status(400).json({ status: false, message: 'Missing parameters' });
+  }
+
+  try {
+    const db = admin.firestore();
+    const userRef = db.collection('users').doc(userId);
+    const userDoc = await userRef.get();
+    const userData = userDoc.data();
+
+    if (!userData || userData.walletBalance < details.amount) {
+      return res.status(400).json({ status: false, message: 'Insufficient balance or user not found' });
+    }
+
+    // Execute via Inlomax
+    const result = await callServer1(service, 'POST', details.payload);
+
+    if (result.status === 'success' || result.status === true) {
+      await userRef.update({ walletBalance: admin.firestore.FieldValue.increment(-details.amount) });
+      await db.collection('transactions').add({
+        userId, 
+        userEmail: userData.email, 
+        type: service.toUpperCase(),
+        amount: details.amount, 
+        status: 'SUCCESS', 
+        date_created: admin.firestore.FieldValue.serverTimestamp()
+      });
+      return res.json({ status: true, message: 'Success', data: result.data });
+    }
+    res.status(400).json({ status: false, message: result.message || 'Failed' });
+  } catch (error: any) {
+    res.status(500).json({ status: false, message: error.message });
+  }
+});
+
 // Inlomax Proxy Route (Server 1)
 app.post('/api/proxy-server1', async (req, res) => {
   const { endpoint, method = 'GET', data } = req.body || {};
   try {
     const result = await callServer1(endpoint, method, data);
-    return res.status(200).json(result);
-  } catch (error: any) {
-    return res.status(500).json({ status: 'error', message: error.message });
-  }
-});
-
-// Ciptopup Proxy Route (Server 2)
-app.post('/api/proxy-server2', async (req, res) => {
-  const { endpoint, method = 'GET', data } = req.body || {};
-  try {
-    const result = await callServer2(endpoint, method, data);
     return res.status(200).json(result);
   } catch (error: any) {
     return res.status(500).json({ status: 'error', message: error.message });
@@ -199,45 +257,6 @@ app.post('/api/proxy-smm', async (req, res) => {
     console.error(`SMM Proxy Error:`, error.message);
     return res.status(500).json({ status: 'error', message: error.message });
   }
-});
-
-// Ciptopup Webhook Route
-app.post('/api/webhooks/ciptopup', async (req, res) => {
-  const secret = process.env.CIPTOPUP_WEBHOOK_SECRET;
-  const receivedSecret = req.headers['x-webhook-secret'] || req.headers['authorization'];
-
-  if (secret && receivedSecret !== secret) {
-    return res.status(401).json({ message: 'Unauthorized' });
-  }
-
-  const payload = req.body;
-  console.log('Ciptopup Webhook Received:', payload);
-  
-  // Logic to update transaction status in Firestore
-  if (admin.apps.length) {
-    try {
-      const db = admin.firestore();
-      const { status, reference, request_id } = payload;
-      const txRef = reference || request_id;
-
-      if ((status === 'success' || status === 'completed') && txRef) {
-        const txQuery = await db.collection('transactions').where('reference', '==', txRef).limit(1).get();
-        if (!txQuery.empty) {
-          const txDoc = txQuery.docs[0];
-          if (txDoc.data().status === 'PENDING') {
-            await txDoc.ref.update({
-              status: 'SUCCESS',
-              date_updated: admin.firestore.FieldValue.serverTimestamp()
-            });
-          }
-        }
-      }
-    } catch (e) {
-      console.error('Webhook DB Error:', e);
-    }
-  }
-
-  res.status(200).json({ status: 'received' });
 });
 
 // Inlomax Webhook Route

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import axios from 'axios';
 import { cipApiClient } from '../services/cipApiClient';
 import { db } from '../firebase/config';
 import { doc, setDoc, serverTimestamp, getDoc } from 'firebase/firestore';
@@ -29,7 +30,6 @@ const AdminPricingPage: React.FC = () => {
   const [prices, setPrices] = useState({ user: '', reseller: '', api: '' });
   const [isSaving, setIsSaving] = useState(false);
   const [filter, setFilter] = useState('');
-  const [activeServer, setActiveServer] = useState<1 | 2>(1);
   const [networkLogos, setNetworkLogos] = useState<Record<string, string>>({});
   
   // Percentage discounts for Airtime and Electricity
@@ -58,44 +58,23 @@ const AdminPricingPage: React.FC = () => {
     await fetchDiscounts();
     try {
       if (activeService === 'data') {
-        if (activeServer === 1) {
-          const res = await cipApiClient<any>('services', { method: 'GET', server: 1 });
-          if (res.status && res.data?.dataPlans) {
-            const planMap = new Map<string, any>();
-            await Promise.all((res.data.dataPlans as any[]).map(async (p) => {
-              const id = `s1-${p.network}-${p.serviceID}`;
-              if (planMap.has(id)) return;
-              const manualDoc = await getDoc(doc(db, "manual_pricing", String(p.serviceID)));
-              planMap.set(id, {
-                id,
-                name: `${p.dataPlan} ${p.dataType}`,
-                base_price: Number(String(p.amount).replace(/,/g, '')),
-                network: p.network,
-                type: p.dataType,
-                manual_prices: manualDoc.exists() ? manualDoc.data() : null
-              });
-            }));
-            setPlans(Array.from(planMap.values()));
-          }
-        } else {
-          const res = await cipApiClient<any>('data/plans', { method: 'GET', server: 2 });
-          if (res.status && Array.isArray(res.data)) {
-            const planMap = new Map<string, any>();
-            res.data.forEach((p: any) => {
-              const id = String(p.id || p.plan_id || p.serviceID);
-              const network = String(p.network || p.network_name || 'Unknown');
-              const fullId = `s2-${network}-${id}`;
-              if (planMap.has(fullId)) return;
-              planMap.set(fullId, {
-                id: fullId,
-                name: String(p.name || p.plan_name || 'Data Plan'),
-                base_price: Number(p.price || p.amount || 0) / 100,
-                network: network,
-                type: String(p.type || p.dataType || 'Unknown')
-              });
+        const res = await cipApiClient<any>('services', { method: 'GET', server: 1 });
+        if (res.status && res.data?.dataPlans) {
+          const planMap = new Map<string, any>();
+          await Promise.all((res.data.dataPlans as any[]).map(async (p) => {
+            const id = `s1-${p.network}-${p.serviceID}`;
+            if (planMap.has(id)) return;
+            const manualDoc = await getDoc(doc(db, "manual_pricing", String(p.serviceID)));
+            planMap.set(id, {
+              id,
+              name: `${p.dataPlan} ${p.dataType}`,
+              base_price: Number(String(p.amount).replace(/,/g, '')),
+              network: p.network,
+              type: p.dataType,
+              manual_prices: manualDoc.exists() ? manualDoc.data() : null
             });
-            setPlans(Array.from(planMap.values()));
-          }
+          }));
+          setPlans(Array.from(planMap.values()));
         }
       } else if (activeService === 'cable') {
         const res = await vtuService.getCableProviders();
@@ -159,7 +138,7 @@ const AdminPricingPage: React.FC = () => {
       addNotification("Failed to load pricing data.", "error");
     }
     setLoading(false);
-  }, [activeService, activeServer, addNotification, fetchDiscounts]);
+  }, [activeService, addNotification, fetchDiscounts]);
 
   useEffect(() => {
     fetchPlans();
@@ -224,7 +203,31 @@ const AdminPricingPage: React.FC = () => {
           <h1 className="text-5xl lg:text-8xl font-black text-gray-900 tracking-tighter leading-[0.85]">Service <br /><span className="text-blue-600">Pricing.</span></h1>
         </div>
         
-        <div className="flex gap-2 p-2 bg-white rounded-[2rem] shadow-xl border border-gray-50 overflow-x-auto">
+        <div className="flex flex-col sm:flex-row gap-4">
+          <button 
+            onClick={async () => {
+              try {
+                setLoading(true);
+                const res = await axios.post('/api/admin/sync-services');
+                if (res.data.status) {
+                  addNotification(res.data.message, "success");
+                  fetchPlans();
+                } else {
+                  addNotification(res.data.message, "error");
+                }
+              } catch (e: any) {
+                addNotification(e.message, "error");
+              } finally {
+                setLoading(false);
+              }
+            }}
+            disabled={loading}
+            className="bg-blue-600 text-white px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-gray-950 transition-all shadow-xl shadow-blue-100 flex items-center space-x-3 disabled:opacity-50"
+          >
+            <Settings2 className="w-4 h-4" />
+            <span>Sync Services</span>
+          </button>
+          <div className="flex gap-2 p-2 bg-white rounded-[2rem] shadow-xl border border-gray-50 overflow-x-auto">
           {[
             { id: 'data', icon: <Wifi className="w-4 h-4" />, label: 'Data' },
             { id: 'airtime', icon: <Smartphone className="w-4 h-4" />, label: 'Airtime' },
@@ -250,6 +253,7 @@ const AdminPricingPage: React.FC = () => {
           </button>
         </div>
       </div>
+    </div>
 
       {(activeService === 'airtime' || activeService === 'power') ? (
         <div className="bg-white p-12 lg:p-20 rounded-[4rem] shadow-2xl border border-gray-50 space-y-16">
@@ -302,12 +306,6 @@ const AdminPricingPage: React.FC = () => {
                 onChange={(e) => setFilter(e.target.value)}
               />
             </div>
-            {activeService === 'data' && (
-              <div className="flex p-2 bg-white rounded-[2rem] border border-gray-100 shadow-sm">
-                <button onClick={() => setActiveServer(1)} className={`px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${activeServer === 1 ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-400'}`}>Server 1</button>
-                <button onClick={() => setActiveServer(2)} className={`px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${activeServer === 2 ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-400'}`}>Server 2</button>
-              </div>
-            )}
           </div>
 
           {loading ? (

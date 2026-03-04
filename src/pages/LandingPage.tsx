@@ -77,8 +77,8 @@ const LandingPage: React.FC = () => {
                 transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
                 className="text-[16vw] lg:text-[10vw] font-black leading-[0.8] tracking-[-0.06em] uppercase mb-12 text-white"
               >
-                Digital <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-br from-blue-400 via-blue-600 to-blue-900">Dominance.</span>
+                Oplug <br />
+                <span className="text-transparent bg-clip-text bg-gradient-to-br from-blue-400 via-blue-600 to-blue-900">Reloaded.</span>
               </motion.h1>
 
               <motion.p 
@@ -87,7 +87,7 @@ const LandingPage: React.FC = () => {
                 transition={{ delay: 0.4 }}
                 className="text-xl lg:text-3xl text-slate-400 font-medium max-w-2xl mb-16 leading-tight tracking-tight"
               >
-                The most advanced infrastructure for digital commerce in Nigeria. Instant fulfilment, military-grade accuracy.
+                The ultimate VTU & SMM infrastructure. ⚡️ Instant delivery, 🛡️ Military-grade security, 💰 Best rates in Nigeria.
               </motion.p>
               
               <motion.div 

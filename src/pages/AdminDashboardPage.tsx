@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { adminService } from '../services/adminService';
-import { vtuService } from '../services/vtuService';
 import Spinner from '../components/Spinner';
 import { UsersIcon, CurrencyDollarIcon, ShieldCheckIcon, BoltIcon } from '../components/Icons';
 
@@ -13,10 +12,8 @@ interface StatCardProps {
 
 const AdminDashboardPage: React.FC = () => {
   const [stats, setStats] = useState<any>(null);
-  const [balances, setBalances] = useState({ srv1: 0, srv2: 0 });
+  const [balances, setBalances] = useState({ srv1: 0 });
   const [loading, setLoading] = useState(true);
-
-  const [srv2Status, setSrv2Status] = useState<'IDLE' | 'CHECKING' | 'ONLINE' | 'OFFLINE'>('IDLE');
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -29,12 +26,6 @@ const AdminDashboardPage: React.FC = () => {
     setBalances(resBalances);
     setLoading(false);
   }, []);
-
-  const checkSrv2 = async () => {
-    setSrv2Status('CHECKING');
-    const res = await vtuService.checkServerStatus(2);
-    setSrv2Status(res.status ? 'ONLINE' : 'OFFLINE');
-  };
 
   useEffect(() => {
     fetchData();
@@ -65,8 +56,8 @@ const AdminDashboardPage: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-8 mb-12">
         <StatCard icon={<UsersIcon />} label="Total Users" value={stats?.totalUsers || 0} color="blue" />
         <StatCard icon={<CurrencyDollarIcon />} label="User Balances" value={`₦${(stats?.totalBalance || 0).toLocaleString()}`} color="green" />
-        <StatCard icon={<BoltIcon />} label="Server 1 Balance" value={`₦${balances.srv1.toLocaleString()}`} color="indigo" />
-        <StatCard icon={<BoltIcon />} label="Server 2 Balance" value={`₦${balances.srv2.toLocaleString()}`} color="red" />
+        <StatCard icon={<BoltIcon />} label="Provider Balance" value={`₦${balances.srv1.toLocaleString()}`} color="indigo" />
+        <StatCard icon={<BoltIcon />} label="Server 2" value="Coming Soon" color="gray" />
         <StatCard icon={<ShieldCheckIcon />} label="Admins" value={stats?.admins || 0} color="gray" />
       </div>
 
@@ -74,20 +65,13 @@ const AdminDashboardPage: React.FC = () => {
         <div className="bg-white p-10 rounded-[3rem] shadow-xl border border-gray-50">
           <div className="flex justify-between items-center mb-8">
             <h3 className="text-2xl font-black text-gray-900 tracking-tight">System Health</h3>
-            <button 
-              onClick={checkSrv2}
-              disabled={srv2Status === 'CHECKING'}
-              className="px-4 py-2 bg-blue-50 text-blue-600 text-[9px] font-black uppercase tracking-widest rounded-xl hover:bg-blue-100 transition-all disabled:opacity-50"
-            >
-              {srv2Status === 'CHECKING' ? 'Checking...' : 'Check Server 2'}
-            </button>
           </div>
           <div className="space-y-6">
-            <AlertItem type="success" message="Server 1 (Inlomax): Online & Working." time="Live" />
+            <AlertItem type="success" message="Main Server: Online & Working." time="Live" />
             <AlertItem 
-              type={srv2Status === 'OFFLINE' ? 'error' : 'success'} 
-              message={srv2Status === 'IDLE' ? 'Server 2 (CIP): Ready for check.' : srv2Status === 'ONLINE' ? 'Server 2 (CIP): Online & Connected.' : srv2Status === 'OFFLINE' ? 'Server 2 (CIP): Connection Failed.' : 'Checking Server 2...'} 
-              time={srv2Status === 'IDLE' ? 'Ready' : 'Live'} 
+              type="info" 
+              message="Secondary Server: Coming Soon." 
+              time="Pending" 
             />
             <AlertItem type="info" message="Database is running smoothly." time="Active" />
           </div>

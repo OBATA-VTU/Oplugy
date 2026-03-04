@@ -254,29 +254,6 @@ export const whatsappService = {
     }
     return null;
   },
-  getAvailablePlans: async (network: string, server: number = 1) => {
-    try {
-      const response = await axios.get(`${process.env.APP_URL}/api/vtu/info?action=plans&server=${server}&network=${network}`);
-      const res = response.data;
-      
-      if (!res.status || !res.data || res.data.length === 0) {
-        return `No plans found for ${network.toUpperCase()} on Server ${server}.`;
-      }
-
-      let message = `*Available ${network.toUpperCase()} Plans (Server ${server}):*\n\n`;
-      res.data.forEach((p: any) => {
-        const planId = p.serviceID || p.id || p.plan_id;
-        const planName = p.dataPlan || p.name || p.plan_name;
-        const amount = p.amount || p.price;
-        message += `• *ID:* ${planId}\n  *Name:* ${planName}\n  *Price:* ₦${amount}\n\n`;
-      });
-      
-      message += `To buy: *DATA ${network.toUpperCase()} [ID] [PHONE]*`;
-      return message;
-    } catch (error: any) {
-      return `Error fetching plans: ${error.message}`;
-    }
-  },
 
   /**
    * Fetch Cable providers from website API
