@@ -97,6 +97,10 @@ async function executeInlomaxPurchase(service: string, payload: any) {
     mappedPayload = { serviceID: payload.plan || payload.serviceID, mobileNumber: payload.mobile_number || payload.mobileNumber };
   } else if (service === 'airtime') {
     mappedPayload = { network: payload.network, amount: payload.amount, mobileNumber: payload.mobile_number || payload.mobileNumber };
+  } else if (service === 'cable') {
+    mappedPayload = { serviceID: payload.serviceID, plan: payload.plan, iucNum: payload.iucNum };
+  } else if (service === 'electricity') {
+    mappedPayload = { serviceID: payload.serviceID, meterNum: payload.meterNum, meterType: payload.meterType || 1, amount: payload.amount };
   }
 
   try {

@@ -28,6 +28,20 @@ export default async function handler(req: any, res: any) {
       if (!message) return res.status(200).json({ status: 'ok' });
 
       const from = message.from;
+      const messageId = message.id;
+
+      // Deduplication check using message ID (simple local cache for immediate retries)
+      if ((global as any).processedMessages?.has(messageId)) {
+        return res.status(200).json({ status: 'ok' });
+      }
+      if (!(global as any).processedMessages) (global as any).processedMessages = new Set();
+      (global as any).processedMessages.add(messageId);
+      // Keep cache small
+      if ((global as any).processedMessages.size > 100) {
+        const first = (global as any).processedMessages.values().next().value;
+        (global as any).processedMessages.delete(first);
+      }
+
       const userName = value.contacts?.[0]?.profile?.name || 'User';
 
       // Handle Text Messages
@@ -204,16 +218,15 @@ export default async function handler(req: any, res: any) {
             await sendServiceList(from, "Select a Service");
           }
 
-          if (buttonId === 'SERVER_1' || buttonId === 'SERVER_2') {
-            const server = buttonId === 'SERVER_1' ? 1 : 2;
-            await whatsappService.updateSession(from, { server, step: 'AWAITING_NETWORK' });
+          if (buttonId === 'SERVER_1') {
+            await whatsappService.updateSession(from, { server: 1, step: 'AWAITING_NETWORK' });
             const providers = [
               { id: 'MTN', title: 'MTN', description: 'MTN Nigeria' },
               { id: 'AIRTEL', title: 'Airtel', description: 'Airtel Africa' },
               { id: 'GLO', title: 'Glo', description: 'Globacom' },
               { id: '9MOBILE', title: '9mobile', description: '9mobile Nigeria' }
             ];
-            await whatsappService.sendInteractiveList(from, `Select your Data Provider (Server ${server}):`, "View Providers", [{ title: "Providers", rows: providers }]);
+            await whatsappService.sendInteractiveList(from, `Select your Data Provider:`, "View Providers", [{ title: "Providers", rows: providers }]);
           }
 
           // Handle Network Selection
@@ -243,9 +256,9 @@ export default async function handler(req: any, res: any) {
             const user = await whatsappService.getUserByPhone(from);
             if (!user) return;
             
-            const email = user.email || user.emailAddress;
+            const email = user.email || user.emailAddress || user.email_address;
             if (!email) {
-              await whatsappService.sendMessage(from, `❌ *Email Missing*\n\nWe couldn't find an email address for your account. Please update your profile on our website first.`);
+              await whatsappService.sendMessage(from, `❌ *Email Missing*\n\nWe couldn't find an email address for your account. Please update your profile on our website (https://oplug.com.ng/profile) first.`);
               return;
             }
 
@@ -346,10 +359,14 @@ export default async function handler(req: any, res: any) {
             await whatsappService.updateSession(from, { service: listId, step: 'AWAITING_NETWORK' });
             
             if (listId === 'DATA') {
-              await whatsappService.sendInteractiveButtons(from, `🚀 *Select Data Server*\n\nChoose which server to use for your data purchase:`, [
-                { id: 'SERVER_1', title: 'Server 1 (Inlomax)' },
-                { id: 'SERVER_2', title: 'Server 2 (Ciptopup)' }
-              ]);
+              await whatsappService.updateSession(from, { server: 1, step: 'AWAITING_NETWORK' });
+              const providers = [
+                { id: 'MTN', title: 'MTN', description: 'MTN Nigeria' },
+                { id: 'AIRTEL', title: 'Airtel', description: 'Airtel Africa' },
+                { id: 'GLO', title: 'Glo', description: 'Globacom' },
+                { id: '9MOBILE', title: '9mobile', description: '9mobile Nigeria' }
+              ];
+              await whatsappService.sendInteractiveList(from, `Select your Data Provider:`, "View Providers", [{ title: "Providers", rows: providers }]);
               return;
             }
 
