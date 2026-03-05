@@ -244,7 +244,14 @@ export const whatsappService = {
   getUserByPhone: async (phone: string) => {
     const db = admin.firestore();
     // Try different formats of the phone number
-    const formats = [phone, phone.replace(/^234/, '0'), phone.replace(/^0/, '234')];
+    const cleanPhone = phone.replace(/\D/g, '');
+    const formats = [
+      cleanPhone, 
+      cleanPhone.replace(/^234/, '0'), 
+      cleanPhone.replace(/^0/, '234'),
+      `+${cleanPhone}`,
+      `+${cleanPhone.replace(/^234/, '0')}`
+    ];
     
     for (const f of formats) {
       const snapshot = await db.collection('users').where('phone', '==', f).limit(1).get();
@@ -252,6 +259,9 @@ export const whatsappService = {
         return { id: snapshot.docs[0].id, ...snapshot.docs[0].data() } as any;
       }
     }
+    
+    // Last resort: search by email if we can find it in session or something, 
+    // but usually phone is the primary key for WhatsApp.
     return null;
   },
 

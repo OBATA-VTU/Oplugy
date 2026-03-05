@@ -51,35 +51,22 @@ async function callServer1(endpoint: string, method: string, data: any) {
   const headers: any = {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
-    'Authorization': `Token ${apiKey}`
+    'Authorization': `Token ${apiKey}`,
+    'Authorization-Token': apiKey
   };
-
-  if (['payelectric', 'subcable', 'validatemeter', 'validatecable'].includes(cleanEndpoint)) {
-    headers['Authorization-Token'] = apiKey;
-  }
 
   let body: any = undefined;
   if (method.toUpperCase() !== 'GET' && data) {
-    const mapped: any = {};
-    const rawServiceID = String(data.serviceID || data.plan_id || data.type || data.provider_id || data.network || '');
-    
-    if (['validatecable', 'subcable', 'airtime'].includes(cleanEndpoint) && isNaN(Number(rawServiceID))) {
-      mapped.serviceID = rawServiceID.toLowerCase();
-    } else {
-      mapped.serviceID = rawServiceID;
-    }
-    
-    if (data.mobileNumber || data.phone || data.phone_number) {
-      mapped.mobileNumber = String(data.mobileNumber || data.phone || data.phone_number);
-    }
-    if (data.amount) mapped.amount = Number(data.amount);
-    if (data.quantity !== undefined) mapped.quantity = Number(data.quantity);
-    if (data.meterNum || data.meter_number) mapped.meterNum = String(data.meterNum || data.meter_number);
-    if (data.meterType !== undefined) mapped.meterType = (data.meterType === 'prepaid' || data.meterType === 1) ? 1 : 2;
-    if (data.iucNum || data.smartCardNumber || data.smartcard) mapped.iucNum = String(data.iucNum || data.smartCardNumber || data.smartcard);
-
-    body = mapped;
+    // Pass through data but ensure serviceID is set if plan_id is present
+    body = { ...data };
+    if (data.plan_id && !data.serviceID) body.serviceID = data.plan_id;
+    if (data.phone && !data.mobileNumber) body.mobileNumber = data.phone;
+    if (data.number && !data.mobileNumber) body.mobileNumber = data.number;
+    if (data.number && !data.iucNum) body.iucNum = data.number;
+    if (data.number && !data.meterNum) body.meterNum = data.number;
   }
+
+  console.log(`Calling Server 1: ${method} ${fullUrl}`, body);
 
   const response = await axios({
     url: fullUrl,
@@ -87,7 +74,7 @@ async function callServer1(endpoint: string, method: string, data: any) {
     headers,
     params: method.toUpperCase() === 'GET' ? data : undefined,
     data: body,
-    timeout: 28000
+    timeout: 30000
   });
 
   return response.data;
@@ -246,6 +233,13 @@ app.get("/api/vtu/info", async (req, res) => {
           return res.json({ status: true, data: plans });
         }
       }
+    } else if (action === 'providers') {
+      // Return hardcoded providers for now to ensure stability
+      if (type === 'CABLE') {
+        return res.json({ status: true, data: ['DSTV', 'GOTV', 'STARTIMES'] });
+      } else if (type === 'POWER') {
+        return res.json({ status: true, data: ['IKEDC', 'EKEDC', 'AEDC', 'PHEDC', 'JEDC', 'KAEDCO', 'KEDCO', 'EEDC', 'IBEDC'] });
+      }
     }
     res.status(400).json({ status: false, message: 'Invalid request' });
   } catch (error: any) {
@@ -316,14 +310,20 @@ app.all('/api/proxy', async (req, res) => {
       result = response.data;
     } else if (server === 'billstack') {
       const secretKey = process.env.BILLSTACK_SECRET_KEY;
+      console.log(`Calling Billstack Proxy: ${endpoint}`, data);
       const response = await axios({
         url: `https://api.billstack.co/${(endpoint || '').replace(/^\//, '')}`,
         method: method.toUpperCase(),
-        headers: { 'Authorization': `Bearer ${secretKey}`, 'Content-Type': 'application/json' },
+        headers: { 
+          'Authorization': `Bearer ${secretKey}`, 
+          'Content-Type': 'application/json' 
+        },
         data: method.toUpperCase() !== 'GET' ? data : undefined,
-        params: method.toUpperCase() === 'GET' ? data : undefined
+        params: method.toUpperCase() === 'GET' ? data : undefined,
+        timeout: 30000
       });
       result = response.data;
+      console.log(`Billstack Proxy Response:`, result);
     } else {
       return res.status(400).json({ status: false, message: 'Invalid server' });
     }
@@ -333,17 +333,45 @@ app.all('/api/proxy', async (req, res) => {
   }
 });
 
-// Ogaviral Proxy Route (SMM)
-app.post('/api/proxy-smm', async (req, res) => {
-  const { action, data } = req.body || {};
-  console.log(`SMM Proxy Request: action=${action}`, data);
+// Specific Proxy Routes for Backward Compatibility
+app.all('/api/proxy-server1', async (req, res) => {
+  const { endpoint, method = 'GET', data } = req.body || {};
   try {
-    const result = await callOgaviral(action, data);
-    console.log(`SMM Proxy Response:`, result);
+    const result = await callServer1(endpoint, method, data);
     return res.status(200).json(result);
   } catch (error: any) {
-    console.error(`SMM Proxy Error:`, error.message);
     return res.status(500).json({ status: 'error', message: error.message });
+  }
+});
+
+app.all('/api/proxy-server2', async (req, res) => {
+  const { endpoint, method = 'GET', data } = req.body || {};
+  try {
+    // Server 2 is currently disabled or using Server 1 as fallback
+    const result = await callServer1(endpoint, method, data);
+    return res.status(200).json(result);
+  } catch (error: any) {
+    return res.status(500).json({ status: 'error', message: error.message });
+  }
+});
+
+app.all('/api/proxy-smm', async (req, res) => {
+  const { action, data } = req.body || {};
+  try {
+    const result = await callOgaviral(action || 'services', data || {});
+    return res.status(200).json(result);
+  } catch (error: any) {
+    return res.status(500).json({ status: 'error', message: error.message });
+  }
+});
+
+// SMM Balance Endpoint
+app.get('/api/smm/balance', async (req, res) => {
+  try {
+    const result = await callOgaviral('balance', {});
+    res.json({ status: true, data: result });
+  } catch (error: any) {
+    res.status(500).json({ status: false, message: error.message });
   }
 });
 

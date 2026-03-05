@@ -12,7 +12,7 @@ interface StatCardProps {
 
 const AdminDashboardPage: React.FC = () => {
   const [stats, setStats] = useState<any>(null);
-  const [balances, setBalances] = useState({ srv1: 0 });
+  const [balances, setBalances] = useState({ srv1: 0, smm: 0 });
   const [loading, setLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
@@ -56,8 +56,8 @@ const AdminDashboardPage: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-8 mb-12">
         <StatCard icon={<UsersIcon />} label="Total Users" value={stats?.totalUsers || 0} color="blue" />
         <StatCard icon={<CurrencyDollarIcon />} label="User Balances" value={`₦${(stats?.totalBalance || 0).toLocaleString()}`} color="green" />
-        <StatCard icon={<BoltIcon />} label="Provider Balance" value={`₦${balances.srv1.toLocaleString()}`} color="indigo" />
-        <StatCard icon={<BoltIcon />} label="Server 2" value="Coming Soon" color="gray" />
+        <StatCard icon={<BoltIcon />} label="VTU Balance" value={`₦${balances.srv1.toLocaleString()}`} color="indigo" />
+        <StatCard icon={<BoltIcon />} label="SMM Balance" value={`₦${balances.smm.toLocaleString()}`} color="red" />
         <StatCard icon={<ShieldCheckIcon />} label="Admins" value={stats?.admins || 0} color="gray" />
       </div>
 

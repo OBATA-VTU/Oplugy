@@ -54,7 +54,7 @@ export default async function handler(req: any, res: any) {
         if (greetings.includes(text) && !session) {
           const user = await whatsappService.getUserByPhone(from);
           if (user) {
-            await sendWelcomeMenu(from, user.username, user.walletBalance, user.phone);
+            await sendWelcomeMenu(from, user.username, user.walletBalance, user.email || 'Not Set', user.phone);
           } else {
             await sendGuestMenu(from);
           }
@@ -88,7 +88,7 @@ export default async function handler(req: any, res: any) {
             });
             await whatsappService.clearSession(from);
             await whatsappService.sendMessage(from, `🎉 *Account Created Successfully!*\n\nWelcome to Oplug, ${session.username}. You can now fund your wallet and start purchasing services.`);
-            await sendWelcomeMenu(from, session.username, 0);
+            await sendWelcomeMenu(from, session.username, 0, email, from);
           } catch (e: any) {
             await whatsappService.sendMessage(from, `❌ Error creating account: ${e.message}`);
           }
@@ -246,14 +246,14 @@ export default async function handler(req: any, res: any) {
             if (!user) return;
             
             const email = user.email || user.emailAddress || user.email_address;
-            if (!email) {
-              await whatsappService.sendMessage(from, `❌ *Email Missing*\n\nWe couldn't find an email address for your account. Please update your profile on our website (https://oplug.com.ng/profile) first.`);
+            if (!email || email.includes('oplug.bot')) {
+              await whatsappService.sendMessage(from, `❌ *Email Missing*\n\nWe couldn't find a valid email address for your account. Please update your profile on our website (https://oplug.com.ng/profile) first to generate a virtual account.`);
               return;
             }
 
             await whatsappService.sendMessage(from, `⏳ Generating your dedicated virtual account...`);
             try {
-              const res = await (whatsappService as any).generateVirtualAccount({
+              const res = await whatsappService.generateVirtualAccount({
                 email: email,
                 firstName: user.username,
                 lastName: 'Oplug',
@@ -262,7 +262,9 @@ export default async function handler(req: any, res: any) {
               });
 
               if (res.status && res.data) {
-                const account = res.data.account[0];
+                const account = Array.isArray(res.data.account) ? res.data.account[0] : res.data.account;
+                if (!account) throw new Error('No account data returned from provider.');
+
                 const db = admin.firestore();
                 await db.collection('users').doc(user.id).update({
                   virtualAccount: {
@@ -270,15 +272,16 @@ export default async function handler(req: any, res: any) {
                     account_name: account.account_name,
                     bank_name: account.bank_name,
                     bank_id: account.bank_id,
-                    reference: res.data.reference
+                    reference: res.data.reference || res.data.merchant_reference
                   }
                 });
                 await handleFunding(from);
               } else {
-                await whatsappService.sendMessage(from, `❌ Failed to generate account: ${res.message || 'Unknown error'}`);
+                await whatsappService.sendMessage(from, `❌ Failed to generate account: ${res.message || 'Invalid response from API'}`);
               }
             } catch (e: any) {
-              await whatsappService.sendMessage(from, `❌ Error: ${e.message}`);
+              console.error('VA Generation Error:', e);
+              await whatsappService.sendMessage(from, `❌ Error: ${e.message || 'Service temporarily unavailable'}`);
             }
           }
 
@@ -468,7 +471,7 @@ async function handleExecutePurchase(from: string, session: any) {
       await whatsappService.sendMessage(from, `✅ *Transaction Successful!*\n\nYour *${session.service}* order for *${session.phone}* has been processed successfully.\n\n💰 *New Balance:* ₦${newBalance.toLocaleString()}\n\n_Powered by OBA TECHNOLOGIES ❤️_`);
       await whatsappService.clearSession(from);
       const updatedUser = await whatsappService.getUserByPhone(from);
-      if (updatedUser) await sendWelcomeMenu(from, updatedUser.username, updatedUser.walletBalance, updatedUser.phone);
+      if (updatedUser) await sendWelcomeMenu(from, updatedUser.username, updatedUser.walletBalance, updatedUser.email || 'Not Set', updatedUser.phone);
     }
   } catch (e: any) {
     await whatsappService.sendMessage(from, `❌ *Transaction Failed*\n\nReason: ${e.message}\n\n_Please try again or contact support._`);
@@ -476,8 +479,8 @@ async function handleExecutePurchase(from: string, session: any) {
   }
 }
 
-async function sendWelcomeMenu(from: string, username: string, balance: number, phone?: string) {
-  const body = `Welcome to *Oplug* 🌟\n\n👤 *${username}*\n📱 ${phone || from}\n💰 *Balance:* ₦${balance.toLocaleString()}\n\n_Choose a service to get started:_`;
+async function sendWelcomeMenu(from: string, username: string, balance: number, email: string, phone?: string) {
+  const body = `Welcome to *Oplug* 🌟\n\n👤 *${username}*\n📧 ${email}\n📱 ${phone || from}\n💰 *Balance:* ₦${balance.toLocaleString()}\n\n_Choose a service to get started:_`;
   await whatsappService.sendInteractiveButtons(from, body, [
     { id: 'CHOOSE_SERVICE', title: 'Select a Service 🛒' }
   ]);
