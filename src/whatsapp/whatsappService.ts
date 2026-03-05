@@ -22,6 +22,12 @@ const WHATSAPP_PHONE_NUMBER_ID = process.env.WHATSAPP_PHONE_NUMBER_ID;
 const INLOMAX_API_KEY = process.env.INLOMAX_API_KEY;
 const INLOMAX_BASE_URL = 'https://inlomax.com/api';
 
+const getAppUrl = () => {
+  if (process.env.APP_URL) return process.env.APP_URL;
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
+  return '';
+};
+
 export const whatsappService = {
   /**
    * Send a text message via Meta's WhatsApp Business API
@@ -158,7 +164,7 @@ export const whatsappService = {
             email,
             amount: Math.round(amount * 100),
             metadata: { ...metadata, source: 'whatsapp_bot' },
-            callback_url: `${process.env.APP_URL}/payment/verify`,
+            callback_url: `${getAppUrl()}/payment/verify`,
             channels: ["card", "bank_transfer"]
           },
           {
@@ -277,7 +283,7 @@ export const whatsappService = {
    */
   getCableProviders: async () => {
     try {
-      const response = await axios.get(`${process.env.APP_URL}/api/vtu/info?action=providers&type=CABLE`);
+      const response = await axios.get(`${getAppUrl()}/api/vtu/info?action=providers&type=CABLE`);
       const res = response.data;
       if (!res.status) return [];
       return res.data.map((name: string) => ({
@@ -293,7 +299,7 @@ export const whatsappService = {
    */
   getElectricityProviders: async () => {
     try {
-      const response = await axios.get(`${process.env.APP_URL}/api/vtu/info?action=providers&type=POWER`);
+      const response = await axios.get(`${getAppUrl()}/api/vtu/info?action=providers&type=POWER`);
       const res = response.data;
       if (!res.status) return [];
       return res.data.map((name: string) => ({
@@ -316,7 +322,7 @@ export const whatsappService = {
       : { serviceID: provider.toLowerCase(), meterNum: number, meterType: 1 };
 
     try {
-      const response = await axios.post(`${process.env.APP_URL}/api/proxy?server=1&endpoint=${endpoint}`, payload);
+      const response = await axios.post(`${getAppUrl()}/api/proxy?server=1&endpoint=${endpoint}`, payload);
       return response.data;
     } catch (error: any) {
       throw error;
@@ -329,7 +335,7 @@ export const whatsappService = {
   getPlansForList: async (network: string, type: 'DATA' | 'AIRTIME' | 'CABLE' | 'POWER', server: number = 1) => {
     if (type === 'DATA') {
       try {
-        const response = await axios.get(`${process.env.APP_URL}/api/vtu/info?action=plans&server=${server}&network=${network}`);
+        const response = await axios.get(`${getAppUrl()}/api/vtu/info?action=plans&server=${server}&network=${network}`);
         const res = response.data;
         if (!res.status || !res.data) return [];
 
@@ -358,7 +364,7 @@ export const whatsappService = {
 
     if (type === 'CABLE') {
       try {
-        const response = await axios.get(`${process.env.APP_URL}/api/vtu/info?action=plans&server=1&network=${network}&type=CABLE`);
+        const response = await axios.get(`${getAppUrl()}/api/vtu/info?action=plans&server=1&network=${network}&type=CABLE`);
         const res = response.data;
         if (!res.status || !res.data) return [];
         return res.data.map((p: any) => ({
@@ -377,7 +383,7 @@ export const whatsappService = {
    */
   executePurchase: async (userId: string, service: string, details: any) => {
     try {
-      const response = await axios.post(`${process.env.APP_URL}/api/vtu/purchase`, {
+      const response = await axios.post(`${getAppUrl()}/api/vtu/purchase`, {
         userId,
         service,
         details,

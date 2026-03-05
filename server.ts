@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import path from 'path';
 import { createProxyMiddleware } from 'http-proxy-middleware';
 import * as admin from 'firebase-admin';
 import axios from 'axios';
@@ -15,8 +16,10 @@ if (!admin.apps.length) {
       admin.initializeApp({
         credential: admin.credential.cert(serviceAccount)
       });
+      admin.firestore().settings({ ignoreUndefinedProperties: true });
     } else {
       admin.initializeApp();
+      admin.firestore().settings({ ignoreUndefinedProperties: true });
       console.warn('FIREBASE_SERVICE_ACCOUNT not configured. Using default credentials.');
       try {
         const app = admin.app();
@@ -29,8 +32,13 @@ if (!admin.apps.length) {
 }
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 const CRA_PORT = 3001;
+
+// Set APP_URL for Vercel and other environments
+if (!process.env.APP_URL && process.env.VERCEL_URL) {
+  process.env.APP_URL = `https://${process.env.VERCEL_URL}`;
+}
 
 app.use(cors());
 app.use(express.json());
@@ -211,40 +219,43 @@ app.post("/api/admin/sync-services", async (req, res) => {
 
       // Sync Data Plans
       for (const plan of dataPlans) {
+        if (!plan.serviceID) continue;
         const planRef = db.collection('manual_pricing').doc(String(plan.serviceID));
         batch.set(planRef, {
           plan_id: String(plan.serviceID),
-          plan_name: plan.dataPlan,
-          network: plan.network,
+          plan_name: plan.dataPlan || plan.plan_name || 'Unknown Data Plan',
+          network: plan.network || 'Unknown',
           type: 'DATA',
-          dataType: plan.dataType,
-          base_price: Number(String(plan.amount).replace(/,/g, '')),
+          dataType: plan.dataType || 'SME',
+          base_price: Number(String(plan.amount || 0).replace(/,/g, '')),
           updatedAt: admin.firestore.FieldValue.serverTimestamp()
         }, { merge: true });
       }
 
       // Sync Cable Plans
       for (const plan of cablePlans) {
+        if (!plan.serviceID) continue;
         const planRef = db.collection('manual_pricing').doc(String(plan.serviceID));
         batch.set(planRef, {
           plan_id: String(plan.serviceID),
-          plan_name: plan.plan_name,
-          network: plan.network,
+          plan_name: plan.plan_name || plan.dataPlan || 'Unknown Cable Plan',
+          network: plan.network || 'Unknown',
           type: 'CABLE',
-          base_price: Number(String(plan.amount).replace(/,/g, '')),
+          base_price: Number(String(plan.amount || 0).replace(/,/g, '')),
           updatedAt: admin.firestore.FieldValue.serverTimestamp()
         }, { merge: true });
       }
 
       // Sync Electricity Plans
       for (const plan of electricityPlans) {
+        if (!plan.serviceID) continue;
         const planRef = db.collection('manual_pricing').doc(String(plan.serviceID));
         batch.set(planRef, {
           plan_id: String(plan.serviceID),
-          plan_name: plan.plan_name,
-          network: plan.network,
+          plan_name: plan.plan_name || plan.dataPlan || 'Unknown Power Plan',
+          network: plan.network || 'Unknown',
           type: 'POWER',
-          base_price: Number(String(plan.amount).replace(/,/g, '')),
+          base_price: Number(String(plan.amount || 0).replace(/,/g, '')),
           updatedAt: admin.firestore.FieldValue.serverTimestamp()
         }, { merge: true });
       }
@@ -516,12 +527,22 @@ app.post('/api/billstack-webhook', async (req, res) => {
 });
 
 // Proxy all other requests to the CRA dev server in development
-if (process.env.NODE_ENV !== 'production') {
+if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
   app.use('/', createProxyMiddleware({
     target: `http://localhost:${CRA_PORT}`,
     changeOrigin: true,
     ws: true // support websockets for HMR
   }));
+} else if (process.env.NODE_ENV === 'production' || process.env.VERCEL) {
+  // Serve static files from the React build folder
+  const buildPath = path.join(process.cwd(), 'build');
+  app.use(express.static(buildPath));
+  
+  // Handle SPA routing: serve index.html for any non-API routes
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api')) return next();
+    res.sendFile(path.join(buildPath, 'index.html'));
+  });
 }
 
 // Background Scheduler for Transactions
@@ -649,7 +670,11 @@ const startScheduler = async () => {
     // Test connection
     await db.collection('settings').limit(1).get();
     console.log('Firestore connection successful. Starting scheduler...');
-    setInterval(processScheduledTransactions, 60000);
+    if (!process.env.VERCEL) {
+      setInterval(processScheduledTransactions, 60000);
+    } else {
+      console.log('Scheduler disabled in Vercel serverless environment. Use Vercel Cron instead.');
+    }
   } catch (error: any) {
     console.error('Failed to connect to Firestore. Scheduler will not run:', error.message);
   }
@@ -657,8 +682,10 @@ const startScheduler = async () => {
 
 startScheduler();
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`API Gateway running on http://0.0.0.0:${PORT}`);
-});
+if (process.env.NODE_ENV !== 'test' && !process.env.VERCEL) {
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`API Gateway running on http://0.0.0.0:${PORT}`);
+  });
+}
 
 export default app;
