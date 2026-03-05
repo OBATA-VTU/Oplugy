@@ -10,6 +10,8 @@ interface SignUpFormProps {
 
 const SignUpForm: React.FC<SignUpFormProps> = ({ onSubmit, onGoogleSignUp, isLoading, error }) => {
   const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
     username: '',
     email: '',
     phoneNumber: '',
@@ -42,6 +44,17 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ onSubmit, onGoogleSignUp, isLoa
       )}
       
       <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="firstName" className="block text-gray-700 text-[10px] font-black uppercase tracking-widest mb-2">First Name</label>
+            <input type="text" id="firstName" className="w-full py-4 px-5 bg-gray-50 border border-gray-100 rounded-xl" placeholder="John" value={formData.firstName} onChange={handleChange} required disabled={isLoading} />
+          </div>
+          <div>
+            <label htmlFor="lastName" className="block text-gray-700 text-[10px] font-black uppercase tracking-widest mb-2">Last Name</label>
+            <input type="text" id="lastName" className="w-full py-4 px-5 bg-gray-50 border border-gray-100 rounded-xl" placeholder="Doe" value={formData.lastName} onChange={handleChange} required disabled={isLoading} />
+          </div>
+        </div>
+
         <div>
           <label htmlFor="username" className="block text-gray-700 text-[10px] font-black uppercase tracking-widest mb-2">Username</label>
           <input type="text" id="username" className="w-full py-4 px-5 bg-gray-50 border border-gray-100 rounded-xl" placeholder="Choose a unique username" value={formData.username} onChange={handleChange} required disabled={isLoading} />

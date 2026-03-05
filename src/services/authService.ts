@@ -98,9 +98,17 @@ export const authService = {
     }
   },
 
-  async signup(payload: { email: string, password: string, username: string, referralCode?: string, phone: string }): Promise<ApiResponse<any>> {
+  async signup(payload: { 
+    email: string, 
+    password: string, 
+    username: string, 
+    firstName: string,
+    lastName: string,
+    referralCode?: string, 
+    phone: string 
+  }): Promise<ApiResponse<any>> {
     try {
-      const { email, password, username, referralCode, phone } = payload;
+      const { email, password, username, firstName, lastName, referralCode, phone } = payload;
       
       // Strict check for unique username
       const usernameLower = username.toLowerCase().trim();
@@ -120,7 +128,7 @@ export const authService = {
 
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-      await updateProfile(user, { displayName: usernameLower });
+      await updateProfile(user, { displayName: `${firstName} ${lastName}` });
 
       let referredBy = null;
       if (referralCode) {
@@ -137,7 +145,9 @@ export const authService = {
       const userData = {
         id: user.uid,
         email,
-        fullName: usernameLower, // We use username as the display name now
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        fullName: `${firstName.trim()} ${lastName.trim()}`,
         username: usernameLower,
         phone: phone.trim(),
         walletBalance: 0,

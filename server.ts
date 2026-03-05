@@ -36,6 +36,12 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// WhatsApp Webhook Route
+app.all('/api/whatsapp/webhook', (req, res, next) => {
+  console.log(`WhatsApp Webhook ${req.method} Received`);
+  handleWhatsAppWebhook(req, res);
+});
+
 // Helper functions for API calls
 async function callServer1(endpoint: string, method: string, data: any) {
   const apiKey = process.env.INLOMAX_API_KEY;
@@ -50,34 +56,49 @@ async function callServer1(endpoint: string, method: string, data: any) {
   
   const headers: any = {
     'Content-Type': 'application/json',
-    'Accept': 'application/json',
-    'Authorization': `Token ${apiKey}`,
-    'Authorization-Token': apiKey
+    'Accept': 'application/json'
   };
+
+  // Specific headers based on Inlomax documentation
+  if (['subcable', 'payelectric'].includes(cleanEndpoint)) {
+    headers['Authorization-Token'] = apiKey;
+  } else {
+    headers['Authorization'] = `Token ${apiKey}`;
+  }
 
   let body: any = undefined;
   if (method.toUpperCase() !== 'GET' && data) {
-    // Pass through data but ensure serviceID is set if plan_id is present
     body = { ...data };
+    // Map common fields to Inlomax expected fields
     if (data.plan_id && !data.serviceID) body.serviceID = data.plan_id;
     if (data.phone && !data.mobileNumber) body.mobileNumber = data.phone;
-    if (data.number && !data.mobileNumber) body.mobileNumber = data.number;
-    if (data.number && !data.iucNum) body.iucNum = data.number;
-    if (data.number && !data.meterNum) body.meterNum = data.number;
+    if (data.number && !data.mobileNumber && !['subcable', 'payelectric', 'validatecable', 'validatemeter'].includes(cleanEndpoint)) body.mobileNumber = data.number;
+    
+    if (cleanEndpoint === 'subcable' || cleanEndpoint === 'validatecable') {
+       if (data.number && !data.iucNum) body.iucNum = data.number;
+    }
+    if (cleanEndpoint === 'payelectric' || cleanEndpoint === 'validatemeter') {
+       if (data.number && !data.meterNum) body.meterNum = data.number;
+    }
   }
 
-  console.log(`Calling Server 1: ${method} ${fullUrl}`, body);
+  console.log(`Calling Server 1: ${method} ${fullUrl}`, JSON.stringify(body));
 
-  const response = await axios({
-    url: fullUrl,
-    method: method.toUpperCase(),
-    headers,
-    params: method.toUpperCase() === 'GET' ? data : undefined,
-    data: body,
-    timeout: 30000
-  });
-
-  return response.data;
+  try {
+    const response = await axios({
+      url: fullUrl,
+      method: method.toUpperCase(),
+      headers,
+      params: method.toUpperCase() === 'GET' ? data : undefined,
+      data: body,
+      timeout: 30000
+    });
+    console.log(`Server 1 Response:`, JSON.stringify(response.data));
+    return response.data;
+  } catch (error: any) {
+    console.error(`Server 1 Error (${fullUrl}):`, error.response?.data || error.message);
+    throw error;
+  }
 }
 
 async function callOgaviral(action: string, data: any = {}) {
@@ -98,17 +119,18 @@ async function callOgaviral(action: string, data: any = {}) {
     }
   });
 
-  const response = await axios({
-    url: baseUrl,
-    method: 'POST',
-    data: params.toString(),
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded'
-    },
-    timeout: 28000
-  });
+  console.log(`Calling Ogaviral: ${baseUrl} action=${action}`, data);
 
-  return response.data;
+  try {
+    const response = await axios.post(baseUrl, params, {
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    });
+    console.log(`Ogaviral Response:`, response.data);
+    return response.data;
+  } catch (error: any) {
+    console.error('Ogaviral Error:', error.response?.data || error.message);
+    throw error;
+  }
 }
 
 // --- Auth Endpoints ---
@@ -182,25 +204,53 @@ app.post("/api/admin/sync-services", async (req, res) => {
       }
     });
 
-    if (response.data.status === 'success' && response.data.data?.dataPlans) {
-      const plans = response.data.data.dataPlans;
+    if (response.data.status === 'success' && response.data.data) {
+      const { dataPlans = [], cablePlans = [], electricityPlans = [] } = response.data.data;
       const db = admin.firestore();
       const batch = db.batch();
 
-      for (const plan of plans) {
+      // Sync Data Plans
+      for (const plan of dataPlans) {
         const planRef = db.collection('manual_pricing').doc(String(plan.serviceID));
         batch.set(planRef, {
           plan_id: String(plan.serviceID),
           plan_name: plan.dataPlan,
           network: plan.network,
-          type: plan.dataType,
+          type: 'DATA',
+          dataType: plan.dataType,
+          base_price: Number(String(plan.amount).replace(/,/g, '')),
+          updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+      }
+
+      // Sync Cable Plans
+      for (const plan of cablePlans) {
+        const planRef = db.collection('manual_pricing').doc(String(plan.serviceID));
+        batch.set(planRef, {
+          plan_id: String(plan.serviceID),
+          plan_name: plan.plan_name,
+          network: plan.network,
+          type: 'CABLE',
+          base_price: Number(String(plan.amount).replace(/,/g, '')),
+          updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+      }
+
+      // Sync Electricity Plans
+      for (const plan of electricityPlans) {
+        const planRef = db.collection('manual_pricing').doc(String(plan.serviceID));
+        batch.set(planRef, {
+          plan_id: String(plan.serviceID),
+          plan_name: plan.plan_name,
+          network: plan.network,
+          type: 'POWER',
           base_price: Number(String(plan.amount).replace(/,/g, '')),
           updatedAt: admin.firestore.FieldValue.serverTimestamp()
         }, { merge: true });
       }
 
       await batch.commit();
-      return res.json({ status: true, message: `Successfully synced ${plans.length} services.` });
+      return res.json({ status: true, message: `Successfully synced ${dataPlans.length + cablePlans.length + electricityPlans.length} services.` });
     }
     res.status(400).json({ status: false, message: 'Failed to fetch services from provider.' });
   } catch (error: any) {
@@ -435,9 +485,15 @@ app.post('/api/paystack-webhook', async (req, res) => {
 // Billstack Webhook
 app.post('/api/billstack-webhook', async (req, res) => {
   const secret = process.env.BILLSTACK_SECRET_KEY;
+  const md5Secret = process.env.BILLSTACK_MD5_SECRET;
+  
   if (!secret) return res.status(500).json({ message: 'Billstack secret not configured' });
-  const expectedSignature = crypto.createHash('md5').update(secret).digest('hex');
-  if (req.headers['x-wiaxy-signature'] !== expectedSignature) return res.status(401).json({ message: 'Invalid signature' });
+  
+  const expectedSignature = md5Secret || crypto.createHash('md5').update(secret).digest('hex');
+  if (req.headers['x-wiaxy-signature'] !== expectedSignature) {
+    console.warn('Billstack Webhook: Invalid signature');
+    return res.status(401).json({ message: 'Invalid signature' });
+  }
 
   const payload = req.body;
   if (payload.event === 'PAYMENT_NOTIFIFICATION' && payload.data?.type === 'RESERVED_ACCOUNT_TRANSACTION') {

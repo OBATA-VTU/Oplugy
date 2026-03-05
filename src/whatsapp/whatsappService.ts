@@ -254,7 +254,14 @@ export const whatsappService = {
     ];
     
     for (const f of formats) {
-      const snapshot = await db.collection('users').where('phone', '==', f).limit(1).get();
+      // Check 'phone' field
+      let snapshot = await db.collection('users').where('phone', '==', f).limit(1).get();
+      if (!snapshot.empty) {
+        return { id: snapshot.docs[0].id, ...snapshot.docs[0].data() } as any;
+      }
+      
+      // Check 'phoneNumber' field
+      snapshot = await db.collection('users').where('phoneNumber', '==', f).limit(1).get();
       if (!snapshot.empty) {
         return { id: snapshot.docs[0].id, ...snapshot.docs[0].data() } as any;
       }

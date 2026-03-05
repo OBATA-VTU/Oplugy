@@ -62,9 +62,21 @@ export default async function handler(req: any, res: any) {
         }
 
         // Handle Ongoing Session (Account Creation)
+        if (session?.step === 'AWAITING_FIRST_NAME') {
+          await whatsappService.updateSession(from, { firstName: text, step: 'AWAITING_LAST_NAME' });
+          await whatsappService.sendMessage(from, `✨ *Nice to meet you, ${text}!*\n\nNow, what is your *Last Name*?`);
+          return res.status(200).json({ status: 'ok' });
+        }
+
+        if (session?.step === 'AWAITING_LAST_NAME') {
+          await whatsappService.updateSession(from, { lastName: text, step: 'AWAITING_USERNAME' });
+          await whatsappService.sendMessage(from, `📝 *Almost there!*\n\nChoose a unique *Username* for your account:`);
+          return res.status(200).json({ status: 'ok' });
+        }
+
         if (session?.step === 'AWAITING_USERNAME') {
           await whatsappService.updateSession(from, { username: text, step: 'AWAITING_EMAIL' });
-          await whatsappService.sendMessage(from, `✨ *Great!* Now please provide your *Email Address* to complete your registration.`);
+          await whatsappService.sendMessage(from, `📧 *Perfect!* Now please provide your *Email Address* to complete your registration.`);
           return res.status(200).json({ status: 'ok' });
         }
 
@@ -77,19 +89,43 @@ export default async function handler(req: any, res: any) {
 
           try {
             const db = admin.firestore();
-            await db.collection('users').add({
-              username: session.username,
+            
+            // Generate a random password since we're creating via WhatsApp
+            const tempPassword = Math.random().toString(36).slice(-8);
+            
+            // Create Firebase Auth user
+            const userRecord = await admin.auth().createUser({
+              email: email,
+              password: tempPassword,
+              displayName: `${session.firstName} ${session.lastName}`,
+              phoneNumber: from.startsWith('+') ? from : `+${from}`
+            });
+
+            const userData = {
+              id: userRecord.uid,
+              firstName: session.firstName,
+              lastName: session.lastName,
+              fullName: `${session.firstName} ${session.lastName}`,
+              username: session.username.toLowerCase(),
               email: email,
               phone: from,
               walletBalance: 0,
-              role: 'User',
+              role: 'user',
+              status: 'active',
+              referralCode: Math.random().toString(36).substring(2, 8).toUpperCase(),
+              referralEarnings: 0,
+              referralCount: 0,
               isPinSet: false,
               createdAt: admin.firestore.FieldValue.serverTimestamp()
-            });
+            };
+
+            await db.collection('users').doc(userRecord.uid).set(userData);
+            
             await whatsappService.clearSession(from);
-            await whatsappService.sendMessage(from, `🎉 *Account Created Successfully!*\n\nWelcome to Oplug, ${session.username}. You can now fund your wallet and start purchasing services.`);
+            await whatsappService.sendMessage(from, `🎉 *Account Created Successfully!*\n\nWelcome to Oplug, ${session.firstName}. You can now fund your wallet and start purchasing services.\n\n_Note: You can log in to our website using your email and a temporary password we generated for you (you should change it later)._`);
             await sendWelcomeMenu(from, session.username, 0, email, from);
           } catch (e: any) {
+            console.error('WhatsApp Registration Error:', e);
             await whatsappService.sendMessage(from, `❌ Error creating account: ${e.message}`);
           }
           return res.status(200).json({ status: 'ok' });
@@ -210,8 +246,8 @@ export default async function handler(req: any, res: any) {
           const buttonId = interactive.button_reply.id;
 
           if (buttonId === 'CREATE_ACCOUNT') {
-            await whatsappService.updateSession(from, { step: 'AWAITING_USERNAME' });
-            await whatsappService.sendMessage(from, `🚀 *Awesome! Let's get you started.*\n\nWhat would you like your *Username* to be?`);
+            await whatsappService.updateSession(from, { step: 'AWAITING_FIRST_NAME' });
+            await whatsappService.sendMessage(from, `🚀 *Awesome! Let's get you started.*\n\nWhat is your *First Name*?`);
           }
 
           if (buttonId === 'GUEST_PURCHASE' || buttonId === 'CHOOSE_SERVICE') {
