@@ -49,14 +49,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const idToken = await firebaseUser.getIdToken();
         setToken(idToken);
         
-        const unsubscribeDoc = onSnapshot(doc(db, "users", firebaseUser.uid), (docSnap) => {
-          if (docSnap.exists()) {
-            const data = docSnap.data();
-            setUser({ ...data, id: firebaseUser.uid });
-            setWalletBalance(data.walletBalance || 0);
+        const unsubscribeDoc = onSnapshot(
+          doc(db, "users", firebaseUser.uid), 
+          (docSnap) => {
+            if (docSnap.exists()) {
+              const data = docSnap.data();
+              setUser({ ...data, id: firebaseUser.uid });
+              setWalletBalance(data.walletBalance || 0);
+            }
+            setIsLoading(false);
+          },
+          (error) => {
+            console.error("Firestore Sync Error:", error);
+            if (error.code === 'permission-denied') {
+              addNotification('Access Denied: Please ensure your Firestore Security Rules are correctly configured.', 'error');
+            } else {
+              addNotification('Failed to sync user data.', 'error');
+            }
+            setIsLoading(false);
           }
-          setIsLoading(false);
-        });
+        );
 
         return () => unsubscribeDoc();
       } else {

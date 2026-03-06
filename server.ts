@@ -20,6 +20,7 @@ if (!admin.apps.length) {
         projectId: projectId
       });
     } else {
+      console.warn(`[Firebase Admin] WARNING: Initializing without service account credentials. Firestore operations may fail with PERMISSION_DENIED in non-GCP environments.`);
       console.log(`Initializing Firebase Admin with Project ID: ${projectId}`);
       admin.initializeApp({
         projectId: projectId
