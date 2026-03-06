@@ -10,35 +10,34 @@ import handleWhatsAppWebhook from './src/whatsapp/webhook';
 // Initialize Firebase Admin
 if (!admin.apps.length) {
   try {
-    const saString = process.env.FIREBASE_SERVICE_ACCOUNT || '{}';
+    const saString = (process.env.FIREBASE_SERVICE_ACCOUNT || '{}').trim();
     let serviceAccount: any;
     try {
-      serviceAccount = JSON.parse(saString);
+      // Remove potential wrapping quotes from Vercel env vars
+      const cleanSaString = saString.replace(/^'|'$/g, '').replace(/^"|"$/g, '');
+      serviceAccount = JSON.parse(cleanSaString);
     } catch (parseError) {
-      console.error('Failed to parse FIREBASE_SERVICE_ACCOUNT JSON. Attempting to fix string format...');
-      // Handle cases where the string might be double-quoted or have escaped newlines incorrectly
-      const fixedString = saString.trim().replace(/^'|'$/g, '').replace(/^"|"$/g, '');
-      serviceAccount = JSON.parse(fixedString);
+      console.error('[Firebase Admin] Failed to parse FIREBASE_SERVICE_ACCOUNT JSON:', parseError);
+      serviceAccount = {};
     }
 
     if (serviceAccount.private_key) {
+      // Fix escaped newlines in private key
       serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
     }
 
     const projectId = serviceAccount.project_id || process.env.FIREBASE_PROJECT_ID || 'oplug-vtu';
     
-    if (serviceAccount.project_id) {
-      console.log(`Initializing Firebase Admin with Service Account. Project: ${projectId}`);
+    if (serviceAccount.project_id && serviceAccount.private_key) {
+      console.log(`[Firebase Admin] Initializing with Service Account for project: ${projectId}`);
+      console.log(`[Firebase Admin] Client Email: ${serviceAccount.client_email}`);
       admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
         projectId: projectId
       });
     } else {
-      console.warn(`[Firebase Admin] WARNING: Initializing without service account credentials. Firestore operations may fail with PERMISSION_DENIED in non-GCP environments.`);
-      console.log(`Initializing Firebase Admin with Project ID: ${projectId}`);
-      admin.initializeApp({
-        projectId: projectId
-      });
+      console.warn(`[Firebase Admin] WARNING: Missing service account credentials (project_id or private_key). Firestore operations will likely fail with PERMISSION_DENIED.`);
+      admin.initializeApp({ projectId: projectId });
     }
     admin.firestore().settings({ ignoreUndefinedProperties: true });
     console.log(`Firebase Admin initialized successfully for project: ${projectId}`);
@@ -410,24 +409,72 @@ app.all('/api/proxy', async (req, res) => {
         return res.status(500).json({ status: false, message: 'Billstack API key not configured on server.' });
       }
       
-      console.log(`[Billstack Proxy] Calling: ${endpoint}`, JSON.stringify(data));
+      const baseUrl = 'https://api.billstack.co';
+      
       try {
-        const response = await axios({
-          url: `https://api.billstack.co/${(endpoint || '').replace(/^\//, '')}`,
-          method: method.toUpperCase(),
-          headers: { 
-            'Authorization': `Bearer ${secretKey}`, 
-            'Content-Type': 'application/json' 
-          },
-          data: method.toUpperCase() !== 'GET' ? data : undefined,
-          params: method.toUpperCase() === 'GET' ? data : undefined,
-          timeout: 30000
-        });
-        result = response.data;
-        console.log(`[Billstack Proxy] Success Response:`, JSON.stringify(result));
+        // Atomic 2-step flow for virtual account generation
+        if (endpoint.includes('generateVirtualAccount')) {
+          console.log(`[Billstack Proxy] Starting Atomic 2-Step Flow for: ${data.email}`);
+          
+          // Step 1: Create Customer (v1/customer)
+          try {
+            await axios.post(`${baseUrl}/v1/customer`, {
+              email: data.email,
+              first_name: data.firstName || data.first_name,
+              last_name: data.lastName || data.last_name,
+              phone: data.phone
+            }, {
+              headers: { 'Authorization': `Bearer ${secretKey}`, 'Content-Type': 'application/json' }
+            });
+            console.log(`[Billstack Proxy] Step 1: Customer created/verified for ${data.email}`);
+          } catch (e: any) {
+            // Ignore duplicate errors, proceed to step 2
+            console.log(`[Billstack Proxy] Step 1: Customer already exists or error ignored: ${e.message}`);
+          }
+          
+          // Step 2: Generate Account (v2/thirdparty/generateVirtualAccount/)
+          const fullUrl = `${baseUrl}/v2/thirdparty/generateVirtualAccount/`;
+          const response = await axios.post(fullUrl, data, {
+            headers: { 
+              'Authorization': `Bearer ${secretKey}`, 
+              'Content-Type': 'application/json',
+              'User-Agent': 'Oplug-API-Gateway/2.0'
+            },
+            timeout: 30000
+          });
+          result = response.data;
+        } else {
+          // Standard proxy for other endpoints
+          const fullUrl = `${baseUrl}/${(endpoint || '').replace(/^\//, '')}`;
+          console.log(`[Billstack Proxy] Calling: ${method.toUpperCase()} ${fullUrl}`, JSON.stringify(data));
+          
+          const response = await axios({
+            url: fullUrl,
+            method: method.toUpperCase(),
+            headers: { 
+              'Authorization': `Bearer ${secretKey}`, 
+              'Content-Type': 'application/json',
+              'User-Agent': 'Oplug-API-Gateway/2.0'
+            },
+            data: method.toUpperCase() !== 'GET' ? data : undefined,
+            params: method.toUpperCase() === 'GET' ? data : undefined,
+            timeout: 30000
+          });
+          result = response.data;
+        }
+        
+        console.log(`[Billstack Proxy] Success Response:`, JSON.stringify(result).substring(0, 200));
       } catch (axiosError: any) {
-        console.error(`[Billstack Proxy] API Error:`, axiosError.response?.data || axiosError.message);
-        return res.status(axiosError.response?.status || 500).json(axiosError.response?.data || { status: false, message: axiosError.message });
+        const errorData = axiosError.response?.data;
+        const isHtml = typeof errorData === 'string' && errorData.includes('<!DOCTYPE html>');
+        const errorMessage = isHtml ? 'Billstack API returned HTML (likely 404 or 500). Check endpoint URL.' : (errorData || axiosError.message);
+        
+        console.error(`[Billstack Proxy] API Error:`, errorMessage);
+        return res.status(axiosError.response?.status || 500).json({
+          status: false,
+          message: isHtml ? 'Internal Provider Error (HTML returned)' : (typeof errorMessage === 'string' ? errorMessage : 'Billstack API Error'),
+          details: isHtml ? undefined : errorData
+        });
       }
     } else {
       return res.status(400).json({ status: false, message: 'Invalid server' });

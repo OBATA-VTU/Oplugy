@@ -33,25 +33,10 @@ export const billstackService = {
     reference: string;
   }): Promise<ApiResponse<BillstackResponse>> => {
     try {
-      // First, ensure customer exists
-      await apiClient<any>('/api/proxy?server=billstack', '', {
-        method: 'POST',
-        data: {
-          endpoint: 'v2/thirdparty/customer',
-          method: 'POST',
-          data: {
-            email: payload.email,
-            firstName: payload.firstName,
-            lastName: payload.lastName,
-            phone: payload.phone
-          }
-        }
-      });
-
       const res = await apiClient<any>('/api/proxy?server=billstack', '', {
         method: 'POST',
         data: {
-          endpoint: 'v2/thirdparty/generateVirtualAccount',
+          endpoint: 'v2/thirdparty/generateVirtualAccount/',
           method: 'POST',
           data: {
             email: payload.email,
