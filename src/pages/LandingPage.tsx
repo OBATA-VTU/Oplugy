@@ -1,212 +1,306 @@
 import React from "react";
+import { Link } from "react-router-dom";
+import { motion } from "motion/react";
 import Logo from "../components/Logo";
+import Footer from "../components/Footer";
+import {
+  Wifi,
+  Smartphone,
+  Tv,
+  Lightbulb,
+  ShieldCheck,
+  Zap,
+  Wallet
+} from "lucide-react";
 
-const ImageService = ({ title, img }: any) => (
-  <div className="text-center group">
-    <div className="flex justify-center mb-6">
-      <img
-        src={img}
-        alt={title}
-        className="w-40 object-contain group-hover:scale-110 transition duration-500"
-      />
-    </div>
-
-    <h3 className="text-lg font-bold text-white">{title}</h3>
-  </div>
-);
-
-const LandingPage = () => {
+const LandingPage: React.FC = () => {
   return (
-    <div className="bg-black text-white">
+    <div className="bg-slate-950 text-white font-sans overflow-hidden">
+
+      {/* NAVBAR */}
+      <nav className="fixed top-0 w-full z-50 bg-slate-950/70 backdrop-blur-xl border-b border-white/5">
+        <div className="max-w-7xl mx-auto px-6 py-5 flex justify-between items-center">
+          <Logo />
+
+          <div className="hidden lg:flex gap-10 text-sm font-semibold">
+            <a href="#services" className="text-slate-400 hover:text-white">Services</a>
+            <a href="#why" className="text-slate-400 hover:text-white">Why Oplug</a>
+            <a href="#how" className="text-slate-400 hover:text-white">How It Works</a>
+            <Link to="/pricing" className="text-slate-400 hover:text-white">Pricing</Link>
+          </div>
+
+          <div className="flex gap-4">
+            <Link to="/login" className="text-slate-300 hover:text-white text-sm">
+              Login
+            </Link>
+
+            <Link
+              to="/signup"
+              className="bg-blue-600 px-6 py-2 rounded-full text-sm font-bold hover:bg-blue-500"
+            >
+              Get Started
+            </Link>
+          </div>
+        </div>
+      </nav>
 
       {/* HERO */}
-      <section className="min-h-screen flex items-center justify-center px-6 text-center">
-        <div className="max-w-4xl">
+      <section className="min-h-screen flex items-center pt-32 px-6">
+        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-24 items-center">
 
-          <div className="flex justify-center mb-8">
-            <Logo className="h-14 w-auto"/>
+          <div>
+            <h1 className="text-6xl lg:text-7xl font-black leading-tight mb-6">
+              Buy Data, Airtime<br />
+              & Pay Bills <br />
+              <span className="text-blue-500">Instantly.</span>
+            </h1>
+
+            <p className="text-lg text-slate-400 mb-10 max-w-lg">
+              Oplug is a fast VTU platform for buying cheap data, airtime,
+              electricity bills and cable subscriptions in Nigeria.
+            </p>
+
+            <div className="flex gap-5 flex-wrap">
+              <Link
+                to="/signup"
+                className="bg-blue-600 px-8 py-4 rounded-full font-bold hover:bg-blue-500"
+              >
+                Create Account
+              </Link>
+
+              <Link
+                to="/pricing"
+                className="border border-white/10 px-8 py-4 rounded-full font-bold hover:bg-white/5"
+              >
+                View Data Prices
+              </Link>
+            </div>
           </div>
 
-          <h1 className="text-6xl font-black mb-6">
-            Nigeria’s Fastest VTU Platform
-          </h1>
+          <motion.img
+            src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
+            alt="mobile data purchase"
+            className="w-[420px] object-contain mx-auto"
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+          />
 
-          <p className="text-xl opacity-80 mb-10">
-            Buy Cheap Data, Airtime, Pay Bills Instantly. Reliable automated
-            VTU platform for everyone.
-          </p>
+        </div>
+      </section>
 
-          <div className="text-3xl font-bold text-green-400 mb-12">
-            Special Offer — 1GB MTN @ ₦225
+      {/* SPECIAL OFFER */}
+      <section className="py-32 px-6 bg-slate-900">
+        <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-20 items-center">
+
+          <motion.img
+            src="https://cdn-icons-png.flaticon.com/512/2885/2885417.png"
+            className="w-[360px] mx-auto object-contain"
+          />
+
+          <div>
+
+            <p className="text-blue-500 font-bold uppercase tracking-widest mb-4">
+              Limited Offer
+            </p>
+
+            <h2 className="text-5xl font-black mb-4">
+              MTN 1GB Data
+            </h2>
+
+            <p className="text-6xl font-black text-blue-500 mb-6">
+              ₦225
+            </p>
+
+            <p className="text-slate-400 mb-8">
+              Buy MTN 1GB data instantly at a discounted rate.
+              Delivery is automatic and takes only a few seconds.
+            </p>
+
+            <Link
+              to="/signup"
+              className="bg-blue-600 px-10 py-4 rounded-full font-bold hover:bg-blue-500"
+            >
+              Buy Now
+            </Link>
+
           </div>
-
-          <a
-            href="/register"
-            className="bg-blue-600 hover:bg-blue-700 px-10 py-4 rounded-xl text-lg font-bold transition"
-          >
-            Get Started
-          </a>
-
         </div>
       </section>
 
       {/* SERVICES */}
-      <section className="py-40 px-6">
+      <section id="services" className="py-40 px-6">
         <div className="max-w-7xl mx-auto">
 
           <h2 className="text-5xl font-black text-center mb-24">
-            Our Services
+            Everything You Need
           </h2>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-y-24 gap-x-10 items-center">
+          <div className="grid md:grid-cols-3 gap-12">
 
-            <ImageService
-              title="Buy MTN Data"
-              img="https://images.unsplash.com/photo-1580910051074-3eb694886505?auto=format&fit=crop&w=600&q=80"
-            />
+            <Service icon={<Wifi size={30}/>} title="Buy Data"
+            text="Purchase MTN, Airtel, Glo and 9mobile data bundles instantly."/>
 
-            <ImageService
-              title="Airtel Data"
-              img="https://images.unsplash.com/photo-1603575448878-868a20723f0d?auto=format&fit=crop&w=600&q=80"
-            />
+            <Service icon={<Smartphone size={30}/>} title="Airtime Topup"
+            text="Recharge airtime instantly for any Nigerian network."/>
 
-            <ImageService
-              title="Glo Data"
-              img="https://images.unsplash.com/photo-1607082352121-fa243f3dde32?auto=format&fit=crop&w=600&q=80"
-            />
+            <Service icon={<Tv size={30}/>} title="Cable TV"
+            text="Renew DSTV, GOTV and Startimes subscriptions."/>
 
-            <ImageService
-              title="9mobile Data"
-              img="https://images.unsplash.com/photo-1599058917765-a780eda07a3e?auto=format&fit=crop&w=600&q=80"
-            />
+            <Service icon={<Lightbulb size={30}/>} title="Electricity Bills"
+            text="Pay electricity bills quickly from your wallet."/>
 
-            <ImageService
-              title="Instant Airtime"
-              img="https://images.unsplash.com/photo-1601597111158-2fceff292cdc?auto=format&fit=crop&w=600&q=80"
-            />
+            <Service icon={<Wallet size={30}/>} title="Wallet Funding"
+            text="Secure wallet funding via bank transfer and cards."/>
 
-            <ImageService
-              title="Cable TV Bills"
-              img="https://images.unsplash.com/photo-1593784991095-a205069470b6?auto=format&fit=crop&w=600&q=80"
-            />
-
-            <ImageService
-              title="Electricity Payment"
-              img="https://images.unsplash.com/photo-1581093458791-9d09d6b43b0b?auto=format&fit=crop&w=600&q=80"
-            />
-
-            <ImageService
-              title="Instant Delivery"
-              img="https://images.unsplash.com/photo-1581092795360-fd1ca04f0952?auto=format&fit=crop&w=600&q=80"
-            />
+            <Service icon={<Zap size={30}/>} title="Instant Delivery"
+            text="Most transactions are completed in under 5 seconds."/>
 
           </div>
         </div>
       </section>
 
-      {/* FEATURES */}
-      <section className="py-40 px-6 bg-neutral-950">
-        <div className="max-w-6xl mx-auto">
+      {/* WHY CHOOSE */}
+      <section id="why" className="py-40 px-6 bg-slate-900">
+        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-24 items-center">
 
-          <h2 className="text-5xl font-black text-center mb-24">
-            Why Choose Oplug
-          </h2>
+          <div>
 
-          <div className="grid md:grid-cols-3 gap-16 text-center">
+            <h2 className="text-5xl font-black mb-10">
+              Why Choose Oplug
+            </h2>
 
-            <div>
-              <h3 className="text-2xl font-bold mb-4">Instant Delivery</h3>
-              <p className="opacity-70">
-                All transactions are processed instantly with automated
-                infrastructure.
-              </p>
-            </div>
+            <div className="space-y-8">
 
-            <div>
-              <h3 className="text-2xl font-bold mb-4">Cheap Data</h3>
-              <p className="opacity-70">
-                Enjoy highly discounted data bundles for all networks.
-              </p>
-            </div>
+              <Feature
+              icon={<Zap/>}
+              title="Instant Delivery"
+              text="Most purchases are delivered automatically in seconds."/>
 
-            <div>
-              <h3 className="text-2xl font-bold mb-4">Secure Payments</h3>
-              <p className="opacity-70">
-                All payments are protected with industry-level encryption.
-              </p>
+              <Feature
+              icon={<ShieldCheck/>}
+              title="Secure Payments"
+              text="Your wallet and transactions are fully protected."/>
+
+              <Feature
+              icon={<Wallet/>}
+              title="Cheap Prices"
+              text="Enjoy reseller-level data prices."/>
+
             </div>
 
           </div>
+
+          <motion.img
+            src="https://cdn-icons-png.flaticon.com/512/1256/1256650.png"
+            className="w-[420px] mx-auto object-contain"
+          />
 
         </div>
       </section>
 
       {/* HOW IT WORKS */}
-      <section className="py-40 px-6">
-        <div className="max-w-6xl mx-auto">
+      <section id="how" className="py-40 px-6">
+        <div className="max-w-6xl mx-auto text-center">
 
-          <h2 className="text-5xl font-black text-center mb-24">
+          <h2 className="text-5xl font-black mb-24">
             How It Works
           </h2>
 
-          <div className="grid md:grid-cols-3 gap-16 text-center">
+          <div className="grid md:grid-cols-3 gap-20">
 
-            <div>
-              <div className="text-5xl font-black mb-6 text-blue-500">1</div>
-              <h3 className="text-xl font-bold mb-3">Create Account</h3>
-              <p className="opacity-70">
-                Register in seconds and gain access to the dashboard.
-              </p>
-            </div>
+            <Step number="01" title="Create Account"
+            text="Sign up and access your personal dashboard."/>
 
-            <div>
-              <div className="text-5xl font-black mb-6 text-blue-500">2</div>
-              <h3 className="text-xl font-bold mb-3">Fund Wallet</h3>
-              <p className="opacity-70">
-                Deposit money easily using automated payment methods.
-              </p>
-            </div>
+            <Step number="02" title="Fund Wallet"
+            text="Add money through bank transfer or card."/>
 
-            <div>
-              <div className="text-5xl font-black mb-6 text-blue-500">3</div>
-              <h3 className="text-xl font-bold mb-3">Buy Services</h3>
-              <p className="opacity-70">
-                Purchase data, airtime and bills instantly.
-              </p>
-            </div>
+            <Step number="03" title="Buy Services"
+            text="Purchase data, airtime or pay bills instantly."/>
 
           </div>
+        </div>
+      </section>
+
+      {/* TRUST */}
+      <section className="py-32 px-6">
+        <div className="max-w-6xl mx-auto grid md:grid-cols-4 gap-16 text-center">
+
+          <Stat number="5000+" label="Users"/>
+          <Stat number="₦10M+" label="Transactions"/>
+          <Stat number="99.9%" label="Uptime"/>
+          <Stat number="24/7" label="Support"/>
 
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="py-40 text-center px-6 bg-blue-600">
+      {/* FINAL CTA */}
+      <section className="py-40 px-6 text-center">
 
-        <h2 className="text-5xl font-black mb-8">
-          Start Using Oplug Today
+        <h2 className="text-6xl font-black mb-10">
+          Start Buying Data Instantly
         </h2>
 
-        <p className="text-xl mb-12">
-          Join hundreds of users buying cheap data every day.
+        <p className="text-slate-400 mb-10">
+          Join thousands of users already using Oplug.
         </p>
 
-        <a
-          href="/register"
-          className="bg-white text-black px-10 py-4 rounded-xl font-bold text-lg"
-        >
-          Create Account
-        </a>
+        <div className="flex justify-center gap-6 flex-wrap">
+
+          <Link
+          to="/signup"
+          className="bg-blue-600 px-12 py-5 rounded-full font-bold hover:bg-blue-500">
+          Get Started
+          </Link>
+
+          <a
+          href="https://wa.me/2348142452729"
+          className="border border-white/10 px-12 py-5 rounded-full font-bold hover:bg-white/5">
+          Contact WhatsApp
+          </a>
+
+        </div>
 
       </section>
 
-      {/* FOOTER */}
-      <footer className="py-14 text-center opacity-60 text-sm">
-        © {new Date().getFullYear()} Oplug VTU
-      </footer>
+      <Footer />
 
     </div>
   );
 };
+
+/* COMPONENTS */
+
+const Service = ({icon,title,text}:any)=>(
+<div className="p-8 border border-white/5 rounded-3xl bg-slate-900/40">
+<div className="text-blue-500 mb-4">{icon}</div>
+<h3 className="text-xl font-bold mb-2">{title}</h3>
+<p className="text-slate-400 text-sm">{text}</p>
+</div>
+)
+
+const Feature = ({icon,title,text}:any)=>(
+<div className="flex gap-4 items-start">
+<div className="text-blue-500">{icon}</div>
+<div>
+<h3 className="font-bold text-lg">{title}</h3>
+<p className="text-slate-400">{text}</p>
+</div>
+</div>
+)
+
+const Step = ({number,title,text}:any)=>(
+<div>
+<p className="text-blue-500 text-5xl font-black mb-4">{number}</p>
+<h3 className="text-xl font-bold mb-2">{title}</h3>
+<p className="text-slate-400">{text}</p>
+</div>
+)
+
+const Stat = ({number,label}:any)=>(
+<div>
+<p className="text-4xl font-black text-blue-500">{number}</p>
+<p className="text-slate-400">{label}</p>
+</div>
+)
 
 export default LandingPage;
