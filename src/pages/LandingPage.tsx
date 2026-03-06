@@ -4,14 +4,13 @@ import { motion } from "motion/react";
 import Logo from "../components/Logo";
 import Footer from "../components/Footer";
 import {
-  Wifi,
   Smartphone,
-  Tv,
-  Lightbulb,
-  ShieldCheck,
   Zap,
+  ShieldCheck,
   Wallet,
-  ArrowRight
+  Wifi,
+  Tv,
+  Lightbulb
 } from "lucide-react";
 
 const LandingPage: React.FC = () => {
