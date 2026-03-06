@@ -1,22 +1,6 @@
 import * as admin from 'firebase-admin';
 import axios from 'axios';
 
-// Initialize Firebase Admin if not already initialized
-if (!admin.apps.length) {
-  try {
-    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT || '{}');
-    if (serviceAccount.project_id) {
-      admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount)
-      });
-    } else {
-      admin.initializeApp();
-    }
-  } catch (e) {
-    console.error('Error initializing Firebase Admin in WhatsApp Service:', e);
-  }
-}
-
 const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN;
 const WHATSAPP_PHONE_NUMBER_ID = process.env.WHATSAPP_PHONE_NUMBER_ID;
 const INLOMAX_API_KEY = process.env.INLOMAX_API_KEY;
@@ -34,12 +18,13 @@ export const whatsappService = {
    */
   sendMessage: async (to: string, text: string) => {
     if (!WHATSAPP_TOKEN || !WHATSAPP_PHONE_NUMBER_ID) {
-      console.error('WhatsApp credentials missing.');
+      console.error('[WhatsApp Service] Credentials missing (TOKEN/ID). Cannot send message.');
       return;
     }
 
+    console.log(`[WhatsApp Service] Sending message to ${to}: ${text.substring(0, 50)}...`);
     try {
-      await axios.post(
+      const response = await axios.post(
         `https://graph.facebook.com/v17.0/${WHATSAPP_PHONE_NUMBER_ID}/messages`,
         {
           messaging_product: 'whatsapp',

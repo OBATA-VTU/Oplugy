@@ -40,6 +40,7 @@ export async function apiClient<T>(
   const fullUrl = endpoint.startsWith('http') ? endpoint : (endpoint.startsWith('/') ? endpoint : `/${endpoint}`);
 
   const method = (customConfig.method as string) || (data ? 'POST' : 'GET');
+  console.log(`[apiClient] Request: ${method} ${fullUrl}`);
 
   const config: RequestInit = {
     ...customConfig,

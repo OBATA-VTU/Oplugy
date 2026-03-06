@@ -11,21 +11,22 @@ import handleWhatsAppWebhook from './src/whatsapp/webhook';
 if (!admin.apps.length) {
   try {
     const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT || '{}');
+    const projectId = serviceAccount.project_id || process.env.FIREBASE_PROJECT_ID || 'oplug-vtu';
+    
     if (serviceAccount.project_id) {
-      console.log(`Initializing Firebase Admin with project: ${serviceAccount.project_id}`);
+      console.log(`Initializing Firebase Admin with Service Account. Project: ${projectId}`);
       admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount)
+        credential: admin.credential.cert(serviceAccount),
+        projectId: projectId
       });
-      admin.firestore().settings({ ignoreUndefinedProperties: true });
     } else {
-      admin.initializeApp();
-      admin.firestore().settings({ ignoreUndefinedProperties: true });
-      console.warn('FIREBASE_SERVICE_ACCOUNT not configured. Using default credentials.');
-      try {
-        const app = admin.app();
-        console.log(`Default Firebase project ID: ${app.options.projectId || 'unknown'}`);
-      } catch (e) {}
+      console.log(`Initializing Firebase Admin with Project ID: ${projectId}`);
+      admin.initializeApp({
+        projectId: projectId
+      });
     }
+    admin.firestore().settings({ ignoreUndefinedProperties: true });
+    console.log(`Firebase Admin initialized successfully for project: ${projectId}`);
   } catch (e) {
     console.error('Error initializing Firebase Admin:', e);
   }
@@ -371,7 +372,7 @@ app.all('/api/proxy', async (req, res) => {
       result = response.data;
     } else if (server === 'billstack') {
       const secretKey = process.env.BILLSTACK_SECRET_KEY;
-      console.log(`Calling Billstack Proxy: ${endpoint}`, data);
+      console.log(`[Billstack Proxy] Endpoint: ${endpoint}`, JSON.stringify(data));
       const response = await axios({
         url: `https://api.billstack.co/${(endpoint || '').replace(/^\//, '')}`,
         method: method.toUpperCase(),
@@ -384,7 +385,7 @@ app.all('/api/proxy', async (req, res) => {
         timeout: 30000
       });
       result = response.data;
-      console.log(`Billstack Proxy Response:`, result);
+      console.log(`[Billstack Proxy] Response:`, JSON.stringify(result));
     } else {
       return res.status(400).json({ status: false, message: 'Invalid server' });
     }

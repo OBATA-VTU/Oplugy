@@ -2,6 +2,8 @@ import { whatsappService } from './whatsappService';
 import * as admin from 'firebase-admin';
 
 export default async function handler(req: any, res: any) {
+  console.log(`WhatsApp Webhook Received: ${req.method}`, JSON.stringify(req.query), req.method === 'POST' ? 'POST Body Received' : '');
+
   // 1. Handle Meta Webhook Verification (GET)
   if (req.method === 'GET') {
     const mode = req.query['hub.mode'];
@@ -47,6 +49,7 @@ export default async function handler(req: any, res: any) {
       // Handle Text Messages
       if (message.type === 'text') {
         const text = message.text.body.trim().toUpperCase();
+        console.log(`WhatsApp Text Message from ${from}: ${text}`);
         const session = await whatsappService.getSession(from);
 
         // Handle Greetings
