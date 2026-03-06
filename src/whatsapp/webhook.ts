@@ -2,7 +2,13 @@ import { whatsappService } from './whatsappService';
 import * as admin from 'firebase-admin';
 
 export default async function handler(req: any, res: any) {
-  console.log(`WhatsApp Webhook Received: ${req.method}`, JSON.stringify(req.query), req.method === 'POST' ? 'POST Body Received' : '');
+  const timestamp = new Date().toISOString();
+  console.log(`[WhatsApp Webhook] [${timestamp}] Incoming Request: ${req.method}`);
+  console.log(`[WhatsApp Webhook] Query:`, JSON.stringify(req.query));
+  
+  if (req.method === 'POST') {
+    console.log(`[WhatsApp Webhook] Body Keys:`, Object.keys(req.body || {}));
+  }
 
   // 1. Handle Meta Webhook Verification (GET)
   if (req.method === 'GET') {
@@ -43,8 +49,6 @@ export default async function handler(req: any, res: any) {
         const first = (global as any).processedMessages.values().next().value;
         (global as any).processedMessages.delete(first);
       }
-
-      const userName = value.contacts?.[0]?.profile?.name || 'User';
 
       // Handle Text Messages
       if (message.type === 'text') {

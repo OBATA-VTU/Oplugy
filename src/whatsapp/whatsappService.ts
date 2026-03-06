@@ -3,13 +3,13 @@ import axios from 'axios';
 
 const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN;
 const WHATSAPP_PHONE_NUMBER_ID = process.env.WHATSAPP_PHONE_NUMBER_ID;
-const INLOMAX_API_KEY = process.env.INLOMAX_API_KEY;
-const INLOMAX_BASE_URL = 'https://inlomax.com/api';
 
 const getAppUrl = () => {
-  if (process.env.APP_URL) return process.env.APP_URL;
-  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
-  return '';
+  const url = process.env.APP_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : '');
+  if (!url) {
+    console.warn('[WhatsApp Service] Warning: APP_URL is not set. Internal API calls may fail.');
+  }
+  return url.replace(/\/$/, '');
 };
 
 export const whatsappService = {
@@ -22,7 +22,7 @@ export const whatsappService = {
       return;
     }
 
-    console.log(`[WhatsApp Service] Sending message to ${to}: ${text.substring(0, 50)}...`);
+    console.log(`[WhatsApp Service] Sending message to ${to}: ${text.substring(0, 100)}...`);
     try {
       const response = await axios.post(
         `https://graph.facebook.com/v17.0/${WHATSAPP_PHONE_NUMBER_ID}/messages`,
@@ -39,8 +39,9 @@ export const whatsappService = {
           }
         }
       );
+      console.log(`[WhatsApp Service] Message sent successfully. ID: ${response.data.messages?.[0]?.id}`);
     } catch (error: any) {
-      console.error('Error sending WhatsApp message:', error.response?.data || error.message);
+      console.error('[WhatsApp Service] Error sending message:', error.response?.data || error.message);
     }
   },
 

@@ -36,19 +36,37 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const CRA_PORT = 3001;
 
+console.log(`[Server] Starting Oplug API Gateway...`);
+console.log(`[Server] Environment: ${process.env.NODE_ENV || 'development'}`);
+console.log(`[Server] Vercel Environment: ${process.env.VERCEL ? 'Yes' : 'No'}`);
+
 // Set APP_URL for Vercel and other environments
 if (!process.env.APP_URL && process.env.VERCEL_URL) {
   process.env.APP_URL = `https://${process.env.VERCEL_URL}`;
 }
+console.log(`[Server] APP_URL: ${process.env.APP_URL || 'Not set'}`);
 
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Health Check
+app.get('/api/health', (req, res) => {
+  console.log(`[Health Check] API is alive at ${new Date().toISOString()}`);
+  res.json({ status: 'ok', timestamp: new Date().toISOString(), env: process.env.NODE_ENV });
+});
+
 // WhatsApp Webhook Route
-app.all('/api/whatsapp/webhook', (req, res, next) => {
-  console.log(`WhatsApp Webhook ${req.method} Received`);
-  handleWhatsAppWebhook(req, res);
+app.all('/api/whatsapp/webhook', async (req, res) => {
+  console.log(`[WhatsApp Webhook] ${req.method} request received at ${new Date().toISOString()}`);
+  try {
+    await handleWhatsAppWebhook(req, res);
+  } catch (error: any) {
+    console.error('[WhatsApp Webhook] Fatal Error:', error.message);
+    if (!res.headersSent) {
+      res.status(500).json({ status: 'error', message: error.message });
+    }
+  }
 });
 
 // Helper functions for API calls
@@ -372,20 +390,30 @@ app.all('/api/proxy', async (req, res) => {
       result = response.data;
     } else if (server === 'billstack') {
       const secretKey = process.env.BILLSTACK_SECRET_KEY;
-      console.log(`[Billstack Proxy] Endpoint: ${endpoint}`, JSON.stringify(data));
-      const response = await axios({
-        url: `https://api.billstack.co/${(endpoint || '').replace(/^\//, '')}`,
-        method: method.toUpperCase(),
-        headers: { 
-          'Authorization': `Bearer ${secretKey}`, 
-          'Content-Type': 'application/json' 
-        },
-        data: method.toUpperCase() !== 'GET' ? data : undefined,
-        params: method.toUpperCase() === 'GET' ? data : undefined,
-        timeout: 30000
-      });
-      result = response.data;
-      console.log(`[Billstack Proxy] Response:`, JSON.stringify(result));
+      if (!secretKey) {
+        console.error('[Billstack Proxy] Error: BILLSTACK_SECRET_KEY is not configured in environment variables.');
+        return res.status(500).json({ status: false, message: 'Billstack API key not configured on server.' });
+      }
+      
+      console.log(`[Billstack Proxy] Calling: ${endpoint}`, JSON.stringify(data));
+      try {
+        const response = await axios({
+          url: `https://api.billstack.co/${(endpoint || '').replace(/^\//, '')}`,
+          method: method.toUpperCase(),
+          headers: { 
+            'Authorization': `Bearer ${secretKey}`, 
+            'Content-Type': 'application/json' 
+          },
+          data: method.toUpperCase() !== 'GET' ? data : undefined,
+          params: method.toUpperCase() === 'GET' ? data : undefined,
+          timeout: 30000
+        });
+        result = response.data;
+        console.log(`[Billstack Proxy] Success Response:`, JSON.stringify(result));
+      } catch (axiosError: any) {
+        console.error(`[Billstack Proxy] API Error:`, axiosError.response?.data || axiosError.message);
+        return res.status(axiosError.response?.status || 500).json(axiosError.response?.data || { status: false, message: axiosError.message });
+      }
     } else {
       return res.status(400).json({ status: false, message: 'Invalid server' });
     }

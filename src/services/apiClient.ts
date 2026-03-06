@@ -37,7 +37,18 @@ export async function apiClient<T>(
   const timeoutId = setTimeout(() => controller.abort(), timeout);
 
   // Normalize endpoint: ensure it starts with / and handle full URLs if passed
-  const fullUrl = endpoint.startsWith('http') ? endpoint : (endpoint.startsWith('/') ? endpoint : `/${endpoint}`);
+  let fullUrl = '';
+  if (endpoint.startsWith('http')) {
+    fullUrl = endpoint;
+  } else {
+    const combined = `${baseUrl.replace(/\/$/, '')}/${endpoint.replace(/^\//, '')}`;
+    fullUrl = combined.startsWith('/') ? combined : `/${combined}`;
+  }
+  
+  // Remove trailing slash if it's not just /
+  if (fullUrl.length > 1 && fullUrl.endsWith('/')) {
+    fullUrl = fullUrl.slice(0, -1);
+  }
 
   const method = (customConfig.method as string) || (data ? 'POST' : 'GET');
   console.log(`[apiClient] Request: ${method} ${fullUrl}`);
