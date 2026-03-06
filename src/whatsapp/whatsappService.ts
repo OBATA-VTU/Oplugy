@@ -171,6 +171,41 @@ export const whatsappService = {
   },
 
   /**
+   * Create a customer on Billstack
+   */
+  createCustomer: async (payload: {
+    email: string;
+    firstName: string;
+    lastName: string;
+    phone: string;
+  }) => {
+    const secretKey = process.env.BILLSTACK_SECRET_KEY;
+    if (!secretKey) throw new Error('Billstack Secret Key not configured.');
+
+    try {
+      const response = await axios.post(
+        'https://api.billstack.co/v2/thirdparty/customer',
+        {
+          email: payload.email,
+          firstName: payload.firstName,
+          lastName: payload.lastName,
+          phone: payload.phone
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${secretKey}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      return response.data;
+    } catch (error: any) {
+      // If customer already exists, Billstack might return an error, handle it
+      return error.response?.data || { status: false, message: error.message };
+    }
+  },
+
+  /**
    * Generate Virtual Account via Billstack
    */
   generateVirtualAccount: async (payload: { 
@@ -184,6 +219,14 @@ export const whatsappService = {
     if (!secretKey) throw new Error('Billstack Secret Key not configured.');
 
     try {
+      // First, try to ensure the customer exists on Billstack
+      await whatsappService.createCustomer({
+        email: payload.email,
+        firstName: payload.firstName,
+        lastName: payload.lastName,
+        phone: payload.phone
+      });
+
       const response = await axios.post(
         'https://api.billstack.co/v2/thirdparty/generateVirtualAccount',
         {

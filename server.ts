@@ -10,7 +10,21 @@ import handleWhatsAppWebhook from './src/whatsapp/webhook';
 // Initialize Firebase Admin
 if (!admin.apps.length) {
   try {
-    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT || '{}');
+    const saString = process.env.FIREBASE_SERVICE_ACCOUNT || '{}';
+    let serviceAccount: any;
+    try {
+      serviceAccount = JSON.parse(saString);
+    } catch (parseError) {
+      console.error('Failed to parse FIREBASE_SERVICE_ACCOUNT JSON. Attempting to fix string format...');
+      // Handle cases where the string might be double-quoted or have escaped newlines incorrectly
+      const fixedString = saString.trim().replace(/^'|'$/g, '').replace(/^"|"$/g, '');
+      serviceAccount = JSON.parse(fixedString);
+    }
+
+    if (serviceAccount.private_key) {
+      serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
+    }
+
     const projectId = serviceAccount.project_id || process.env.FIREBASE_PROJECT_ID || 'oplug-vtu';
     
     if (serviceAccount.project_id) {
