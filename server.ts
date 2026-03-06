@@ -569,7 +569,7 @@ if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
   app.use(express.static(buildPath));
   
   // Handle SPA routing: serve index.html for any non-API routes
-  app.get('*', (req, res, next) => {
+  app.get('/*', (req, res, next) => {
     if (req.path.startsWith('/api')) return next();
     res.sendFile(path.join(buildPath, 'index.html'));
   });

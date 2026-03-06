@@ -4,7 +4,7 @@ import axios from 'axios';
 const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN;
 const WHATSAPP_PHONE_NUMBER_ID = process.env.WHATSAPP_PHONE_NUMBER_ID;
 
-const getAppUrl = () => {
+export const getAppUrl = () => {
   const url = process.env.APP_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : '');
   if (!url) {
     console.warn('[WhatsApp Service] Warning: APP_URL is not set. Internal API calls may fail.');
