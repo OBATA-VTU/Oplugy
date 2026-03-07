@@ -3,6 +3,8 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import SignUpForm from '../components/SignUpForm';
 import Logo from '../components/Logo';
+import { motion } from 'motion/react';
+import { ShieldCheck, Zap, Globe, Users } from 'lucide-react';
 
 const SignUpPage: React.FC = () => {
   const { signup, loginWithGoogle, isAuthenticated, isLoading } = useAuth();
@@ -35,44 +37,73 @@ const SignUpPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex bg-white">
-      {/* Left side: Visual branding */}
-      <div className="hidden lg:block lg:w-1/2 bg-blue-600 relative overflow-hidden">
-        <div className="absolute inset-0 flex items-center justify-center p-20">
-          <div className="text-white text-center">
-            <h2 className="text-6xl font-black mb-8 tracking-tighter">Join the Family.</h2>
-            <p className="text-xl text-blue-100 mb-12 max-w-md mx-auto">
-              Unlock Nigeria's most reliable digital utility gateway. Fast recharges, secure payments, and 24/7 automated delivery.
-            </p>
-            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 border border-white/20 text-left max-w-sm mx-auto">
-              <div className="space-y-4">
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
-                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7"></path></svg>
-                  </div>
-                  <span className="font-bold">Instant Wallet Funding</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
-                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7"></path></svg>
-                  </div>
-                  <span className="font-bold">Automated 24/7 Node</span>
-                </div>
-              </div>
+    <div className="min-h-screen flex bg-white overflow-hidden">
+      {/* Left side: Visual */}
+      <div className="hidden lg:block lg:w-[55%] bg-blue-600 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.1),transparent_70%)]"></div>
+        
+        <div className="absolute inset-0 flex flex-col items-center justify-center p-24 text-white">
+          <div className="max-w-2xl space-y-16 relative z-10">
+            <div className="space-y-6">
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="inline-flex items-center space-x-3 px-4 py-2 bg-white/10 border border-white/20 rounded-full text-white"
+              >
+                <Users className="w-4 h-4" />
+                <span className="text-[10px] font-black uppercase tracking-widest">Join 100K+ Users</span>
+              </motion.div>
+              <motion.h2 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="text-6xl xl:text-8xl font-black tracking-tighter leading-[0.85]"
+              >
+                Start Your <br /><span className="text-gray-950">Journey Now.</span>
+              </motion.h2>
+              <motion.p 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                className="text-xl text-white/70 font-medium leading-relaxed"
+              >
+                Unlock Nigeria's most reliable digital utility gateway. Fast recharges, secure payments, and 24/7 automated delivery.
+              </motion.p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-8">
+               <FeatureCard icon={<ShieldCheck className="w-6 h-6" />} title="Secure" desc="End-to-end encryption" />
+               <FeatureCard icon={<Globe className="w-6 h-6" />} title="Reliable" desc="99.9% Uptime SLA" />
+               <FeatureCard icon={<Users className="w-6 h-6" />} title="Reseller" desc="Built for growth" />
+               <FeatureCard icon={<Zap className="w-6 h-6" />} title="Instant" desc="Sub-second delivery" />
             </div>
           </div>
         </div>
-        <div className="absolute -top-20 -left-20 w-80 h-80 bg-white/10 rounded-full blur-3xl"></div>
+
+        {/* Decorative elements */}
+        <div className="absolute top-0 right-0 w-full h-full pointer-events-none">
+           <div className="absolute top-1/4 -right-20 w-96 h-96 bg-white/10 rounded-full blur-[120px] animate-pulse"></div>
+           <div className="absolute bottom-1/4 -left-20 w-96 h-96 bg-gray-950/10 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '1s' }}></div>
+        </div>
       </div>
 
-      {/* Right side: Signup Form */}
-      <div className="w-full lg:w-1/2 flex flex-col justify-center px-8 sm:px-12 lg:px-24">
-        <div className="mb-12">
+      {/* Right side: Form */}
+      <motion.div 
+        initial={{ opacity: 0, x: 50 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+        className="w-full lg:w-[45%] flex flex-col justify-center px-8 sm:px-12 lg:px-24 xl:px-32 bg-white relative z-10 overflow-y-auto no-scrollbar py-20"
+      >
+        <div className="mb-16">
           <Logo />
         </div>
         <div className="max-w-md w-full mx-auto lg:mx-0">
-          <h1 className="text-4xl font-black text-gray-900 mb-4 tracking-tighter leading-none">Create Account</h1>
-          <p className="text-gray-500 mb-10">Start your journey with OBATA v2 today.</p>
+          <div className="space-y-4 mb-12">
+            <h2 className="text-[11px] font-black text-blue-600 uppercase tracking-[0.5em]">Registration</h2>
+            <h1 className="text-5xl lg:text-7xl font-black text-gray-900 tracking-tighter leading-[0.85]">Create <br />Account.</h1>
+            <p className="text-gray-400 text-lg font-medium leading-relaxed">Join Oplug v2 today and experience the future of digital payments.</p>
+          </div>
           
           <SignUpForm 
             onSubmit={handleSignUpSubmit} 
@@ -81,16 +112,33 @@ const SignUpPage: React.FC = () => {
             error={authError} 
           />
           
-          <p className="mt-8 text-center lg:text-left text-sm text-gray-600">
-            Already have an account?{' '}
-            <Link to="/login" className="font-bold text-blue-600 hover:text-blue-700 transition-colors">
-              Log In
-            </Link>
-          </p>
+          <div className="mt-12 pt-8 border-t border-gray-50">
+            <p className="text-center lg:text-left text-sm text-gray-500 font-medium">
+              Already have an account?{' '}
+              <Link to="/login" className="font-black text-blue-600 hover:text-gray-900 transition-all underline underline-offset-4">
+                Login Here
+              </Link>
+            </p>
+          </div>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 };
+
+const FeatureCard = ({ icon, title, desc }: { icon: React.ReactNode, title: string, desc: string }) => (
+  <motion.div 
+    initial={{ opacity: 0, scale: 0.9 }}
+    animate={{ opacity: 1, scale: 1 }}
+    transition={{ duration: 0.5 }}
+    className="p-8 bg-white/5 border border-white/10 rounded-[2.5rem] backdrop-blur-xl hover:bg-white/10 transition-all group"
+  >
+    <div className="w-12 h-12 bg-white text-blue-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all shadow-lg">
+      {icon}
+    </div>
+    <h4 className="text-lg font-black tracking-tight mb-1">{title}</h4>
+    <p className="text-sm text-white/60 font-medium">{desc}</p>
+  </motion.div>
+);
 
 export default SignUpPage;

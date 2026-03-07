@@ -118,7 +118,7 @@ const ProfilePage: React.FC = () => {
     setIsVerifyingKyc(true);
     try {
       const response = await billstackService.upgradeAccount({
-        email: user.email,
+        accountNumber: user.virtualAccount.account_number,
         bvn: bvn
       });
 

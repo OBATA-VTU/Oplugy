@@ -72,24 +72,24 @@ export const billstackService = {
   /**
    * Upgrade a virtual account with BVN (KYC).
    */
-  upgradeAccount: async (payload: { email: string; bvn: string }): Promise<ApiResponse<any>> => {
+  upgradeAccount: async (payload: { accountNumber: string; bvn: string }): Promise<ApiResponse<any>> => {
     try {
       const res = await apiClient<any>('/api/proxy?server=billstack', '', {
         method: 'POST',
         data: {
-          endpoint: 'v2/thirdparty/upgradeVirtualAccount',
+          endpoint: 'v2/thirdparty/upgradeVirtualAccount/',
           method: 'POST',
           data: {
-            customer: payload.email,
-            bvn: payload.bvn
+            account_number: payload.accountNumber,
+            bvn: Number(payload.bvn)
           }
         }
       });
 
-      if (res.status && res.data?.status) {
+      if (res.status && (res.data?.status === true || res.data?.responseCode === 0 || res.data?.responseCode === "00")) {
         return {
           status: true,
-          message: res.data.message || 'Account upgraded successfully.',
+          message: res.data.message || 'Validated',
           data: res.data
         };
       }

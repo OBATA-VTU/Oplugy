@@ -46,7 +46,18 @@ import OverviewTest from './pages/tests/OverviewTest';
 import VtuTest from './pages/tests/VtuTest';
 import PaymentTest from './pages/tests/PaymentTest';
 import MediaTest from './pages/tests/MediaTest';
+import PublicLayout from './components/PublicLayout';
+import BlogPage from './pages/BlogPage';
+import AboutPage from './pages/AboutPage';
+import { useAuth } from './hooks/useAuth';
 import ScrollToTop from './components/ScrollToTop';
+
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user, isLoading } = useAuth();
+  if (isLoading) return null;
+  if (!user) return <Navigate to="/login" replace />;
+  return <>{children}</>;
+};
 
 const App: React.FC = () => {
   return (
@@ -58,19 +69,29 @@ const App: React.FC = () => {
             <NotificationContainer />
             <Routes>
               {/* PUBLIC ROUTES */}
-              <Route path="/" element={<LandingPage />} />
+              <Route element={<PublicLayout />}>
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/pricing" element={<PricingPage />} />
+                <Route path="/quick-purchase" element={<QuickPurchasePage />} />
+                <Route path="/quick-purchase/airtime" element={<QuickBuyAirtime />} />
+                <Route path="/quick-purchase/data" element={<QuickBuyData />} />
+                <Route path="/quick-purchase/electricity" element={<QuickBuyElectricity />} />
+                <Route path="/quick-purchase/cable" element={<QuickBuyCable />} />
+                <Route path="/quick-purchase/checkout" element={<QuickBuyCheckout />} />
+                <Route path="/blog" element={<BlogPage />} />
+                <Route path="/about" element={<AboutPage />} />
+                <Route path="/terms" element={<TermsPage />} />
+                <Route path="/privacy" element={<PrivacyPage />} />
+                <Route path="/faq" element={<FAQPage />} />
+                <Route path="/support" element={<SupportPage />} />
+              </Route>
+
               <Route path="/login" element={<LoginPage />} />
               <Route path="/signup" element={<SignUpPage />} />
-              <Route path="/quick-purchase" element={<QuickPurchasePage />} />
-              <Route path="/quick-purchase/airtime" element={<QuickBuyAirtime />} />
-              <Route path="/quick-purchase/data" element={<QuickBuyData />} />
-              <Route path="/quick-purchase/electricity" element={<QuickBuyElectricity />} />
-              <Route path="/quick-purchase/cable" element={<QuickBuyCable />} />
-              <Route path="/quick-purchase/checkout" element={<QuickBuyCheckout />} />
               <Route path="/payment/verify" element={<PaymentVerifyPage />} />
 
-              {/* ROUTES WITH SIDEBAR (Layout) */}
-              <Route element={<Layout />}>
+              {/* ROUTES WITH SIDEBAR (Layout) - PROTECTED */}
+              <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
                 <Route path="/dashboard" element={<DashboardPage />} />
                 <Route path="/airtime" element={<AirtimePage />} />
                 <Route path="/data" element={<DataPage />} />
@@ -84,12 +105,7 @@ const App: React.FC = () => {
                 <Route path="/referrals" element={<ReferralPage />} />
                 <Route path="/schedule" element={<SchedulePurchasePage />} />
                 <Route path="/smm" element={<SmmPage />} />
-                <Route path="/pricing" element={<PricingPage />} />
                 <Route path="/api-docs" element={<ApiDocsPage />} />
-                <Route path="/support" element={<SupportPage />} />
-                <Route path="/faq" element={<FAQPage />} />
-                <Route path="/terms" element={<TermsPage />} />
-                <Route path="/privacy" element={<PrivacyPage />} />
               </Route>
 
               {/* ADMIN ROUTES */}
