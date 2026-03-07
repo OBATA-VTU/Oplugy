@@ -82,6 +82,8 @@ export interface TransactionResponse {
   type: 'AIRTIME' | 'DATA' | 'CABLE' | 'ELECTRICITY' | 'FUNDING' | 'REFERRAL' | 'EDUCATION';
   source: string;
   remarks: string;
+  fee?: number;
+  netAmount?: number;
   date_created: any; 
   date_updated: any;
   token?: string; 

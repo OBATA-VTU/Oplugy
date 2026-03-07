@@ -194,7 +194,7 @@ const TransactionHistoryPage: React.FC = () => {
                       <div className="text-right lg:text-left space-y-1">
                         <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Amount</p>
                         <p className={`text-2xl font-black tracking-tighter ${tx.type === 'FUNDING' ? 'text-green-600' : 'text-gray-900'}`}>
-                          {tx.type === 'FUNDING' ? '+' : '-'}₦{tx.amount.toLocaleString()}
+                          {tx.type === 'FUNDING' ? '+' : '-'}₦{(tx.netAmount || tx.amount).toLocaleString()}
                         </p>
                       </div>
                       <div className="text-right space-y-1">

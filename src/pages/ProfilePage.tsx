@@ -1,25 +1,28 @@
 import React, { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNotifications } from '../hooks/useNotifications';
-import { Shield, LogOut, Copy, Check, User, Lock, Terminal, CreditCard, Eye, EyeOff, RefreshCw } from 'lucide-react';
+import { Shield, Copy, Check, User, Lock, Terminal, Eye, EyeOff, RefreshCw, BadgeCheck } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { authService } from '../services/authService';
+import { billstackService } from '../services/billstackService';
 import { db } from '../firebase/config';
 import { doc, updateDoc } from 'firebase/firestore';
-import Spinner from '../components/Spinner';
 
 const ProfilePage: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const { addNotification } = useNotifications();
-  const [activeTab, setActiveTab] = useState<'PERSONAL' | 'BANK' | 'PIN' | 'API' | 'PASSWORD'>('PERSONAL');
+  const [activeTab, setActiveTab] = useState<'PERSONAL' | 'BANK' | 'PIN' | 'API' | 'PASSWORD' | 'KYC'>('PERSONAL');
   const [isUpdating, setIsUpdating] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
   
   const [pinForm, setPinForm] = useState({ oldPin: '', newPin: '', confirmPin: '' });
-  const [passwordForm, setPasswordForm] = useState({ current: '', new: '', confirm: '' });
   const [webhookUrl, setWebhookUrl] = useState(user?.webhookUrl || '');
   const [showApiKey, setShowApiKey] = useState(false);
   const [apiKey, setApiKey] = useState(user?.apiKey || '');
+
+  const [bvn, setBvn] = useState('');
+  const [isVerifyingKyc, setIsVerifyingKyc] = useState(false);
+  const [isUpgradingReseller, setIsUpgradingReseller] = useState(false);
 
   const [personalInfo, setPersonalInfo] = useState({
     fullName: user?.fullName || '',
@@ -104,6 +107,89 @@ const ProfilePage: React.FC = () => {
     setIsUpdating(false);
   };
 
+  const handleKycSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !bvn) return;
+    if (bvn.length !== 11) {
+      addNotification("BVN must be 11 digits.", "warning");
+      return;
+    }
+
+    setIsVerifyingKyc(true);
+    try {
+      const response = await billstackService.upgradeAccount({
+        email: user.email,
+        bvn: bvn
+      });
+
+      if (response.status) {
+        const userRef = doc(db, "users", user.id);
+        await updateDoc(userRef, { 
+          isVerified: true,
+          bvn: bvn,
+          kycStatus: 'VERIFIED'
+        });
+        addNotification("KYC Verified successfully! You now have a verified badge.", "success");
+        setBvn('');
+      } else {
+        addNotification(response.message || "KYC Verification failed.", "error");
+      }
+    } catch (error: any) {
+      console.error("KYC Error:", error);
+      addNotification(error.message || "An error occurred during KYC verification.", "error");
+    } finally {
+      setIsVerifyingKyc(false);
+    }
+  };
+
+  const handleUpgradeToReseller = async () => {
+    if (!user) return;
+    if (user.role === 'reseller' || user.role === 'admin') {
+      addNotification("You are already on a premium plan.", "info");
+      return;
+    }
+    if (!user.isVerified) {
+      addNotification("Please complete KYC verification first.", "warning");
+      setActiveTab('KYC');
+      return;
+    }
+    if (user.walletBalance < 1200) {
+      addNotification("Insufficient balance. You need ₦1,200 for reseller upgrade.", "error");
+      return;
+    }
+
+    if (!window.confirm("Upgrade to Reseller for ₦1,200? This will give you access to lower rates.")) return;
+
+    setIsUpgradingReseller(true);
+    try {
+      const userRef = doc(db, "users", user.id);
+      
+      // Atomic update would be better, but for now:
+      await updateDoc(userRef, { 
+        role: 'reseller',
+        walletBalance: user.walletBalance - 1200
+      });
+
+      // Record transaction
+      const { vtuService } = await import('../services/vtuService');
+      await vtuService.recordTransaction({
+        userId: user.id,
+        userEmail: user.email,
+        type: 'SYSTEM',
+        amount: 1200,
+        source: 'Account Upgrade',
+        remarks: 'Upgraded to Reseller Package',
+        status: 'SUCCESS'
+      });
+
+      addNotification("Congratulations! You are now a Reseller.", "success");
+    } catch (error: any) {
+      addNotification("Upgrade failed. Please try again.", "error");
+    } finally {
+      setIsUpgradingReseller(false);
+    }
+  };
+
   const copyToClipboard = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
     setCopied(id);
@@ -130,7 +216,10 @@ const ProfilePage: React.FC = () => {
                </div>
             </div>
             <div className="text-center">
-               <h1 className="text-4xl font-black tracking-tighter text-gray-900 dark:text-white uppercase">{user?.fullName || 'User'}</h1>
+               <div className="flex items-center justify-center gap-2">
+                  <h1 className="text-4xl font-black tracking-tighter text-gray-900 dark:text-white uppercase">{user?.fullName || 'User'}</h1>
+                  {user?.isVerified && <BadgeCheck className="text-blue-600" size={24} fill="currentColor" />}
+               </div>
                <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mt-2">{user?.role || 'Reseller'}</p>
             </div>
          </div>
@@ -139,6 +228,7 @@ const ProfilePage: React.FC = () => {
       {/* Tabs Navigation */}
       <div className="flex flex-wrap justify-center gap-4 pt-20">
          <TabButton active={activeTab === 'PERSONAL'} onClick={() => setActiveTab('PERSONAL')}>Personal Info</TabButton>
+         <TabButton active={activeTab === 'KYC'} onClick={() => setActiveTab('KYC')}>KYC Verification</TabButton>
          <TabButton active={activeTab === 'BANK'} onClick={() => setActiveTab('BANK')}>Bank Settings</TabButton>
          <TabButton active={activeTab === 'PIN'} onClick={() => setActiveTab('PIN')}>Transaction Pin</TabButton>
          <TabButton active={activeTab === 'API'} onClick={() => setActiveTab('API')}>Api & Webhook</TabButton>
@@ -166,6 +256,24 @@ const ProfilePage: React.FC = () => {
                 <ProfileInput label="Full Name" value={personalInfo.fullName} onChange={(v: string) => setPersonalInfo({...personalInfo, fullName: v})} />
                 <ProfileInput label="User Name" value={personalInfo.username} onChange={(v: string) => setPersonalInfo({...personalInfo, username: v})} />
                 <ProfileInput label="Account Type" value={user?.role || 'Reseller'} readOnly />
+                
+                {user?.role === 'user' && (
+                  <div className="md:col-span-2 bg-blue-50 border border-blue-100 p-8 rounded-3xl flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div className="space-y-1">
+                      <h4 className="text-lg font-black text-blue-900 uppercase tracking-tight">Upgrade to Reseller</h4>
+                      <p className="text-blue-700 text-xs font-medium">Get access to lower rates and premium features for just ₦1,200.</p>
+                    </div>
+                    <button 
+                      type="button"
+                      onClick={handleUpgradeToReseller}
+                      disabled={isUpgradingReseller}
+                      className="bg-blue-600 text-white px-8 py-4 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-gray-950 transition-all shadow-lg shadow-blue-100 disabled:opacity-50 whitespace-nowrap"
+                    >
+                      {isUpgradingReseller ? 'Upgrading...' : 'Upgrade Now (₦1,200)'}
+                    </button>
+                  </div>
+                )}
+
                 <ProfileInput label="Email Address" value={personalInfo.email} onChange={(v: string) => setPersonalInfo({...personalInfo, email: v})} />
                 <ProfileInput label="Phone Number" value={personalInfo.phone} onChange={(v: string) => setPersonalInfo({...personalInfo, phone: v})} />
                 <ProfileInput label="NIN Status" value="Verified" readOnly />
@@ -257,9 +365,9 @@ const ProfilePage: React.FC = () => {
                     </div>
                     <button 
                       onClick={() => apiKey && copyToClipboard(apiKey, "API Key")}
-                      className="p-5 bg-gray-950 text-white rounded-2xl hover:bg-blue-600 transition-all"
+                      className={`p-5 rounded-2xl transition-all ${copied === 'API Key' ? 'bg-emerald-500 text-white' : 'bg-gray-950 text-white hover:bg-blue-600'}`}
                     >
-                      <Copy size={20} />
+                      {copied === 'API Key' ? <Check size={20} /> : <Copy size={20} />}
                     </button>
                   </div>
                 </div>
@@ -283,6 +391,58 @@ const ProfilePage: React.FC = () => {
                   {isUpdating ? 'Saving...' : 'Save Config'}
                 </button>
               </div>
+            </motion.div>
+          )}
+
+          {activeTab === 'KYC' && (
+            <motion.div 
+              key="kyc"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="space-y-12"
+            >
+              <div className="flex items-center space-x-4 mb-10">
+                 <div className="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
+                    <Shield size={24} />
+                 </div>
+                 <h3 className="text-xl font-black uppercase tracking-tight">KYC Verification</h3>
+              </div>
+
+              {user?.isVerified ? (
+                <div className="bg-emerald-50 border border-emerald-100 p-10 rounded-[3rem] text-center space-y-4">
+                  <div className="w-20 h-20 rounded-full bg-emerald-500 text-white flex items-center justify-center mx-auto shadow-xl shadow-emerald-100">
+                    <BadgeCheck size={40} />
+                  </div>
+                  <h4 className="text-2xl font-black text-emerald-900 uppercase tracking-tight">Account Verified</h4>
+                  <p className="text-emerald-700 font-medium max-w-md mx-auto">Your identity has been successfully verified. You now have access to premium features and a verified badge.</p>
+                </div>
+              ) : (
+                <div className="space-y-10">
+                  <div className="bg-blue-50/50 p-8 rounded-3xl border border-blue-100">
+                    <p className="text-blue-800 text-sm font-medium leading-relaxed">
+                      Verify your identity using your Bank Verification Number (BVN). This is required for reseller upgrades and to ensure the security of your account.
+                    </p>
+                  </div>
+
+                  <form onSubmit={handleKycSubmit} className="max-w-md space-y-8">
+                    <ProfileInput 
+                      label="Bank Verification Number (BVN)" 
+                      value={bvn} 
+                      onChange={(v: string) => setBvn(v.replace(/\D/g, ''))} 
+                      maxLength={11}
+                      placeholder="Enter 11-digit BVN"
+                    />
+                    
+                    <button 
+                      disabled={isVerifyingKyc || bvn.length !== 11}
+                      className="w-full bg-blue-600 text-white py-5 rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-gray-950 transition-all shadow-xl shadow-blue-100 disabled:opacity-50"
+                    >
+                      {isVerifyingKyc ? 'Verifying...' : 'Verify Identity'}
+                    </button>
+                  </form>
+                </div>
+              )}
             </motion.div>
           )}
 
@@ -322,43 +482,6 @@ const ProfileInput = ({ label, value, onChange, readOnly, type = "text", maxLeng
       readOnly={readOnly}
       maxLength={maxLength}
       className={`w-full p-6 bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-[2rem] text-sm font-black tracking-tight focus:bg-white dark:focus:bg-[#050505] outline-none transition-all ${readOnly ? 'opacity-60 cursor-not-allowed' : ''}`}
-    />
-  </div>
-);
-
-const SectionHeader = ({ title, desc }: { title: string, desc: string }) => (
-  <div>
-    <h3 className="text-4xl font-black tracking-tighter uppercase mb-2">{title}</h3>
-    <p className="text-gray-400 font-medium">{desc}</p>
-  </div>
-);
-
-const DataField = ({ label, value, icon, isCopyable, onCopy, copied }: any) => (
-  <div className="space-y-3">
-    <label className="block text-[9px] font-black text-gray-400 uppercase tracking-widest ml-2">{label}</label>
-    <div className="flex items-center gap-3">
-       <div className="flex-1 bg-gray-50 p-4 rounded-xl flex items-center space-x-4 border border-transparent hover:border-gray-100 transition-all">
-         <div className="text-gray-400">{icon}</div>
-         <span className="font-black text-gray-900 tracking-tight text-sm truncate">{value}</span>
-       </div>
-       {isCopyable && (
-         <button onClick={onCopy} className={`p-4 rounded-xl transition-all shadow-sm ${copied ? 'bg-emerald-500 text-white' : 'bg-white border border-gray-100 hover:bg-blue-600 hover:text-white'}`}>
-           {copied ? <Check size={16} /> : <Copy size={16} />}
-         </button>
-       )}
-    </div>
-  </div>
-);
-
-const InputField = ({ label, type = "text", value, onChange, maxLength }: any) => (
-  <div className="space-y-3">
-    <label className="block text-[9px] font-black text-gray-400 uppercase tracking-widest ml-2">{label}</label>
-    <input 
-      type={type} 
-      className="w-full p-5 bg-gray-50 border border-gray-100 rounded-2xl font-black text-xl tracking-tight focus:ring-4 focus:ring-blue-50 focus:bg-white transition-all outline-none"
-      value={value}
-      onChange={(e) => onChange(e.target.value.replace(/\D/g, ''))}
-      maxLength={maxLength}
     />
   </div>
 );

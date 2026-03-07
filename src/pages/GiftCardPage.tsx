@@ -4,7 +4,7 @@ import { useNotifications } from '../hooks/useNotifications';
 import PinPromptModal from '../components/PinPromptModal';
 import InsufficientBalanceModal from '../components/InsufficientBalanceModal';
 import LoadingScreen from '../components/LoadingScreen';
-import { Gift, ShieldCheck, CheckCircle2, Receipt, ArrowRight, Zap, Copy, Check } from 'lucide-react';
+import { Gift, CheckCircle2, Zap, Copy, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';

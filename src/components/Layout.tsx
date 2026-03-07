@@ -7,8 +7,8 @@ import { motion, AnimatePresence } from 'motion/react';
 import { 
   Home, Smartphone, Wifi, Zap, Tv, 
   LogOut, Menu, History, Wallet,
-  ShieldCheck, DollarSign, Users, Gamepad2, ArrowLeftRight,
-  Bell, Sun, Moon, Clock, ChevronRight, X, Search, CreditCard, Globe
+  ShieldCheck, DollarSign, Users,
+  Bell, Sun, Moon, Clock, ChevronRight, X, Search, CreditCard, ArrowLeftRight
 } from 'lucide-react';
 
 const NavItem: React.FC<{ to: string; icon: ReactNode; children: ReactNode; onClick?: () => void }> = ({ to, icon, children, onClick }) => (

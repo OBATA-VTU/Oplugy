@@ -36,6 +36,18 @@ const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, transactio
           <ReceiptItem label="Service Type" value={transaction.type} highlight />
           <ReceiptItem label="Beneficiary" value={transaction.source} />
           
+          {transaction.type === 'FUNDING' && (
+            <>
+              <ReceiptItem label="Gross Amount" value={`₦${transaction.amount.toLocaleString()}`} />
+              {transaction.fee !== undefined && (
+                <ReceiptItem label="Service Fee" value={`₦${transaction.fee.toLocaleString()}`} />
+              )}
+              {transaction.netAmount !== undefined && (
+                <ReceiptItem label="Net Credited" value={`₦${transaction.netAmount.toLocaleString()}`} highlight />
+              )}
+            </>
+          )}
+
           {transaction.type === 'ELECTRICITY' && transaction.token && (
             <div className="bg-blue-50 p-6 rounded-2xl border-2 border-dashed border-blue-100 text-center animate-in zoom-in-95">
                <p className="text-[9px] font-black text-blue-600 uppercase tracking-widest mb-2">Meter Token</p>

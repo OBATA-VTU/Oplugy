@@ -20,7 +20,7 @@ const FundingPage: React.FC = () => {
   const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
 
   const numAmount = parseFloat(amount) || 0;
-  const serviceFee = fundingMethod === 'AUTO' ? numAmount * 0.02 : 0; // 2% fee only for auto
+  const serviceFee = fundingMethod === 'AUTO' ? numAmount * 0.02 : 0; // 2% fee for Paystack
   const totalCharge = numAmount + serviceFee;
 
   const handleCopy = (text: string, label: string) => {
@@ -175,8 +175,8 @@ const FundingPage: React.FC = () => {
         <div className="space-y-1">
           <h4 className="text-sm font-black text-blue-900 uppercase tracking-widest">Transaction Charges</h4>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-1">
-            <p className="text-blue-800 text-xs font-medium">0.9% – Virtual Account (9PSB & PalmPay transfers)</p>
-            <p className="text-blue-800 text-xs font-medium">1.5% – Paystack payments</p>
+            <p className="text-blue-800 text-xs font-medium">0.7% – Virtual Account (9PSB & PalmPay transfers)</p>
+            <p className="text-blue-800 text-xs font-medium">2% – Paystack payments</p>
           </div>
         </div>
       </div>
@@ -217,7 +217,7 @@ const FundingPage: React.FC = () => {
             <div className="bg-emerald-50 p-6 rounded-2xl border border-emerald-100 flex flex-col justify-center items-center text-center space-y-4">
               <CheckCircle2 className="text-emerald-600 w-12 h-12" />
               <p className="text-emerald-900 text-xs font-bold leading-relaxed">
-                Funds sent to this account will be credited to your wallet instantly after 0.9% fee deduction.
+                Funds sent to this account will be credited to your wallet instantly after 0.7% fee deduction.
               </p>
             </div>
           </div>
@@ -271,12 +271,12 @@ const FundingPage: React.FC = () => {
           {numAmount > 0 && (
             <div className="bg-gray-50 p-6 rounded-2xl space-y-3 border border-gray-100">
               <div className="flex justify-between items-center text-xs">
-                <span className="font-bold text-gray-400 uppercase tracking-widest">Gateway Fee (1.5%)</span>
-                <span className="font-black text-red-500">₦{(numAmount * 0.015).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                <span className="font-bold text-gray-400 uppercase tracking-widest">Gateway Fee (2%)</span>
+                <span className="font-black text-red-500">₦{(numAmount * 0.02).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
               </div>
               <div className="pt-3 border-t border-gray-200 flex justify-between items-center">
                 <span className="font-black text-gray-900 uppercase tracking-widest text-xs">Total to Pay</span>
-                <span className="font-black text-blue-600 text-2xl tracking-tight">₦{(numAmount * 1.015).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                <span className="font-black text-blue-600 text-2xl tracking-tight">₦{(numAmount * 1.02).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
               </div>
             </div>
           )}
