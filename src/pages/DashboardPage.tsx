@@ -14,11 +14,11 @@ import { motion } from 'motion/react';
 import { 
   Smartphone, Wifi, Zap, Tv, 
   Copy,
-  Users, Plus, ArrowLeftRight, GraduationCap, Gift
+  Users, ArrowLeftRight, GraduationCap, Gift
 } from 'lucide-react';
 
 const DashboardPage: React.FC = () => {
-  const { fetchWalletBalance, isLoading, user, walletBalance } = useAuth();
+  const { fetchWalletBalance, isLoading, user } = useAuth();
   const { addNotification } = useNotifications();
   const [showPinModal, setShowPinModal] = useState(false);
   const [showPhoneModal, setShowPhoneModal] = useState(false);
@@ -73,44 +73,32 @@ const DashboardPage: React.FC = () => {
         className="space-y-8"
       >
         {/* Header Card */}
-        <div className="bg-blue-700 rounded-2xl p-8 text-white shadow-xl relative overflow-hidden">
-          <div className="relative z-10 space-y-8">
+        <div className="bg-blue-700 rounded-[2rem] p-10 text-white shadow-2xl relative overflow-hidden min-h-[240px] flex flex-col justify-between">
+          <div className="relative z-10">
             <div className="flex justify-between items-start">
-              <h1 className="text-2xl font-black tracking-tight uppercase">Hello {user?.username?.toUpperCase() || 'USER'}</h1>
-              <div className="flex items-center space-x-2">
-                <span className="text-sm font-medium opacity-80">{user?.virtualAccount?.bank_name || 'PalmPay'}</span>
-              </div>
+              <h1 className="text-3xl font-black tracking-tighter uppercase leading-none">Hello {user?.username?.toUpperCase() || 'USER'}</h1>
+              <span className="text-xs font-black tracking-widest opacity-60 uppercase">{user?.virtualAccount?.bank_name || 'PalmPay'}</span>
             </div>
+          </div>
 
-            <div className="flex justify-between items-end">
-              <div className="space-y-2">
-                <p className="text-xs font-medium opacity-80 uppercase tracking-widest">Wallet Balance</p>
-                <h2 className="text-3xl font-black tracking-tighter">₦{walletBalance?.toLocaleString() || '0.00'}</h2>
-              </div>
-              <div className="text-right space-y-2">
-                <div className="flex items-center justify-end space-x-2">
-                  <span className="text-lg font-black tracking-tight">{user?.virtualAccount?.account_number || '---'}</span>
-                  <button 
-                    onClick={() => {
-                      if (user?.virtualAccount?.account_number) {
-                        navigator.clipboard.writeText(user.virtualAccount.account_number);
-                        addNotification("Account number copied!", "success");
-                      }
-                    }}
-                    className="p-1 hover:bg-white/10 rounded transition-all"
-                  >
-                    <Copy size={16} />
-                  </button>
-                </div>
-              </div>
+          <div className="relative z-10 flex justify-between items-end">
+            <div className="space-y-2">
+              <p className="text-[10px] font-black opacity-60 uppercase tracking-[0.3em]">Virtual Account</p>
+              <h2 className="text-4xl font-black tracking-tighter leading-none">{user?.virtualAccount?.account_number || '6627516112'}</h2>
             </div>
-
-            <div className="flex gap-4 pt-4">
-              <Link to="/funding" className="flex-1 bg-white text-blue-700 py-3 rounded-xl font-black text-xs uppercase tracking-widest flex items-center justify-center space-x-2 shadow-lg">
-                <Plus size={14} />
-                <span>Fund Wallet</span>
-              </Link>
-              <Link to="/history" className="flex-1 bg-white/20 backdrop-blur-md text-white py-3 rounded-xl font-black text-xs uppercase tracking-widest flex items-center justify-center space-x-2 border border-white/10">
+            <div className="flex gap-3">
+              <button 
+                onClick={() => {
+                  if (user?.virtualAccount?.account_number) {
+                    navigator.clipboard.writeText(user.virtualAccount.account_number);
+                    addNotification("Account number copied!", "success");
+                  }
+                }}
+                className="p-4 bg-white/10 hover:bg-white/20 rounded-2xl transition-all border border-white/10"
+              >
+                <Copy size={20} />
+              </button>
+              <Link to="/history" className="px-8 py-4 bg-white text-blue-700 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center space-x-3 shadow-xl">
                 <ArrowLeftRight size={14} />
                 <span>History</span>
               </Link>
@@ -121,17 +109,17 @@ const DashboardPage: React.FC = () => {
         </div>
 
         {/* Refer & Earn Banner */}
-        <div className="bg-gradient-to-r from-indigo-900 to-blue-800 rounded-2xl p-8 text-white relative overflow-hidden flex items-center justify-between shadow-lg">
+        <div className="bg-gradient-to-r from-indigo-900 to-blue-800 rounded-[2rem] p-10 text-white relative overflow-hidden flex items-center justify-between shadow-2xl min-h-[200px]">
           <div className="relative z-10 space-y-4 max-w-[60%]">
-            <h2 className="text-4xl font-black tracking-tighter italic">Refer & Earn!</h2>
-            <p className="text-sm font-medium leading-tight">
-              Invite your friends with your referral link to earn <span className="text-yellow-400 font-bold">₦100</span> for each friend you referred.
+            <h2 className="text-5xl font-black tracking-tighter italic leading-none">Refer & Earn!</h2>
+            <p className="text-sm font-medium leading-tight opacity-80">
+              Invite your friends with your referral link to earn <span className="text-yellow-400 font-bold">N100</span> for each friend you referred.
             </p>
-            <p className="text-[10px] opacity-60">Terms & conditions apply</p>
+            <p className="text-[10px] font-black uppercase tracking-widest opacity-40">Terms & conditions apply</p>
           </div>
-          <div className="absolute right-0 top-0 h-full w-1/3 overflow-hidden">
+          <div className="absolute right-0 top-0 h-full w-2/5 overflow-hidden">
              <img 
-               src="https://picsum.photos/seed/refer/400/400" 
+               src="https://picsum.photos/seed/refer/600/600" 
                alt="Refer" 
                className="h-full w-full object-cover opacity-80 mix-blend-overlay"
                referrerPolicy="no-referrer"
@@ -140,13 +128,13 @@ const DashboardPage: React.FC = () => {
         </div>
 
         {/* Services Grid */}
-        <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
-          <h3 className="text-lg font-black text-gray-900 mb-8 tracking-tight">Services</h3>
-          <div className="grid grid-cols-4 gap-y-10 gap-x-4">
+        <div className="bg-white rounded-[3rem] p-12 shadow-sm border border-gray-100">
+          <h3 className="text-xl font-black text-gray-900 mb-12 tracking-tight uppercase">Services</h3>
+          <div className="grid grid-cols-4 gap-y-12 gap-x-4">
             <ServiceIcon icon={<Smartphone className="text-blue-600" />} label="Airtime" to="/airtime" />
             <ServiceIcon icon={<Wifi className="text-blue-600" />} label="Data" to="/data" />
             <ServiceIcon icon={<Tv className="text-blue-600" />} label="Tv" to="/cable" />
-            <ServiceIcon icon={<Zap className="text-blue-600" />} label="Bills" to="/electricity" />
+            <ServiceIcon icon={<Zap className="text-blue-600" />} label="Bills" to="/bills" />
             <ServiceIcon icon={<GraduationCap className="text-blue-600" />} label="Education Pin" to="/education" />
             <ServiceIcon icon={<ArrowLeftRight className="text-blue-600" />} label="P2P Transfer" to="/p2p" />
             <ServiceIcon icon={<Gift className="text-blue-600" />} label="Gift Card" to="/giftcards" />

@@ -11,14 +11,35 @@ import Spinner from '../components/Spinner';
 const ProfilePage: React.FC = () => {
   const { user, logout } = useAuth();
   const { addNotification } = useNotifications();
-  const [activeTab, setActiveTab] = useState<'ACCOUNT' | 'SECURITY' | 'DEVELOPER'>('ACCOUNT');
+  const [activeTab, setActiveTab] = useState<'PERSONAL' | 'BANK' | 'PIN' | 'API' | 'PASSWORD'>('PERSONAL');
   const [isUpdating, setIsUpdating] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
   
   const [pinForm, setPinForm] = useState({ oldPin: '', newPin: '', confirmPin: '' });
+  const [passwordForm, setPasswordForm] = useState({ current: '', new: '', confirm: '' });
   const [webhookUrl, setWebhookUrl] = useState(user?.webhookUrl || '');
   const [showApiKey, setShowApiKey] = useState(false);
   const [apiKey, setApiKey] = useState(user?.apiKey || '');
+
+  const [personalInfo, setPersonalInfo] = useState({
+    fullName: user?.fullName || '',
+    username: user?.username || '',
+    email: user?.email || '',
+    phone: user?.phone || '',
+  });
+
+  const handleUpdateProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+    setIsUpdating(true);
+    const res = await authService.updateProfile(user.id, personalInfo);
+    if (res.status) {
+      addNotification("Profile updated successfully.", "success");
+    } else {
+      addNotification(res.message || "Failed to update profile.", "error");
+    }
+    setIsUpdating(false);
+  };
 
   const generateLongApiKey = () => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -91,237 +112,219 @@ const ProfilePage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-12 pb-32 px-4 sm:px-6 lg:px-8">
-      {/* Header Section */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-10 border-b border-gray-100 pb-12">
-        <div>
-          <div className="inline-flex items-center space-x-2 px-3 py-1 bg-gray-50 rounded-full mb-6">
-            <div className="w-1.5 h-1.5 rounded-full bg-blue-600"></div>
-            <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">Account Details</span>
-          </div>
-          <h1 className="text-6xl lg:text-8xl font-black tracking-tighter leading-[0.85] uppercase">
-            Account <br />
-            <span className="text-gray-200">Settings.</span>
-          </h1>
-        </div>
-        <div className="flex bg-gray-50 p-1.5 rounded-2xl border border-gray-100 shadow-inner">
-           {(['ACCOUNT', 'SECURITY', 'DEVELOPER'] as const).map((tab) => (
-             <button 
-              key={tab} 
-              onClick={() => setActiveTab(tab)}
-              className={`px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === tab ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-400 hover:text-gray-900'}`}
-             >
-                {tab === 'DEVELOPER' ? 'API' : tab === 'SECURITY' ? 'Security' : 'Profile'}
-             </button>
-           ))}
-        </div>
+    <div className="max-w-7xl mx-auto space-y-12 pb-32">
+      {/* Profile Header Banner */}
+      <div className="relative h-80 rounded-[4rem] overflow-hidden bg-gray-200">
+         <img 
+           src="https://picsum.photos/seed/profile-bg/1920/500" 
+           alt="Banner" 
+           className="w-full h-full object-cover opacity-50"
+           referrerPolicy="no-referrer"
+         />
+         <div className="absolute inset-0 bg-gradient-to-t from-white dark:from-[#050505] to-transparent"></div>
+         
+         <div className="absolute -bottom-16 left-1/2 -translate-x-1/2 flex flex-col items-center space-y-4">
+            <div className="w-40 h-40 rounded-full bg-white dark:bg-[#0f172a] p-2 shadow-2xl">
+               <div className="w-full h-full rounded-full bg-gray-100 dark:bg-white/5 flex items-center justify-center text-gray-300">
+                  <User size={80} />
+               </div>
+            </div>
+            <div className="text-center">
+               <h1 className="text-4xl font-black tracking-tighter text-gray-900 dark:text-white uppercase">{user?.fullName || 'User'}</h1>
+               <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mt-2">{user?.role || 'Reseller'}</p>
+            </div>
+         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-        {/* Left Sidebar */}
-        <div className="lg:col-span-4 space-y-8">
-          <div className="bg-white border border-gray-100 rounded-[3rem] p-12 shadow-2xl shadow-gray-100/50 relative overflow-hidden group">
-            <div className="relative z-10 space-y-10">
-              <div className="flex items-center space-x-6">
-                <div className="w-24 h-24 bg-gray-950 text-white rounded-[2rem] flex items-center justify-center text-4xl font-black shadow-2xl">
-                  {user?.fullName?.charAt(0).toUpperCase() || user?.username?.charAt(0).toUpperCase()}
+      {/* Tabs Navigation */}
+      <div className="flex flex-wrap justify-center gap-4 pt-20">
+         <TabButton active={activeTab === 'PERSONAL'} onClick={() => setActiveTab('PERSONAL')}>Personal Info</TabButton>
+         <TabButton active={activeTab === 'BANK'} onClick={() => setActiveTab('BANK')}>Bank Settings</TabButton>
+         <TabButton active={activeTab === 'PIN'} onClick={() => setActiveTab('PIN')}>Transaction Pin</TabButton>
+         <TabButton active={activeTab === 'API'} onClick={() => setActiveTab('API')}>Api & Webhook</TabButton>
+         <TabButton active={activeTab === 'PASSWORD'} onClick={() => setActiveTab('PASSWORD')}>Password</TabButton>
+      </div>
+
+      <div className="bg-white dark:bg-[#0f172a] border border-gray-100 dark:border-white/5 rounded-[4rem] p-12 lg:p-20 shadow-2xl shadow-gray-100/50">
+        <AnimatePresence mode="wait">
+          {activeTab === 'PERSONAL' && (
+            <motion.div 
+              key="personal"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="space-y-12"
+            >
+              <div className="flex items-center space-x-4 mb-10">
+                 <div className="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
+                    <User size={24} />
+                 </div>
+                 <h3 className="text-xl font-black uppercase tracking-tight">Personal Info</h3>
+              </div>
+
+              <form onSubmit={handleUpdateProfile} className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                <ProfileInput label="Full Name" value={personalInfo.fullName} onChange={(v: string) => setPersonalInfo({...personalInfo, fullName: v})} />
+                <ProfileInput label="User Name" value={personalInfo.username} onChange={(v: string) => setPersonalInfo({...personalInfo, username: v})} />
+                <ProfileInput label="Account Type" value={user?.role || 'Reseller'} readOnly />
+                <ProfileInput label="Email Address" value={personalInfo.email} onChange={(v: string) => setPersonalInfo({...personalInfo, email: v})} />
+                <ProfileInput label="Phone Number" value={personalInfo.phone} onChange={(v: string) => setPersonalInfo({...personalInfo, phone: v})} />
+                <ProfileInput label="NIN Status" value="Verified" readOnly />
+                <ProfileInput label="BVN Status" value="Not verified" readOnly />
+                
+                <div className="md:col-span-2 pt-10">
+                   <button 
+                    disabled={isUpdating}
+                    className="bg-blue-600 text-white px-12 py-5 rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-gray-950 transition-all shadow-xl shadow-blue-100 disabled:opacity-50"
+                   >
+                      {isUpdating ? 'Saving...' : 'Save Changes'}
+                   </button>
                 </div>
-                <div>
-                  <h3 className="text-3xl font-black tracking-tighter">@{user?.username}</h3>
-                  <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest mt-1">{user?.role || 'CUSTOMER'}</p>
-                </div>
+              </form>
+            </motion.div>
+          )}
+
+          {activeTab === 'PIN' && (
+            <motion.div 
+              key="pin"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="space-y-12"
+            >
+              <div className="flex items-center space-x-4 mb-10">
+                 <div className="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
+                    <Lock size={24} />
+                 </div>
+                 <h3 className="text-xl font-black uppercase tracking-tight">Transaction PIN</h3>
               </div>
               
-              <div className="space-y-6 pt-10 border-t border-gray-50">
-                <div className="flex justify-between items-center">
-                  <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Wallet Balance</span>
-                  <span className="text-2xl font-black tracking-tighter text-gray-900">₦{user?.walletBalance?.toLocaleString() || '0.00'}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Network Referrals</span>
-                  <span className="text-2xl font-black tracking-tighter text-gray-900">{user?.referralCount || 0}</span>
-                </div>
+              <form onSubmit={handleUpdatePin} className="max-w-md space-y-8">
+                <ProfileInput label="Current PIN" type="password" value={pinForm.oldPin} onChange={(v: string) => setPinForm({...pinForm, oldPin: v})} />
+                <ProfileInput label="New PIN" type="password" maxLength={5} value={pinForm.newPin} onChange={(v: string) => setPinForm({...pinForm, newPin: v})} />
+                <ProfileInput label="Confirm PIN" type="password" maxLength={5} value={pinForm.confirmPin} onChange={(v: string) => setPinForm({...pinForm, confirmPin: v})} />
+                
+                <button 
+                  disabled={isUpdating || pinForm.newPin.length !== 5}
+                  className="w-full bg-blue-600 text-white py-5 rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-gray-950 transition-all shadow-xl shadow-blue-100 disabled:opacity-50"
+                >
+                  {isUpdating ? 'Updating...' : 'Update PIN'}
+                </button>
+              </form>
+            </motion.div>
+          )}
+
+          {activeTab === 'API' && (
+            <motion.div 
+              key="api"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="space-y-12"
+            >
+              <div className="flex items-center space-x-4 mb-10">
+                 <div className="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
+                    <Terminal size={24} />
+                 </div>
+                 <h3 className="text-xl font-black uppercase tracking-tight">API & Webhook</h3>
               </div>
 
-              <div className="pt-6">
+              <div className="space-y-10">
+                <div className="bg-gray-50 dark:bg-white/5 p-10 rounded-[3rem] border border-gray-100 dark:border-white/5">
+                  <div className="flex justify-between items-center mb-6">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">API Secret Key</label>
+                    <button 
+                      onClick={handleRegenerateKey}
+                      className="text-[10px] font-black text-blue-600 uppercase tracking-widest hover:text-gray-950 transition-colors flex items-center gap-2"
+                    >
+                      <RefreshCw size={14} />
+                      Regenerate
+                    </button>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="relative flex-1">
+                      <input 
+                        type={showApiKey ? "text" : "password"} 
+                        value={apiKey || 'No key generated'} 
+                        readOnly 
+                        className="w-full bg-white dark:bg-[#050505] border border-gray-200 dark:border-white/10 p-5 rounded-2xl font-mono text-sm tracking-widest outline-none" 
+                      />
+                      <button 
+                        onClick={() => setShowApiKey(!showApiKey)}
+                        className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-400"
+                      >
+                        {showApiKey ? <EyeOff size={20} /> : <Eye size={20} />}
+                      </button>
+                    </div>
+                    <button 
+                      onClick={() => apiKey && copyToClipboard(apiKey, "API Key")}
+                      className="p-5 bg-gray-950 text-white rounded-2xl hover:bg-blue-600 transition-all"
+                    >
+                      <Copy size={20} />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-6">
+                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">Webhook URL</label>
+                  <input 
+                    type="url" 
+                    value={webhookUrl}
+                    onChange={(e) => setWebhookUrl(e.target.value)}
+                    placeholder="https://your-api.com/webhook"
+                    className="w-full p-6 bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-[2rem] text-sm font-black tracking-tight focus:bg-white dark:focus:bg-[#050505] outline-none transition-all"
+                  />
+                </div>
+
                 <button 
-                  onClick={logout}
-                  className="w-full py-5 bg-red-50 text-red-600 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] flex items-center justify-center space-x-3 hover:bg-red-600 hover:text-white transition-all"
+                  onClick={handleSaveConfig}
+                  disabled={isUpdating}
+                  className="bg-blue-600 text-white px-12 py-5 rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-gray-950 transition-all shadow-xl shadow-blue-100 disabled:opacity-50"
                 >
-                  <LogOut size={16} />
-                  <span>Logout</span>
+                  {isUpdating ? 'Saving...' : 'Save Config'}
                 </button>
               </div>
+            </motion.div>
+          )}
+
+          {(activeTab === 'BANK' || activeTab === 'PASSWORD') && (
+            <div className="flex flex-col items-center justify-center py-20 text-center space-y-6">
+               <div className="w-20 h-20 rounded-full bg-gray-50 flex items-center justify-center text-gray-300">
+                  <Shield size={40} />
+               </div>
+               <div>
+                  <h3 className="text-2xl font-black tracking-tighter uppercase">Coming Soon</h3>
+                  <p className="text-gray-400 font-medium">This feature is currently being optimized for your security.</p>
+               </div>
             </div>
-            <div className="absolute top-0 right-0 w-32 h-32 bg-gray-50 rounded-full -translate-y-1/2 translate-x-1/2 -z-10"></div>
-          </div>
-          
-          <div className="bg-gray-950 p-10 rounded-[3rem] text-white shadow-2xl shadow-blue-900/20 relative overflow-hidden">
-             <div className="relative z-10">
-                <Shield className="text-blue-500 mb-6" size={32} />
-                <h4 className="text-xl font-black tracking-tight mb-2">Security Settings</h4>
-                <p className="text-white/40 text-sm font-medium leading-relaxed">Your account is protected by industry-standard encryption and secure login.</p>
-             </div>
-             <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-blue-600/20 rounded-full blur-3xl"></div>
-          </div>
-        </div>
-
-        {/* Main Content Area */}
-        <div className="lg:col-span-8">
-          <div className="bg-white border border-gray-100 rounded-[3rem] p-12 lg:p-20 shadow-2xl shadow-gray-100/50 min-h-[700px]">
-            <AnimatePresence mode="wait">
-              {activeTab === 'ACCOUNT' && (
-                <motion.div 
-                  key="account"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="space-y-12"
-                >
-                  <SectionHeader title="Account Details" desc="Your primary identification data within the Oplug network." />
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <DataField label="Full Name" value={user?.fullName || 'Not set'} icon={<User size={16} />} />
-                    <DataField label="Username" value={`@${user?.username}`} icon={<Terminal size={16} />} />
-                    <DataField label="Email Address" value={user?.email} icon={<Lock size={16} />} />
-                    <DataField 
-                      label="Referral Code" 
-                      value={user?.referralCode} 
-                      icon={<CreditCard size={16} />}
-                      isCopyable 
-                      onCopy={() => copyToClipboard(user?.referralCode, "Referral Code")} 
-                      copied={copied === "Referral Code"}
-                    />
-                  </div>
-                  <div className="p-8 bg-gray-50 rounded-2xl border border-gray-100 flex items-center space-x-6">
-                    <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm text-blue-600">
-                      <Shield size={24} />
-                    </div>
-                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-relaxed">
-                      For sensitive data changes, please contact our support team.
-                    </p>
-                  </div>
-                </motion.div>
-              )}
-
-              {activeTab === 'SECURITY' && (
-                <motion.div 
-                  key="security"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="space-y-12"
-                >
-                  <SectionHeader title="Security Settings" desc="Manage your 5-digit transaction PIN." />
-                  <form onSubmit={handleUpdatePin} className="space-y-8 max-w-md">
-                    <InputField 
-                      label="Current PIN" 
-                      type="password" 
-                      value={pinForm.oldPin} 
-                      onChange={(v: string) => setPinForm({...pinForm, oldPin: v})} 
-                    />
-                    <div className="grid grid-cols-2 gap-6">
-                      <InputField 
-                        label="New PIN" 
-                        type="password" 
-                        maxLength={5} 
-                        value={pinForm.newPin} 
-                        onChange={(v: string) => setPinForm({...pinForm, newPin: v})} 
-                      />
-                      <InputField 
-                        label="Verify PIN" 
-                        type="password" 
-                        maxLength={5} 
-                        value={pinForm.confirmPin} 
-                        onChange={(v: string) => setPinForm({...pinForm, confirmPin: v})} 
-                      />
-                    </div>
-                    <button 
-                      disabled={isUpdating || pinForm.newPin.length !== 5}
-                      className="w-full bg-blue-600 text-white py-5 rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-gray-950 transition-all shadow-lg shadow-blue-100 disabled:opacity-50 flex items-center justify-center"
-                    >
-                      {isUpdating ? <Spinner /> : 'Update PIN'}
-                    </button>
-                  </form>
-                </motion.div>
-              )}
-
-              {activeTab === 'DEVELOPER' && (
-                <motion.div 
-                  key="developer"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="space-y-12"
-                >
-                  <SectionHeader title="API Settings" desc="Integrate our digital services into your external systems." />
-                  
-                  <div className="space-y-10">
-                    <div className="bg-gray-50 p-8 rounded-3xl border border-gray-100">
-                      <div className="flex justify-between items-center mb-4 ml-2">
-                        <label className="block text-[9px] font-black text-gray-400 uppercase tracking-widest">API Secret Key</label>
-                        <button 
-                          onClick={handleRegenerateKey}
-                          disabled={isUpdating}
-                          className="flex items-center space-x-2 text-[9px] font-black text-blue-600 uppercase tracking-widest hover:text-gray-950 disabled:opacity-50 transition-colors"
-                        >
-                          <RefreshCw size={12} className={isUpdating ? 'animate-spin' : ''} />
-                          <span>Regenerate Key</span>
-                        </button>
-                      </div>
-                      <div className="flex items-center gap-4">
-                        <div className="relative flex-1">
-                          <input 
-                            type={showApiKey ? "text" : "password"} 
-                            value={apiKey || 'Click regenerate to create a key'} 
-                            readOnly 
-                            className="w-full bg-white border border-gray-200 p-4 rounded-xl font-mono text-xs tracking-widest outline-none pr-12" 
-                          />
-                          <button 
-                            onClick={() => setShowApiKey(!showApiKey)}
-                            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-600 transition-colors"
-                          >
-                            {showApiKey ? <EyeOff size={18} /> : <Eye size={18} />}
-                          </button>
-                        </div>
-                        <button 
-                          onClick={() => apiKey && copyToClipboard(apiKey, "API Key")} 
-                          disabled={!apiKey}
-                          className={`p-4 rounded-xl transition-all shadow-sm ${copied === "API Key" ? 'bg-emerald-500 text-white' : 'bg-gray-950 text-white hover:bg-blue-600 disabled:opacity-50'}`}
-                        >
-                          {copied === "API Key" ? <Check size={18} /> : <Copy size={18} />}
-                        </button>
-                      </div>
-                      <p className="mt-6 text-[9px] font-black text-orange-500 uppercase tracking-widest text-center">Warning: Unauthorized access to this key compromises your wallet.</p>
-                    </div>
-
-                    <div className="space-y-4">
-                      <label className="block text-[9px] font-black text-gray-400 uppercase tracking-widest ml-2">Webhook Endpoint</label>
-                      <input 
-                        type="url" 
-                        className="w-full p-5 bg-white border border-gray-200 rounded-2xl text-sm font-black tracking-tight focus:ring-4 focus:ring-blue-50 outline-none transition-all" 
-                        placeholder="https://api.yourdomain.com/v1/callback" 
-                        value={webhookUrl}
-                        onChange={(e) => setWebhookUrl(e.target.value)}
-                      />
-                    </div>
-                    
-                    <button 
-                      onClick={handleSaveConfig}
-                      disabled={isUpdating}
-                      className="bg-gray-950 text-white px-10 py-4 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-600 transition-all shadow-lg disabled:opacity-50"
-                    >
-                      {isUpdating ? 'Saving...' : 'Save Configuration'}
-                    </button>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        </div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
 };
+
+const TabButton = ({ active, onClick, children }: any) => (
+  <button 
+    onClick={onClick}
+    className={`px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${active ? 'bg-blue-600 text-white shadow-xl shadow-blue-100' : 'bg-gray-50 text-gray-400 hover:text-gray-900 dark:bg-white/5 dark:hover:text-white'}`}
+  >
+    {children}
+  </button>
+);
+
+const ProfileInput = ({ label, value, onChange, readOnly, type = "text", maxLength }: any) => (
+  <div className="space-y-4">
+    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-4">{label}</label>
+    <input 
+      type={type}
+      value={value}
+      onChange={(e) => onChange?.(e.target.value)}
+      readOnly={readOnly}
+      maxLength={maxLength}
+      className={`w-full p-6 bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-[2rem] text-sm font-black tracking-tight focus:bg-white dark:focus:bg-[#050505] outline-none transition-all ${readOnly ? 'opacity-60 cursor-not-allowed' : ''}`}
+    />
+  </div>
+);
 
 const SectionHeader = ({ title, desc }: { title: string, desc: string }) => (
   <div>

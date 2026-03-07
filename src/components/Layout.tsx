@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { 
   Home, Smartphone, Wifi, Zap, Tv, 
   LogOut, Menu, History, Wallet,
-  ShieldCheck, DollarSign, Users, Gamepad2,
+  ShieldCheck, DollarSign, Users, Gamepad2, ArrowLeftRight,
   Bell, Sun, Moon, Clock, ChevronRight, X, Search, CreditCard, Globe
 } from 'lucide-react';
 
@@ -61,50 +61,36 @@ const Layout: React.FC = () => {
         </button>
       </div>
       
-      <div className="px-10">
-        {/* User Card */}
-        <motion.div 
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          className="p-6 bg-gray-50 dark:bg-white/5 rounded-[2rem] border border-gray-100 dark:border-white/5 group cursor-pointer transition-all" 
-          onClick={() => { navigate('/profile'); closeSidebar(); }}
-        >
-           <div className="flex items-center space-x-4">
-              <div className="w-14 h-14 rounded-2xl bg-blue-600 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-blue-500/20 group-hover:rotate-6 transition-all">
-                 {user?.username?.charAt(0).toUpperCase() || 'U'}
-              </div>
-              <div className="overflow-hidden">
-                 <p className="text-lg font-black text-gray-900 dark:text-white tracking-tighter leading-none mb-1 truncate">{user?.username || 'User'}</p>
-                 <p className="text-[9px] text-blue-600 dark:text-blue-400 font-bold uppercase tracking-[0.2em]">{user?.role || 'User'}</p>
-              </div>
-           </div>
-        </motion.div>
-      </div>
-      
       <nav className="flex-grow px-6 space-y-2 overflow-y-auto no-scrollbar pb-10">
-        <div className="px-6 py-4 text-[9px] font-bold uppercase tracking-[0.5em] text-gray-400 dark:text-white/20">Menu</div>
+        <div className="px-6 py-4 text-[9px] font-black uppercase tracking-[0.5em] text-gray-400 dark:text-white/20">Main</div>
         <NavItem to="/dashboard" icon={<Home className="w-5 h-5" />} onClick={closeSidebar}>Dashboard</NavItem>
-        <NavItem to="/funding" icon={<Wallet className="w-5 h-5" />} onClick={closeSidebar}>Add Money</NavItem>
-        <NavItem to="/schedule" icon={<Clock className="w-5 h-5" />} onClick={closeSidebar}>Planned Payments</NavItem>
-        <NavItem to="/history" icon={<History className="w-5 h-5" />} onClick={closeSidebar}>History</NavItem>
         
-        <div className="px-6 py-4 mt-8 text-[9px] font-bold uppercase tracking-[0.5em] text-gray-400 dark:text-white/20">Buy Services</div>
+        <div className="px-6 py-4 mt-8 text-[9px] font-black uppercase tracking-[0.5em] text-gray-400 dark:text-white/20">Services</div>
         <NavItem to="/airtime" icon={<Smartphone className="w-5 h-5" />} onClick={closeSidebar}>Buy Airtime</NavItem>
         <NavItem to="/data" icon={<Wifi className="w-5 h-5" />} onClick={closeSidebar}>Buy Data</NavItem>
-        <NavItem to="/smm" icon={<Globe className="w-5 h-5" />} onClick={closeSidebar}>Social Boost</NavItem>
-        <NavItem to="/bills" icon={<Zap className="w-5 h-5" />} onClick={closeSidebar}>Light Bills</NavItem>
-        <NavItem to="/cable" icon={<Tv className="w-5 h-5" />} onClick={closeSidebar}>TV Subscription</NavItem>
-        <NavItem to="/education" icon={<Gamepad2 className="w-5 h-5" />} onClick={closeSidebar}>Education</NavItem>
+        <NavItem to="/cable" icon={<Tv className="w-5 h-5" />} onClick={closeSidebar}>Cable Subscription</NavItem>
+        <NavItem to="/bills" icon={<Zap className="w-5 h-5" />} onClick={closeSidebar}>Electricity Payment</NavItem>
+        <NavItem to="/education" icon={<Smartphone className="w-5 h-5" />} onClick={closeSidebar}>Education Pins</NavItem>
+        <NavItem to="/schedule" icon={<Clock className="w-5 h-5" />} onClick={closeSidebar}>Schedule Transaction</NavItem>
 
-        <div className="px-6 py-4 mt-8 text-[9px] font-bold uppercase tracking-[0.5em] text-gray-400 dark:text-white/20">My Account</div>
-        <NavItem to="/referrals" icon={<Users className="w-5 h-5" />} onClick={closeSidebar}>Invite Friends</NavItem>
-        <NavItem to="/pricing" icon={<DollarSign className="w-5 h-5" />} onClick={closeSidebar}>Prices</NavItem>
-        <NavItem to="/profile" icon={<ShieldCheck className="w-5 h-5" />} onClick={closeSidebar}>My Profile</NavItem>
+        <div className="px-6 py-4 mt-8 text-[9px] font-black uppercase tracking-[0.5em] text-gray-400 dark:text-white/20">Payments</div>
+        <NavItem to="/funding" icon={<Wallet className="w-5 h-5" />} onClick={closeSidebar}>Fund Wallet</NavItem>
+        <NavItem to="/p2p" icon={<ArrowLeftRight className="w-5 h-5" />} onClick={closeSidebar}>P2P Transfer</NavItem>
+        <NavItem to="/referrals" icon={<Users className="w-5 h-5" />} onClick={closeSidebar}>Refer and Earn</NavItem>
+        <NavItem to="/giftcards" icon={<CreditCard className="w-5 h-5" />} onClick={closeSidebar}>Gift Card</NavItem>
+        <NavItem to="/history" icon={<History className="w-5 h-5" />} onClick={closeSidebar}>History</NavItem>
+        <NavItem to="/pricing" icon={<DollarSign className="w-5 h-5" />} onClick={closeSidebar}>Pricings</NavItem>
+
+        <div className="px-6 py-4 mt-8 text-[9px] font-black uppercase tracking-[0.5em] text-gray-400 dark:text-white/20">Account</div>
+        <NavItem to="/profile" icon={<ShieldCheck className="w-5 h-5" />} onClick={closeSidebar}>Account Settings</NavItem>
+        <NavItem to="/kyc" icon={<ShieldCheck className="w-5 h-5" />} onClick={closeSidebar}>KYC Verification</NavItem>
+        <NavItem to="/api-docs" icon={<Smartphone className="w-5 h-5" />} onClick={closeSidebar}>Developer's API</NavItem>
+        <NavItem to="/support" icon={<Smartphone className="w-5 h-5" />} onClick={closeSidebar}>Support</NavItem>
 
         {user?.role === 'admin' && (
           <div className="pt-8 mt-8 border-t border-gray-100 dark:border-white/5">
-            <div className="px-6 mb-4 text-[9px] font-bold uppercase tracking-[0.5em] text-red-500">Admin</div>
-            <NavItem to="/admin" icon={<ShieldCheck className="w-5 h-5" />} onClick={closeSidebar}>Admin</NavItem>
+            <div className="px-6 mb-4 text-[9px] font-black uppercase tracking-[0.5em] text-red-500">Admin</div>
+            <NavItem to="/admin" icon={<ShieldCheck className="w-5 h-5" />} onClick={closeSidebar}>Admin Terminal</NavItem>
           </div>
         )}
       </nav>
@@ -198,12 +184,43 @@ const Layout: React.FC = () => {
 
              <div className="w-px h-10 bg-gray-100 dark:bg-white/5 hidden sm:block"></div>
 
-             <button 
-              onClick={() => navigate('/profile')}
-              className="w-14 h-14 rounded-2xl bg-gray-100 dark:bg-white/5 border-4 border-white dark:border-[#050505] shadow-xl overflow-hidden flex items-center justify-center text-blue-600 font-black text-lg hover:scale-110 transition-all hover:bg-blue-600 hover:text-white"
-             >
-                {user?.username?.charAt(0).toUpperCase() || 'U'}
-             </button>
+             <div className="relative group">
+                <button 
+                  className="w-14 h-14 rounded-2xl bg-gray-100 dark:bg-white/5 border-4 border-white dark:border-[#050505] shadow-xl overflow-hidden flex items-center justify-center text-blue-600 font-black text-lg hover:scale-110 transition-all hover:bg-blue-600 hover:text-white"
+                >
+                   {user?.username?.charAt(0).toUpperCase() || 'U'}
+                </button>
+                
+                {/* Profile Dropdown */}
+                <div className="absolute right-0 mt-4 w-72 bg-white dark:bg-[#0f172a] rounded-[2rem] shadow-2xl border border-gray-100 dark:border-white/5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50 p-6">
+                   <div className="flex flex-col items-center text-center space-y-4 mb-6">
+                      <div className="w-20 h-20 rounded-[2rem] bg-gray-100 dark:bg-white/5 flex items-center justify-center text-blue-600 font-black text-3xl">
+                         {user?.username?.charAt(0).toUpperCase() || 'U'}
+                      </div>
+                      <div>
+                         <h4 className="text-xl font-black text-gray-900 dark:text-white tracking-tighter leading-none">{user?.fullName || 'User'}</h4>
+                         <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-2">{user?.role || 'User'} Package</p>
+                      </div>
+                   </div>
+                   
+                   <div className="space-y-2 pt-6 border-t border-gray-50 dark:border-white/5">
+                      <button 
+                        onClick={() => navigate('/profile')}
+                        className="w-full flex items-center space-x-4 p-4 rounded-2xl text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/5 transition-all text-xs font-black uppercase tracking-widest"
+                      >
+                         <ShieldCheck size={18} />
+                         <span>Settings</span>
+                      </button>
+                      <button 
+                        onClick={handleLogout}
+                        className="w-full flex items-center space-x-4 p-4 rounded-2xl text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all text-xs font-black uppercase tracking-widest"
+                      >
+                         <LogOut size={18} />
+                         <span>Logout</span>
+                      </button>
+                   </div>
+                </div>
+             </div>
           </div>
         </header>
 

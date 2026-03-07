@@ -16,6 +16,7 @@ import CablePage from './pages/CablePage';
 import EducationPage from './pages/EducationPage';
 import PricingPage from './pages/PricingPage';
 import ProfilePage from './pages/ProfilePage';
+import GiftCardPage from './pages/GiftCardPage';
 import FundingPage from './pages/FundingPage';
 import TransactionHistoryPage from './pages/TransactionHistoryPage';
 import ReferralPage from './pages/ReferralPage';
@@ -76,6 +77,7 @@ const App: React.FC = () => {
                 <Route path="/bills" element={<BillsPage />} />
                 <Route path="/cable" element={<CablePage />} />
                 <Route path="/education" element={<EducationPage />} />
+                <Route path="/giftcards" element={<GiftCardPage />} />
                 <Route path="/profile" element={<ProfilePage />} />
                 <Route path="/funding" element={<FundingPage />} />
                 <Route path="/history" element={<TransactionHistoryPage />} />

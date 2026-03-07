@@ -41,8 +41,11 @@ export async function apiClient<T>(
   if (endpoint.startsWith('http')) {
     fullUrl = endpoint;
   } else {
-    const combined = `${baseUrl.replace(/\/$/, '')}/${endpoint.replace(/^\//, '')}`;
-    fullUrl = combined.startsWith('/') ? combined : `/${combined}`;
+    // Ensure we don't create protocol-relative URLs (//path)
+    const cleanBase = baseUrl.replace(/\/$/, '');
+    const cleanEndpoint = endpoint.replace(/^\//, '');
+    const combined = cleanBase ? `${cleanBase}/${cleanEndpoint}` : `/${cleanEndpoint}`;
+    fullUrl = combined;
   }
   
   // Remove trailing slash if it's not just /

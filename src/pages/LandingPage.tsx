@@ -119,16 +119,22 @@ const LandingPage: React.FC = () => {
                   ))}
                 </div>
                 
-                <div className="mt-6 p-6 bg-blue-600 rounded-3xl text-white">
-                  <div className="flex justify-between items-center mb-4">
-                    <p className="text-sm font-bold opacity-80 uppercase tracking-wider">Wallet Balance</p>
-                    <CreditCard size={20} />
+                <div className="mt-6 p-10 bg-blue-600 rounded-[3rem] text-white relative overflow-hidden">
+                  <div className="relative z-10">
+                    <div className="flex justify-between items-center mb-10">
+                      <p className="text-[10px] font-black opacity-60 uppercase tracking-[0.3em]">Virtual Account</p>
+                      <CreditCard size={24} />
+                    </div>
+                    <h2 className="text-4xl font-black tracking-tighter leading-none mb-2">6627516112</h2>
+                    <p className="text-xs font-bold opacity-60 uppercase tracking-widest">PalmPay Limited</p>
+                    
+                    <div className="mt-12 flex justify-between items-center text-[10px] font-black uppercase tracking-widest">
+                      <span className="px-4 py-2 bg-white/20 rounded-full">Active Account</span>
+                      <span className="opacity-40">ID: OPL-8829</span>
+                    </div>
                   </div>
-                  <p className="text-3xl font-black tracking-tight">₦25,450.00</p>
-                  <div className="mt-6 flex justify-between items-center text-xs font-bold">
-                    <span className="px-3 py-1 bg-white/20 rounded-full">Active Account</span>
-                    <span className="opacity-60">ID: OPL-8829</span>
-                  </div>
+                  {/* Subtle pattern */}
+                  <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10 pointer-events-none"></div>
                 </div>
               </div>
               

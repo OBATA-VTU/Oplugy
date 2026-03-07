@@ -183,6 +183,15 @@ export const authService = {
     }
   },
 
+  async updateProfile(userId: string, data: any): Promise<ApiResponse<void>> {
+    try {
+      await updateDoc(doc(db, "users", userId), data);
+      return { status: true, message: "Profile updated successfully." };
+    } catch (error: any) {
+      return { status: false, message: error.message };
+    }
+  },
+
   async logout(): Promise<void> {
     await signOut(auth);
   }

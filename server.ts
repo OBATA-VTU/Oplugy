@@ -550,6 +550,91 @@ app.post('/api/paystack-webhook', async (req, res) => {
   res.status(200).json({ status: 'received' });
 });
 
+// Gift Card Endpoints
+app.post('/api/giftcards/generate', async (req, res) => {
+  const { amount, userId } = req.body;
+  if (!amount || !userId) return res.status(400).json({ status: false, message: 'Amount and User ID required' });
+  
+  try {
+    const db = admin.firestore();
+    const userRef = db.collection('users').doc(userId);
+    const userDoc = await userRef.get();
+    
+    if (!userDoc.exists) return res.status(404).json({ status: false, message: 'User not found' });
+    if ((userDoc.data()?.walletBalance || 0) < amount) return res.status(400).json({ status: false, message: 'Insufficient balance' });
+    
+    const code = crypto.randomBytes(4).toString('hex').toUpperCase();
+    
+    await db.runTransaction(async (transaction) => {
+      transaction.update(userRef, { walletBalance: admin.firestore.FieldValue.increment(-amount) });
+      transaction.set(db.collection('giftcards').doc(code), {
+        code,
+        amount: Number(amount),
+        creatorId: userId,
+        status: 'ACTIVE',
+        date_created: admin.firestore.FieldValue.serverTimestamp()
+      });
+      transaction.set(db.collection('transactions').doc(), {
+        userId,
+        userEmail: userDoc.data()?.email,
+        type: 'DEBIT',
+        amount,
+        source: 'Gift Card Generation',
+        remarks: `Generated Gift Card: ${code}`,
+        status: 'SUCCESS',
+        date_created: admin.firestore.FieldValue.serverTimestamp()
+      });
+    });
+    
+    res.json({ status: true, message: 'Gift card generated successfully', code });
+  } catch (error: any) {
+    res.status(500).json({ status: false, message: error.message });
+  }
+});
+
+app.post('/api/giftcards/redeem', async (req, res) => {
+  const { code, userId } = req.body;
+  if (!code || !userId) return res.status(400).json({ status: false, message: 'Code and User ID required' });
+  
+  try {
+    const db = admin.firestore();
+    const giftcardRef = db.collection('giftcards').doc(code.toUpperCase());
+    const giftcardDoc = await giftcardRef.get();
+    
+    if (!giftcardDoc.exists || giftcardDoc.data()?.status !== 'ACTIVE') {
+      return res.status(400).json({ status: false, message: 'Invalid or already redeemed gift card' });
+    }
+    
+    const amount = giftcardDoc.data()?.amount;
+    const fee = amount * 0.005; // 0.5% charge
+    const redeemAmount = amount - fee;
+    
+    const userRef = db.collection('users').doc(userId);
+    const userDoc = await userRef.get();
+    
+    if (!userDoc.exists) return res.status(404).json({ status: false, message: 'User not found' });
+    
+    await db.runTransaction(async (transaction) => {
+      transaction.update(giftcardRef, { status: 'REDEEMED', redeemerId: userId, date_redeemed: admin.firestore.FieldValue.serverTimestamp() });
+      transaction.update(userRef, { walletBalance: admin.firestore.FieldValue.increment(redeemAmount) });
+      transaction.set(db.collection('transactions').doc(), {
+        userId,
+        userEmail: userDoc.data()?.email,
+        type: 'CREDIT',
+        amount: redeemAmount,
+        source: 'Gift Card Redemption',
+        remarks: `Redeemed Gift Card: ${code} (Fee: N${fee})`,
+        status: 'SUCCESS',
+        date_created: admin.firestore.FieldValue.serverTimestamp()
+      });
+    });
+    
+    res.json({ status: true, message: `Gift card redeemed! N${redeemAmount.toLocaleString()} added to your wallet.` });
+  } catch (error: any) {
+    res.status(500).json({ status: false, message: error.message });
+  }
+});
+
 // Billstack Webhook
 app.post('/api/billstack-webhook', async (req, res) => {
   const secret = process.env.BILLSTACK_SECRET_KEY;
