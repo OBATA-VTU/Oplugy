@@ -171,43 +171,7 @@ export const whatsappService = {
   },
 
   /**
-   * Create a customer on Billstack (Step 1)
-   */
-  createCustomer: async (payload: {
-    email: string;
-    firstName: string;
-    lastName: string;
-    phone: string;
-  }) => {
-    const secretKey = process.env.BILLSTACK_SECRET_KEY;
-    if (!secretKey) throw new Error('Billstack Secret Key not configured.');
-
-    try {
-      // Use v1/customer as per user's technical breakdown
-      const response = await axios.post(
-        'https://api.billstack.co/v1/customer',
-        {
-          email: payload.email,
-          first_name: payload.firstName,
-          last_name: payload.lastName,
-          phone: payload.phone
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${secretKey}`,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
-      return response.data;
-    } catch (error: any) {
-      // If customer already exists, Billstack might return an error, handle it
-      return error.response?.data || { status: false, message: error.message };
-    }
-  },
-
-  /**
-   * Generate Virtual Account via Billstack (Step 2)
+   * Generate Virtual Account via Billstack (Single-step v2)
    */
   generateVirtualAccount: async (payload: { 
     email: string; 
@@ -220,15 +184,7 @@ export const whatsappService = {
     if (!secretKey) throw new Error('Billstack Secret Key not configured.');
 
     try {
-      // Step 1: Ensure customer exists on Billstack using v1/customer
-      await whatsappService.createCustomer({
-        email: payload.email,
-        firstName: payload.firstName,
-        lastName: payload.lastName,
-        phone: payload.phone
-      });
-
-      // Step 2: Generate Virtual Account using v2/thirdparty/generateVirtualAccount
+      // Use the single-step v2 endpoint as per latest documentation
       const response = await axios.post(
         'https://api.billstack.co/v2/thirdparty/generateVirtualAccount/',
         {
