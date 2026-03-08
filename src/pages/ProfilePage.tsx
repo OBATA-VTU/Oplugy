@@ -115,6 +115,11 @@ const ProfilePage: React.FC = () => {
       return;
     }
 
+    if (!user.virtualAccount?.account_number) {
+      addNotification("Please generate a virtual account first.", "warning");
+      return;
+    }
+
     setIsVerifyingKyc(true);
     try {
       const response = await billstackService.upgradeAccount({

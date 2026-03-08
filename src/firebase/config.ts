@@ -3,7 +3,7 @@ import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 /**
- * Firebase configuration for OBATA VTU.
+ * Firebase configuration for Oplug VTU.
  * NOTE: For full white-label branding (removing 'firebaseapp.com' from Google Sign-in popup),
  * ensure you have added a custom domain in Firebase Console > Authentication > Settings > Domains.
  */
@@ -20,7 +20,7 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
-// Export OBATA Auth and Database services
+// Export Oplug Auth and Database services
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export default app;

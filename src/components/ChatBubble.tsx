@@ -7,7 +7,7 @@ const ChatBubble: React.FC = () => {
   const proNumber = "+2348142452729";
 
   const handleSend = () => {
-    const encodedMessage = encodeURIComponent(message || "Hello OBATA v2 support, I need help.");
+    const encodedMessage = encodeURIComponent(message || "Hello Oplug support, I need help.");
     const whatsappUrl = `https://wa.me/${proNumber.replace(/\D/g, '')}?text=${encodedMessage}`;
     window.open(whatsappUrl, '_blank');
     setIsOpen(false);
@@ -19,7 +19,7 @@ const ChatBubble: React.FC = () => {
       {isOpen && (
         <div className="bg-white border border-gray-100 rounded-[2rem] shadow-2xl w-72 mb-4 overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
           <div className="bg-blue-600 p-6 text-white">
-            <h4 className="font-black text-sm uppercase tracking-widest">OBATA Support</h4>
+            <h4 className="font-black text-sm uppercase tracking-widest">Oplug Support</h4>
             <p className="text-[10px] opacity-80 mt-1 font-medium italic">Online - 24/7 Response Node</p>
           </div>
           <div className="p-6">

@@ -414,18 +414,22 @@ app.all('/api/proxy', async (req, res) => {
       }
       
       const baseUrl = 'https://api.billstack.co';
+      const cleanEndpoint = (endpoint || '').replace(/^\//, '');
       
       try {
-        // Use the single-step v2 endpoint as per latest documentation
-        const fullUrl = `${baseUrl}/v2/thirdparty/generateVirtualAccount/`;
-        console.log(`[Billstack Proxy] Calling: POST ${fullUrl}`, JSON.stringify(data));
+        const fullUrl = `${baseUrl}/${cleanEndpoint}`;
+        console.log(`[Billstack Proxy] Calling: ${method.toUpperCase()} ${fullUrl}`, JSON.stringify(data));
         
-        const response = await axios.post(fullUrl, data, {
+        const response = await axios({
+          url: fullUrl,
+          method: method.toUpperCase(),
           headers: { 
             'Authorization': `Bearer ${secretKey}`, 
             'Content-Type': 'application/json',
             'User-Agent': 'Oplug-API-Gateway/2.0'
           },
+          data: method.toUpperCase() !== 'GET' ? data : undefined,
+          params: method.toUpperCase() === 'GET' ? data : undefined,
           timeout: 30000
         });
         result = response.data;

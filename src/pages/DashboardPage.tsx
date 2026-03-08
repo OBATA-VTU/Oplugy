@@ -11,18 +11,37 @@ import { authService } from '../services/authService';
 import { vtuService } from '../services/vtuService';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
+import { useServices } from '../context/ServiceContext';
 import { 
   Smartphone, Wifi, Zap, Tv, 
   Copy,
   Users, ArrowLeftRight, GraduationCap, Gift,
-  Wallet, History, ShieldCheck
+  Wallet, History, ShieldCheck, RefreshCw, Plus
 } from 'lucide-react';
 
 const DashboardPage: React.FC = () => {
   const { fetchWalletBalance, isLoading, user } = useAuth();
+  const { refreshPrices } = useServices();
   const { addNotification } = useNotifications();
   const [showPinModal, setShowPinModal] = useState(false);
   const [showPhoneModal, setShowPhoneModal] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await Promise.all([
+        fetchWalletBalance(),
+        refreshPrices(),
+        adminService.getGlobalSettings()
+      ]);
+      addNotification("Data synchronized successfully!", "success");
+    } catch (error) {
+      addNotification("Failed to sync data.", "error");
+    } finally {
+      setTimeout(() => setIsRefreshing(false), 1000);
+    }
+  };
 
   const fetchDashboardData = useCallback(async () => {
     if (user) {
@@ -74,6 +93,30 @@ const DashboardPage: React.FC = () => {
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
         className="space-y-16"
       >
+        {/* Header Section */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div>
+            <h1 className="text-4xl font-black tracking-tighter uppercase mb-2">Terminal Console</h1>
+            <p className="text-sm text-gray-400 font-medium">System operational • {new Date().toLocaleDateString()}</p>
+          </div>
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className={`p-4 bg-white dark:bg-white/5 rounded-2xl border border-gray-100 dark:border-white/10 text-gray-500 hover:text-blue-600 transition-all shadow-sm ${isRefreshing ? 'animate-spin' : ''}`}
+            >
+              <RefreshCw size={20} />
+            </button>
+            <Link 
+              to="/funding" 
+              className="px-8 py-4 bg-blue-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:opacity-90 transition-all shadow-lg shadow-blue-600/20 flex items-center gap-3"
+            >
+              <Plus size={16} />
+              Add Liquidity
+            </Link>
+          </div>
+        </div>
+
         {/* Hero Section: Balance & Account */}
         <div className="grid lg:grid-cols-2 gap-10">
           {/* Wallet Card */}
@@ -104,36 +147,52 @@ const DashboardPage: React.FC = () => {
           </div>
 
           {/* Virtual Account Card */}
-          <div className="bg-gray-50 dark:bg-white/2 rounded-[3rem] p-12 border border-gray-100 dark:border-white/5 flex flex-col justify-between min-h-[320px]">
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.4em] text-gray-400 dark:text-white/20 mb-4">Settlement Account</p>
-                <h3 className="text-3xl font-black tracking-tighter uppercase text-gray-900 dark:text-white">{user?.virtualAccount?.bank_name || 'PalmPay'}</h3>
-              </div>
-              <div className="px-4 py-2 bg-blue-600/10 text-blue-600 rounded-full text-[10px] font-black uppercase tracking-widest">Active</div>
-            </div>
-
-            <div className="space-y-6">
-              <div className="flex justify-between items-end">
-                <div className="space-y-2">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Account Number</p>
-                  <p className="text-4xl font-black tracking-tighter text-gray-900 dark:text-white">{user?.virtualAccount?.account_number || '6627516112'}</p>
+          {user?.virtualAccount?.account_number ? (
+            <div className="bg-gray-50 dark:bg-white/2 rounded-[3rem] p-12 border border-gray-100 dark:border-white/5 flex flex-col justify-between min-h-[320px]">
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.4em] text-gray-400 dark:text-white/20 mb-4">Settlement Account</p>
+                  <h3 className="text-3xl font-black tracking-tighter uppercase text-gray-900 dark:text-white">{user.virtualAccount.bank_name}</h3>
                 </div>
-                <button 
-                  onClick={() => {
-                    if (user?.virtualAccount?.account_number) {
+                <div className="px-4 py-2 bg-blue-600/10 text-blue-600 rounded-full text-[10px] font-black uppercase tracking-widest">Active</div>
+              </div>
+
+              <div className="space-y-6">
+                <div className="flex justify-between items-end">
+                  <div className="space-y-2">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Account Number</p>
+                    <p className="text-4xl font-black tracking-tighter text-gray-900 dark:text-white">{user.virtualAccount.account_number}</p>
+                  </div>
+                  <button 
+                    onClick={() => {
                       navigator.clipboard.writeText(user.virtualAccount.account_number);
                       addNotification("Account number copied!", "success");
-                    }
-                  }}
-                  className="p-5 bg-white dark:bg-white/5 rounded-2xl border border-gray-100 dark:border-white/10 text-gray-500 hover:text-blue-600 transition-all shadow-sm"
-                >
-                  <Copy size={20} />
-                </button>
+                    }}
+                    className="p-5 bg-white dark:bg-white/5 rounded-2xl border border-gray-100 dark:border-white/10 text-gray-500 hover:text-blue-600 transition-all shadow-sm"
+                  >
+                    <Copy size={20} />
+                  </button>
+                </div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Account Name: <span className="text-gray-900 dark:text-white">{user.virtualAccount.account_name}</span></p>
               </div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Account Name: <span className="text-gray-900 dark:text-white">{user?.virtualAccount?.account_name || 'OPLUG / ' + user?.username}</span></p>
             </div>
-          </div>
+          ) : (
+            <div className="bg-gray-50 dark:bg-white/2 rounded-[3rem] p-12 border border-gray-100 dark:border-white/5 flex flex-col items-center justify-center text-center space-y-6 min-h-[320px]">
+              <div className="w-16 h-16 bg-blue-600/10 rounded-full flex items-center justify-center text-blue-600">
+                <Wallet size={32} />
+              </div>
+              <div>
+                <h3 className="text-xl font-black tracking-tighter uppercase mb-2">No Virtual Account</h3>
+                <p className="text-sm text-gray-400 font-medium max-w-[200px] mx-auto">Generate a virtual account to fund your wallet instantly.</p>
+              </div>
+              <Link 
+                to="/profile" 
+                className="px-8 py-4 bg-blue-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:opacity-90 transition-all shadow-lg shadow-blue-600/20"
+              >
+                Generate Now
+              </Link>
+            </div>
+          )}
         </div>
 
         {/* Services Section */}

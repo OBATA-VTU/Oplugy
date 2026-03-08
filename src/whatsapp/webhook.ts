@@ -1,17 +1,14 @@
 import { whatsappService, getAppUrl } from './whatsappService';
 import * as admin from 'firebase-admin';
 import axios from 'axios';
+import { GoogleGenAI } from "@google/genai";
+
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 export default async function handler(req: any, res: any) {
   const timestamp = new Date().toISOString();
   console.log(`[WhatsApp Webhook] [${timestamp}] Incoming Request: ${req.method}`);
-  console.log(`[WhatsApp Webhook] Query:`, JSON.stringify(req.query));
   
-  if (req.method === 'POST') {
-    console.log(`[WhatsApp Webhook] Body Keys:`, Object.keys(req.body || {}));
-  }
-
-  // 1. Handle Meta Webhook Verification (GET)
   if (req.method === 'GET') {
     const mode = req.query['hub.mode'];
     const token = req.query['hub.verify_token'];
@@ -24,7 +21,6 @@ export default async function handler(req: any, res: any) {
     }
   }
 
-  // 2. Handle Incoming Messages (POST)
   if (req.method === 'POST') {
     const body = req.body;
 
@@ -39,225 +35,212 @@ export default async function handler(req: any, res: any) {
       const from = message.from;
       const messageId = message.id;
 
-      // Deduplication check using message ID (simple local cache for immediate retries)
       if ((global as any).processedMessages?.has(messageId)) {
         return res.status(200).json({ status: 'ok' });
       }
       if (!(global as any).processedMessages) (global as any).processedMessages = new Set();
       (global as any).processedMessages.add(messageId);
-      // Keep cache small
       if ((global as any).processedMessages.size > 100) {
         const first = (global as any).processedMessages.values().next().value;
         (global as any).processedMessages.delete(first);
       }
 
-      // Handle Text Messages
+      const session = await whatsappService.getSession(from);
+
       if (message.type === 'text') {
-        const text = message.text.body.trim().toUpperCase();
+        const text = message.text.body.trim();
         console.log(`WhatsApp Text Message from ${from}: ${text}`);
-        const session = await whatsappService.getSession(from);
 
-        // Handle Greetings
-        const greetings = ['HI', 'HELLO', 'WASSUP', 'HEY', 'YO', 'GOOD MORNING', 'GOOD AFTERNOON', 'GOOD EVENING'];
-        if (greetings.includes(text) && !session) {
-          const user = await whatsappService.getUserByPhone(from);
-          if (user) {
-            await sendWelcomeMenu(from, user.username, user.walletBalance, user.email || 'Not Set', user.phone);
-          } else {
-            await sendGuestMenu(from);
-          }
-          return res.status(200).json({ status: 'ok' });
-        }
-
-        // Handle Ongoing Session (Account Creation)
-        if (session?.step === 'AWAITING_FIRST_NAME') {
-          await whatsappService.updateSession(from, { firstName: text, step: 'AWAITING_LAST_NAME' });
-          await whatsappService.sendMessage(from, `✨ *Nice to meet you, ${text}!*\n\nNow, what is your *Last Name*?`);
-          return res.status(200).json({ status: 'ok' });
-        }
-
-        if (session?.step === 'AWAITING_LAST_NAME') {
-          await whatsappService.updateSession(from, { lastName: text, step: 'AWAITING_USERNAME' });
-          await whatsappService.sendMessage(from, `📝 *Almost there!*\n\nChoose a unique *Username* for your account:`);
-          return res.status(200).json({ status: 'ok' });
-        }
-
-        if (session?.step === 'AWAITING_USERNAME') {
-          await whatsappService.updateSession(from, { username: text, step: 'AWAITING_EMAIL' });
-          await whatsappService.sendMessage(from, `📧 *Perfect!* Now please provide your *Email Address* to complete your registration.`);
-          return res.status(200).json({ status: 'ok' });
-        }
-
-        if (session?.step === 'AWAITING_EMAIL') {
-          const email = text.toLowerCase();
-          if (!email.includes('@')) {
-            await whatsappService.sendMessage(from, `❌ Invalid email format. Please provide a valid email address.`);
+        // Handle Ongoing Session (Account Creation, Purchase Flows, etc.)
+        if (session && session.step && session.step !== 'IDLE') {
+          if (session.step === 'AWAITING_FIRST_NAME') {
+            await whatsappService.updateSession(from, { firstName: text, step: 'AWAITING_LAST_NAME' });
+            await whatsappService.sendMessage(from, `✨ *Nice to meet you, ${text}!*\n\nNow, what is your *Last Name*?`);
             return res.status(200).json({ status: 'ok' });
           }
 
-          try {
-            const db = admin.firestore();
-            
-            // Generate a random password since we're creating via WhatsApp
-            const tempPassword = Math.random().toString(36).slice(-8);
-            
-            // Create Firebase Auth user
-            const userRecord = await admin.auth().createUser({
-              email: email,
-              password: tempPassword,
-              displayName: `${session.firstName} ${session.lastName}`,
-              phoneNumber: from.startsWith('+') ? from : `+${from}`
-            });
-
-            const userData = {
-              id: userRecord.uid,
-              firstName: session.firstName,
-              lastName: session.lastName,
-              fullName: `${session.firstName} ${session.lastName}`,
-              username: session.username.toLowerCase(),
-              email: email,
-              phone: from,
-              walletBalance: 0,
-              role: 'user',
-              status: 'active',
-              referralCode: Math.random().toString(36).substring(2, 8).toUpperCase(),
-              referralEarnings: 0,
-              referralCount: 0,
-              isPinSet: false,
-              createdAt: admin.firestore.FieldValue.serverTimestamp()
-            };
-
-            await db.collection('users').doc(userRecord.uid).set(userData);
-            
-            await whatsappService.clearSession(from);
-            await whatsappService.sendMessage(from, `🎉 *Account Created Successfully!*\n\nWelcome to Oplug, ${session.firstName}. You can now fund your wallet and start purchasing services.\n\n_Note: You can log in to our website using your email and a temporary password we generated for you (you should change it later)._`);
-            await sendWelcomeMenu(from, session.username, 0, email, from);
-          } catch (e: any) {
-            console.error('WhatsApp Registration Error:', e);
-            await whatsappService.sendMessage(from, `❌ Error creating account: ${e.message}`);
-          }
-          return res.status(200).json({ status: 'ok' });
-        }
-
-        // Handle Phone Input for Purchase
-        if (session?.step === 'AWAITING_PHONE') {
-          const phone = text.replace(/\s+/g, '');
-          if (phone.length < 10) {
-            await whatsappService.sendMessage(from, `❌ *Invalid phone number.*\n\nPlease provide a valid 11-digit phone number.`);
+          if (session.step === 'AWAITING_LAST_NAME') {
+            await whatsappService.updateSession(from, { lastName: text, step: 'AWAITING_USERNAME' });
+            await whatsappService.sendMessage(from, `📝 *Almost there!*\n\nChoose a unique *Username* for your account:`);
             return res.status(200).json({ status: 'ok' });
           }
-          
-          if (session.service === 'AIRTIME') {
-            await whatsappService.updateSession(from, { phone: phone, step: 'AWAITING_AIRTIME_AMOUNT' });
-            await whatsappService.sendMessage(from, `💰 *Enter Amount*\n\nHow much *${session.network}* airtime do you want to purchase for *${phone}*?\n\n_Minimum: ₦50, Maximum: ₦50,000_`);
-          } else {
-            await whatsappService.updateSession(from, { phone: phone, step: 'AWAITING_CONFIRMATION' });
-            const summary = `📝 *Order Confirmation*\n\n🔹 *Service:* ${session.service}\n🔹 *Network:* ${session.network}\n🔹 *Plan:* ${session.planName}\n🔹 *Phone:* ${phone}\n💰 *Price:* ₦${session.price}\n\nProceed with purchase?`;
+
+          if (session.step === 'AWAITING_USERNAME') {
+            await whatsappService.updateSession(from, { username: text, step: 'AWAITING_EMAIL' });
+            await whatsappService.sendMessage(from, `📧 *Perfect!* Now please provide your *Email Address* to complete your registration.`);
+            return res.status(200).json({ status: 'ok' });
+          }
+
+          if (session.step === 'AWAITING_EMAIL') {
+            const email = text.toLowerCase();
+            if (!email.includes('@')) {
+              await whatsappService.sendMessage(from, `❌ Invalid email format. Please provide a valid email address.`);
+              return res.status(200).json({ status: 'ok' });
+            }
+
+            try {
+              const db = admin.firestore();
+              const tempPassword = Math.random().toString(36).slice(-8);
+              const userRecord = await admin.auth().createUser({
+                email: email,
+                password: tempPassword,
+                displayName: `${session.firstName} ${session.lastName}`,
+                phoneNumber: from.startsWith('+') ? from : `+${from}`
+              });
+
+              const userData = {
+                id: userRecord.uid,
+                firstName: session.firstName,
+                lastName: session.lastName,
+                fullName: `${session.firstName} ${session.lastName}`,
+                username: session.username.toLowerCase(),
+                email: email,
+                phone: from,
+                walletBalance: 0,
+                role: 'user',
+                status: 'active',
+                referralCode: Math.random().toString(36).substring(2, 8).toUpperCase(),
+                referralEarnings: 0,
+                referralCount: 0,
+                isPinSet: false,
+                createdAt: admin.firestore.FieldValue.serverTimestamp()
+              };
+
+              await db.collection('users').doc(userRecord.uid).set(userData);
+              await whatsappService.clearSession(from);
+              await whatsappService.sendMessage(from, `🎉 *Account Created Successfully!*\n\nWelcome to Oplug, ${session.firstName}. You can now fund your wallet and start purchasing services.`);
+              await sendWelcomeMenu(from, session.username, 0, email, from);
+            } catch (e: any) {
+              console.error('WhatsApp Registration Error:', e);
+              await whatsappService.sendMessage(from, `❌ Error creating account: ${e.message}`);
+            }
+            return res.status(200).json({ status: 'ok' });
+          }
+
+          if (session.step === 'AWAITING_PHONE') {
+            const phone = text.replace(/\s+/g, '');
+            if (phone.length < 10) {
+              await whatsappService.sendMessage(from, `❌ *Invalid phone number.*\n\nPlease provide a valid 11-digit phone number.`);
+              return res.status(200).json({ status: 'ok' });
+            }
+            
+            if (session.service === 'AIRTIME') {
+              await whatsappService.updateSession(from, { phone: phone, step: 'AWAITING_AIRTIME_AMOUNT' });
+              await whatsappService.sendMessage(from, `💰 *Enter Amount*\n\nHow much *${session.network}* airtime do you want to purchase for *${phone}*?\n\n_Minimum: ₦50, Maximum: ₦50,000_`);
+            } else {
+              await whatsappService.updateSession(from, { phone: phone, step: 'AWAITING_CONFIRMATION' });
+              const summary = `📝 *Order Confirmation*\n\n🔹 *Service:* ${session.service}\n🔹 *Network:* ${session.network}\n🔹 *Plan:* ${session.planName}\n🔹 *Phone:* ${phone}\n💰 *Price:* ₦${session.price}\n\nProceed with purchase?`;
+              await whatsappService.sendInteractiveButtons(from, summary, [
+                { id: 'CONFIRM_PURCHASE', title: 'Confirm ✅' },
+                { id: 'CANCEL_PURCHASE', title: 'Cancel ❌' }
+              ]);
+            }
+            return res.status(200).json({ status: 'ok' });
+          }
+
+          if (session.step === 'AWAITING_AIRTIME_AMOUNT') {
+            const amount = parseFloat(text);
+            if (isNaN(amount) || amount < 100 || amount > 50000) {
+              await whatsappService.sendMessage(from, `❌ *Invalid Amount*\n\nPlease enter a valid amount between ₦100 and ₦50,000.`);
+              return res.status(200).json({ status: 'ok' });
+            }
+
+            await whatsappService.updateSession(from, { price: amount, planName: `${session.network} Airtime`, step: 'AWAITING_CONFIRMATION' });
+            const summary = `📝 *Order Confirmation*\n\n🔹 *Service:* AIRTIME\n🔹 *Network:* ${session.network}\n🔹 *Phone:* ${session.phone}\n💰 *Amount:* ₦${amount}\n\nProceed with purchase?`;
             await whatsappService.sendInteractiveButtons(from, summary, [
               { id: 'CONFIRM_PURCHASE', title: 'Confirm ✅' },
               { id: 'CANCEL_PURCHASE', title: 'Cancel ❌' }
             ]);
-          }
-          return res.status(200).json({ status: 'ok' });
-        }
-
-        // Handle Airtime Amount Input
-        if (session?.step === 'AWAITING_AIRTIME_AMOUNT') {
-          const amount = parseFloat(text);
-          if (isNaN(amount) || amount < 100 || amount > 50000) {
-            await whatsappService.sendMessage(from, `❌ *Invalid Amount*\n\nPlease enter a valid amount between ₦100 and ₦50,000.`);
             return res.status(200).json({ status: 'ok' });
           }
 
-          await whatsappService.updateSession(from, { price: amount, planName: `${session.network} Airtime`, step: 'AWAITING_CONFIRMATION' });
-          const summary = `📝 *Order Confirmation*\n\n🔹 *Service:* AIRTIME\n🔹 *Network:* ${session.network}\n🔹 *Phone:* ${session.phone}\n💰 *Amount:* ₦${amount}\n\nProceed with purchase?`;
-          await whatsappService.sendInteractiveButtons(from, summary, [
-            { id: 'CONFIRM_PURCHASE', title: 'Confirm ✅' },
-            { id: 'CANCEL_PURCHASE', title: 'Cancel ❌' }
-          ]);
-          return res.status(200).json({ status: 'ok' });
-        }
-
-        // Handle IUC Input for Cable
-        if (session?.step === 'AWAITING_IUC') {
-          const iuc = text.replace(/\s+/g, '');
-          await whatsappService.sendMessage(from, `🔍 Verifying IUC Number *${iuc}*...`);
-          try {
-            const verification = await (whatsappService as any).verifyNumber('CABLE', session.network, iuc);
-            if (verification.status) {
-              const customerName = verification.customerName || verification.data?.customerName || 'Unknown Customer';
-              await whatsappService.updateSession(from, { phone: iuc, customerName, step: 'AWAITING_PLAN' });
-              const plans = await (whatsappService as any).getPlansForList(session.network, 'CABLE');
-              await whatsappService.sendMessage(from, `👤 *Customer:* ${customerName}\n\nSelect a plan for your *${session.network}* subscription:`);
-              await whatsappService.sendInteractiveList(from, `Select ${session.network} Plan`, "View Plans", [{ title: "Plans", rows: plans.slice(0, 10) }]);
-            } else {
-              await whatsappService.sendMessage(from, `❌ *Verification Failed*\n\n${verification.message || 'Invalid IUC Number'}. Please check and try again.`);
+          if (session.step === 'AWAITING_IUC') {
+            const iuc = text.replace(/\s+/g, '');
+            await whatsappService.sendMessage(from, `🔍 Verifying IUC Number *${iuc}*...`);
+            try {
+              const verification = await (whatsappService as any).verifyNumber('CABLE', session.network, iuc);
+              if (verification.status) {
+                const customerName = verification.customerName || verification.data?.customerName || 'Unknown Customer';
+                await whatsappService.updateSession(from, { phone: iuc, customerName, step: 'AWAITING_PLAN' });
+                const plans = await (whatsappService as any).getPlansForList(session.network, 'CABLE');
+                await whatsappService.sendMessage(from, `👤 *Customer:* ${customerName}\n\nSelect a plan for your *${session.network}* subscription:`);
+                await whatsappService.sendInteractiveList(from, `Select ${session.network} Plan`, "View Plans", [{ title: "Plans", rows: plans.slice(0, 10) }]);
+              } else {
+                await whatsappService.sendMessage(from, `❌ *Verification Failed*\n\n${verification.message || 'Invalid IUC Number'}. Please check and try again.`);
+              }
+            } catch (e: any) {
+              await whatsappService.sendMessage(from, `❌ Error verifying IUC: ${e.message}. Please try again.`);
             }
-          } catch (e: any) {
-            await whatsappService.sendMessage(from, `❌ Error verifying IUC: ${e.message}. Please try again.`);
-          }
-          return res.status(200).json({ status: 'ok' });
-        }
-
-        // Handle Funding Amount
-        if (session?.step === 'AWAITING_FUNDING_AMOUNT') {
-          const amount = parseFloat(text);
-          if (isNaN(amount) || amount < 100) {
-            await whatsappService.sendMessage(from, `❌ Invalid amount. Minimum is ₦100.`);
             return res.status(200).json({ status: 'ok' });
           }
 
-          await whatsappService.updateSession(from, { amount, step: 'AWAITING_FUNDING_METHOD' });
-          await whatsappService.sendInteractiveButtons(from, `💳 *Select Payment Method*\n\nYou want to fund *₦${amount}*.\n\nHow would you like to pay?`, [
-            { id: 'PS_CARD', title: 'Card 💳' },
-            { id: 'PS_TRANSFER', title: 'Transfer 🏦' }
-          ]);
-          return res.status(200).json({ status: 'ok' });
-        }
-
-        // Handle Meter Input for Power
-        if (session?.step === 'AWAITING_METER') {
-          const meter = text.replace(/\s+/g, '');
-          await whatsappService.sendMessage(from, `🔍 Verifying Meter Number *${meter}*...`);
-          try {
-            const verification = await (whatsappService as any).verifyNumber('POWER', session.network, meter);
-            if (verification.status) {
-              const customerName = verification.customerName || verification.data?.customerName || 'Unknown Customer';
-              await whatsappService.updateSession(from, { phone: meter, customerName, step: 'AWAITING_AMOUNT' });
-              await whatsappService.sendMessage(from, `👤 *Customer:* ${customerName}\n\nHow much *${session.network}* electricity do you want to buy? (₦)`);
-            } else {
-              await whatsappService.sendMessage(from, `❌ *Verification Failed*\n\n${verification.message || 'Invalid Meter Number'}. Please check and try again.`);
+          if (session.step === 'AWAITING_FUNDING_AMOUNT') {
+            const amount = parseFloat(text);
+            if (isNaN(amount) || amount < 100) {
+              await whatsappService.sendMessage(from, `❌ Invalid amount. Minimum is ₦100.`);
+              return res.status(200).json({ status: 'ok' });
             }
-          } catch (e: any) {
-            await whatsappService.sendMessage(from, `❌ Error verifying Meter: ${e.message}. Please try again.`);
-          }
-          return res.status(200).json({ status: 'ok' });
-        }
 
-        // Handle Amount Input for Power
-        if (session?.step === 'AWAITING_AMOUNT') {
-          const amount = parseFloat(text);
-          if (isNaN(amount) || amount < 500) {
-            await whatsappService.sendMessage(from, `❌ Invalid amount. Minimum is ₦500.`);
+            await whatsappService.updateSession(from, { amount, step: 'AWAITING_FUNDING_METHOD' });
+            await whatsappService.sendInteractiveButtons(from, `💳 *Select Payment Method*\n\nYou want to fund *₦${amount}*.\n\nHow would you like to pay?`, [
+              { id: 'PS_CARD', title: 'Card 💳' },
+              { id: 'PS_TRANSFER', title: 'Transfer 🏦' }
+            ]);
             return res.status(200).json({ status: 'ok' });
           }
-          
-          await whatsappService.updateSession(from, { price: amount, planName: `${session.network} Electricity`, step: 'AWAITING_CONFIRMATION' });
-          const summary = `📝 *Order Confirmation*\n\n🔹 *Service:* ${session.service}\n🔹 *Provider:* ${session.network}\n🔹 *Customer:* ${session.customerName}\n🔹 *Meter:* ${session.phone}\n💰 *Amount:* ₦${amount}\n\nProceed with purchase?`;
-          await whatsappService.sendInteractiveButtons(from, summary, [
-            { id: 'CONFIRM_PURCHASE', title: 'Confirm ✅' },
-            { id: 'CANCEL_PURCHASE', title: 'Cancel ❌' }
-          ]);
-          return res.status(200).json({ status: 'ok' });
-        }
 
-        // Default Greeting / Menu
-        const user = await whatsappService.getUserByPhone(from);
-        if (user) {
-          await sendWelcomeMenu(from, user.username, user.walletBalance, user.phone);
+          if (session.step === 'AWAITING_METER') {
+            const meter = text.replace(/\s+/g, '');
+            await whatsappService.sendMessage(from, `🔍 Verifying Meter Number *${meter}*...`);
+            try {
+              const verification = await (whatsappService as any).verifyNumber('POWER', session.network, meter);
+              if (verification.status) {
+                const customerName = verification.customerName || verification.data?.customerName || 'Unknown Customer';
+                await whatsappService.updateSession(from, { phone: meter, customerName, step: 'AWAITING_AMOUNT' });
+                await whatsappService.sendMessage(from, `👤 *Customer:* ${customerName}\n\nHow much *${session.network}* electricity do you want to buy? (₦)`);
+              } else {
+                await whatsappService.sendMessage(from, `❌ *Verification Failed*\n\n${verification.message || 'Invalid Meter Number'}. Please check and try again.`);
+              }
+            } catch (e: any) {
+              await whatsappService.sendMessage(from, `❌ Error verifying Meter: ${e.message}. Please try again.`);
+            }
+            return res.status(200).json({ status: 'ok' });
+          }
+
+          if (session.step === 'AWAITING_AMOUNT') {
+            const amount = parseFloat(text);
+            if (isNaN(amount) || amount < 500) {
+              await whatsappService.sendMessage(from, `❌ Invalid amount. Minimum is ₦500.`);
+              return res.status(200).json({ status: 'ok' });
+            }
+            
+            await whatsappService.updateSession(from, { price: amount, planName: `${session.network} Electricity`, step: 'AWAITING_CONFIRMATION' });
+            const summary = `📝 *Order Confirmation*\n\n🔹 *Service:* ${session.service}\n🔹 *Provider:* ${session.network}\n🔹 *Customer:* ${session.customerName}\n🔹 *Meter:* ${session.phone}\n💰 *Amount:* ₦${amount}\n\nProceed with purchase?`;
+            await whatsappService.sendInteractiveButtons(from, summary, [
+              { id: 'CONFIRM_PURCHASE', title: 'Confirm ✅' },
+              { id: 'CANCEL_PURCHASE', title: 'Cancel ❌' }
+            ]);
+            return res.status(200).json({ status: 'ok' });
+          }
         } else {
-          await sendGuestMenu(from);
+          // Use AI for smart interaction
+          const user = await whatsappService.getUserByPhone(from);
+          const aiResponse = await handleAiInteraction(from, text, user);
+          
+          if (aiResponse.intent === 'PURCHASE') {
+            await whatsappService.updateSession(from, { step: 'IDLE', service: aiResponse.service });
+            await sendServiceList(from, `I see you want to buy ${aiResponse.service}. Please select a provider:`);
+          } else if (aiResponse.intent === 'GREETING') {
+            if (user) {
+              await sendWelcomeMenu(from, user.username, user.walletBalance, user.email || 'Not Set', user.phone);
+            } else {
+              await sendGuestMenu(from);
+            }
+          } else {
+            await whatsappService.sendMessage(from, aiResponse.text);
+          }
         }
+        return res.status(200).json({ status: 'ok' });
       }
 
       // Handle Interactive Responses
@@ -265,7 +248,6 @@ export default async function handler(req: any, res: any) {
         const interactive = message.interactive;
         const session = await whatsappService.getSession(from);
         
-        // Button Replies
         if (interactive.type === 'button_reply') {
           const buttonId = interactive.button_reply.id;
 
@@ -278,7 +260,6 @@ export default async function handler(req: any, res: any) {
             await sendServiceList(from, "Select a Service");
           }
 
-          // Handle Network Selection
           if (['MTN', 'AIRTEL', 'GLO', '9MOBILE'].includes(buttonId)) {
             const service = session?.service;
             if (service === 'DATA') {
@@ -296,24 +277,23 @@ export default async function handler(req: any, res: any) {
             }
           }
 
-          // Handle Confirmation
           if (buttonId === 'CONFIRM_PURCHASE') {
             await handleExecutePurchase(from, session);
           }
 
           if (buttonId === 'GENERATE_VA') {
             const user = await whatsappService.getUserByPhone(from);
-            if (!user) return;
+            if (!user) return res.status(200).json({ status: 'ok' });
             
             const email = user.email || user.emailAddress || user.email_address;
             if (!email || email.includes('oplug.bot')) {
-              await whatsappService.sendMessage(from, `❌ *Email Missing*\n\nWe couldn't find a valid email address for your account. Please update your profile on our website (https://oplug.com.ng/profile) first to generate a virtual account.`);
-              return;
+              await whatsappService.sendMessage(from, `❌ *Email Missing*\n\nPlease update your profile on our website first.`);
+              return res.status(200).json({ status: 'ok' });
             }
 
             await whatsappService.sendMessage(from, `⏳ Generating your dedicated virtual account...`);
             try {
-              const res = await whatsappService.generateVirtualAccount({
+              const resVA = await whatsappService.generateVirtualAccount({
                 email: email,
                 firstName: user.username,
                 lastName: 'Oplug',
@@ -321,27 +301,26 @@ export default async function handler(req: any, res: any) {
                 reference: `REF-${user.id}-${Date.now()}`
               });
 
-              if (res.status && res.data) {
-                const account = Array.isArray(res.data.account) ? res.data.account[0] : res.data.account;
-                if (!account) throw new Error('No account data returned from provider.');
-
-                const db = admin.firestore();
-                await db.collection('users').doc(user.id).update({
-                  virtualAccount: {
-                    account_number: account.account_number,
-                    account_name: account.account_name,
-                    bank_name: account.bank_name,
-                    bank_id: account.bank_id,
-                    reference: res.data.reference || res.data.merchant_reference
-                  }
-                });
-                await handleFunding(from);
+              if (resVA.status && resVA.data) {
+                const account = Array.isArray(resVA.data.account) ? resVA.data.account[0] : resVA.data.account;
+                if (account) {
+                  const db = admin.firestore();
+                  await db.collection('users').doc(user.id).update({
+                    virtualAccount: {
+                      account_number: account.account_number,
+                      account_name: account.account_name,
+                      bank_name: account.bank_name,
+                      bank_id: account.bank_id,
+                      reference: resVA.data.reference
+                    }
+                  });
+                  await handleFunding(from);
+                }
               } else {
-                await whatsappService.sendMessage(from, `❌ Failed to generate account: ${res.message || 'Invalid response from API'}`);
+                await whatsappService.sendMessage(from, `❌ Failed: ${resVA.message}`);
               }
             } catch (e: any) {
-              console.error('VA Generation Error:', e);
-              await whatsappService.sendMessage(from, `❌ Error: ${e.message || 'Service temporarily unavailable'}`);
+              await whatsappService.sendMessage(from, `❌ Error: ${e.message}`);
             }
           }
 
@@ -350,56 +329,22 @@ export default async function handler(req: any, res: any) {
             await whatsappService.sendMessage(from, `💰 *Fund with Paystack*\n\nHow much would you like to add to your wallet? (Min: ₦100)`);
           }
 
-          if (buttonId === 'PS_CARD') {
-            const session = await whatsappService.getSession(from);
+          if (buttonId === 'PS_CARD' || buttonId === 'PS_TRANSFER') {
             const user = await whatsappService.getUserByPhone(from);
-            if (!user || !session?.amount) return;
+            if (!user || !session?.amount) return res.status(200).json({ status: 'ok' });
 
             await whatsappService.sendMessage(from, `⏳ Generating your payment link...`);
             try {
-              const res = await axios.post(`${getAppUrl()}/api/proxy?server=paystack&endpoint=transaction/initialize`, {
+              const resPS = await axios.post(`${getAppUrl()}/api/proxy?server=paystack&endpoint=transaction/initialize`, {
                 email: user.email,
                 amount: session.amount * 100,
                 callback_url: `${getAppUrl()}/dashboard`,
                 metadata: { userId: user.id, type: 'FUNDING' }
               });
 
-              if (res.data.status) {
-                await whatsappService.sendMessage(from, `🔗 *Payment Link Generated*\n\nClick the link below to pay ₦${session.amount} securely with your card:\n\n${res.data.data.authorization_url}\n\n_Your wallet will be credited automatically after payment._`);
+              if (resPS.data.status) {
+                await whatsappService.sendMessage(from, `🔗 *Payment Link Generated*\n\nClick the link below to pay ₦${session.amount}:\n\n${resPS.data.data.authorization_url}`);
                 await whatsappService.clearSession(from);
-              } else {
-                throw new Error(res.data.message);
-              }
-            } catch (e: any) {
-              await whatsappService.sendMessage(from, `❌ Error: ${e.message}`);
-            }
-          }
-
-          if (buttonId === 'PS_TRANSFER') {
-            const session = await whatsappService.getSession(from);
-            const user = await whatsappService.getUserByPhone(from);
-            if (!user || !session?.amount) return;
-
-            await whatsappService.sendMessage(from, `⏳ Fetching transfer details...`);
-            try {
-              // For Paystack Transfer, we initialize a transaction with bank_transfer channel
-              const res = await axios.post(`${getAppUrl()}/api/proxy?server=paystack&endpoint=transaction/initialize`, {
-                email: user.email,
-                amount: session.amount * 100,
-                channels: ['bank_transfer'],
-                metadata: { userId: user.id, type: 'FUNDING' }
-              });
-
-              if (res.data.status) {
-                // Since Paystack doesn't return the account details in the initialize response, 
-                // we show the checkout URL where they can see the account number.
-                // However, the user asked to "fetch the transfer details and show on WhatsApp".
-                // This usually requires a Dedicated Virtual Account or a specific integration.
-                // For now, we'll provide the link and explain it shows the account.
-                await whatsappService.sendMessage(from, `🏦 *Bank Transfer Details*\n\nPlease click the link below to view the one-time bank account details for your ₦${session.amount} funding:\n\n${res.data.data.authorization_url}\n\n_Once you make the transfer, your wallet will be credited instantly._`);
-                await whatsappService.clearSession(from);
-              } else {
-                throw new Error(res.data.message);
               }
             } catch (e: any) {
               await whatsappService.sendMessage(from, `❌ Error: ${e.message}`);
@@ -409,32 +354,19 @@ export default async function handler(req: any, res: any) {
           if (buttonId === 'CANCEL_PURCHASE') {
             await whatsappService.clearSession(from);
             await whatsappService.sendMessage(from, `❌ *Transaction Cancelled.*`);
-            const user = await whatsappService.getUserByPhone(from);
-            if (user) await sendWelcomeMenu(from, user.username, user.walletBalance, user.phone);
-            else await sendGuestMenu(from);
           }
         }
 
-        // List Replies
         if (interactive.type === 'list_reply') {
           const listId = interactive.list_reply.id;
           const listTitle = interactive.list_reply.title;
 
-          // Handle Network/Provider Selection
           if (['MTN', 'AIRTEL', 'GLO', '9MOBILE', 'DSTV', 'GOTV', 'STARTIMES', 'IKEJA-ELECTRIC', 'EKO-ELECTRIC', 'KANO-ELECTRIC', 'PORTHARCOURT-ELECTRIC', 'JOS-ELECTRIC', 'IBADAN-ELECTRIC', 'KADUNA-ELECTRIC', 'ABUJA-ELECTRIC', 'ENUGU-ELECTRIC', 'BENIN-ELECTRIC'].includes(listId)) {
             if (!session) return res.status(200).json({ status: 'ok' });
             const service = session.service;
-            if (service === 'DATA') {
-              const plans = await (whatsappService as any).getPlansForList(listId, 'DATA', 1);
-              if (plans.length > 0) {
-                await whatsappService.updateSession(from, { network: listId, step: 'AWAITING_PHONE' });
-                await whatsappService.sendMessage(from, `Please enter the *Phone Number* for the ${listId} Data:`);
-              } else {
-                await whatsappService.sendMessage(from, `❌ No plans found for ${listId}.`);
-              }
-            } else if (service === 'AIRTIME') {
+            if (service === 'DATA' || service === 'AIRTIME') {
               await whatsappService.updateSession(from, { network: listId, step: 'AWAITING_PHONE' });
-              await whatsappService.sendMessage(from, `Please enter the *Phone Number* for the ${listId} Airtime:`);
+              await whatsappService.sendMessage(from, `Please enter the *Phone Number* for the ${listId} ${service}:`);
             } else if (service === 'CABLE') {
               await whatsappService.updateSession(from, { network: listId, step: 'AWAITING_IUC' });
               await whatsappService.sendMessage(from, `Please enter your *${listId} IUC Number*:`);
@@ -445,10 +377,9 @@ export default async function handler(req: any, res: any) {
           } else if (listId === 'FUND_WALLET') {
             await handleFunding(from);
           } else if (listId === 'SUPPORT') {
-            await whatsappService.sendMessage(from, `👨‍💻 *Oplug Support*\n\nFor any issues or inquiries, please contact our support team on WhatsApp: https://wa.me/2348142452729`);
+            await whatsappService.sendMessage(from, `👨‍💻 *Oplug Support*\n\nContact us: https://wa.me/2348142452729`);
           } else if (['AIRTIME', 'DATA', 'CABLE', 'POWER'].includes(listId)) {
             await whatsappService.updateSession(from, { service: listId, server: 1, step: 'AWAITING_NETWORK' });
-            
             let providers: any[] = [];
             if (listId === 'AIRTIME') {
               providers = [
@@ -463,15 +394,11 @@ export default async function handler(req: any, res: any) {
               providers = await (whatsappService as any).getElectricityProviders();
             }
             await whatsappService.sendInteractiveList(from, `Select your *${listId}* Provider:`, "View Providers", [{ title: "Providers", rows: providers }]);
-          }
- else if (listId.startsWith('PLAN_')) {
+          } else if (listId.startsWith('PLAN_')) {
             const planId = listId.replace('PLAN_', '');
-            // Extract price from description if possible or fetch from DB
-            // For now, let's assume we store it in the session or fetch it again
             const db = admin.firestore();
             const planDoc = await db.collection('manual_pricing').doc(planId).get();
             const planData = planDoc.data();
-            
             const price = planData?.user_price || 0;
             const planName = planData?.plan_name || listTitle;
 
@@ -483,81 +410,76 @@ export default async function handler(req: any, res: any) {
                 { id: 'CANCEL_PURCHASE', title: 'Cancel ❌' }
               ]);
             } else {
-              await whatsappService.updateSession(from, { 
-                planId: planId, 
-                planName: planName,
-                price: price,
-                step: 'AWAITING_PHONE' 
-              });
-              await whatsappService.sendMessage(from, `✨ *Great!* You've selected *${planName}* (₦${price}).\n\nPlease enter the *Phone Number* you want to fund:`);
+              await whatsappService.updateSession(from, { planId, planName, price, step: 'AWAITING_PHONE' });
+              await whatsappService.sendMessage(from, `✨ Selected *${planName}* (₦${price}).\n\nPlease enter the *Phone Number*:`);
             }
           } else if (listId.startsWith('AMT_')) {
             const amount = parseInt(listId.replace('AMT_', ''));
-            await whatsappService.updateSession(from, { 
-              planName: `₦${amount} Airtime`,
-              price: amount,
-              step: 'AWAITING_PHONE' 
-            });
-            await whatsappService.sendMessage(from, `Please enter the *Phone Number* to receive the Airtime:`);
+            await whatsappService.updateSession(from, { planName: `₦${amount} Airtime`, price: amount, step: 'AWAITING_PHONE' });
+            await whatsappService.sendMessage(from, `Please enter the *Phone Number* for Airtime:`);
           }
         }
+        return res.status(200).json({ status: 'ok' });
       }
-
-      return res.status(200).json({ status: 'ok' });
     }
   }
-
   return res.status(405).json({ error: 'Method not allowed' });
+}
+
+async function handleAiInteraction(from: string, text: string, user: any) {
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: `You are Oplug AI, a smart assistant for Oplug VTU platform. 
+      The user says: "${text}"
+      User Context: ${user ? `Username: ${user.username}, Balance: ₦${user.walletBalance}` : 'Guest User'}
+      
+      Available Services: Airtime, Data, Cable TV, Electricity, Education Pins.
+      
+      Tasks:
+      1. Detect if the user wants to purchase a service.
+      2. If they want to purchase, respond with JSON: {"intent": "PURCHASE", "service": "AIRTIME|DATA|CABLE|POWER|EDUCATION"}
+      3. If it's a greeting, respond with JSON: {"intent": "GREETING"}
+      4. Otherwise, respond with a helpful text message in JSON: {"intent": "CHAT", "text": "your response here"}
+      
+      Respond ONLY with JSON.`,
+      config: { responseMimeType: "application/json" }
+    });
+
+    return JSON.parse(response.text || '{"intent": "CHAT", "text": "I am here to help!"}');
+  } catch (e) {
+    console.error('AI Error:', e);
+    return { intent: "CHAT", "text": "I'm Oplug AI. How can I help you today?" };
+  }
 }
 
 async function handleExecutePurchase(from: string, session: any) {
   const user = await whatsappService.getUserByPhone(from);
   if (!user) {
-    await whatsappService.sendMessage(from, `❌ You need an account to make purchases. Please use the "Create Account" button.`);
+    await whatsappService.sendMessage(from, `❌ Account required.`);
     return;
   }
 
   try {
-    await whatsappService.sendMessage(from, `⏳ Processing your order...`);
-    
+    await whatsappService.sendMessage(from, `⏳ Processing...`);
     let serviceType = '';
     let payload: any = {};
     
     if (session.service === 'DATA') {
       serviceType = 'data';
-      payload = {
-        network: session.network,
-        plan: session.planId,
-        mobile_number: session.phone,
-        Ported_number: true
-      };
+      payload = { network: session.network, plan: session.planId, mobile_number: session.phone, Ported_number: true };
     } else if (session.service === 'AIRTIME') {
       serviceType = 'airtime';
-      payload = {
-        network: session.network,
-        amount: session.price,
-        mobile_number: session.phone,
-        Ported_number: true,
-        airtime_type: 'VTU'
-      };
+      payload = { network: session.network, amount: session.price, mobile_number: session.phone, Ported_number: true, airtime_type: 'VTU' };
     } else if (session.service === 'CABLE') {
       serviceType = 'cable';
-      payload = {
-        serviceID: session.network.toLowerCase(),
-        plan: session.planId,
-        iucNum: session.phone
-      };
+      payload = { serviceID: session.network.toLowerCase(), plan: session.planId, iucNum: session.phone };
     } else if (session.service === 'POWER') {
       serviceType = 'electricity';
-      payload = {
-        serviceID: session.network.toLowerCase(),
-        meterNum: session.phone,
-        meterType: 1,
-        amount: session.price
-      };
+      payload = { serviceID: session.network.toLowerCase(), meterNum: session.phone, meterType: 1, amount: session.price };
     }
 
-      const result = await whatsappService.executePurchase(user.id, serviceType, {
+    const result = await whatsappService.executePurchase(user.id, serviceType, {
       amount: session.price,
       network: session.network,
       server: 1,
@@ -565,27 +487,22 @@ async function handleExecutePurchase(from: string, session: any) {
     });
 
     if (result.status) {
-      const newBalance = user.walletBalance - session.price;
-      await whatsappService.sendMessage(from, `✅ *Transaction Successful!*\n\nYour *${session.service}* order for *${session.phone}* has been processed successfully.\n\n💰 *New Balance:* ₦${newBalance.toLocaleString()}\n\n_Powered by OBA TECHNOLOGIES ❤️_`);
+      await whatsappService.sendMessage(from, `✅ *Successful!*\n\nOrder for *${session.phone}* processed.\n\n_Powered by Oplug ❤️_`);
       await whatsappService.clearSession(from);
-      const updatedUser = await whatsappService.getUserByPhone(from);
-      if (updatedUser) await sendWelcomeMenu(from, updatedUser.username, updatedUser.walletBalance, updatedUser.email || 'Not Set', updatedUser.phone);
     }
   } catch (e: any) {
-    await whatsappService.sendMessage(from, `❌ *Transaction Failed*\n\nReason: ${e.message}\n\n_Please try again or contact support._`);
+    await whatsappService.sendMessage(from, `❌ *Failed*: ${e.message}`);
     await whatsappService.clearSession(from);
   }
 }
 
 async function sendWelcomeMenu(from: string, username: string, balance: number, email: string, phone?: string) {
-  const body = `Welcome to *Oplug* 🌟\n\n👤 *${username}*\n📧 ${email}\n📱 ${phone || from}\n💰 *Balance:* ₦${balance.toLocaleString()}\n\n_Choose a service to get started:_`;
-  await whatsappService.sendInteractiveButtons(from, body, [
-    { id: 'CHOOSE_SERVICE', title: 'Select a Service 🛒' }
-  ]);
+  const body = `Welcome to *Oplug* 🌟\n\n👤 *${username}*\n💰 *Balance:* ₦${balance.toLocaleString()}\n\n_Choose a service:_`;
+  await whatsappService.sendInteractiveButtons(from, body, [{ id: 'CHOOSE_SERVICE', title: 'Select a Service 🛒' }]);
 }
 
 async function sendGuestMenu(from: string) {
-  const body = `Welcome to *Oplug* 🌟\n\n👤 *User not found*\n\nIt seems you don't have an account with us yet. Please choose an option below:`;
+  const body = `Welcome to *Oplug* 🌟\n\n👤 *User not found*\n\nPlease choose an option:`;
   await whatsappService.sendInteractiveButtons(from, body, [
     { id: 'CREATE_ACCOUNT', title: 'Create Account 🚀' },
     { id: 'GUEST_PURCHASE', title: 'Guest Purchase 🛒' }
@@ -597,19 +514,17 @@ async function sendServiceList(from: string, title: string) {
     {
       title: "Main Services",
       rows: [
-        { id: 'AIRTIME', title: 'Airtime', description: 'Top up airtime for all networks' },
-        { id: 'DATA', title: 'Data Bundle', description: 'Cheap data for MTN, Airtel, Glo, 9mobile' },
+        { id: 'AIRTIME', title: 'Airtime', description: 'Top up airtime' },
+        { id: 'DATA', title: 'Data Bundle', description: 'Cheap data' },
         { id: 'CABLE', title: 'Cable TV', description: 'DSTV, GOTV, Startimes' },
-        { id: 'POWER', title: 'Electricity', description: 'Prepaid & Postpaid bills' }
+        { id: 'POWER', title: 'Electricity', description: 'Bills' }
       ]
     },
     {
       title: "Others",
       rows: [
-        { id: 'EDUCATION', title: 'Education', description: 'WAEC & NECO Result Pins' },
-        { id: 'SMM', title: 'Social Boost', description: 'Followers, Likes, Views' },
-        { id: 'FUND_WALLET', title: 'Fund Wallet', description: 'Add money to your Oplug wallet' },
-        { id: 'SUPPORT', title: 'Any Issue/Support', description: 'Chat with our team' }
+        { id: 'FUND_WALLET', title: 'Fund Wallet', description: 'Add money' },
+        { id: 'SUPPORT', title: 'Support', description: 'Chat with us' }
       ]
     }
   ];
@@ -618,23 +533,17 @@ async function sendServiceList(from: string, title: string) {
 
 async function handleFunding(from: string) {
   const user = await whatsappService.getUserByPhone(from);
-  if (!user) {
-    await whatsappService.sendMessage(from, `❌ *Account Required*\n\nYou need an account to fund your wallet. Please use the "Create Account" button.`);
-    return;
-  }
+  if (!user) return;
 
-  // If user has a virtual account, show it
   if (user.virtualAccount) {
     const va = user.virtualAccount;
-    const body = `🏦 *Your Dedicated Virtual Account*\n\n🏛️ *Bank:* ${va.bank_name}\n🔢 *Account Number:* ${va.account_number}\n👤 *Account Name:* ${va.account_name}\n\n_Transfer any amount to this account to fund your wallet instantly!_`;
+    const body = `🏦 *Virtual Account*\n\n🏛️ *Bank:* ${va.bank_name}\n🔢 *Number:* ${va.account_number}\n👤 *Name:* ${va.account_name}`;
     await whatsappService.sendMessage(from, body);
-    return;
+  } else {
+    const body = `💳 *Fund Wallet*\n\nGenerate a virtual account or use Paystack?`;
+    await whatsappService.sendInteractiveButtons(from, body, [
+      { id: 'GENERATE_VA', title: 'Generate Account 🏦' },
+      { id: 'PAYSTACK_FUNDING', title: 'Paystack 💳' }
+    ]);
   }
-
-  // Otherwise, offer to generate one or use Paystack
-  const body = `💳 *Fund Your Wallet*\n\nYou don't have a dedicated virtual account yet. Would you like to generate one or use Paystack?`;
-  await whatsappService.sendInteractiveButtons(from, body, [
-    { id: 'GENERATE_VA', title: 'Generate Account 🏦' },
-    { id: 'PAYSTACK_FUNDING', title: 'Paystack 💳' }
-  ]);
 }

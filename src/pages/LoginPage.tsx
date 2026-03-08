@@ -49,7 +49,7 @@ const LoginPage: React.FC = () => {
           <div className="space-y-4 mb-12">
             <h2 className="text-[11px] font-black text-blue-600 uppercase tracking-[0.5em]">Authentication</h2>
             <h1 className="text-5xl lg:text-7xl font-black text-gray-900 tracking-tighter leading-[0.85]">Welcome <br />Back.</h1>
-            <p className="text-gray-400 text-lg font-medium leading-relaxed">Access your OBATA v2 dashboard to manage your digital assets.</p>
+            <p className="text-gray-400 text-lg font-medium leading-relaxed">Access your Oplug dashboard to manage your digital assets.</p>
           </div>
           
           <AuthForm 
@@ -100,7 +100,7 @@ const LoginPage: React.FC = () => {
                 transition={{ delay: 0.5 }}
                 className="text-xl text-white/40 font-medium leading-relaxed"
               >
-                Join over 100,000+ users who trust OBATA for their daily digital needs. Secure, automated, and lightning fast.
+                Join over 100,000+ users who trust Oplug for their daily digital needs. Secure, automated, and lightning fast.
               </motion.p>
             </div>
 

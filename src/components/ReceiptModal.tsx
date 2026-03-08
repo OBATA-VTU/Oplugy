@@ -77,7 +77,7 @@ const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, transactio
 
         <div className="border-t-2 border-dashed border-gray-100 pt-8 mt-4 text-center">
            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600">Powering your digital lifestyle</p>
-           <p className="text-[8px] font-bold text-gray-300 mt-2">© {new Date().getFullYear()} OBATA DIGITAL SOLUTIONS. NO REFUND ON COMPLETED ORDERS.</p>
+           <p className="text-[8px] font-bold text-gray-300 mt-2">© {new Date().getFullYear()} OPLUG DIGITAL SOLUTIONS. NO REFUND ON COMPLETED ORDERS.</p>
         </div>
       </div>
 

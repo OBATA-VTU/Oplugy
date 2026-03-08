@@ -73,7 +73,7 @@ const Footer: React.FC = () => {
         <div className="pt-16 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-10">
           <div className="flex flex-col md:flex-row items-center gap-10">
             <p className="text-white/20 text-[10px] font-bold uppercase tracking-widest">
-              &copy; {new Date().getFullYear()} OBATA DIGITAL SOLUTIONS.
+              &copy; {new Date().getFullYear()} OPLUG DIGITAL SOLUTIONS.
             </p>
             <div className="flex space-x-8">
               <Link to="/privacy" className="text-white/20 text-[10px] font-bold uppercase tracking-widest hover:text-white transition-colors">Privacy Policy</Link>

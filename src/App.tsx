@@ -3,6 +3,7 @@ import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { NotificationProvider } from './context/NotificationContext';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { ServiceProvider } from './context/ServiceContext';
 import NotificationContainer from './components/NotificationContainer';
 import Layout from './components/Layout';
 import LandingPage from './pages/LandingPage';
@@ -64,74 +65,76 @@ const App: React.FC = () => {
     <ThemeProvider>
       <NotificationProvider>
         <AuthProvider>
-          <Router>
-            <ScrollToTop />
-            <NotificationContainer />
-            <Routes>
-              {/* PUBLIC ROUTES */}
-              <Route element={<PublicLayout />}>
-                <Route path="/" element={<LandingPage />} />
-                <Route path="/pricing" element={<PricingPage />} />
-                <Route path="/quick-purchase" element={<QuickPurchasePage />} />
-                <Route path="/quick-purchase/airtime" element={<QuickBuyAirtime />} />
-                <Route path="/quick-purchase/data" element={<QuickBuyData />} />
-                <Route path="/quick-purchase/electricity" element={<QuickBuyElectricity />} />
-                <Route path="/quick-purchase/cable" element={<QuickBuyCable />} />
-                <Route path="/quick-purchase/checkout" element={<QuickBuyCheckout />} />
-                <Route path="/blog" element={<BlogPage />} />
-                <Route path="/about" element={<AboutPage />} />
-                <Route path="/terms" element={<TermsPage />} />
-                <Route path="/privacy" element={<PrivacyPage />} />
-                <Route path="/faq" element={<FAQPage />} />
-                <Route path="/support" element={<SupportPage />} />
-              </Route>
-
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/signup" element={<SignUpPage />} />
-              <Route path="/payment/verify" element={<PaymentVerifyPage />} />
-
-              {/* ROUTES WITH SIDEBAR (Layout) - PROTECTED */}
-              <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
-                <Route path="/dashboard" element={<DashboardPage />} />
-                <Route path="/airtime" element={<AirtimePage />} />
-                <Route path="/data" element={<DataPage />} />
-                <Route path="/bills" element={<BillsPage />} />
-                <Route path="/cable" element={<CablePage />} />
-                <Route path="/education" element={<EducationPage />} />
-                <Route path="/giftcards" element={<GiftCardPage />} />
-                <Route path="/profile" element={<ProfilePage />} />
-                <Route path="/funding" element={<FundingPage />} />
-                <Route path="/history" element={<TransactionHistoryPage />} />
-                <Route path="/referrals" element={<ReferralPage />} />
-                <Route path="/schedule" element={<SchedulePurchasePage />} />
-                <Route path="/smm" element={<SmmPage />} />
-                <Route path="/api-docs" element={<ApiDocsPage />} />
-              </Route>
-
-              {/* ADMIN ROUTES */}
-              <Route path="/admin" element={<AdminLayout />}>
-                <Route index element={<Navigate to="dashboard" replace />} />
-                <Route path="dashboard" element={<AdminDashboardPage />} />
-                <Route path="users" element={<AdminUsersPage />} />
-                <Route path="transactions" element={<AdminTransactionsPage />} />
-                <Route path="funding-requests" element={<AdminFundingRequestsPage />} />
-                <Route path="pricing" element={<AdminPricingPage />} />
-                <Route path="settings" element={<AdminSettingsPage />} />
-                
-                {/* TERMINAL SUITE (NESTED IN ADMIN) */}
-                <Route path="terminal" element={<TerminalLayout />}>
-                  <Route index element={<Navigate to="overview" replace />} />
-                  <Route path="overview" element={<OverviewTest />} />
-                  <Route path="vtu" element={<VtuTest />} />
-                  <Route path="payments" element={<PaymentTest />} />
-                  <Route path="media" element={<MediaTest />} />
+          <ServiceProvider>
+            <Router>
+              <ScrollToTop />
+              <NotificationContainer />
+              <Routes>
+                {/* PUBLIC ROUTES */}
+                <Route element={<PublicLayout />}>
+                  <Route path="/" element={<LandingPage />} />
+                  <Route path="/pricing" element={<PricingPage />} />
+                  <Route path="/quick-purchase" element={<QuickPurchasePage />} />
+                  <Route path="/quick-purchase/airtime" element={<QuickBuyAirtime />} />
+                  <Route path="/quick-purchase/data" element={<QuickBuyData />} />
+                  <Route path="/quick-purchase/electricity" element={<QuickBuyElectricity />} />
+                  <Route path="/quick-purchase/cable" element={<QuickBuyCable />} />
+                  <Route path="/quick-purchase/checkout" element={<QuickBuyCheckout />} />
+                  <Route path="/blog" element={<BlogPage />} />
+                  <Route path="/about" element={<AboutPage />} />
+                  <Route path="/terms" element={<TermsPage />} />
+                  <Route path="/privacy" element={<PrivacyPage />} />
+                  <Route path="/faq" element={<FAQPage />} />
+                  <Route path="/support" element={<SupportPage />} />
                 </Route>
-              </Route>
-              
-              {/* GLOBAL REDIRECT */}
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </Router>
+
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/signup" element={<SignUpPage />} />
+                <Route path="/payment/verify" element={<PaymentVerifyPage />} />
+
+                {/* ROUTES WITH SIDEBAR (Layout) - PROTECTED */}
+                <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+                  <Route path="/dashboard" element={<DashboardPage />} />
+                  <Route path="/airtime" element={<AirtimePage />} />
+                  <Route path="/data" element={<DataPage />} />
+                  <Route path="/bills" element={<BillsPage />} />
+                  <Route path="/cable" element={<CablePage />} />
+                  <Route path="/education" element={<EducationPage />} />
+                  <Route path="/giftcards" element={<GiftCardPage />} />
+                  <Route path="/profile" element={<ProfilePage />} />
+                  <Route path="/funding" element={<FundingPage />} />
+                  <Route path="/history" element={<TransactionHistoryPage />} />
+                  <Route path="/referrals" element={<ReferralPage />} />
+                  <Route path="/schedule" element={<SchedulePurchasePage />} />
+                  <Route path="/smm" element={<SmmPage />} />
+                  <Route path="/api-docs" element={<ApiDocsPage />} />
+                </Route>
+
+                {/* ADMIN ROUTES */}
+                <Route path="/admin" element={<AdminLayout />}>
+                  <Route index element={<Navigate to="dashboard" replace />} />
+                  <Route path="dashboard" element={<AdminDashboardPage />} />
+                  <Route path="users" element={<AdminUsersPage />} />
+                  <Route path="transactions" element={<AdminTransactionsPage />} />
+                  <Route path="funding-requests" element={<AdminFundingRequestsPage />} />
+                  <Route path="pricing" element={<AdminPricingPage />} />
+                  <Route path="settings" element={<AdminSettingsPage />} />
+                  
+                  {/* TERMINAL SUITE (NESTED IN ADMIN) */}
+                  <Route path="terminal" element={<TerminalLayout />}>
+                    <Route index element={<Navigate to="overview" replace />} />
+                    <Route path="overview" element={<OverviewTest />} />
+                    <Route path="vtu" element={<VtuTest />} />
+                    <Route path="payments" element={<PaymentTest />} />
+                    <Route path="media" element={<MediaTest />} />
+                  </Route>
+                </Route>
+                
+                {/* GLOBAL REDIRECT */}
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </Router>
+          </ServiceProvider>
         </AuthProvider>
       </NotificationProvider>
     </ThemeProvider>

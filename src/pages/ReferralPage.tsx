@@ -8,7 +8,7 @@ const ReferralPage: React.FC = () => {
   const { addNotification } = useNotifications();
   const [copied, setCopied] = useState(false);
 
-  const displayCode = user?.referralCode || 'JOIN-OBATA';
+  const displayCode = user?.referralCode || 'JOIN-OPLUG';
   const referralLink = `${window.location.origin}/#/signup?ref=${displayCode}`;
 
   const handleCopy = () => {

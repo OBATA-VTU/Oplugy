@@ -5,15 +5,15 @@ const FAQPage: React.FC = () => {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
   const faqs = [
-    { q: "What is OBATA?", a: "OBATA is an app that lets you buy cheap data, airtime, and pay bills instantly." },
+    { q: "What is Oplug?", a: "Oplug is an app that lets you buy cheap data, airtime, and pay bills instantly." },
     { q: "How long does delivery take?", a: "It takes about 2 seconds. Everything is automatic and happens immediately." },
     { q: "Is my money safe?", a: "Yes. We use the best security to protect your money and your account." },
-    { q: "Can I use OBATA for business?", a: "Yes. We have special accounts for people who want to sell data and airtime to others." },
+    { q: "Can I use Oplug for business?", a: "Yes. We have special accounts for people who want to sell data and airtime to others." },
     { q: "What if my transaction fails?", a: "If something goes wrong, our system will automatically refund your money to your wallet immediately." }
   ];
 
   const proNumber = "+2348142452729";
-  const whatsappUrl = `https://wa.me/${proNumber.replace(/\D/g, '')}?text=Hello%20OBATA%20PRO,%20I%20need%20assistance%20with%20my%20account.`;
+  const whatsappUrl = `https://wa.me/${proNumber.replace(/\D/g, '')}?text=Hello%20Oplug%20PRO,%20I%20need%20assistance%20with%20my%20account.`;
 
   return (
     <div className="max-w-4xl mx-auto pb-32">
