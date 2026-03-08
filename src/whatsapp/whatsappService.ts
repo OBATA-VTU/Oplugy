@@ -1,7 +1,7 @@
 import * as admin from 'firebase-admin';
 import axios from 'axios';
 
-const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN;
+const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN || process.env.WHATSAPP_ACCESS_TOKEN;
 const WHATSAPP_PHONE_NUMBER_ID = process.env.WHATSAPP_PHONE_NUMBER_ID;
 
 export const getAppUrl = () => {

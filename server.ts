@@ -74,10 +74,12 @@ app.get('/api/health', (req, res) => {
     FIREBASE_SERVICE_ACCOUNT: !!process.env.FIREBASE_SERVICE_ACCOUNT,
     INLOMAX_API_KEY: !!process.env.INLOMAX_API_KEY,
     GEMINI_API_KEY: !!process.env.GEMINI_API_KEY,
-    WHATSAPP_ACCESS_TOKEN: !!process.env.WHATSAPP_ACCESS_TOKEN,
+    WHATSAPP_TOKEN: !!(process.env.WHATSAPP_TOKEN || process.env.WHATSAPP_ACCESS_TOKEN),
+    WHATSAPP_PHONE_NUMBER_ID: !!process.env.WHATSAPP_PHONE_NUMBER_ID,
     WHATSAPP_VERIFY_TOKEN: !!process.env.WHATSAPP_VERIFY_TOKEN,
     OGAVIRAL_API_KEY: !!process.env.OGAVIRAL_API_KEY,
     PAYSTACK_SECRET_KEY: !!process.env.PAYSTACK_SECRET_KEY,
+    BILLSTACK_SECRET_KEY: !!process.env.BILLSTACK_SECRET_KEY,
   };
   
   const allSet = Object.values(envStatus).every(v => v === true);
@@ -146,6 +148,7 @@ async function callServer1(endpoint: string, method: string, data: any) {
   }
 
   console.log(`Calling Server 1: ${method} ${fullUrl}`, JSON.stringify(body));
+  console.log(`Using API Key: ${apiKey.substring(0, 5)}...${apiKey.substring(apiKey.length - 3)}`);
 
   try {
     const response = await axios({
@@ -703,7 +706,7 @@ if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
   app.use(express.static(buildPath));
   
   // Handle SPA routing: serve index.html for any non-API routes
-  app.get('/:path*', (req, res, next) => {
+  app.get('*', (req, res, next) => {
     if (req.path.startsWith('/api')) return next();
     res.sendFile(path.join(buildPath, 'index.html'));
   });
