@@ -4,6 +4,7 @@ import path from 'path';
 import * as admin from 'firebase-admin';
 import axios from 'axios';
 import crypto from 'crypto';
+import { createProxyMiddleware } from 'http-proxy-middleware';
 import { initializeFirebaseAdmin } from './src/firebase/admin';
 import handleWhatsAppWebhook from './api/whatsapp/webhook';
 
@@ -22,6 +23,7 @@ console.log(`[Server] Vercel Environment: ${process.env.VERCEL ? 'Yes' : 'No'}`)
 if (!process.env.APP_URL && process.env.VERCEL_URL) {
   process.env.APP_URL = `https://${process.env.VERCEL_URL}`;
 }
+
 console.log(`[Server] APP_URL: ${process.env.APP_URL || 'Not set'}`);
 
 app.use(cors());
@@ -44,60 +46,73 @@ app.get('/api/health', (req, res) => {
 
   const allSet = Object.values(envStatus).every(v => v === true);
 
-  res.json({ 
+  res.json({
     status: allSet ? 'ok' : 'configuration_required',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV,
     vercel: !!process.env.VERCEL,
     config: envStatus,
-    message: allSet ? 'All systems operational' : 'Some environment variables are missing. Please check your Vercel settings.'
+    message: allSet
+      ? 'All systems operational'
+      : 'Some environment variables are missing. Please check your Vercel settings.'
   });
 });
 
 // WhatsApp Webhook Route
 app.all('/api/whatsapp/webhook', async (req, res) => {
-  console.log(`[WhatsApp Webhook] ${req.method} request received at ${new Date().toISOString()}`);
+  console.log(`[WhatsApp Webhook] ${req.method} request received`);
+
   try {
     await handleWhatsAppWebhook(req, res);
   } catch (error: any) {
     console.error('[WhatsApp Webhook] Fatal Error:', error.message);
+
     if (!res.headersSent) {
-      res.status(500).json({ status: 'error', message: error.message });
+      res.status(500).json({
+        status: 'error',
+        message: error.message
+      });
     }
   }
 });
 
-// Proxy and API endpoints (Server1, Ogaviral, Paystack, Billstack, VTU, etc.) remain the same as your previous implementation
-// [Omitted for brevity, copy all previous endpoint implementations here]
-
-// --------------------- SPA Serving (Production/Vercel) ---------------------
+// --------------------- DEVELOPMENT PROXY ---------------------
 if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
-  // Proxy CRA dev server in development
-  import { createProxyMiddleware } from 'http-proxy-middleware';
-  app.use('/', createProxyMiddleware({
-    target: `http://localhost:${CRA_PORT}`,
-    changeOrigin: true,
-    ws: true
-  }));
-} else {
-  // Serve React build in production / Vercel
-  const buildPath = path.join(process.cwd(), 'build');
-  app.use(express.static(buildPath));
 
-  // Catch-all middleware for SPA routing
-  app.use((req, res, next) => {
-    if (req.path.startsWith('/api')) return next();
-    res.sendFile(path.join(buildPath, 'index.html'));
-  });
+  app.use(
+    '/',
+    createProxyMiddleware({
+      target: `http://localhost:${CRA_PORT}`,
+      changeOrigin: true,
+      ws: true
+    })
+  );
+
 }
 
-// Background scheduler for transactions remains the same
-// [Omitted for brevity, copy your previous scheduler code here]
+// --------------------- PRODUCTION / VERCEL ---------------------
+else {
 
+  const buildPath = path.join(process.cwd(), 'build');
+
+  app.use(express.static(buildPath));
+
+  // SPA catch-all
+  app.use((req, res, next) => {
+    if (req.path.startsWith('/api')) return next();
+
+    res.sendFile(path.join(buildPath, 'index.html'));
+  });
+
+}
+
+// --------------------- START SERVER ---------------------
 if (process.env.NODE_ENV !== 'test' && !process.env.VERCEL) {
+
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`API Gateway running on http://0.0.0.0:${PORT}`);
   });
+
 }
 
 export default app;
