@@ -5,50 +5,12 @@ import { createProxyMiddleware } from 'http-proxy-middleware';
 import * as admin from 'firebase-admin';
 import axios from 'axios';
 import crypto from 'crypto';
+import { initializeProxyRoutes } from './src/services/proxyService';
+import { initializeFirebaseAdmin } from './src/firebase/admin';
 import handleWhatsAppWebhook from './src/whatsapp/webhook';
 
 // Initialize Firebase Admin
-if (!admin.apps.length) {
-  try {
-    const saString = (process.env.FIREBASE_SERVICE_ACCOUNT || '{}').trim();
-    let serviceAccount: any;
-    try {
-      // Remove potential wrapping quotes from Vercel env vars
-      const cleanSaString = saString.replace(/^'|'$/g, '').replace(/^"|"$/g, '');
-      serviceAccount = JSON.parse(cleanSaString);
-    } catch (parseError) {
-      console.error('[Firebase Admin] Failed to parse FIREBASE_SERVICE_ACCOUNT JSON:', parseError);
-      serviceAccount = {};
-    }
-
-    if (serviceAccount.private_key) {
-      // Fix escaped newlines in private key
-      serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
-    }
-
-    const projectId = serviceAccount.project_id || process.env.FIREBASE_PROJECT_ID || 'oplug-vtu';
-    
-    if (serviceAccount.project_id && serviceAccount.private_key) {
-      console.log(`[Firebase Admin] Initializing with Service Account for project: ${projectId}`);
-      console.log(`[Firebase Admin] Client Email: ${serviceAccount.client_email}`);
-      try {
-        admin.initializeApp({
-          credential: admin.credential.cert(serviceAccount),
-          projectId: projectId
-        });
-      } catch (initErr: any) {
-        console.error(`[Firebase Admin] Initialization Error:`, initErr.message);
-      }
-    } else {
-      console.warn(`[Firebase Admin] WARNING: Missing service account credentials (project_id or private_key). Firestore operations will likely fail with PERMISSION_DENIED.`);
-      admin.initializeApp({ projectId: projectId });
-    }
-    admin.firestore().settings({ ignoreUndefinedProperties: true });
-    console.log(`Firebase Admin initialized successfully for project: ${projectId}`);
-  } catch (e) {
-    console.error('Error initializing Firebase Admin:', e);
-  }
-}
+initializeFirebaseAdmin();
 
 const app = express();
 const PORT = process.env.PORT || 3000;

@@ -1,9 +1,10 @@
-import { whatsappService, getAppUrl } from './whatsappService';
-import { initializeFirebaseAdmin } from '../firebase/admin';
+import { VercelRequest, VercelResponse } from '@vercel/node';
+import { whatsappService, getAppUrl } from '../../src/whatsapp/whatsappService';
+import { initializeFirebaseAdmin } from '../../src/firebase/admin';
 import axios from 'axios';
 import { GoogleGenAI } from "@google/genai";
 
-// Initialize Firebase Admin
+// Initialize Firebase Admin for this serverless function
 const admin = initializeFirebaseAdmin();
 
 let ai: GoogleGenAI | null = null;
@@ -19,11 +20,11 @@ function getAi() {
   return ai;
 }
 
-export default async function handler(req: any, res: any) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   const timestamp = new Date().toISOString();
   console.log(`[WhatsApp Webhook] [${timestamp}] Incoming Request: ${req.method}`);
-  console.log(`[WhatsApp Webhook] Query Params:`, JSON.stringify(req.query));
   
+  // GET: Webhook Verification
   if (req.method === 'GET') {
     const mode = req.query['hub.mode'];
     const token = req.query['hub.verify_token'];
@@ -35,6 +36,7 @@ export default async function handler(req: any, res: any) {
 
     if (mode === 'subscribe' && token === expectedToken) {
       console.log(`[WhatsApp Webhook] Verification SUCCESS`);
+      // Vercel requires sending the challenge as a plain string for Meta verification
       return res.status(200).send(challenge);
     } else {
       console.error(`[WhatsApp Webhook] Verification FAILED. Token mismatch or invalid mode.`);
@@ -42,6 +44,7 @@ export default async function handler(req: any, res: any) {
     }
   }
 
+  // POST: Message Handling
   if (req.method === 'POST') {
     const body = req.body;
 
@@ -56,10 +59,11 @@ export default async function handler(req: any, res: any) {
       const from = message.from;
       const messageId = message.id;
 
-      if ((global as any).processedMessages?.has(messageId)) {
+      // Deduplication (using global set, though serverless functions are ephemeral)
+      if (!(global as any).processedMessages) (global as any).processedMessages = new Set();
+      if ((global as any).processedMessages.has(messageId)) {
         return res.status(200).json({ status: 'ok' });
       }
-      if (!(global as any).processedMessages) (global as any).processedMessages = new Set();
       (global as any).processedMessages.add(messageId);
       if ((global as any).processedMessages.size > 100) {
         const first = (global as any).processedMessages.values().next().value;
@@ -72,8 +76,8 @@ export default async function handler(req: any, res: any) {
         const text = message.text.body.trim();
         console.log(`WhatsApp Text Message from ${from}: ${text}`);
 
-        // Handle Ongoing Session (Account Creation, Purchase Flows, etc.)
         if (session && session.step && session.step !== 'IDLE') {
+          // Registration Flow
           if (session.step === 'AWAITING_FIRST_NAME') {
             await whatsappService.updateSession(from, { firstName: text, step: 'AWAITING_LAST_NAME' });
             await whatsappService.sendMessage(from, `✨ *Nice to meet you, ${text}!*\n\nNow, what is your *Last Name*?`);
@@ -138,6 +142,7 @@ export default async function handler(req: any, res: any) {
             return res.status(200).json({ status: 'ok' });
           }
 
+          // Purchase Flows
           if (session.step === 'AWAITING_PHONE') {
             const phone = text.replace(/\s+/g, '');
             if (phone.length < 10) {
@@ -161,8 +166,8 @@ export default async function handler(req: any, res: any) {
 
           if (session.step === 'AWAITING_AIRTIME_AMOUNT') {
             const amount = parseFloat(text);
-            if (isNaN(amount) || amount < 100 || amount > 50000) {
-              await whatsappService.sendMessage(from, `❌ *Invalid Amount*\n\nPlease enter a valid amount between ₦100 and ₦50,000.`);
+            if (isNaN(amount) || amount < 50 || amount > 50000) {
+              await whatsappService.sendMessage(from, `❌ *Invalid Amount*\n\nPlease enter a valid amount between ₦50 and ₦50,000.`);
               return res.status(200).json({ status: 'ok' });
             }
 
@@ -244,7 +249,7 @@ export default async function handler(req: any, res: any) {
             return res.status(200).json({ status: 'ok' });
           }
         } else {
-          // Use AI for smart interaction
+          // AI Interaction
           const user = await whatsappService.getUserByPhone(from);
           const aiResponse = await handleAiInteraction(from, text, user);
           
@@ -264,7 +269,7 @@ export default async function handler(req: any, res: any) {
         return res.status(200).json({ status: 'ok' });
       }
 
-      // Handle Interactive Responses
+      // Interactive Responses
       if (message.type === 'interactive') {
         const interactive = message.interactive;
         const session = await whatsappService.getSession(from);
