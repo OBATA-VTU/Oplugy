@@ -70,8 +70,26 @@ app.use(express.urlencoded({ extended: true }));
 
 // Health Check
 app.get('/api/health', (req, res) => {
-  console.log(`[Health Check] API is alive at ${new Date().toISOString()}`);
-  res.json({ status: 'ok', timestamp: new Date().toISOString(), env: process.env.NODE_ENV });
+  const envStatus = {
+    FIREBASE_SERVICE_ACCOUNT: !!process.env.FIREBASE_SERVICE_ACCOUNT,
+    INLOMAX_API_KEY: !!process.env.INLOMAX_API_KEY,
+    GEMINI_API_KEY: !!process.env.GEMINI_API_KEY,
+    WHATSAPP_ACCESS_TOKEN: !!process.env.WHATSAPP_ACCESS_TOKEN,
+    WHATSAPP_VERIFY_TOKEN: !!process.env.WHATSAPP_VERIFY_TOKEN,
+    OGAVIRAL_API_KEY: !!process.env.OGAVIRAL_API_KEY,
+    PAYSTACK_SECRET_KEY: !!process.env.PAYSTACK_SECRET_KEY,
+  };
+  
+  const allSet = Object.values(envStatus).every(v => v === true);
+  
+  res.json({ 
+    status: allSet ? 'ok' : 'configuration_required',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV,
+    vercel: !!process.env.VERCEL,
+    config: envStatus,
+    message: allSet ? 'All systems operational' : 'Some environment variables are missing. Please check your Vercel settings.'
+  });
 });
 
 // WhatsApp Webhook Route
