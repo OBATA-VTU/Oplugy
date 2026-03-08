@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { db } from '../firebase/config';
-import { collection, getDocs, query, orderBy } from 'firebase/firestore';
+import { collection, getDocs, query } from 'firebase/firestore';
 import { useAuth } from '../hooks/useAuth';
 
 interface ServicePrice {
@@ -25,28 +25,38 @@ export const ServiceProvider: React.FC<{ children: ReactNode }> = ({ children })
   const [isLoading, setIsLoading] = useState(true);
   const { isAuthenticated } = useAuth();
 
-  const fetchPrices = async () => {
+  const fetchPrices = useCallback(async () => {
+    if (!isAuthenticated) return;
     setIsLoading(true);
     try {
-      const q = query(collection(db, 'manual_pricing'), orderBy('plan_name', 'asc'));
+      // Simplified query: remove orderBy to avoid index requirements and potential permission issues
+      const q = query(collection(db, 'manual_pricing'));
       const querySnapshot = await getDocs(q);
       const fetchedPrices: ServicePrice[] = [];
       querySnapshot.forEach((doc) => {
         fetchedPrices.push({ id: doc.id, ...doc.data() } as ServicePrice);
       });
+      
+      // Sort in memory instead
+      fetchedPrices.sort((a, b) => (a.plan_name || '').localeCompare(b.plan_name || ''));
+      
       setPrices(fetchedPrices);
-    } catch (error) {
-      console.error('Error fetching prices:', error);
+    } catch (error: any) {
+      if (error.code === 'permission-denied') {
+        console.warn('[ServiceContext] Firestore permissions denied for "manual_pricing" collection. Please ensure your Firestore security rules allow authenticated users to read this collection.');
+      } else {
+        console.error('Error fetching prices:', error);
+      }
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [isAuthenticated]);
 
   useEffect(() => {
     if (isAuthenticated) {
       fetchPrices();
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, fetchPrices]);
 
   const getPricesByService = (type: string, network?: string) => {
     return prices.filter(p => 

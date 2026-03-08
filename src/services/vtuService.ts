@@ -5,14 +5,21 @@ import { db, auth } from '../firebase/config';
 
 async function getManualPrice(planId: string, role: UserRole): Promise<number | null> {
   try {
+    // Only attempt to fetch if we have a planId
+    if (!planId) return null;
+    
     const priceDoc = await getDoc(doc(db, "manual_pricing", planId));
     if (priceDoc.exists()) {
       const prices = priceDoc.data();
       const priceKey = `${role}_price`;
       return Number(prices[priceKey] || prices.user_price);
     }
-  } catch (e) {
-    console.warn(`Manual price sync skipped for ${planId}`);
+  } catch (e: any) {
+    if (e.code === 'permission-denied') {
+      // Silently fail for manual price sync if permissions are missing (common for public pages)
+      return null;
+    }
+    console.warn(`Manual price sync skipped for ${planId}:`, e.message);
   }
   return null;
 }

@@ -49,7 +49,6 @@ const Layout: React.FC = () => {
   };
 
   const closeSidebar = () => setIsSidebarOpen(false);
-  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
   const toggleProfile = () => setIsProfileOpen(!isProfileOpen);
   const closeProfile = () => setIsProfileOpen(false);
 
