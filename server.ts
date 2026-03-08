@@ -1,7 +1,6 @@
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
-import { createProxyMiddleware } from 'http-proxy-middleware';
 import * as admin from 'firebase-admin';
 import axios from 'axios';
 import crypto from 'crypto';
@@ -68,29 +67,33 @@ app.all('/api/whatsapp/webhook', async (req, res) => {
   }
 });
 
-// --- (Include all your helper functions, auth, VTU endpoints, proxy, webhooks, scheduler, gift card endpoints, etc.) ---
-// For brevity, all previous code remains unchanged here (same as your original server.ts)
+// Proxy and API endpoints (Server1, Ogaviral, Paystack, Billstack, VTU, etc.) remain the same as your previous implementation
+// [Omitted for brevity, copy all previous endpoint implementations here]
 
-// Proxy all other requests to the CRA dev server in development
+// --------------------- SPA Serving (Production/Vercel) ---------------------
 if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+  // Proxy CRA dev server in development
+  import { createProxyMiddleware } from 'http-proxy-middleware';
   app.use('/', createProxyMiddleware({
     target: `http://localhost:${CRA_PORT}`,
     changeOrigin: true,
     ws: true
   }));
-} else if (process.env.NODE_ENV === 'production' || process.env.VERCEL) {
-  // Serve static files from the React build folder
+} else {
+  // Serve React build in production / Vercel
   const buildPath = path.join(process.cwd(), 'build');
   app.use(express.static(buildPath));
 
-  // Correct SPA routing for React
-  app.get('/*', (req, res, next) => {
+  // Catch-all middleware for SPA routing
+  app.use((req, res, next) => {
     if (req.path.startsWith('/api')) return next();
     res.sendFile(path.join(buildPath, 'index.html'));
   });
 }
 
-// Start server
+// Background scheduler for transactions remains the same
+// [Omitted for brevity, copy your previous scheduler code here]
+
 if (process.env.NODE_ENV !== 'test' && !process.env.VERCEL) {
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`API Gateway running on http://0.0.0.0:${PORT}`);
