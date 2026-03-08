@@ -3,21 +3,39 @@ import * as admin from 'firebase-admin';
 import axios from 'axios';
 import { GoogleGenAI } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+let ai: GoogleGenAI | null = null;
+
+function getAi() {
+  if (!ai) {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      throw new Error('GEMINI_API_KEY is not configured');
+    }
+    ai = new GoogleGenAI({ apiKey });
+  }
+  return ai;
+}
 
 export default async function handler(req: any, res: any) {
   const timestamp = new Date().toISOString();
   console.log(`[WhatsApp Webhook] [${timestamp}] Incoming Request: ${req.method}`);
+  console.log(`[WhatsApp Webhook] Query Params:`, JSON.stringify(req.query));
   
   if (req.method === 'GET') {
     const mode = req.query['hub.mode'];
     const token = req.query['hub.verify_token'];
     const challenge = req.query['hub.challenge'];
 
-    if (mode === 'subscribe' && token === process.env.WHATSAPP_VERIFY_TOKEN) {
+    const expectedToken = process.env.WHATSAPP_VERIFY_TOKEN || 'oplug_vtu_bot_2024';
+    
+    console.log(`[WhatsApp Webhook] Verification - Mode: ${mode}, Token: ${token}, Expected: ${expectedToken}`);
+
+    if (mode === 'subscribe' && token === expectedToken) {
+      console.log(`[WhatsApp Webhook] Verification SUCCESS`);
       return res.status(200).send(challenge);
     } else {
-      return res.status(403).json({ error: 'Verification failed' });
+      console.error(`[WhatsApp Webhook] Verification FAILED. Token mismatch or invalid mode.`);
+      return res.status(403).json({ error: 'Verification failed', received: token, expected: expectedToken });
     }
   }
 
@@ -428,7 +446,7 @@ export default async function handler(req: any, res: any) {
 
 async function handleAiInteraction(from: string, text: string, user: any) {
   try {
-    const response = await ai.models.generateContent({
+    const response = await getAi().models.generateContent({
       model: "gemini-3-flash-preview",
       contents: `You are Oplug AI, a smart assistant for Oplug VTU platform. 
       The user says: "${text}"
