@@ -36,7 +36,9 @@ export function initializeFirebaseAdmin() {
           console.error(`[Firebase Admin] Initialization Error:`, initErr.message);
         }
       } else {
-        console.warn(`[Firebase Admin] WARNING: Missing service account credentials (project_id or private_key). Firestore operations will likely fail with PERMISSION_DENIED.`);
+        console.error(`[Firebase Admin] ERROR: Missing service account credentials (project_id or private_key).`);
+        console.log(`[Firebase Admin] FIREBASE_SERVICE_ACCOUNT length: ${saString.length}`);
+        console.log(`[Firebase Admin] Attempting to initialize with default credentials for project: ${projectId}`);
         admin.initializeApp({ projectId: projectId });
       }
       admin.firestore().settings({ ignoreUndefinedProperties: true });

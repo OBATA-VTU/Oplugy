@@ -10,6 +10,26 @@ import { initializeFirebaseAdmin } from './src/firebase/admin';
 // Initialize Firebase Admin
 initializeFirebaseAdmin();
 
+// Safe JSON stringify helper to avoid circular structure errors
+function safeStringify(obj: any, indent = 0) {
+  try {
+    const cache = new Set();
+    return JSON.stringify(
+      obj,
+      (key, value) => {
+        if (typeof value === 'object' && value !== null) {
+          if (cache.has(value)) return '[Circular]';
+          cache.add(value);
+        }
+        return value;
+      },
+      indent
+    );
+  } catch (e) {
+    return String(obj);
+  }
+}
+
 const app = express();
 const PORT: number = Number(process.env.PORT) || 3000;
 const CRA_PORT = 3001;
@@ -90,7 +110,7 @@ async function callServer1(endpoint: string, method: string, data: any) {
     }
   }
 
-  console.log(`Calling Server 1: ${method} ${fullUrl}`, JSON.stringify(body));
+  console.log(`Calling Server 1: ${method} ${fullUrl}`, safeStringify(body));
   console.log(`Using API Key: ${apiKey.substring(0, 5)}...${apiKey.substring(apiKey.length - 3)}`);
 
   try {
@@ -102,7 +122,7 @@ async function callServer1(endpoint: string, method: string, data: any) {
       data: body,
       timeout: 30000
     });
-    console.log(`Server 1 Response:`, JSON.stringify(response.data));
+    console.log(`Server 1 Response:`, safeStringify(response.data));
     return response.data;
   } catch (error: any) {
     console.error(`Server 1 Error (${fullUrl}):`, error.response?.data || error.message);
@@ -382,7 +402,7 @@ app.all('/api/proxy', async (req, res) => {
       
       try {
         const fullUrl = `${baseUrl}/${cleanEndpoint}`;
-        console.log(`[Billstack Proxy] Calling: ${method.toUpperCase()} ${fullUrl}`, JSON.stringify(data));
+        console.log(`[Billstack Proxy] Calling: ${method.toUpperCase()} ${fullUrl}`, safeStringify(data));
         
         const response = await axios({
           url: fullUrl,
@@ -397,7 +417,7 @@ app.all('/api/proxy', async (req, res) => {
           timeout: 30000
         });
         result = response.data;
-        console.log(`[Billstack Proxy] Success Response:`, JSON.stringify(result).substring(0, 200));
+        console.log(`[Billstack Proxy] Success Response:`, safeStringify(result).substring(0, 200));
       } catch (axiosError: any) {
         const errorData = axiosError.response?.data;
         const isHtml = typeof errorData === 'string' && errorData.includes('<!DOCTYPE html>');
@@ -496,7 +516,7 @@ app.post('/api/webhooks/inlomax', async (req, res) => {
 app.post('/api/paystack-webhook', async (req, res) => {
   const secret = process.env.PAYSTACK_SECRET_KEY;
   if (!secret) return res.status(500).json({ message: 'Paystack secret not configured' });
-  const hash = crypto.createHmac('sha512', secret).update(JSON.stringify(req.body)).digest('hex');
+  const hash = crypto.createHmac('sha512', secret).update(safeStringify(req.body)).digest('hex');
   if (hash !== req.headers['x-paystack-signature']) return res.status(401).json({ message: 'Invalid signature' });
   
   const event = req.body;
@@ -649,7 +669,7 @@ if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
   app.use(express.static(buildPath));
   
   // Handle SPA routing: serve index.html for any non-API routes
-  app.get('/:path*', (req, res, next) => {
+  app.get('*', (req, res, next) => {
     if (req.path.startsWith('/api')) return next();
     res.sendFile(path.join(buildPath, 'index.html'));
   });
