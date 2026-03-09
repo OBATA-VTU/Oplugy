@@ -2,37 +2,55 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-const Logo: React.FC<{ className?: string }> = ({ className = 'h-8 w-auto' }) => {
+const Logo: React.FC<{ className?: string }> = ({ className = 'h-10 w-auto' }) => {
   return (
-    <Link to="/" className="flex items-center space-x-2 group focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-xl p-1 transition-all">
-      <div className="relative">
+    <Link to="/" className="flex items-center group focus:outline-none rounded-xl p-1 transition-all">
+      <div className="relative mr-3">
         <svg
           className={className}
-          viewBox="0 0 100 100"
+          viewBox="0 0 160 120"
           xmlns="http://www.w3.org/2000/svg"
           aria-label="Oplug Logo"
         >
-          {/* Main Body */}
-          <rect width="100" height="100" rx="24" fill="#2563eb" className="group-hover:scale-105 transition-transform duration-300" />
-          
-          {/* Plug Prongs */}
-          <rect x="38" y="28" width="6" height="15" rx="3" fill="white" />
-          <rect x="56" y="28" width="6" height="15" rx="3" fill="white" />
-          
-          {/* Plug Body */}
-          <path
-            fill="white"
-            d="M32 40h36v25c0 4-4 8-8 8H40c-4 0-8-4-8-8V40z"
+          {/* The Wire 'O' - Main rounded part */}
+          <path 
+            d="M60 20C37.9086 20 20 37.9086 20 60C20 82.0914 37.9086 100 60 100C82.0914 100 100 82.0914 100 60" 
+            stroke="#2563EB" 
+            strokeWidth="10" 
+            strokeLinecap="round" 
+            fill="none"
+            className="group-hover:stroke-blue-700 transition-colors duration-300"
           />
           
-          {/* Accent Dot */}
-          <circle cx="72" cy="72" r="8" fill="#fbbf24" />
+          {/* Wire moving across the text 'plug' */}
+          <path 
+            d="M100 60C100 60 110 60 120 60C135 60 145 50 145 35" 
+            stroke="#2563EB" 
+            strokeWidth="6" 
+            strokeLinecap="round" 
+            fill="none"
+          />
+
+          {/* Star at the end of the rope (positioned above where 'g' would be) */}
+          <path 
+            d="M145 20L148 25H154L149 28L151 34L145 31L139 34L141 28L136 25H142L145 20Z" 
+            fill="#FBBF24" 
+            className="animate-bounce"
+          />
+          
+          {/* Inner Plug details in the O */}
+          <rect x="48" y="45" width="4" height="10" rx="1" fill="#2563EB" opacity="0.4" />
+          <rect x="68" y="45" width="4" height="10" rx="1" fill="#2563EB" opacity="0.4" />
         </svg>
       </div>
       
-      <div className="flex flex-col">
-        <span className="text-xl font-black text-gray-900 dark:text-white tracking-tighter uppercase leading-none">Oplug</span>
-        <span className="text-[7px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-[0.2em] mt-0.5">Instant VTU</span>
+      <div className="flex flex-col relative">
+        <div className="flex items-baseline">
+          <span className="text-3xl font-black text-gray-900 dark:text-white tracking-tighter uppercase leading-none">
+            <span className="text-blue-600">O</span>plug
+          </span>
+        </div>
+        <span className="text-[8px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.3em] mt-1">Digital Solutions</span>
       </div>
     </Link>
   );

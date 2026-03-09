@@ -1,11 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import Footer from '../components/Footer';
 import { motion } from 'motion/react';
 import { 
   Smartphone, 
   ArrowRight, CheckCircle2,
-  Users, TrendingUp,
+  Users,
   Wifi, Tv, Lightbulb, Zap as ZapIcon
 } from 'lucide-react';
 
@@ -156,36 +155,63 @@ const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* HOW IT WORKS */}
-      <section className="py-20 bg-white dark:bg-gray-900">
+      {/* WHERE TO BEGIN */}
+      <section className="py-24 bg-white dark:bg-gray-900">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center mb-16">
-            <h2 className="text-blue-600 font-bold uppercase tracking-wider mb-2">How It Works</h2>
-            <p className="text-3xl lg:text-4xl font-extrabold">Start in 3 Simple Steps</p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-12">
-            {[
-              { step: '01', title: 'Create Account', desc: 'Sign up for a free account in less than a minute with your basic details.' },
-              { step: '02', title: 'Fund Wallet', desc: 'Add money to your wallet using any of our secure payment methods.' },
-              { step: '03', title: 'Purchase Service', desc: 'Select any service you want and get it delivered to you instantly.' },
-            ].map((item, i) => (
-              <div key={i} className="text-center relative">
-                <div className="text-6xl font-black text-blue-600/10 absolute -top-10 left-1/2 -translate-x-1/2 z-0">
-                  {item.step}
-                </div>
-                <div className="relative z-10">
-                  <h3 className="text-2xl font-bold mb-4">{item.title}</h3>
-                  <p className="text-gray-600 dark:text-gray-400">{item.desc}</p>
-                </div>
-              </div>
-            ))}
+          <div className="text-center mb-20">
+            <h2 className="text-blue-600 font-bold uppercase tracking-wider mb-2">Getting Started</h2>
+            <p className="text-4xl lg:text-6xl font-black text-gray-900 dark:text-white tracking-tighter">Where to Begin?</p>
+            <p className="text-gray-500 mt-4 text-lg">Follow these 3 simple steps to start enjoying our services.</p>
           </div>
           
-          <div className="mt-16 text-center">
-            <Link to="/signup" className="bg-blue-600 text-white px-10 py-4 rounded-lg font-bold hover:bg-blue-700 transition-all shadow-lg">
-              Get Started Now
-            </Link>
+          <div className="grid md:grid-cols-3 gap-12">
+            {[
+              { 
+                step: '01', 
+                title: 'Create Account', 
+                desc: 'Sign up in seconds with just your basic details.',
+                svg: (
+                  <svg width="120" height="120" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="50" cy="50" r="45" stroke="#2563EB" strokeWidth="2" strokeDasharray="4 4" />
+                    <circle cx="50" cy="40" r="15" stroke="#2563EB" strokeWidth="4" />
+                    <path d="M30 75C30 65 40 60 50 60C60 60 70 65 70 75" stroke="#2563EB" strokeWidth="4" strokeLinecap="round" />
+                    <path d="M75 30L85 20M85 20H75M85 20V30" stroke="#FBBF24" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                )
+              },
+              { 
+                step: '02', 
+                title: 'Fund Wallet', 
+                desc: 'Add money to your wallet via bank transfer or card.',
+                svg: (
+                  <svg width="120" height="120" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="20" y="30" width="60" height="40" rx="8" stroke="#2563EB" strokeWidth="4" />
+                    <circle cx="50" cy="50" r="8" stroke="#FBBF24" strokeWidth="4" />
+                    <path d="M80 45V55" stroke="#2563EB" strokeWidth="4" strokeLinecap="round" />
+                    <path d="M10 50H20" stroke="#2563EB" strokeWidth="4" strokeLinecap="round" />
+                  </svg>
+                )
+              },
+              { 
+                step: '03', 
+                title: 'Buy Service', 
+                desc: 'Select any service and get instant delivery.',
+                svg: (
+                  <svg width="120" height="120" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M30 20H70L80 50H20L30 20Z" stroke="#2563EB" strokeWidth="4" strokeLinejoin="round" />
+                    <rect x="25" y="50" width="50" height="30" stroke="#2563EB" strokeWidth="4" />
+                    <path d="M50 60V70M40 65H60" stroke="#FBBF24" strokeWidth="4" strokeLinecap="round" />
+                  </svg>
+                )
+              }
+            ].map((item, i) => (
+              <div key={i} className="bg-gray-50 dark:bg-gray-800/50 p-10 rounded-[2.5rem] border border-gray-100 dark:border-gray-700 hover:border-blue-500 transition-all group">
+                <div className="mb-8">{item.svg}</div>
+                <span className="text-blue-600 font-black text-4xl opacity-20 group-hover:opacity-100 transition-opacity">{item.step}</span>
+                <h3 className="text-2xl font-bold mt-4 mb-4 text-gray-900 dark:text-white">{item.title}</h3>
+                <p className="text-gray-500 dark:text-gray-400 leading-relaxed">{item.desc}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -219,7 +245,6 @@ const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* CTA SECTION */}
       <section className="py-20 bg-blue-600 text-white">
         <div className="max-w-7xl mx-auto px-6 text-center">
           <h2 className="text-3xl lg:text-5xl font-extrabold mb-6">Ready to Experience Fast VTU?</h2>
@@ -237,7 +262,76 @@ const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      <Footer />
+      {/* SUPPORTED BY */}
+      <section className="py-16 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800">
+        <div className="max-w-7xl mx-auto px-6">
+          <p className="text-center text-gray-400 font-bold uppercase tracking-widest text-xs mb-10">Supported Networks & Partners</p>
+          <div className="flex flex-wrap justify-center items-center gap-12 opacity-50 grayscale hover:grayscale-0 transition-all duration-500">
+             {['MTN', 'Airtel', 'Glo', '9mobile', 'DSTV', 'GOTV', 'Startimes', 'Paystack'].map(p => (
+               <span key={p} className="text-2xl font-black tracking-tighter text-gray-400">{p}</span>
+             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* RESELLER CTA */}
+      <section className="py-24 bg-gray-50 dark:bg-gray-950 overflow-hidden relative">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="bg-gradient-to-r from-indigo-600 to-blue-700 rounded-[3rem] p-12 lg:p-20 text-white relative overflow-hidden">
+            <div className="grid lg:grid-cols-2 gap-12 items-center relative z-10">
+              <div>
+                <h2 className="text-4xl lg:text-5xl font-black mb-6 leading-tight">Start Your Own VTU Business Today!</h2>
+                <p className="text-xl text-indigo-100 mb-10 leading-relaxed">
+                  Join our reseller program and get access to even cheaper rates. Build your own customer base and earn daily income with Oplug.
+                </p>
+                <Link to="/signup" className="bg-white text-indigo-600 px-10 py-5 rounded-xl font-bold text-lg hover:bg-indigo-50 transition-all shadow-xl inline-block">
+                  Become a Reseller
+                </Link>
+              </div>
+              <div className="flex justify-center">
+                {/* SVG Character for Reseller */}
+                <svg width="300" height="300" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className="drop-shadow-2xl">
+                  <circle cx="100" cy="100" r="80" fill="white" fillOpacity="0.1" />
+                  <path d="M60 140C60 117.909 77.9086 100 100 100C122.091 100 140 117.909 140 140" stroke="white" strokeWidth="12" strokeLinecap="round" />
+                  <circle cx="100" cy="65" r="25" stroke="white" strokeWidth="12" />
+                  <path d="M130 80L150 60M150 60L130 40M150 60H100" stroke="#FBBF24" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+            </div>
+            {/* Decorative circles */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-indigo-400/20 rounded-full translate-y-1/2 -translate-x-1/2"></div>
+          </div>
+        </div>
+      </section>
+
+      {/* API CTA */}
+      <section className="py-24 bg-white dark:bg-gray-900">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="grid lg:grid-cols-2 gap-20 items-center">
+            <div className="order-2 lg:order-1">
+               {/* SVG Character for API */}
+               <svg width="350" height="350" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="40" y="40" width="120" height="120" rx="20" stroke="#2563EB" strokeWidth="8" />
+                  <path d="M70 80L50 100L70 120" stroke="#2563EB" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M130 80L150 100L130 120" stroke="#2563EB" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M110 70L90 130" stroke="#FBBF24" strokeWidth="8" strokeLinecap="round" />
+               </svg>
+            </div>
+            <div className="order-1 lg:order-2">
+              <h2 className="text-blue-600 font-bold uppercase tracking-wider mb-2">For Developers</h2>
+              <p className="text-4xl lg:text-5xl font-black mb-6 leading-tight">Integrate Our Powerful API</p>
+              <p className="text-gray-600 dark:text-gray-400 text-lg mb-10 leading-relaxed">
+                Build your own VTU application using our robust and well-documented API. Fast response times and 99.9% uptime guaranteed.
+              </p>
+              <Link to="/api-docs" className="bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-10 py-5 rounded-xl font-bold text-lg hover:opacity-90 transition-all shadow-xl inline-block">
+                View API Documentation
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
     </div>
   );
 };

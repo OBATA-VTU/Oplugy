@@ -111,7 +111,10 @@ async function callServer1(endpoint: string, method: string, data: any) {
   }
 
   console.log(`Calling Server 1: ${method} ${fullUrl}`, safeStringify(body));
-  console.log(`Using API Key: ${apiKey.substring(0, 5)}...${apiKey.substring(apiKey.length - 3)}`);
+  
+  if (apiKey.length < 10) {
+    console.warn(`[Server] WARNING: INLOMAX_API_KEY seems too short or invalid.`);
+  }
 
   try {
     const response = await axios({
@@ -125,8 +128,16 @@ async function callServer1(endpoint: string, method: string, data: any) {
     console.log(`Server 1 Response:`, safeStringify(response.data));
     return response.data;
   } catch (error: any) {
-    console.error(`Server 1 Error (${fullUrl}):`, error.response?.data || error.message);
-    throw error;
+    const errorData = error.response?.data;
+    const errorMessage = errorData?.message || errorData?.error || error.message;
+    console.error(`Server 1 Error (${fullUrl}):`, errorData || error.message);
+    
+    // Create a more user-friendly error message
+    let userMessage = 'Provider Error: ' + (typeof errorMessage === 'string' ? errorMessage : 'Unknown error from provider');
+    if (error.code === 'ECONNABORTED') userMessage = 'Provider connection timed out. Please try again.';
+    if (error.response?.status === 401) userMessage = 'Authentication failed with provider. Please check API configuration.';
+    
+    throw new Error(userMessage);
   }
 }
 
