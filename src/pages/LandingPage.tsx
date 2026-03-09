@@ -10,202 +10,230 @@ import {
 } from 'lucide-react';
 
 const LandingPage: React.FC = () => {
-  const stats = [
-    { label: 'Active Users', value: '50k+', icon: <Users className="w-5 h-5" /> },
-    { label: 'Daily Orders', value: '100k+', icon: <TrendingUp className="w-5 h-5" /> },
-    { label: 'Success Rate', value: '99.9%', icon: <CheckCircle2 className="w-5 h-5" /> },
+  const services = [
+    { name: 'Airtime Topup', icon: <Smartphone className="w-8 h-8" />, desc: 'Instant airtime recharge for MTN, GLO, Airtel, and 9mobile.', color: 'bg-blue-500' },
+    { name: 'Cheap Data', icon: <Wifi className="w-8 h-8" />, desc: 'Buy cheap data plans for all networks at wholesale prices.', color: 'bg-green-500' },
+    { name: 'Cable TV', icon: <Tv className="w-8 h-8" />, desc: 'Renew your DSTV, GOTV, and Startimes subscriptions instantly.', color: 'bg-purple-500' },
+    { name: 'Electricity Bills', icon: <Lightbulb className="w-8 h-8" />, desc: 'Pay your electricity bills (Prepaid & Postpaid) with ease.', color: 'bg-yellow-500' },
+    { name: 'Exam Pins', icon: <CheckCircle2 className="w-8 h-8" />, desc: 'Purchase WAEC, NECO, and NABTEB result checker pins.', color: 'bg-red-500' },
+    { name: 'SMM Services', icon: <Users className="w-8 h-8" />, desc: 'Boost your social media presence with our SMM tools.', color: 'bg-indigo-500' },
+  ];
+
+  const features = [
+    { title: 'Fast Delivery', desc: 'All our services are automated and delivered instantly to your phone.', icon: <ZapIcon className="w-6 h-6 text-blue-600" /> },
+    { title: 'Secure Payments', desc: 'Your transactions are protected with industry-standard security protocols.', icon: <CheckCircle2 className="w-6 h-6 text-green-600" /> },
+    { title: '24/7 Support', desc: 'Our dedicated support team is always available to assist you anytime.', icon: <ArrowRight className="w-6 h-6 text-purple-600" /> },
   ];
 
   return (
-    <div className="bg-white dark:bg-[#050505] text-gray-900 dark:text-white font-sans selection:bg-blue-600 selection:text-white overflow-x-hidden">
-      {/* HERO SECTION - Editorial Style */}
-      <section className="relative pt-48 pb-32 lg:pt-64 lg:pb-48 overflow-hidden">
+    <div className="bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white font-sans selection:bg-blue-600 selection:text-white">
+      {/* HERO SECTION */}
+      <section className="relative bg-gradient-to-br from-blue-700 to-blue-900 py-20 lg:py-32 overflow-hidden">
         <div className="max-w-7xl mx-auto px-6 relative z-10">
-          <div className="text-center max-w-5xl mx-auto">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, x: -50 }}
+              animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8 }}
+              className="text-white"
             >
-              <h1 className="text-7xl lg:text-[10vw] font-black tracking-tighter leading-[0.85] uppercase mb-12">
-                Digital <br />
-                <span className="text-blue-600">Freedom.</span>
+              <h1 className="text-4xl lg:text-6xl font-extrabold leading-tight mb-6">
+                Fast, Reliable & Secure <span className="text-yellow-400">VTU Platform</span>
               </h1>
-              
-              <div className="grid lg:grid-cols-12 gap-12 items-center text-left mt-20">
-                <div className="lg:col-span-7">
-                  <p className="text-2xl lg:text-4xl font-black tracking-tight leading-tight mb-10">
-                    The most powerful VTU platform in Nigeria. Wholesale rates, instant delivery, and 24/7 reliability.
-                  </p>
-                  <div className="flex flex-wrap gap-6">
-                    <Link to="/signup" className="bg-blue-600 text-white px-12 py-6 rounded-[2rem] text-lg font-black uppercase tracking-widest hover:bg-gray-950 transition-all shadow-2xl shadow-blue-600/20 flex items-center space-x-4">
-                      <span>Get Started</span>
-                      <ArrowRight size={20} />
-                    </Link>
-                    <Link to="/quick-purchase" className="bg-gray-100 dark:bg-white/5 text-gray-900 dark:text-white px-12 py-6 rounded-[2rem] text-lg font-black uppercase tracking-widest hover:bg-gray-200 dark:hover:bg-white/10 transition-all">
-                      Quick Buy
-                    </Link>
-                  </div>
-                </div>
-                
-                <div className="lg:col-span-5">
-                  <div className="bg-gray-50 dark:bg-white/2 p-10 rounded-[3rem] border border-gray-100 dark:border-white/5 space-y-8">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-12 h-12 bg-blue-600 text-white rounded-2xl flex items-center justify-center">
-                        <ZapIcon size={24} />
-                      </div>
-                      <p className="text-sm font-black uppercase tracking-widest">Instant Fulfillment</p>
-                    </div>
-                    <p className="text-gray-500 dark:text-gray-400 font-medium leading-relaxed">
-                      Our proprietary routing engine ensures that 99.9% of transactions are completed in under 3 seconds.
-                    </p>
-                    <div className="pt-8 border-t border-gray-200 dark:border-white/5 flex items-center justify-between">
-                      <div className="flex -space-x-3">
-                        {[1, 2, 3].map((i) => (
-                          <div key={i} className="w-10 h-10 rounded-full border-2 border-white dark:border-[#050505] bg-gray-200">
-                            <img src={`https://picsum.photos/seed/u${i}/100/100`} alt="User" className="rounded-full" />
-                          </div>
-                        ))}
-                      </div>
-                      <p className="text-[10px] font-black uppercase tracking-widest text-blue-600">50k+ Active Users</p>
-                    </div>
-                  </div>
-                </div>
+              <p className="text-lg lg:text-xl text-blue-100 mb-10 leading-relaxed">
+                Experience the best way to buy Airtime, Data, Pay Bills, and more at the cheapest rates in Nigeria. Join thousands of happy users today!
+              </p>
+              <div className="flex flex-wrap gap-4">
+                <Link to="/signup" className="bg-yellow-400 text-blue-900 px-8 py-4 rounded-lg text-lg font-bold hover:bg-yellow-500 transition-all shadow-xl">
+                  Get Started Now
+                </Link>
+                <Link to="/login" className="bg-white/10 text-white border border-white/20 px-8 py-4 rounded-lg text-lg font-bold hover:bg-white/20 transition-all">
+                  Login to Account
+                </Link>
               </div>
+              <div className="mt-10 flex items-center space-x-4 text-sm text-blue-200">
+                <div className="flex -space-x-2">
+                  {[1, 2, 3, 4].map(i => (
+                    <img key={i} src={`https://picsum.photos/seed/user${i}/100/100`} alt="user" className="w-8 h-8 rounded-full border-2 border-blue-800" />
+                  ))}
+                </div>
+                <span>Trusted by 50,000+ Nigerians</span>
+              </div>
+            </motion.div>
+            
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.8 }}
+              className="hidden lg:block"
+            >
+              <img 
+                src="https://picsum.photos/seed/nigeria-vtu/800/600" 
+                alt="VTU Services" 
+                className="rounded-2xl shadow-2xl border-8 border-white/10"
+                referrerPolicy="no-referrer"
+              />
             </motion.div>
           </div>
         </div>
         
         {/* Background Accents */}
-        <div className="absolute top-0 right-0 w-[50vw] h-[50vw] bg-blue-600/5 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2"></div>
-        <div className="absolute bottom-0 left-0 w-[40vw] h-[40vw] bg-indigo-600/5 rounded-full blur-[120px] translate-y-1/2 -translate-x-1/2"></div>
+        <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-yellow-400/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
       </section>
 
-      {/* SERVICES - Bento Grid Style */}
-      <section className="py-32 lg:py-48 bg-gray-50 dark:bg-white/2 rounded-[4rem] lg:rounded-[6rem] mx-4 lg:mx-10">
+      {/* SERVICES SECTION */}
+      <section id="services" className="py-20 bg-white dark:bg-gray-900">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="mb-24">
-            <h2 className="text-[10px] font-black uppercase tracking-[0.5em] text-blue-600 mb-6">Our Ecosystem</h2>
-            <p className="text-5xl lg:text-7xl font-black tracking-tighter uppercase leading-none">Complete <br /><span className="text-gray-400">Connectivity.</span></p>
+          <div className="text-center mb-16">
+            <h2 className="text-blue-600 font-bold uppercase tracking-wider mb-2">Our Services</h2>
+            <p className="text-3xl lg:text-4xl font-extrabold text-gray-900 dark:text-white">What We Offer You</p>
+            <div className="w-20 h-1.5 bg-blue-600 mx-auto mt-4 rounded-full"></div>
           </div>
 
-          <div className="grid lg:grid-cols-12 gap-8">
-            <div className="lg:col-span-8 bg-white dark:bg-[#050505] p-12 rounded-[3rem] border border-gray-100 dark:border-white/5 shadow-sm group hover:shadow-2xl transition-all duration-700">
-              <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-10">
-                <div className="space-y-6 max-w-md">
-                  <div className="w-16 h-16 bg-blue-50 dark:bg-blue-500/10 rounded-3xl flex items-center justify-center text-blue-600">
-                    <Wifi size={32} />
-                  </div>
-                  <h3 className="text-4xl font-black tracking-tight uppercase">Wholesale Data</h3>
-                  <p className="text-gray-500 dark:text-gray-400 font-medium leading-relaxed">
-                    Get MTN, Airtel, Glo, and 9mobile data at prices you won't find anywhere else. Perfect for personal use or reselling.
-                  </p>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {services.map((service, i) => (
+              <motion.div
+                key={i}
+                whileHover={{ y: -10 }}
+                className="p-8 bg-gray-50 dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 hover:shadow-xl transition-all"
+              >
+                <div className={`${service.color} w-16 h-16 rounded-xl flex items-center justify-center text-white mb-6 shadow-lg`}>
+                  {service.icon}
                 </div>
-                <div className="w-full md:w-64 h-64 bg-gray-50 dark:bg-white/5 rounded-[2rem] p-8 flex flex-col justify-between">
-                   <div className="flex justify-between items-center">
-                      <span className="text-[10px] font-black uppercase tracking-widest text-blue-600">MTN SME</span>
-                      <TrendingUp size={16} className="text-blue-600" />
-                   </div>
-                   <p className="text-4xl font-black tracking-tighter">₦235<span className="text-lg">/GB</span></p>
-                   <div className="h-2 bg-gray-200 dark:bg-white/10 rounded-full overflow-hidden">
-                      <div className="h-full bg-blue-600 w-3/4"></div>
-                   </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="lg:col-span-4 bg-blue-600 p-12 rounded-[3rem] text-white flex flex-col justify-between shadow-2xl shadow-blue-600/20">
-              <div className="w-16 h-16 bg-white/20 rounded-3xl flex items-center justify-center">
-                <Smartphone size={32} />
-              </div>
-              <div>
-                <h3 className="text-3xl font-black tracking-tight uppercase mb-4">Airtime Topup</h3>
-                <p className="text-white/70 font-medium leading-relaxed mb-8">
-                  Instant recharge for all networks with up to 3% cashback on every transaction.
+                <h3 className="text-xl font-bold mb-3">{service.name}</h3>
+                <p className="text-gray-600 dark:text-gray-400 leading-relaxed mb-6">
+                  {service.desc}
                 </p>
-                <Link to="/signup" className="inline-flex items-center space-x-3 text-sm font-black uppercase tracking-widest group">
-                  <span>Recharge Now</span>
-                  <ArrowRight size={16} className="group-hover:translate-x-2 transition-transform" />
+                <Link to="/signup" className="text-blue-600 font-bold flex items-center hover:underline">
+                  Buy Now <ArrowRight size={16} className="ml-2" />
                 </Link>
-              </div>
-            </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
 
-            <div className="lg:col-span-4 bg-gray-950 p-12 rounded-[3rem] text-white flex flex-col justify-between">
-               <div className="w-16 h-16 bg-white/10 rounded-3xl flex items-center justify-center text-blue-500">
-                <Lightbulb size={32} />
-              </div>
-              <div>
-                <h3 className="text-3xl font-black tracking-tight uppercase mb-4">Utility Bills</h3>
-                <p className="text-white/40 font-medium leading-relaxed mb-8">
-                  Pay for electricity and other utility bills across Nigeria with zero stress and zero fees.
-                </p>
-              </div>
-            </div>
-
-            <div className="lg:col-span-8 bg-white dark:bg-[#050505] p-12 rounded-[3rem] border border-gray-100 dark:border-white/5 shadow-sm">
-              <div className="flex flex-col md:flex-row items-center gap-12">
-                <div className="flex-1 space-y-6">
-                  <div className="w-16 h-16 bg-purple-50 dark:bg-purple-500/10 rounded-3xl flex items-center justify-center text-purple-600">
-                    <Tv size={32} />
+      {/* WHY CHOOSE US */}
+      <section className="py-20 bg-gray-50 dark:bg-gray-950">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            <div>
+              <h2 className="text-blue-600 font-bold uppercase tracking-wider mb-2">Why Choose Us</h2>
+              <p className="text-3xl lg:text-4xl font-extrabold mb-6">Experience Seamless Digital Transactions</p>
+              <p className="text-gray-600 dark:text-gray-400 text-lg mb-10">
+                We provide the most reliable and affordable VTU services in Nigeria. Our platform is designed to give you the best value for your money.
+              </p>
+              
+              <div className="space-y-8">
+                {features.map((feature, i) => (
+                  <div key={i} className="flex items-start space-x-4">
+                    <div className="bg-white dark:bg-gray-800 p-3 rounded-lg shadow-md">
+                      {feature.icon}
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-lg mb-1">{feature.title}</h4>
+                      <p className="text-gray-600 dark:text-gray-400">{feature.desc}</p>
+                    </div>
                   </div>
-                  <h3 className="text-4xl font-black tracking-tight uppercase">TV Subscriptions</h3>
-                  <p className="text-gray-500 dark:text-gray-400 font-medium leading-relaxed">
-                    Renew your DSTV, GOTV, and Startimes subscriptions instantly. No more waiting for signals to return.
-                  </p>
-                </div>
-                <div className="grid grid-cols-2 gap-4 w-full md:w-auto">
-                   {['DSTV', 'GOTV', 'STARTIMES', 'SHOWMAX'].map(tv => (
-                     <div key={tv} className="px-6 py-4 bg-gray-50 dark:bg-white/5 rounded-2xl text-[10px] font-black uppercase tracking-widest text-center border border-gray-100 dark:border-white/5">
-                        {tv}
-                     </div>
-                   ))}
-                </div>
+                ))}
+              </div>
+            </div>
+            
+            <div className="relative">
+              <img 
+                src="https://picsum.photos/seed/vtu-features/600/700" 
+                alt="Features" 
+                className="rounded-3xl shadow-2xl"
+                referrerPolicy="no-referrer"
+              />
+              <div className="absolute -bottom-10 -left-10 bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-700 hidden md:block">
+                <p className="text-4xl font-extrabold text-blue-600 mb-1">99.9%</p>
+                <p className="text-gray-500 font-bold uppercase text-xs tracking-widest">Success Rate</p>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* STATS - Minimalist */}
-      <section className="py-32 lg:py-48">
+      {/* HOW IT WORKS */}
+      <section className="py-20 bg-white dark:bg-gray-900">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-20">
-            {stats.map((stat, i) => (
-              <div key={i} className="space-y-4">
-                <p className="text-[10px] font-black uppercase tracking-[0.5em] text-blue-600">{stat.label}</p>
-                <p className="text-7xl lg:text-8xl font-black tracking-tighter leading-none">{stat.value}</p>
-                <div className="w-12 h-1 bg-gray-100 dark:bg-white/10"></div>
+          <div className="text-center mb-16">
+            <h2 className="text-blue-600 font-bold uppercase tracking-wider mb-2">How It Works</h2>
+            <p className="text-3xl lg:text-4xl font-extrabold">Start in 3 Simple Steps</p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-12">
+            {[
+              { step: '01', title: 'Create Account', desc: 'Sign up for a free account in less than a minute with your basic details.' },
+              { step: '02', title: 'Fund Wallet', desc: 'Add money to your wallet using any of our secure payment methods.' },
+              { step: '03', title: 'Purchase Service', desc: 'Select any service you want and get it delivered to you instantly.' },
+            ].map((item, i) => (
+              <div key={i} className="text-center relative">
+                <div className="text-6xl font-black text-blue-600/10 absolute -top-10 left-1/2 -translate-x-1/2 z-0">
+                  {item.step}
+                </div>
+                <div className="relative z-10">
+                  <h3 className="text-2xl font-bold mb-4">{item.title}</h3>
+                  <p className="text-gray-600 dark:text-gray-400">{item.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          <div className="mt-16 text-center">
+            <Link to="/signup" className="bg-blue-600 text-white px-10 py-4 rounded-lg font-bold hover:bg-blue-700 transition-all shadow-lg">
+              Get Started Now
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* TESTIMONIALS */}
+      <section className="py-20 bg-gray-50 dark:bg-gray-950">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-blue-600 font-bold uppercase tracking-wider mb-2">Testimonials</h2>
+            <p className="text-3xl lg:text-4xl font-extrabold">What Our Users Say</p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[
+              { name: 'Emeka Obi', role: 'Business Owner', text: 'This is the best VTU platform I have used. The data delivery is super fast and the prices are very affordable.' },
+              { name: 'Amina Yusuf', role: 'Student', text: 'I love how easy it is to buy data on this site. No more stress, and I save a lot of money every month.' },
+              { name: 'Olawale Adeyemi', role: 'Freelancer', text: 'Reliable and secure. I use it for all my utility bills and airtime topups. Highly recommended!' },
+            ].map((t, i) => (
+              <div key={i} className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+                <div className="flex items-center space-x-1 text-yellow-500 mb-4">
+                  {[1, 2, 3, 4, 5].map(s => <ZapIcon key={s} size={16} fill="currentColor" />)}
+                </div>
+                <p className="text-gray-600 dark:text-gray-400 italic mb-6">"{t.text}"</p>
+                <div>
+                  <p className="font-bold">{t.name}</p>
+                  <p className="text-sm text-gray-500">{t.role}</p>
+                </div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* CTA - Bold Editorial */}
-      <section className="py-48 lg:py-64 bg-gray-950 text-white relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-6 relative z-10">
-          <div className="max-w-4xl">
-            <h2 className="text-6xl lg:text-[8vw] font-black tracking-tighter leading-[0.85] uppercase mb-16">
-              Join the <br />
-              <span className="text-blue-600">Revolution.</span>
-            </h2>
-            <p className="text-2xl lg:text-4xl font-black tracking-tight text-white/40 mb-20 max-w-2xl">
-              Stop overpaying for data. Start your journey with Oplug today and experience digital freedom.
-            </p>
-            <div className="flex flex-wrap gap-8">
-              <Link to="/signup" className="bg-blue-600 text-white px-16 py-8 rounded-[2.5rem] text-xl font-black uppercase tracking-widest hover:bg-white hover:text-gray-950 transition-all shadow-2xl shadow-blue-600/20">
-                Create Account
-              </Link>
-              <Link to="/support" className="border border-white/20 text-white px-16 py-8 rounded-[2.5rem] text-xl font-black uppercase tracking-widest hover:bg-white/10 transition-all">
-                Contact Us
-              </Link>
-            </div>
+      {/* CTA SECTION */}
+      <section className="py-20 bg-blue-600 text-white">
+        <div className="max-w-7xl mx-auto px-6 text-center">
+          <h2 className="text-3xl lg:text-5xl font-extrabold mb-6">Ready to Experience Fast VTU?</h2>
+          <p className="text-xl text-blue-100 mb-10 max-w-2xl mx-auto">
+            Join thousands of Nigerians who trust us for their daily digital needs. Sign up now and start enjoying cheap rates!
+          </p>
+          <div className="flex flex-wrap justify-center gap-4">
+            <Link to="/signup" className="bg-white text-blue-600 px-10 py-4 rounded-lg font-bold hover:bg-gray-100 transition-all shadow-xl">
+              Create Free Account
+            </Link>
+            <Link to="/support" className="bg-blue-700 text-white border border-blue-500 px-10 py-4 rounded-lg font-bold hover:bg-blue-800 transition-all">
+              Contact Support
+            </Link>
           </div>
-        </div>
-        
-        {/* Decorative Text */}
-        <div className="absolute -bottom-20 -right-20 text-[20vw] font-black text-white/5 leading-none pointer-events-none select-none">
-          OPLUG
         </div>
       </section>
 

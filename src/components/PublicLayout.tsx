@@ -16,31 +16,31 @@ const PublicLayout: React.FC = () => {
   }, []);
 
   const navLinks = [
+    { name: 'Home', to: '/' },
+    { name: 'Services', to: '/#services' },
     { name: 'Pricing', to: '/pricing' },
     { name: 'Quick Buy', to: '/quick-purchase' },
-    { name: 'Blog', to: '/blog' },
-    { name: 'About Us', to: '/about' },
-    { name: 'Privacy', to: '/privacy' },
-    { name: 'Terms', to: '/terms' },
+    { name: 'FAQ', to: '/faq' },
+    { name: 'Support', to: '/support' },
   ];
 
   return (
     <div className="min-h-screen bg-white dark:bg-[#050505] text-gray-900 dark:text-white font-sans selection:bg-blue-600 selection:text-white flex flex-col">
       {/* Navigation */}
-      <nav className={`fixed w-full z-[100] transition-all duration-700 ${scrolled ? 'bg-white/90 dark:bg-[#050505]/90 backdrop-blur-2xl py-4 border-b border-gray-100 dark:border-white/5 shadow-sm' : 'bg-transparent py-10'}`}>
-        <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
+      <nav className={`fixed w-full z-[100] transition-all duration-300 ${scrolled ? 'bg-white dark:bg-gray-900 py-3 border-b border-gray-200 dark:border-gray-800 shadow-md' : 'bg-white/80 dark:bg-gray-900/80 backdrop-blur-md py-5'}`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex justify-between items-center">
           <Logo />
           
           {/* Desktop Links */}
-          <div className="hidden lg:flex items-center space-x-10">
+          <div className="hidden lg:flex items-center space-x-8">
             {navLinks.map((link) => (
-              <Link key={link.name} to={link.to} className="text-[11px] font-black uppercase tracking-[0.2em] text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white transition-all">
+              <Link key={link.name} to={link.to} className="text-sm font-semibold text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400 transition-colors">
                 {link.name}
               </Link>
             ))}
-            <div className="w-px h-6 bg-gray-100 dark:bg-white/10 mx-2"></div>
-            <Link to="/login" className="text-[11px] font-black uppercase tracking-[0.2em] text-gray-900 dark:text-white hover:text-blue-600 transition-colors">Login</Link>
-            <Link to="/signup" className="bg-blue-600 text-white px-8 py-4 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] hover:bg-gray-950 transition-all shadow-2xl shadow-blue-600/20">Sign Up</Link>
+            <div className="w-px h-6 bg-gray-200 dark:bg-gray-700 mx-2"></div>
+            <Link to="/login" className="text-sm font-semibold text-gray-900 dark:text-white hover:text-blue-600 transition-colors">Login</Link>
+            <Link to="/signup" className="bg-blue-600 text-white px-6 py-2.5 rounded-lg text-sm font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20">Register</Link>
           </div>
 
           {/* Mobile Menu Trigger */}
@@ -78,13 +78,13 @@ const PublicLayout: React.FC = () => {
                 </button>
               </div>
               
-              <div className="flex flex-col space-y-8">
+              <div className="flex flex-col space-y-6">
                 {navLinks.map((link) => (
                   <Link 
                     key={link.name} 
                     to={link.to} 
                     onClick={() => setIsMenuOpen(false)}
-                    className="text-2xl font-black tracking-tighter uppercase hover:text-blue-600 transition-colors"
+                    className="text-lg font-semibold text-gray-800 dark:text-gray-200 hover:text-blue-600 transition-colors"
                   >
                     {link.name}
                   </Link>
@@ -92,8 +92,8 @@ const PublicLayout: React.FC = () => {
               </div>
 
               <div className="mt-auto space-y-4">
-                <Link to="/login" className="block w-full py-5 text-center font-black uppercase tracking-widest text-xs border border-gray-100 dark:border-white/10 rounded-2xl">Login</Link>
-                <Link to="/signup" className="block w-full py-5 text-center font-black uppercase tracking-widest text-xs bg-blue-600 text-white rounded-2xl">Create Account</Link>
+                <Link to="/login" onClick={() => setIsMenuOpen(false)} className="block w-full py-4 text-center font-bold text-sm border border-gray-200 dark:border-gray-700 rounded-xl">Login</Link>
+                <Link to="/signup" onClick={() => setIsMenuOpen(false)} className="block w-full py-4 text-center font-bold text-sm bg-blue-600 text-white rounded-xl">Register Now</Link>
               </div>
             </motion.div>
           </>
