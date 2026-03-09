@@ -6,8 +6,6 @@ import * as admin from 'firebase-admin';
 import axios from 'axios';
 import crypto from 'crypto';
 import { initializeFirebaseAdmin } from './src/firebase/admin';
-import { whatsappService } from './src/whatsapp/whatsappService';
-import { GoogleGenAI } from "@google/genai";
 
 // Initialize Firebase Admin
 initializeFirebaseAdmin();
@@ -35,10 +33,6 @@ app.get('/api/health', (req, res) => {
   const envStatus = {
     FIREBASE_SERVICE_ACCOUNT: !!process.env.FIREBASE_SERVICE_ACCOUNT,
     INLOMAX_API_KEY: !!process.env.INLOMAX_API_KEY,
-    GEMINI_API_KEY: !!process.env.GEMINI_API_KEY,
-    WHATSAPP_TOKEN: !!(process.env.WHATSAPP_TOKEN || process.env.WHATSAPP_ACCESS_TOKEN),
-    WHATSAPP_PHONE_NUMBER_ID: !!process.env.WHATSAPP_PHONE_NUMBER_ID,
-    WHATSAPP_VERIFY_TOKEN: !!process.env.WHATSAPP_VERIFY_TOKEN,
     OGAVIRAL_API_KEY: !!process.env.OGAVIRAL_API_KEY,
     PAYSTACK_SECRET_KEY: !!process.env.PAYSTACK_SECRET_KEY,
     BILLSTACK_SECRET_KEY: !!process.env.BILLSTACK_SECRET_KEY,
@@ -55,144 +49,6 @@ app.get('/api/health', (req, res) => {
     message: allSet ? 'All systems operational' : 'Some environment variables are missing. Please check your Vercel settings.'
   });
 });
-
-// WhatsApp Webhook Logic
-app.get('/api/whatsapp/webhook', (req, res) => {
-  const mode = req.query['hub.mode'];
-  const token = req.query['hub.verify_token'];
-  const challenge = req.query['hub.challenge'];
-  const verifyToken = process.env.WHATSAPP_VERIFY_TOKEN || 'oplug_vtu_bot_2024';
-
-  if (mode === 'subscribe' && token === verifyToken) {
-    console.log('[WhatsApp Webhook] Verification successful');
-    return res.status(200).send(challenge);
-  } else {
-    console.warn('[WhatsApp Webhook] Verification failed');
-    return res.status(403).send('Forbidden');
-  }
-});
-
-app.post('/api/whatsapp/webhook', async (req, res) => {
-  const body = req.body;
-  if (body.object === 'whatsapp_business_account') {
-    const entry = body.entry?.[0];
-    const change = entry?.changes?.[0];
-    const value = change?.value;
-    const message = value?.messages?.[0];
-
-    if (message) {
-      const from = message.from;
-      const type = message.type;
-      let text = '';
-
-      if (type === 'text') {
-        text = message.text.body;
-      } else if (type === 'interactive') {
-        const interactive = message.interactive;
-        if (interactive.type === 'button_reply') {
-          text = interactive.button_reply.id;
-        } else if (interactive.type === 'list_reply') {
-          text = interactive.list_reply.id;
-        }
-      }
-
-      if (text) {
-        try {
-          await handleWhatsAppMessage(from, text);
-        } catch (error: any) {
-          console.error('[WhatsApp Webhook] Message Handling Error:', error.message);
-        }
-      }
-    }
-    return res.status(200).json({ status: 'ok' });
-  }
-  res.status(404).json({ status: 'not_found' });
-});
-
-async function handleWhatsAppMessage(from: string, text: string) {
-  const session = await whatsappService.getSession(from);
-  const user = await whatsappService.getUserByPhone(from);
-
-  // 1. Initial Commands
-  if (['START', 'MENU', 'HI', 'HELLO'].includes(text.toUpperCase())) {
-    await whatsappService.clearSession(from);
-    if (user) {
-      const body = `Welcome back to *Oplug*, ${user.username}! 🌟\n\n💰 *Balance:* ₦${(user.walletBalance || 0).toLocaleString()}\n\nWhat would you like to do today?`;
-      return whatsappService.sendInteractiveButtons(from, body, [
-        { id: 'BUY_SERVICES', title: 'Buy Services 🛒' },
-        { id: 'CHECK_BALANCE', title: 'Check Balance 💰' },
-        { id: 'TALK_TO_AI', title: 'Ask AI 🤖' }
-      ]);
-    } else {
-      const body = `Welcome to *Oplug*! 🌟\n\nNigeria's most reliable VTU platform. You are currently not logged in.\n\n_Please choose an option:_`;
-      return whatsappService.sendInteractiveButtons(from, body, [
-        { id: 'REGISTER', title: 'Register 📝' },
-        { id: 'LOGIN_HELP', title: 'Login Help 🔑' },
-        { id: 'ABOUT_US', title: 'About Oplug ℹ️' }
-      ]);
-    }
-  }
-
-  // 2. Handle Button/List Responses
-  if (text === 'BUY_SERVICES') {
-    return whatsappService.sendInteractiveList(from, 'Select a service category:', 'View Services', [
-      {
-        title: 'VTU Services',
-        rows: [
-          { id: 'SVC_AIRTIME', title: 'Airtime 📱', description: 'Top up your mobile' },
-          { id: 'SVC_DATA', title: 'Data 🌐', description: 'Cheap data bundles' },
-          { id: 'SVC_CABLE', title: 'Cable TV 📺', description: 'DSTV, GOTV, Startimes' },
-          { id: 'SVC_POWER', title: 'Electricity 💡', description: 'Pay power bills' }
-        ]
-      }
-    ]);
-  }
-
-  if (text === 'CHECK_BALANCE') {
-    if (!user) return whatsappService.sendMessage(from, "❌ You need to be logged in to check your balance.");
-    return whatsappService.sendMessage(from, `💰 Your current wallet balance is: *₦${user.walletBalance.toLocaleString()}*`);
-  }
-
-  if (text === 'REGISTER') {
-    await whatsappService.updateSession(from, { step: 'AWAITING_USERNAME' });
-    return whatsappService.sendMessage(from, "Welcome! Let's get you registered.\n\nWhat should we call you? (Enter a *Username*):");
-  }
-
-  // 3. Handle Session Steps
-  if (session) {
-    if (session.step === 'AWAITING_USERNAME') {
-      await whatsappService.updateSession(from, { username: text, step: 'AWAITING_EMAIL' });
-      return whatsappService.sendMessage(from, "Great! Now please provide your *Email Address*:");
-    }
-    if (session.step === 'AWAITING_EMAIL') {
-      if (!text.includes('@')) return whatsappService.sendMessage(from, "❌ Invalid email. Please provide a valid email address:");
-      await whatsappService.updateSession(from, { email: text, step: 'AWAITING_PASSWORD' });
-      return whatsappService.sendMessage(from, "Almost there! Please set a *Password* for your account:");
-    }
-    if (session.step === 'AWAITING_PASSWORD') {
-      // Finalize registration logic would go here
-      await whatsappService.clearSession(from);
-      return whatsappService.sendMessage(from, "✅ Registration details received! Our team will verify and activate your account shortly. You can also visit our website to complete the process.");
-    }
-  }
-
-  // 4. AI Fallback
-  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
-  const systemPrompt = `You are Oplug AI, a helpful assistant for Oplug VTU platform.
-  User: ${user ? user.username : 'Guest'}
-  Context: Oplug provides Airtime, Data, Cable TV, and Electricity bills at wholesale rates.
-  Instructions: Be concise. If the user wants to buy something, guide them to use the menu or type 'START'.`;
-
-  try {
-    const result = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: `${systemPrompt}\n\nUser Message: ${text}`
-    });
-    await whatsappService.sendMessage(from, result.text);
-  } catch (error) {
-    await whatsappService.sendMessage(from, "I'm sorry, I'm having trouble thinking right now. Please type 'START' to see the main menu.");
-  }
-}
 
 // Helper functions for API calls
 async function callServer1(endpoint: string, method: string, data: any) {
@@ -919,18 +775,16 @@ async function processScheduledTransactions() {
 
 // Run scheduler every 60 seconds
 const startScheduler = async () => {
+  if (process.env.VERCEL) {
+    console.log('Scheduler disabled in Vercel serverless environment. Use Vercel Cron instead.');
+    return;
+  }
+
   try {
-    const db = admin.firestore();
-    // Test connection
-    await db.collection('settings').limit(1).get();
-    console.log('Firestore connection successful. Starting scheduler...');
-    if (!process.env.VERCEL) {
-      setInterval(processScheduledTransactions, 60000);
-    } else {
-      console.log('Scheduler disabled in Vercel serverless environment. Use Vercel Cron instead.');
-    }
+    console.log('Starting background scheduler...');
+    setInterval(processScheduledTransactions, 60000);
   } catch (error: any) {
-    console.error('Failed to connect to Firestore. Scheduler will not run:', error.message);
+    console.error('Failed to start scheduler:', error.message);
   }
 };
 
