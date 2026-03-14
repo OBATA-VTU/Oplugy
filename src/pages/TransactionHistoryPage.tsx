@@ -109,14 +109,14 @@ const TransactionHistoryPage: React.FC = () => {
       />
 
       <div className="text-center space-y-4">
-        <div className="inline-flex p-4 bg-blue-50 text-blue-600 rounded-[2rem] mb-4 shadow-inner">
+        <div className="inline-flex p-4 bg-emerald-50 text-emerald-600 rounded-[2rem] mb-4 shadow-inner">
           <Receipt className="w-10 h-10" />
         </div>
         <h2 className="text-5xl lg:text-6xl font-black text-gray-900 tracking-tighter">History</h2>
         <p className="text-gray-400 font-medium text-xl max-w-xl mx-auto">Track your spending and all your transactions here.</p>
       </div>
 
-      <div className="bg-white p-8 lg:p-12 rounded-[4rem] shadow-2xl shadow-blue-100/50 border border-gray-50 space-y-10">
+      <div className="bg-white p-8 lg:p-12 rounded-[4rem] shadow-2xl shadow-emerald-100/50 border border-gray-50 space-y-10">
         {/* Filters & Search */}
         <div className="flex flex-col lg:flex-row gap-6 justify-between items-center">
           <div className="flex p-2 bg-gray-50 rounded-[2rem] border-2 border-transparent w-full lg:w-auto">
@@ -124,7 +124,7 @@ const TransactionHistoryPage: React.FC = () => {
               <button 
                 key={f}
                 onClick={() => setFilter(f as any)} 
-                className={`flex-1 lg:px-8 py-4 rounded-[1.5rem] font-black uppercase tracking-widest text-[10px] transition-all ${filter === f ? 'bg-white text-blue-600 shadow-xl' : 'text-gray-400 hover:text-gray-600'}`}
+                className={`flex-1 lg:px-8 py-4 rounded-[1.5rem] font-black uppercase tracking-widest text-[10px] transition-all ${filter === f ? 'bg-white text-emerald-600 shadow-xl' : 'text-gray-400 hover:text-gray-600'}`}
               >
                 {f}
               </button>
@@ -136,17 +136,17 @@ const TransactionHistoryPage: React.FC = () => {
               <input 
                 type="text" 
                 placeholder="Search ID, type..." 
-                className="w-full pl-14 pr-8 py-5 bg-gray-50 border-2 border-transparent rounded-[2rem] font-bold text-gray-900 outline-none focus:border-blue-600 focus:bg-white transition-all placeholder:text-gray-300"
+                className="w-full pl-14 pr-8 py-5 bg-gray-50 border-2 border-transparent rounded-[2rem] font-bold text-gray-900 outline-none focus:border-emerald-600 focus:bg-white transition-all placeholder:text-gray-300"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
-              <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-600 transition-colors w-5 h-5" />
+              <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-emerald-600 transition-colors w-5 h-5" />
             </div>
             
             {transactions.length > 0 && (
               <button 
                 onClick={downloadCSV}
-                className="p-5 bg-gray-900 text-white rounded-[1.5rem] hover:bg-blue-600 transition-all shadow-lg"
+                className="p-5 bg-gray-900 text-white rounded-[1.5rem] hover:bg-emerald-600 transition-all shadow-lg"
                 title="Export CSV"
               >
                 <Download className="w-5 h-5" />
@@ -172,10 +172,10 @@ const TransactionHistoryPage: React.FC = () => {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95 }}
                     onClick={() => openReceipt(tx)}
-                    className="group bg-white p-6 lg:p-8 rounded-[2.5rem] border border-gray-100 hover:border-blue-100 hover:shadow-xl hover:shadow-blue-100/50 transition-all flex flex-col lg:flex-row lg:items-center justify-between gap-6 cursor-pointer"
+                    className="group bg-white p-6 lg:p-8 rounded-[2.5rem] border border-gray-100 hover:border-emerald-100 hover:shadow-xl hover:shadow-emerald-100/50 transition-all flex flex-col lg:flex-row lg:items-center justify-between gap-6 cursor-pointer"
                   >
                     <div className="flex items-center space-x-6">
-                      <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform ${tx.type === 'FUNDING' ? 'bg-green-50 text-green-600' : 'bg-blue-50 text-blue-600'}`}>
+                      <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform ${tx.type === 'FUNDING' ? 'bg-green-50 text-green-600' : 'bg-emerald-50 text-emerald-600'}`}>
                         {getTypeIcon(tx.type)}
                       </div>
                       <div className="space-y-1">

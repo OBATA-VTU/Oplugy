@@ -148,10 +148,10 @@ const CablePage: React.FC = () => {
                       setSelectedOperator(op);
                       setStep('SMARTCARD');
                     }}
-                    className={`group p-8 rounded-[2.5rem] border-2 transition-all flex flex-col items-center space-y-4 ${selectedOperator?.id === op.id ? 'border-blue-600 bg-blue-50 shadow-xl shadow-blue-100' : 'border-gray-50 bg-gray-50 hover:border-gray-200'}`}
+                    className={`group p-8 rounded-[2.5rem] border-2 transition-all flex flex-col items-center space-y-4 ${selectedOperator?.id === op.id ? 'border-emerald-600 bg-emerald-50 shadow-xl shadow-emerald-100' : 'border-gray-50 bg-gray-50 hover:border-gray-200'}`}
                   >
                     <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
-                      <Tv className="w-10 h-10 text-blue-600" />
+                      <Tv className="w-10 h-10 text-emerald-600" />
                     </div>
                     <span className="font-black text-gray-900 uppercase tracking-widest text-xs">{op.name}</span>
                   </button>
@@ -174,7 +174,7 @@ const CablePage: React.FC = () => {
                 <div className="relative">
                   <input 
                     type="text" 
-                    className="w-full p-10 bg-gray-50 border-4 border-transparent rounded-[2.5rem] text-4xl font-black tracking-tighter outline-none focus:border-blue-600 focus:bg-white transition-all text-center placeholder:text-gray-200" 
+                    className="w-full p-10 bg-gray-50 border-4 border-transparent rounded-[2.5rem] text-4xl font-black tracking-tighter outline-none focus:border-emerald-600 focus:bg-white transition-all text-center placeholder:text-gray-200" 
                     placeholder="0000000000" 
                     value={smartcardNo} 
                     onChange={e => setSmartcardNo(e.target.value.replace(/\D/g, ''))} 
@@ -186,7 +186,7 @@ const CablePage: React.FC = () => {
                 <button 
                   onClick={handleVerify}
                   disabled={smartcardNo.length < 5}
-                  className="w-full py-8 bg-gray-900 text-white rounded-[2.5rem] font-black text-[12px] uppercase tracking-[0.4em] shadow-2xl hover:bg-blue-600 transition-all transform active:scale-95 disabled:opacity-30"
+                  className="w-full py-8 bg-gray-900 text-white rounded-[2.5rem] font-black text-[12px] uppercase tracking-[0.4em] shadow-2xl hover:bg-emerald-600 transition-all transform active:scale-95 disabled:opacity-30"
                 >
                   Verify Identity
                 </button>
@@ -205,12 +205,12 @@ const CablePage: React.FC = () => {
               <BackButton onClick={() => setStep('SMARTCARD')} />
               <StepHeader num="03" title="Select Package" />
               
-              <div className="p-8 bg-blue-50 rounded-[2.5rem] border-2 border-dashed border-blue-100 flex items-center space-x-6">
-                <div className="w-16 h-16 bg-blue-600 text-white rounded-2xl flex items-center justify-center shrink-0 shadow-lg">
+              <div className="p-8 bg-emerald-50 rounded-[2.5rem] border-2 border-dashed border-emerald-100 flex items-center space-x-6">
+                <div className="w-16 h-16 bg-emerald-600 text-white rounded-2xl flex items-center justify-center shrink-0 shadow-lg">
                   <Tv className="w-8 h-8" />
                 </div>
                 <div>
-                  <p className="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] mb-1">Customer Identified</p>
+                  <p className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.2em] mb-1">Customer Identified</p>
                   <p className="text-2xl font-black text-gray-900 tracking-tight uppercase">{customerName}</p>
                 </div>
               </div>
@@ -223,14 +223,14 @@ const CablePage: React.FC = () => {
                       setSelectedPlan(plan);
                       setStep('PHONE');
                     }}
-                    className={`p-8 rounded-[2.5rem] border-2 text-left transition-all flex justify-between items-center group ${selectedPlan?.id === plan.id ? 'border-blue-600 bg-blue-50' : 'border-gray-50 bg-gray-50 hover:border-gray-200'}`}
+                    className={`p-8 rounded-[2.5rem] border-2 text-left transition-all flex justify-between items-center group ${selectedPlan?.id === plan.id ? 'border-emerald-600 bg-emerald-50' : 'border-gray-50 bg-gray-50 hover:border-gray-200'}`}
                   >
                     <div className="space-y-1">
                       <h4 className="font-black text-gray-900 text-xl uppercase tracking-tight">{plan.name}</h4>
                       <p className="text-gray-400 font-bold text-xs uppercase tracking-widest">{selectedOperator?.name}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-blue-600 font-black text-3xl tracking-tighter">₦{plan.amount.toLocaleString()}</p>
+                      <p className="text-emerald-600 font-black text-3xl tracking-tighter">₦{plan.amount.toLocaleString()}</p>
                     </div>
                   </button>
                 ))}
@@ -252,7 +252,7 @@ const CablePage: React.FC = () => {
                 <div className="relative">
                   <input 
                     type="tel" 
-                    className="w-full p-10 bg-gray-50 border-4 border-transparent rounded-[2.5rem] text-4xl font-black tracking-tighter outline-none focus:border-blue-600 focus:bg-white transition-all text-center placeholder:text-gray-200" 
+                    className="w-full p-10 bg-gray-50 border-4 border-transparent rounded-[2.5rem] text-4xl font-black tracking-tighter outline-none focus:border-emerald-600 focus:bg-white transition-all text-center placeholder:text-gray-200" 
                     placeholder="08000000000" 
                     value={phoneNumber} 
                     onChange={e => setPhoneNumber(e.target.value.replace(/\D/g, ''))} 
@@ -271,7 +271,7 @@ const CablePage: React.FC = () => {
                     setStep('CHECKOUT');
                   }}
                   disabled={phoneNumber.length !== 11}
-                  className="w-full py-8 bg-blue-600 text-white rounded-[2.5rem] font-black text-[12px] uppercase tracking-[0.4em] shadow-2xl shadow-blue-100 hover:bg-gray-950 transition-all transform active:scale-95 disabled:opacity-30"
+                  className="w-full py-8 bg-emerald-600 text-white rounded-[2.5rem] font-black text-[12px] uppercase tracking-[0.4em] shadow-2xl shadow-emerald-100 hover:bg-gray-950 transition-all transform active:scale-95 disabled:opacity-30"
                 >
                   Review Order
                 </button>
@@ -298,14 +298,14 @@ const CablePage: React.FC = () => {
                 
                 <div className="pt-8 border-t-4 border-dashed border-gray-200 flex justify-between items-end">
                   <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Total Amount</span>
-                  <span className="text-4xl font-black text-blue-600 tracking-tighter">₦{selectedPlan?.amount.toLocaleString()}</span>
+                  <span className="text-4xl font-black text-emerald-600 tracking-tighter">₦{selectedPlan?.amount.toLocaleString()}</span>
                 </div>
               </div>
 
               <div className="space-y-4">
                 <button 
                   onClick={() => setShowPinModal(true)}
-                  className="w-full py-8 bg-blue-600 text-white rounded-[2.5rem] font-black text-[12px] uppercase tracking-[0.4em] shadow-2xl shadow-blue-100 hover:bg-gray-950 transition-all transform active:scale-95"
+                  className="w-full py-8 bg-emerald-600 text-white rounded-[2.5rem] font-black text-[12px] uppercase tracking-[0.4em] shadow-2xl shadow-emerald-100 hover:bg-gray-950 transition-all transform active:scale-95"
                 >
                   Confirm & Pay
                 </button>
@@ -337,7 +337,7 @@ const CablePage: React.FC = () => {
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <button 
                   onClick={resetAll}
-                  className="px-10 py-6 bg-blue-600 text-white rounded-3xl font-black text-[11px] uppercase tracking-widest hover:bg-gray-950 transition-all shadow-xl shadow-blue-100 flex items-center justify-center space-x-3"
+                  className="px-10 py-6 bg-emerald-600 text-white rounded-3xl font-black text-[11px] uppercase tracking-widest hover:bg-gray-950 transition-all shadow-xl shadow-emerald-100 flex items-center justify-center space-x-3"
                 >
                   <ArrowRight className="w-4 h-4" />
                   <span>Renew Another</span>
@@ -355,13 +355,13 @@ const CablePage: React.FC = () => {
         </AnimatePresence>
       </div>
 
-      <div className="p-10 bg-blue-50 rounded-[3rem] border border-blue-100 flex items-start space-x-8">
-        <div className="w-16 h-16 bg-blue-600 text-white rounded-2xl flex items-center justify-center shrink-0 shadow-lg">
+      <div className="p-10 bg-emerald-50 rounded-[3rem] border border-emerald-100 flex items-start space-x-8">
+        <div className="w-16 h-16 bg-emerald-600 text-white rounded-2xl flex items-center justify-center shrink-0 shadow-lg">
           <Zap className="w-8 h-8" />
         </div>
         <div className="space-y-2">
-          <h4 className="text-xl font-black text-blue-900 tracking-tight">Instant Activation</h4>
-          <p className="text-blue-800/60 font-medium leading-relaxed">Cable TV renewals are done instantly. Your signal will be back within minutes after payment.</p>
+          <h4 className="text-xl font-black text-emerald-900 tracking-tight">Instant Activation</h4>
+          <p className="text-emerald-800/60 font-medium leading-relaxed">Cable TV renewals are done instantly. Your signal will be back within minutes after payment.</p>
         </div>
       </div>
     </div>
@@ -370,7 +370,7 @@ const CablePage: React.FC = () => {
 
 const StepHeader = ({ num, title }: { num: string, title: string }) => (
   <div className="flex items-center space-x-4 mb-8">
-    <div className="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center font-black text-sm">{num}</div>
+    <div className="w-10 h-10 bg-emerald-600 text-white rounded-xl flex items-center justify-center font-black text-sm">{num}</div>
     <h3 className="text-3xl font-black text-gray-900 tracking-tight">{title}</h3>
   </div>
 );
@@ -385,7 +385,7 @@ const CheckoutRow = ({ label, value }: { label: string, value: string }) => (
 const BackButton = ({ onClick }: { onClick: () => void }) => (
   <button 
     onClick={onClick}
-    className="text-[10px] font-black text-gray-400 uppercase tracking-widest hover:text-blue-600 transition-all flex items-center space-x-2"
+    className="text-[10px] font-black text-gray-400 uppercase tracking-widest hover:text-emerald-600 transition-all flex items-center space-x-2"
   >
     <span>← Back to previous step</span>
   </button>

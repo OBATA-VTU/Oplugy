@@ -72,7 +72,7 @@ const QuickBuyCheckout: React.FC = () => {
       <nav className="px-6 py-6 lg:px-12 bg-white/80 backdrop-blur-md border-b border-gray-100 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
            <Logo />
-           <button onClick={() => navigate(-1)} className="flex items-center space-x-2 text-sm font-bold text-gray-500 hover:text-blue-600 transition-all">
+           <button onClick={() => navigate(-1)} className="flex items-center space-x-2 text-sm font-bold text-gray-500 hover:text-emerald-600 transition-all">
               <ArrowLeft className="w-4 h-4" />
               <span>Back</span>
            </button>
@@ -82,7 +82,7 @@ const QuickBuyCheckout: React.FC = () => {
       <main className="flex-1 flex items-center justify-center p-4 lg:p-12">
         <div className="w-full max-w-xl bg-white rounded-[2.5rem] p-8 lg:p-12 shadow-xl border border-gray-50 space-y-8">
           <div className="text-center space-y-2">
-            <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <CreditCard className="w-8 h-8" />
             </div>
             <h1 className="text-4xl font-black text-gray-900 tracking-tight">Checkout.</h1>
@@ -133,14 +133,14 @@ const QuickBuyCheckout: React.FC = () => {
               </div>
               <div className="pt-4 border-t border-gray-200 flex justify-between items-center">
                 <span className="text-lg font-bold text-gray-900">Total Payable</span>
-                <span className="text-3xl font-black text-blue-600 tracking-tight">₦{total.toLocaleString()}</span>
+                <span className="text-3xl font-black text-emerald-600 tracking-tight">₦{total.toLocaleString()}</span>
               </div>
             </div>
 
             <button 
               onClick={handlePayment} 
               disabled={isProcessing}
-              className="w-full py-6 bg-blue-600 hover:bg-gray-900 text-white rounded-2xl font-bold uppercase tracking-widest text-sm shadow-xl shadow-blue-100 transition-all flex items-center justify-center space-x-3 transform active:scale-95 disabled:opacity-50"
+              className="w-full py-6 bg-emerald-600 hover:bg-gray-900 text-white rounded-2xl font-bold uppercase tracking-widest text-sm shadow-xl shadow-emerald-100 transition-all flex items-center justify-center space-x-3 transform active:scale-95 disabled:opacity-50"
             >
               {isProcessing ? <Spinner /> : <><ShieldCheck className="w-5 h-5" /> <span>Pay ₦{total.toLocaleString()}</span></>}
             </button>

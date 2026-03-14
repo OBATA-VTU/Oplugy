@@ -105,7 +105,7 @@ const QuickBuyCable: React.FC = () => {
       <nav className="px-6 py-6 lg:px-12 bg-white/80 backdrop-blur-md border-b border-gray-100 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
            <Logo />
-           <button onClick={() => navigate('/quick-purchase')} className="flex items-center space-x-2 text-sm font-bold text-gray-500 hover:text-blue-600 transition-all">
+           <button onClick={() => navigate('/quick-purchase')} className="flex items-center space-x-2 text-sm font-bold text-gray-500 hover:text-emerald-600 transition-all">
               <ArrowLeft className="w-4 h-4" />
               <span>Back</span>
            </button>
@@ -115,10 +115,10 @@ const QuickBuyCable: React.FC = () => {
       <main className="flex-1 flex items-center justify-center p-4 lg:p-12">
         <div className="w-full max-w-2xl bg-white rounded-[2.5rem] p-8 lg:p-12 shadow-xl border border-gray-50 space-y-8">
           <div className="text-center space-y-2">
-            <div className="w-16 h-16 bg-pink-50 text-pink-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <Tv className="w-8 h-8" />
             </div>
-            <h1 className="text-4xl font-black text-gray-900 tracking-tight">Cable <span className="text-blue-600">TV.</span></h1>
+            <h1 className="text-4xl font-black text-gray-900 tracking-tight">Cable <span className="text-emerald-600">TV.</span></h1>
             <p className="text-gray-500 font-medium">Renew your subscription instantly.</p>
           </div>
 
@@ -126,7 +126,7 @@ const QuickBuyCable: React.FC = () => {
             <div className="space-y-3">
               <label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider ml-2">1. Select Provider</label>
               <select 
-                className="w-full p-5 bg-gray-50 rounded-2xl font-bold text-lg border-2 border-transparent focus:border-blue-600 outline-none appearance-none transition-all disabled:opacity-50"
+                className="w-full p-5 bg-gray-50 rounded-2xl font-bold text-lg border-2 border-transparent focus:border-emerald-600 outline-none appearance-none transition-all disabled:opacity-50"
                 value={details.providerId}
                 onChange={(e) => {
                   const provider = providers.find(p => p.id === e.target.value);
@@ -146,7 +146,7 @@ const QuickBuyCable: React.FC = () => {
               <div className="flex gap-3">
                 <input 
                   type="text" 
-                  className="flex-1 p-5 bg-gray-50 border-2 border-transparent rounded-2xl font-bold text-xl outline-none focus:border-blue-600 focus:bg-white transition-all tracking-tight" 
+                  className="flex-1 p-5 bg-gray-50 border-2 border-transparent rounded-2xl font-bold text-xl outline-none focus:border-emerald-600 focus:bg-white transition-all tracking-tight" 
                   placeholder="Enter IUC number"
                   value={details.smartcard}
                   onChange={(e) => { setDetails({...details, smartcard: e.target.value}); setCustomerName(null); }}
@@ -154,7 +154,7 @@ const QuickBuyCable: React.FC = () => {
                 <button 
                   onClick={handleVerify}
                   disabled={verifying || !details.smartcard || !details.providerId}
-                  className="px-6 bg-gray-900 text-white rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-blue-600 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="px-6 bg-gray-900 text-white rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-emerald-600 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {verifying ? <Spinner /> : <><Search className="w-4 h-4" /> <span>Verify</span></>}
                 </button>
@@ -186,7 +186,7 @@ const QuickBuyCable: React.FC = () => {
               <label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider ml-2">3. Select Bouquet</label>
               <div className="relative">
                 <select 
-                  className="w-full p-5 bg-gray-50 rounded-2xl font-bold text-lg border-2 border-transparent focus:border-blue-600 outline-none appearance-none transition-all disabled:opacity-50"
+                  className="w-full p-5 bg-gray-50 rounded-2xl font-bold text-lg border-2 border-transparent focus:border-emerald-600 outline-none appearance-none transition-all disabled:opacity-50"
                   value={details.planId ? `${details.planId}|${details.amount}|${details.planName}` : ''}
                   onChange={(e) => {
                     const [id, price, name] = e.target.value.split('|');
@@ -208,7 +208,7 @@ const QuickBuyCable: React.FC = () => {
             <button 
               onClick={handleNext}
               disabled={!customerName || !details.planId}
-              className="w-full py-6 bg-blue-600 hover:bg-gray-900 text-white rounded-2xl font-bold uppercase tracking-widest text-sm shadow-xl shadow-blue-100 transition-all flex items-center justify-center space-x-3 transform active:scale-95 disabled:opacity-50"
+              className="w-full py-6 bg-emerald-600 hover:bg-gray-900 text-white rounded-2xl font-bold uppercase tracking-widest text-sm shadow-xl shadow-emerald-100 transition-all flex items-center justify-center space-x-3 transform active:scale-95 disabled:opacity-50"
             >
               <span>Continue to Checkout</span>
               <ChevronRight className="w-5 h-5" />

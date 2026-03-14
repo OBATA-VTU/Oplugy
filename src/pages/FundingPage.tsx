@@ -168,15 +168,15 @@ const FundingPage: React.FC = () => {
       </div>
 
       {/* Charges Notice */}
-      <div className="bg-blue-50 border border-blue-100 rounded-2xl p-6 flex items-start space-x-4">
-        <div className="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center flex-shrink-0">
+      <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-6 flex items-start space-x-4">
+        <div className="w-10 h-10 bg-emerald-600 text-white rounded-xl flex items-center justify-center flex-shrink-0">
           <Info size={20} />
         </div>
         <div className="space-y-1">
-          <h4 className="text-sm font-black text-blue-900 uppercase tracking-widest">Transaction Charges</h4>
+          <h4 className="text-sm font-black text-emerald-900 uppercase tracking-widest">Transaction Charges</h4>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-1">
-            <p className="text-blue-800 text-xs font-medium">0.7% – Virtual Account (9PSB & PalmPay transfers)</p>
-            <p className="text-blue-800 text-xs font-medium">2% – Paystack payments</p>
+            <p className="text-emerald-800 text-xs font-medium">0.7% – Virtual Account (9PSB & PalmPay transfers)</p>
+            <p className="text-emerald-800 text-xs font-medium">2% – Paystack payments</p>
           </div>
         </div>
       </div>
@@ -203,8 +203,8 @@ const FundingPage: React.FC = () => {
               <div className="space-y-1">
                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Account Number</p>
                 <div className="flex items-center justify-between">
-                  <p className="text-2xl font-black text-blue-600 tracking-tighter">{user.virtualAccount.account_number}</p>
-                  <button onClick={() => handleCopy(user.virtualAccount!.account_number, 'Account Number')} className="p-2 hover:bg-blue-50 text-blue-600 rounded-lg transition-all">
+                  <p className="text-2xl font-black text-emerald-600 tracking-tighter">{user.virtualAccount.account_number}</p>
+                  <button onClick={() => handleCopy(user.virtualAccount!.account_number, 'Account Number')} className="p-2 hover:bg-emerald-50 text-emerald-600 rounded-lg transition-all">
                     <Copy size={18} />
                   </button>
                 </div>
@@ -223,7 +223,7 @@ const FundingPage: React.FC = () => {
           </div>
         ) : (
           <div className="bg-gray-50 rounded-2xl p-10 text-center space-y-6">
-            <div className="w-20 h-20 bg-blue-50 text-blue-600 rounded-3xl flex items-center justify-center mx-auto">
+            <div className="w-20 h-20 bg-emerald-50 text-emerald-600 rounded-3xl flex items-center justify-center mx-auto">
               <Zap className="w-10 h-10" />
             </div>
             <div className="space-y-2">
@@ -233,7 +233,7 @@ const FundingPage: React.FC = () => {
             <button 
               onClick={handleGenerateVirtualAccount}
               disabled={isProcessing}
-              className="px-10 py-4 bg-blue-600 text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-gray-950 transition-all disabled:opacity-50 shadow-lg shadow-blue-100"
+              className="px-10 py-4 bg-emerald-600 text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-gray-950 transition-all disabled:opacity-50 shadow-lg shadow-emerald-100"
             >
               {isProcessing ? 'Generating...' : 'Generate Account Now'}
             </button>
@@ -244,7 +244,7 @@ const FundingPage: React.FC = () => {
       {/* Paystack Section */}
       <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 space-y-8">
         <div className="flex items-center space-x-4">
-          <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center">
+          <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center">
             <CreditCard size={24} />
           </div>
           <div>
@@ -259,7 +259,7 @@ const FundingPage: React.FC = () => {
             <div className="relative">
               <input 
                 type="number" 
-                className="w-full p-6 bg-gray-50 border-2 border-transparent rounded-2xl text-2xl font-black tracking-tighter outline-none focus:border-blue-600 focus:bg-white transition-all" 
+                className="w-full p-6 bg-gray-50 border-2 border-transparent rounded-2xl text-2xl font-black tracking-tighter outline-none focus:border-emerald-600 focus:bg-white transition-all" 
                 placeholder="0.00" 
                 value={amount} 
                 onChange={(e) => setAmount(e.target.value)} 
@@ -276,7 +276,7 @@ const FundingPage: React.FC = () => {
               </div>
               <div className="pt-3 border-t border-gray-200 flex justify-between items-center">
                 <span className="font-black text-gray-900 uppercase tracking-widest text-xs">Total to Pay</span>
-                <span className="font-black text-blue-600 text-2xl tracking-tight">₦{(numAmount * 1.02).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                <span className="font-black text-emerald-600 text-2xl tracking-tight">₦{(numAmount * 1.02).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
               </div>
             </div>
           )}
@@ -284,7 +284,7 @@ const FundingPage: React.FC = () => {
           <button 
             onClick={handlePaystack}
             disabled={isProcessing || numAmount < 100}
-            className="w-full py-6 bg-blue-600 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-blue-100 hover:bg-gray-950 transition-all disabled:opacity-30 flex items-center justify-center space-x-3"
+            className="w-full py-6 bg-emerald-600 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-emerald-100 hover:bg-gray-950 transition-all disabled:opacity-30 flex items-center justify-center space-x-3"
           >
             <CreditCard size={18} />
             <span>{isProcessing ? 'Processing...' : 'Pay with Paystack'}</span>
@@ -323,7 +323,7 @@ const FundingPage: React.FC = () => {
               <p className="text-[10px] font-black text-white/30 uppercase tracking-widest">Account Name</p>
               <p className="text-sm font-bold">Boluwatife Oluwapelumi Ayuba</p>
             </div>
-            <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-blue-600/20 rounded-full blur-3xl"></div>
+            <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-emerald-600/20 rounded-full blur-3xl"></div>
           </div>
 
           <div className="space-y-6">
@@ -339,7 +339,7 @@ const FundingPage: React.FC = () => {
                 />
                 <label 
                   htmlFor="receipt-upload"
-                  className="flex flex-col items-center justify-center w-full p-8 border-2 border-dashed border-gray-100 rounded-2xl hover:border-blue-600 hover:bg-blue-50 transition-all cursor-pointer group"
+                  className="flex flex-col items-center justify-center w-full p-8 border-2 border-dashed border-gray-100 rounded-2xl hover:border-emerald-600 hover:bg-emerald-50 transition-all cursor-pointer group"
                 >
                   {receiptPreview ? (
                     <div className="relative w-full aspect-video rounded-xl overflow-hidden">
@@ -350,7 +350,7 @@ const FundingPage: React.FC = () => {
                     </div>
                   ) : (
                     <>
-                      <Upload className="w-8 h-8 text-gray-300 mb-2 group-hover:text-blue-600 transition-colors" />
+                      <Upload className="w-8 h-8 text-gray-300 mb-2 group-hover:text-emerald-600 transition-colors" />
                       <p className="text-gray-900 font-bold text-xs tracking-tight">Click to upload screenshot</p>
                     </>
                   )}
@@ -361,7 +361,7 @@ const FundingPage: React.FC = () => {
             <button 
               onClick={handleManualSubmit}
               disabled={isProcessing || !receiptFile || numAmount < 100}
-              className="w-full py-5 bg-gray-950 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-600 transition-all disabled:opacity-30 flex items-center justify-center space-x-3"
+              className="w-full py-5 bg-gray-950 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-emerald-600 transition-all disabled:opacity-30 flex items-center justify-center space-x-3"
             >
               <CheckCircle2 size={16} />
               <span>{isProcessing ? 'Submitting...' : 'Submit Proof'}</span>
@@ -372,21 +372,21 @@ const FundingPage: React.FC = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         <div className="p-8 bg-gray-50 rounded-[2.5rem] border border-gray-100 space-y-4">
-          <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-blue-600 shadow-sm">
+          <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-emerald-600 shadow-sm">
             <ShieldCheck className="w-6 h-6" />
           </div>
           <h4 className="font-black text-gray-900 tracking-tight">Secure Payment</h4>
           <p className="text-gray-400 text-xs font-medium leading-relaxed">Your transaction is encrypted and secured by industry leaders.</p>
         </div>
         <div className="p-8 bg-gray-50 rounded-[2.5rem] border border-gray-100 space-y-4">
-          <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-green-600 shadow-sm">
+          <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-emerald-600 shadow-sm">
             <Zap className="w-6 h-6" />
           </div>
           <h4 className="font-black text-gray-900 tracking-tight">Instant Funding</h4>
           <p className="text-gray-400 text-xs font-medium leading-relaxed">Automated payments are processed instantly to your wallet.</p>
         </div>
         <div className="p-8 bg-gray-50 rounded-[2.5rem] border border-gray-100 space-y-4">
-          <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-amber-600 shadow-sm">
+          <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-emerald-600 shadow-sm">
             <Info className="w-6 h-6" />
           </div>
           <h4 className="font-black text-gray-900 tracking-tight">24/7 Support</h4>

@@ -94,14 +94,14 @@ const EducationPage: React.FC = () => {
       />
 
       <div className="text-center space-y-4">
-        <div className="inline-flex p-4 bg-blue-50 text-blue-600 rounded-[2rem] mb-4 shadow-inner">
+        <div className="inline-flex p-4 bg-emerald-50 text-emerald-600 rounded-[2rem] mb-4 shadow-inner">
           <GraduationCap className="w-10 h-10" />
         </div>
         <h2 className="text-5xl lg:text-6xl font-black text-gray-900 tracking-tighter">Exam PINs</h2>
         <p className="text-gray-400 font-medium text-xl max-w-xl mx-auto">Get WAEC, NECO, and NABTEB result checker pins instantly.</p>
       </div>
 
-      <div className="bg-white p-10 lg:p-16 rounded-[4rem] shadow-2xl shadow-blue-100/50 border border-gray-50 relative overflow-hidden">
+      <div className="bg-white p-10 lg:p-16 rounded-[4rem] shadow-2xl shadow-emerald-100/50 border border-gray-50 relative overflow-hidden">
         <AnimatePresence mode="wait">
           {step === 'EXAM' && (
             <motion.div 
@@ -120,13 +120,13 @@ const EducationPage: React.FC = () => {
                       setSelectedExam(exam);
                       setStep('QUANTITY');
                     }}
-                    className={`group p-8 rounded-[2.5rem] border-2 text-left transition-all flex justify-between items-center ${selectedExam?.id === exam.id ? 'border-blue-600 bg-blue-50 shadow-xl shadow-blue-100' : 'border-gray-50 bg-gray-50 hover:border-gray-200'}`}
+                    className={`group p-8 rounded-[2.5rem] border-2 text-left transition-all flex justify-between items-center ${selectedExam?.id === exam.id ? 'border-emerald-600 bg-emerald-50 shadow-xl shadow-emerald-100' : 'border-gray-50 bg-gray-50 hover:border-gray-200'}`}
                   >
                     <div className="space-y-1">
                       <h4 className="font-black text-gray-900 text-xl uppercase tracking-tight">{exam.name}</h4>
-                      <p className="text-blue-600 font-black text-2xl tracking-tighter">₦{(exam.price + marginPerPin).toLocaleString()}</p>
+                      <p className="text-emerald-600 font-black text-2xl tracking-tighter">₦{(exam.price + marginPerPin).toLocaleString()}</p>
                     </div>
-                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${selectedExam?.id === exam.id ? 'bg-blue-600 text-white shadow-lg' : 'bg-white text-gray-300'}`}>
+                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${selectedExam?.id === exam.id ? 'bg-emerald-600 text-white shadow-lg' : 'bg-white text-gray-300'}`}>
                       <ShieldCheck className="w-6 h-6" />
                     </div>
                   </button>
@@ -150,20 +150,20 @@ const EducationPage: React.FC = () => {
                 <div className="flex items-center space-x-12">
                   <button 
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="w-20 h-20 bg-gray-100 rounded-[2rem] flex items-center justify-center text-gray-400 hover:bg-blue-600 hover:text-white transition-all shadow-sm"
+                    className="w-20 h-20 bg-gray-100 rounded-[2rem] flex items-center justify-center text-gray-400 hover:bg-emerald-600 hover:text-white transition-all shadow-sm"
                   >
                     <Minus className="w-8 h-8" />
                   </button>
                   <span className="text-9xl font-black text-gray-900 tracking-tighter">{quantity}</span>
                   <button 
                     onClick={() => setQuantity(Math.min(10, quantity + 1))}
-                    className="w-20 h-20 bg-gray-100 rounded-[2rem] flex items-center justify-center text-gray-400 hover:bg-blue-600 hover:text-white transition-all shadow-sm"
+                    className="w-20 h-20 bg-gray-100 rounded-[2rem] flex items-center justify-center text-gray-400 hover:bg-emerald-600 hover:text-white transition-all shadow-sm"
                   >
                     <Plus className="w-8 h-8" />
                   </button>
                 </div>
                 
-                <div className="bg-gray-900 p-10 rounded-[3rem] w-full max-w-md text-center shadow-2xl border-t-8 border-blue-600">
+                <div className="bg-gray-900 p-10 rounded-[3rem] w-full max-w-md text-center shadow-2xl border-t-8 border-emerald-600">
                   <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.3em] mb-2">Total Amount</p>
                   <p className="text-6xl font-black text-white tracking-tighter">₦{totalAmount.toLocaleString()}</p>
                 </div>
@@ -177,7 +177,7 @@ const EducationPage: React.FC = () => {
                   }
                   setStep('CHECKOUT');
                 }}
-                className="w-full py-8 bg-blue-600 text-white rounded-[2.5rem] font-black text-[12px] uppercase tracking-[0.4em] shadow-2xl shadow-blue-100 hover:bg-gray-950 transition-all transform active:scale-95"
+                className="w-full py-8 bg-emerald-600 text-white rounded-[2.5rem] font-black text-[12px] uppercase tracking-[0.4em] shadow-2xl shadow-emerald-100 hover:bg-gray-950 transition-all transform active:scale-95"
               >
                 Review Order
               </button>
@@ -201,14 +201,14 @@ const EducationPage: React.FC = () => {
                 
                 <div className="pt-8 border-t-4 border-dashed border-gray-200 flex justify-between items-end">
                   <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Total Amount</span>
-                  <span className="text-4xl font-black text-blue-600 tracking-tighter">₦{totalAmount.toLocaleString()}</span>
+                  <span className="text-4xl font-black text-emerald-600 tracking-tighter">₦{totalAmount.toLocaleString()}</span>
                 </div>
               </div>
 
               <div className="space-y-4">
                 <button 
                   onClick={() => setShowPinModal(true)}
-                  className="w-full py-8 bg-blue-600 text-white rounded-[2.5rem] font-black text-[12px] uppercase tracking-[0.4em] shadow-2xl shadow-blue-100 hover:bg-gray-950 transition-all transform active:scale-95"
+                  className="w-full py-8 bg-emerald-600 text-white rounded-[2.5rem] font-black text-[12px] uppercase tracking-[0.4em] shadow-2xl shadow-emerald-100 hover:bg-gray-950 transition-all transform active:scale-95"
                 >
                   Confirm & Pay
                 </button>
@@ -240,7 +240,7 @@ const EducationPage: React.FC = () => {
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <button 
                   onClick={resetAll}
-                  className="px-10 py-6 bg-blue-600 text-white rounded-3xl font-black text-[11px] uppercase tracking-widest hover:bg-gray-950 transition-all shadow-xl shadow-blue-100 flex items-center justify-center space-x-3"
+                  className="px-10 py-6 bg-emerald-600 text-white rounded-3xl font-black text-[11px] uppercase tracking-widest hover:bg-gray-950 transition-all shadow-xl shadow-emerald-100 flex items-center justify-center space-x-3"
                 >
                   <ArrowRight className="w-4 h-4" />
                   <span>Buy Another</span>
@@ -258,13 +258,13 @@ const EducationPage: React.FC = () => {
         </AnimatePresence>
       </div>
 
-      <div className="p-10 bg-blue-50 rounded-[3rem] border border-blue-100 flex items-start space-x-8">
-        <div className="w-16 h-16 bg-blue-600 text-white rounded-2xl flex items-center justify-center shrink-0 shadow-lg">
+      <div className="p-10 bg-emerald-50 rounded-[3rem] border border-emerald-100 flex items-start space-x-8">
+        <div className="w-16 h-16 bg-emerald-600 text-white rounded-2xl flex items-center justify-center shrink-0 shadow-lg">
           <Zap className="w-8 h-8" />
         </div>
         <div className="space-y-2">
-          <h4 className="text-xl font-black text-blue-900 tracking-tight">Instant Delivery</h4>
-          <p className="text-blue-800/60 font-medium leading-relaxed">Exam PINs are ready instantly. You can find them in your history immediately after payment.</p>
+          <h4 className="text-xl font-black text-emerald-900 tracking-tight">Instant Delivery</h4>
+          <p className="text-emerald-800/60 font-medium leading-relaxed">Exam PINs are ready instantly. You can find them in your history immediately after payment.</p>
         </div>
       </div>
     </div>
@@ -273,7 +273,7 @@ const EducationPage: React.FC = () => {
 
 const StepHeader = ({ num, title }: { num: string, title: string }) => (
   <div className="flex items-center space-x-4 mb-8">
-    <div className="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center font-black text-sm">{num}</div>
+    <div className="w-10 h-10 bg-emerald-600 text-white rounded-xl flex items-center justify-center font-black text-sm">{num}</div>
     <h3 className="text-3xl font-black text-gray-900 tracking-tight">{title}</h3>
   </div>
 );
@@ -288,7 +288,7 @@ const CheckoutRow = ({ label, value }: { label: string, value: string }) => (
 const BackButton = ({ onClick }: { onClick: () => void }) => (
   <button 
     onClick={onClick}
-    className="text-[10px] font-black text-gray-400 uppercase tracking-widest hover:text-blue-600 transition-all flex items-center space-x-2"
+    className="text-[10px] font-black text-gray-400 uppercase tracking-widest hover:text-emerald-600 transition-all flex items-center space-x-2"
   >
     <span>← Back to previous step</span>
   </button>

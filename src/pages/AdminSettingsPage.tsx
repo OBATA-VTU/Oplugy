@@ -100,13 +100,13 @@ const AdminSettingsPage: React.FC = () => {
     <div className="max-w-7xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-1000 pb-24">
       <div className="flex flex-col lg:flex-row justify-between lg:items-end gap-10">
         <div className="space-y-4">
-          <h2 className="text-[11px] font-black text-blue-600 uppercase tracking-[0.5em]">Admin Control Panel</h2>
-          <h1 className="text-5xl lg:text-8xl font-black text-gray-900 tracking-tighter leading-[0.85]">Website <br /><span className="text-blue-600">Settings.</span></h1>
+          <h2 className="text-[11px] font-black text-emerald-600 uppercase tracking-[0.5em]">Admin Control Panel</h2>
+          <h1 className="text-5xl lg:text-8xl font-black text-gray-900 tracking-tighter leading-[0.85]">Website <br /><span className="text-emerald-600">Settings.</span></h1>
         </div>
         <button 
           onClick={handleUpdate} 
           disabled={isUpdating}
-          className="flex items-center space-x-4 bg-gray-950 text-white px-10 py-6 rounded-[2rem] shadow-2xl text-[11px] font-black uppercase tracking-widest hover:bg-blue-600 transition-all transform active:scale-95 group"
+          className="flex items-center space-x-4 bg-gray-950 text-white px-10 py-6 rounded-[2rem] shadow-2xl text-[11px] font-black uppercase tracking-widest hover:bg-emerald-600 transition-all transform active:scale-95 group"
         >
           {isUpdating ? <Spinner /> : <><Save className="w-4 h-4 group-hover:scale-110 transition-transform" /> <span>Save All Changes</span></>}
         </button>
@@ -121,7 +121,7 @@ const AdminSettingsPage: React.FC = () => {
             >
                <div className="relative z-10">
                   <div className="flex items-center space-x-4 mb-12">
-                     <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center shadow-inner">
+                     <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center shadow-inner">
                         <DollarSign className="w-6 h-6" />
                      </div>
                      <h3 className="text-4xl font-black text-gray-900 tracking-tighter">Profit Settings</h3>
@@ -132,7 +132,7 @@ const AdminSettingsPage: React.FC = () => {
                      <MarginInput label="Profit from API Users (₦)" value={pricing.api_margin} onChange={(val: number) => setPricing({...pricing, api_margin: val})} />
                   </div>
                </div>
-               <div className="absolute top-0 right-0 w-64 h-64 bg-blue-50/50 rounded-full translate-x-1/2 -translate-y-1/2 blur-3xl"></div>
+               <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-50/50 rounded-full translate-x-1/2 -translate-y-1/2 blur-3xl"></div>
             </motion.div>
 
             <motion.div 
@@ -149,7 +149,7 @@ const AdminSettingsPage: React.FC = () => {
                </div>
                <div className="space-y-6">
                   <textarea 
-                    className="w-full p-10 bg-gray-50 border-2 border-transparent rounded-[3rem] font-bold text-lg min-h-[200px] focus:ring-8 focus:ring-blue-50 focus:bg-white focus:border-blue-100 transition-all outline-none" 
+                    className="w-full p-10 bg-gray-50 border-2 border-transparent rounded-[3rem] font-bold text-lg min-h-[200px] focus:ring-8 focus:ring-emerald-50 focus:bg-white focus:border-emerald-100 transition-all outline-none" 
                     placeholder="Write a message for your users here..." 
                     value={announcement} 
                     onChange={(e) => setAnnouncement(e.target.value)} 
@@ -170,7 +170,7 @@ const AdminSettingsPage: React.FC = () => {
             >
                <div className="relative z-10">
                   <div className="flex items-center space-x-4 mb-12">
-                     <div className="w-12 h-12 bg-white/10 text-blue-500 rounded-2xl flex items-center justify-center shadow-inner">
+                     <div className="w-12 h-12 bg-white/10 text-emerald-500 rounded-2xl flex items-center justify-center shadow-inner">
                         <Server className="w-6 h-6" />
                      </div>
                      <h3 className="text-4xl font-black mb-2 tracking-tighter">Service Charges</h3>
@@ -179,7 +179,7 @@ const AdminSettingsPage: React.FC = () => {
                   <div className="space-y-12">
                      <div className="space-y-8">
                        <div className="flex items-center justify-between">
-                          <p className="text-[11px] font-black text-blue-400 uppercase tracking-[0.4em]">Provider Connection</p>
+                          <p className="text-[11px] font-black text-emerald-400 uppercase tracking-[0.4em]">Provider Connection</p>
                           <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.5)]"></div>
                        </div>
                        <div className="space-y-6">
@@ -191,14 +191,14 @@ const AdminSettingsPage: React.FC = () => {
 
                      <div className="p-10 bg-white/5 rounded-[2.5rem] border border-white/10">
                         <div className="flex items-center space-x-4 mb-4">
-                           <Shield className="w-5 h-5 text-blue-500" />
+                           <Shield className="w-5 h-5 text-emerald-500" />
                            <h4 className="text-[11px] font-black uppercase tracking-widest">Important Note</h4>
                         </div>
                         <p className="text-white/40 text-sm leading-relaxed font-medium">These extra charges are added to the price your provider gives you. Be careful when changing these.</p>
                      </div>
                   </div>
                </div>
-               <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600/10 rounded-full blur-[120px] group-hover:bg-blue-600/20 transition-all duration-1000"></div>
+               <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-600/10 rounded-full blur-[120px] group-hover:bg-emerald-600/20 transition-all duration-1000"></div>
             </motion.div>
 
             <motion.div 
@@ -290,12 +290,12 @@ interface MarginInputProps {
 
 const MarginInput = ({ label, value, onChange, dark }: MarginInputProps) => (
   <div className={`flex items-center justify-between p-8 rounded-[2.5rem] transition-all group ${dark ? 'bg-white/5 border border-white/10 hover:bg-white/10' : 'bg-gray-50 border border-transparent hover:border-gray-100 hover:bg-white hover:shadow-xl'}`}>
-    <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${dark ? 'text-white/60 group-hover:text-white' : 'text-gray-500 group-hover:text-blue-600'}`}>{label}</span>
+    <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${dark ? 'text-white/60 group-hover:text-white' : 'text-gray-500 group-hover:text-emerald-600'}`}>{label}</span>
     <div className="flex items-center gap-4">
        <span className={`text-2xl font-black ${dark ? 'text-white/20' : 'text-gray-200'}`}>₦</span>
        <input 
          type="number" 
-         className={`w-32 p-5 rounded-2xl text-center font-black text-xl outline-none transition-all ${dark ? 'bg-white/10 text-white border border-white/10 focus:border-blue-500 focus:bg-white/20' : 'bg-white border border-gray-100 text-gray-900 focus:border-blue-600 shadow-inner'}`} 
+         className={`w-32 p-5 rounded-2xl text-center font-black text-xl outline-none transition-all ${dark ? 'bg-white/10 text-white border border-white/10 focus:border-emerald-500 focus:bg-white/20' : 'bg-white border border-gray-100 text-gray-900 focus:border-emerald-600 shadow-inner'}`} 
          value={value} 
          onChange={(e) => onChange(parseFloat(e.target.value) || 0)} 
        />

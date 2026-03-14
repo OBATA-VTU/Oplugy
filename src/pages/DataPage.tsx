@@ -191,13 +191,13 @@ const DataPage: React.FC = () => {
         <motion.div 
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          className="px-6 py-2 bg-blue-50 text-blue-600 rounded-full text-[10px] font-black uppercase tracking-[0.4em] border border-blue-100/50"
+          className="px-6 py-2 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-black uppercase tracking-[0.4em] border border-emerald-100/50"
         >
           Data Bundles
         </motion.div>
         <h1 className="text-6xl lg:text-9xl font-black text-gray-900 tracking-tighter leading-[0.8] py-2">
           Stay <br />
-          <span className="text-blue-600">Connected.</span>
+          <span className="text-emerald-600">Connected.</span>
         </h1>
         <p className="text-gray-400 font-medium text-xl max-w-xl mx-auto leading-relaxed">
           Affordable data plans for all networks. Fast delivery, zero stress.
@@ -235,7 +235,7 @@ const DataPage: React.FC = () => {
               <div className="flex flex-col sm:flex-row gap-6 justify-center pt-8">
                 <button 
                   onClick={resetAll}
-                  className="px-12 py-8 bg-blue-600 text-white rounded-[2.5rem] font-black text-[12px] uppercase tracking-[0.3em] hover:bg-gray-950 transition-all shadow-2xl shadow-blue-100 flex items-center justify-center space-x-4 group"
+                  className="px-12 py-8 bg-emerald-600 text-white rounded-[2.5rem] font-black text-[12px] uppercase tracking-[0.3em] hover:bg-gray-950 transition-all shadow-2xl shadow-emerald-100 flex items-center justify-center space-x-4 group"
                 >
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
                   <span>Buy Again</span>
@@ -262,7 +262,7 @@ const DataPage: React.FC = () => {
                   <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">1. Select Network</label>
                   <div className="relative">
                     <select 
-                      className="w-full p-6 bg-gray-50 rounded-[2rem] font-bold text-lg border-2 border-transparent focus:border-blue-600 focus:bg-white outline-none transition-all appearance-none"
+                      className="w-full p-6 bg-gray-50 rounded-[2rem] font-bold text-lg border-2 border-transparent focus:border-emerald-600 focus:bg-white outline-none transition-all appearance-none"
                       value={selectedOperator}
                       onChange={(e) => {
                         setSelectedOperator(e.target.value);
@@ -303,7 +303,7 @@ const DataPage: React.FC = () => {
                   <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">{dataTypes.length > 0 ? '3' : '2'}. Data Plan</label>
                   <div className="relative">
                     <select 
-                      className="w-full p-6 bg-gray-50 rounded-[2rem] font-bold text-lg border-2 border-transparent focus:border-blue-600 focus:bg-white outline-none transition-all appearance-none"
+                      className="w-full p-6 bg-gray-50 rounded-[2rem] font-bold text-lg border-2 border-transparent focus:border-emerald-600 focus:bg-white outline-none transition-all appearance-none"
                       value={selectedPlanId}
                       onChange={(e) => setSelectedPlanId(e.target.value)}
                       disabled={!selectedOperator}
@@ -321,7 +321,7 @@ const DataPage: React.FC = () => {
                   <div className="relative">
                     <input 
                       type="tel" 
-                      className="w-full p-6 pl-14 bg-gray-50 border-2 border-transparent rounded-[2rem] font-bold text-xl outline-none focus:border-blue-600 focus:bg-white transition-all tracking-tight" 
+                      className="w-full p-6 pl-14 bg-gray-50 border-2 border-transparent rounded-[2rem] font-bold text-xl outline-none focus:border-emerald-600 focus:bg-white transition-all tracking-tight" 
                       placeholder="08012345678"
                       maxLength={11}
                       value={phoneNumber}
@@ -337,11 +337,11 @@ const DataPage: React.FC = () => {
                 <motion.div 
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="p-8 bg-blue-50 rounded-[3rem] border border-blue-100 space-y-4"
+                  className="p-8 bg-emerald-50 rounded-[3rem] border border-emerald-100 space-y-4"
                 >
                   <div className="flex justify-between items-center">
-                    <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Total Amount</span>
-                    <span className="text-3xl font-black text-blue-900 tracking-tighter">₦{selectedPlan.amount.toLocaleString()}</span>
+                    <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Total Amount</span>
+                    <span className="text-3xl font-black text-emerald-900 tracking-tighter">₦{selectedPlan.amount.toLocaleString()}</span>
                   </div>
                 </motion.div>
               )}
@@ -355,7 +355,7 @@ const DataPage: React.FC = () => {
                   }
                   setShowPinModal(true);
                 }}
-                className="w-full py-10 bg-blue-600 text-white rounded-[3rem] font-black text-[14px] uppercase tracking-[0.4em] shadow-2xl shadow-blue-200 hover:bg-gray-950 transition-all transform active:scale-95 disabled:opacity-50 flex items-center justify-center space-x-4"
+                className="w-full py-10 bg-emerald-600 text-white rounded-[3rem] font-black text-[14px] uppercase tracking-[0.4em] shadow-2xl shadow-emerald-200 hover:bg-gray-950 transition-all transform active:scale-95 disabled:opacity-50 flex items-center justify-center space-x-4"
               >
                 {isPurchasing ? <LoadingScreen message="Processing..." /> : <><Zap className="w-5 h-5" /> <span>Purchase Data</span></>}
               </button>

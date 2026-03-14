@@ -18,7 +18,7 @@ const FAQPage: React.FC = () => {
   return (
     <div className="max-w-4xl mx-auto pb-32">
       <div className="text-center mb-20">
-        <h2 className="text-blue-600 text-[10px] font-black uppercase tracking-[0.4em] mb-4">Help Center</h2>
+        <h2 className="text-emerald-600 text-[10px] font-black uppercase tracking-[0.4em] mb-4">Help Center</h2>
         <h1 className="text-5xl lg:text-7xl font-black text-gray-900 tracking-tighter leading-none">Questions & Answers</h1>
       </div>
 
@@ -30,7 +30,7 @@ const FAQPage: React.FC = () => {
                 className="w-full p-8 text-left flex justify-between items-center group hover:bg-gray-50 transition-colors"
               >
                 <span className="font-black text-gray-900 text-lg tracking-tight">{faq.q}</span>
-                <span className={`text-blue-600 transition-transform duration-300 ${activeIndex === idx ? 'rotate-45' : ''}`}>
+                <span className={`text-emerald-600 transition-transform duration-300 ${activeIndex === idx ? 'rotate-45' : ''}`}>
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M12 4v16m8-8H4"></path></svg>
                 </span>
               </button>
@@ -57,8 +57,8 @@ const FAQPage: React.FC = () => {
                 <span>Chat on WhatsApp</span>
               </a>
            </div>
-           <div className="absolute top-0 right-0 w-80 h-80 bg-blue-600/10 rounded-full blur-[100px]"></div>
-           <div className="absolute bottom-0 left-0 w-80 h-80 bg-blue-600/10 rounded-full blur-[100px]"></div>
+           <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-600/10 rounded-full blur-[100px]"></div>
+           <div className="absolute bottom-0 left-0 w-80 h-80 bg-emerald-600/10 rounded-full blur-[100px]"></div>
         </div>
       </div>
   );

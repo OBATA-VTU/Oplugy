@@ -32,7 +32,7 @@ const BlogPage: React.FC = () => {
       <div className="mb-24">
         <h1 className="text-7xl lg:text-9xl font-black tracking-tighter uppercase leading-[0.85] mb-12">
           Insights <br />
-          <span className="text-blue-600">& News.</span>
+          <span className="text-emerald-600">& News.</span>
         </h1>
         <p className="text-2xl text-gray-500 dark:text-gray-400 max-w-2xl font-black uppercase tracking-tight">
           Stay updated with the latest trends in digital payments and VTU services.
@@ -68,13 +68,13 @@ const BlogPage: React.FC = () => {
                     <span>{post.date}</span>
                   </div>
                 </div>
-                <h2 className="text-4xl lg:text-5xl font-black tracking-tight uppercase leading-none group-hover:text-blue-600 transition-colors">
+                <h2 className="text-4xl lg:text-5xl font-black tracking-tight uppercase leading-none group-hover:text-emerald-600 transition-colors">
                   {post.title}
                 </h2>
                 <p className="text-lg text-gray-500 dark:text-gray-400 leading-relaxed">
                   {post.excerpt}
                 </p>
-                <div className="flex items-center space-x-4 text-blue-600 font-black uppercase tracking-widest text-xs">
+                <div className="flex items-center space-x-4 text-emerald-600 font-black uppercase tracking-widest text-xs">
                   <span>Read Full Article</span>
                   <ArrowRight size={16} className="group-hover:translate-x-2 transition-transform" />
                 </div>

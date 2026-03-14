@@ -10,14 +10,17 @@ import { adminService } from '../services/adminService';
 import { authService } from '../services/authService';
 import { vtuService } from '../services/vtuService';
 import { Link } from 'react-router-dom';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { useServices } from '../context/ServiceContext';
 import { 
   Smartphone, Wifi, Zap, Tv, 
-  Copy,
-  Users, ArrowLeftRight, GraduationCap, Gift,
-  Wallet, History, ShieldCheck, RefreshCw, Plus
+  Eye, EyeOff,
+  ArrowLeftRight, GraduationCap,
+  ShieldCheck, Plus,
+  Bell, ChevronRight,
+  Bitcoin, Lightbulb, LayoutGrid, Search
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const DashboardPage: React.FC = () => {
   const { fetchWalletBalance, isLoading, user } = useAuth();
@@ -26,6 +29,39 @@ const DashboardPage: React.FC = () => {
   const [showPinModal, setShowPinModal] = useState(false);
   const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [showBalance, setShowBalance] = useState(true);
+  const [currentBanner, setCurrentBanner] = useState(0);
+
+  const banners = [
+    {
+      title: "Airtime Discounts",
+      desc: "Get up to 5% off on all airtime purchases today!",
+      image: "https://picsum.photos/seed/happy/800/400",
+      cta: "Buy Now",
+      color: "bg-emerald-600"
+    },
+    {
+      title: "Data Bundle Deals",
+      desc: "Cheap data for all networks. MTN, Airtel, Glo & 9mobile.",
+      image: "https://picsum.photos/seed/tech/800/400",
+      cta: "Explore",
+      color: "bg-emerald-700"
+    },
+    {
+      title: "Crypto Trading",
+      desc: "Buy and sell crypto at the best rates in Nigeria.",
+      image: "https://picsum.photos/seed/crypto/800/400",
+      cta: "Trade Now",
+      color: "bg-orange-600"
+    }
+  ];
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentBanner((prev) => (prev + 1) % banners.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [banners.length]);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -83,177 +119,194 @@ const DashboardPage: React.FC = () => {
   if (isLoading) return <div className="flex justify-center p-20"><Spinner /></div>;
 
   return (
-    <div className="max-w-6xl mx-auto space-y-16 pb-24">
+    <div className="max-w-4xl mx-auto space-y-8 pb-32 px-4">
       {showPinModal && <PinSetupModal onSuccess={handlePinSuccess} />}
       {showPhoneModal && <PhoneSetupModal onSuccess={handlePhoneSuccess} />}
       
       <motion.div 
-        initial={{ opacity: 0, y: 30 }}
+        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        className="space-y-16"
+        className="space-y-8"
       >
-        {/* Header Section */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div>
-            <h1 className="text-4xl font-black tracking-tighter uppercase mb-2">Terminal Console</h1>
-            <p className="text-sm text-gray-400 font-medium">System operational • {new Date().toLocaleDateString()}</p>
+        {/* Header / Top Nav */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600">
+              <span className="font-bold">{user?.username?.charAt(0).toUpperCase()}</span>
+            </div>
+            <div>
+              <h2 className="text-sm font-bold text-gray-900 dark:text-white">Hello, {user?.username}</h2>
+              <p className="text-[10px] text-gray-500">Welcome back!</p>
+            </div>
           </div>
-          <div className="flex items-center gap-4">
-            <button 
-              onClick={handleRefresh}
-              disabled={isRefreshing}
-              className={`p-4 bg-white dark:bg-white/5 rounded-2xl border border-gray-100 dark:border-white/10 text-gray-500 hover:text-blue-600 transition-all shadow-sm ${isRefreshing ? 'animate-spin' : ''}`}
-            >
-              <RefreshCw size={20} />
+          <div className="flex items-center gap-3">
+            <button className="p-2 bg-gray-100 dark:bg-white/5 rounded-full relative">
+              <Bell size={18} className="text-gray-600 dark:text-gray-400" />
+              <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-[#022c22]"></span>
             </button>
-            <Link 
-              to="/funding" 
-              className="px-8 py-4 bg-blue-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:opacity-90 transition-all shadow-lg shadow-blue-600/20 flex items-center gap-3"
-            >
-              <Plus size={16} />
-              Add Liquidity
-            </Link>
           </div>
         </div>
 
-        {/* Hero Section: Balance & Account */}
-        <div className="grid lg:grid-cols-2 gap-10">
-          {/* Wallet Card */}
-          <div className="bg-blue-600 rounded-[3rem] p-12 text-white shadow-2xl relative overflow-hidden flex flex-col justify-between min-h-[320px]">
-            <div className="relative z-10 flex justify-between items-start">
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.4em] opacity-60 mb-4">Available Liquidity</p>
-                <h2 className="text-6xl font-black tracking-tighter leading-none">
-                  ₦{user?.walletBalance?.toLocaleString() || '0.00'}
-                </h2>
-              </div>
-              <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-xl border border-white/10">
-                <Wallet size={28} />
-              </div>
+        {/* Wallet Overview Card */}
+        <div className="bg-emerald-900 rounded-[2.5rem] p-8 text-white shadow-2xl relative overflow-hidden">
+          <div className="relative z-10 space-y-6">
+            <div className="flex justify-between items-center">
+              <span className="text-xs font-medium opacity-80">Wallet Balance</span>
+              <button onClick={() => setShowBalance(!showBalance)} className="opacity-80">
+                {showBalance ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+            
+            <div className="space-y-1">
+              <h1 className="text-4xl font-bold tracking-tight">
+                {showBalance ? `₦${user?.walletBalance?.toLocaleString() || '0.00'}` : '₦ • • • • •'}
+              </h1>
             </div>
 
-            <div className="relative z-10 flex items-center space-x-4">
-              <Link to="/funding" className="flex-1 bg-white text-blue-600 py-5 rounded-2xl font-black text-[11px] uppercase tracking-widest text-center hover:bg-gray-100 transition-all shadow-xl">
-                Add Funds
+            <div className="grid grid-cols-2 gap-4 pt-4">
+              <Link to="/funding" className="flex items-center justify-center gap-2 bg-white text-emerald-900 py-4 rounded-2xl font-bold text-sm shadow-lg">
+                <Plus size={18} />
+                Fund Wallet
               </Link>
-              <Link to="/history" className="px-8 py-5 bg-white/10 hover:bg-white/20 rounded-2xl transition-all border border-white/10 backdrop-blur-xl">
-                <History size={20} />
-              </Link>
+              <button className="flex items-center justify-center gap-2 bg-emerald-800 text-white py-4 rounded-2xl font-bold text-sm border border-emerald-700">
+                <ArrowLeftRight size={18} />
+                Send Money
+              </button>
             </div>
 
-            {/* Decorative background element */}
-            <div className="absolute -right-20 -bottom-20 w-64 h-64 bg-white/5 rounded-full blur-3xl"></div>
-          </div>
-
-          {/* Virtual Account Card */}
-          {user?.virtualAccount?.account_number ? (
-            <div className="bg-gray-50 dark:bg-white/2 rounded-[3rem] p-12 border border-gray-100 dark:border-white/5 flex flex-col justify-between min-h-[320px]">
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.4em] text-gray-400 dark:text-white/20 mb-4">Settlement Account</p>
-                  <h3 className="text-3xl font-black tracking-tighter uppercase text-gray-900 dark:text-white">{user.virtualAccount.bank_name}</h3>
+            {/* Verification Alert */}
+            {!user?.phone && (
+              <div className="flex items-center justify-between bg-emerald-950/40 p-4 rounded-2xl border border-emerald-800/50">
+                <div className="flex items-center gap-3">
+                  <ShieldCheck size={18} className="text-emerald-400" />
+                  <span className="text-[10px] font-medium">Account not verified</span>
                 </div>
-                <div className="px-4 py-2 bg-blue-600/10 text-blue-600 rounded-full text-[10px] font-black uppercase tracking-widest">Active</div>
+                <button onClick={() => setShowPhoneModal(true)} className="text-[10px] font-bold underline">Verify Account</button>
               </div>
-
-              <div className="space-y-6">
-                <div className="flex justify-between items-end">
-                  <div className="space-y-2">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Account Number</p>
-                    <p className="text-4xl font-black tracking-tighter text-gray-900 dark:text-white">{user.virtualAccount.account_number}</p>
-                  </div>
-                  <button 
-                    onClick={() => {
-                      navigator.clipboard.writeText(user.virtualAccount.account_number);
-                      addNotification("Account number copied!", "success");
-                    }}
-                    className="p-5 bg-white dark:bg-white/5 rounded-2xl border border-gray-100 dark:border-white/10 text-gray-500 hover:text-blue-600 transition-all shadow-sm"
-                  >
-                    <Copy size={20} />
-                  </button>
-                </div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Account Name: <span className="text-gray-900 dark:text-white">{user.virtualAccount.account_name}</span></p>
-              </div>
-            </div>
-          ) : (
-            <div className="bg-gray-50 dark:bg-white/2 rounded-[3rem] p-12 border border-gray-100 dark:border-white/5 flex flex-col items-center justify-center text-center space-y-6 min-h-[320px]">
-              <div className="w-16 h-16 bg-blue-600/10 rounded-full flex items-center justify-center text-blue-600">
-                <Wallet size={32} />
-              </div>
-              <div>
-                <h3 className="text-xl font-black tracking-tighter uppercase mb-2">No Virtual Account</h3>
-                <p className="text-sm text-gray-400 font-medium max-w-[200px] mx-auto">Generate a virtual account to fund your wallet instantly.</p>
-              </div>
-              <Link 
-                to="/profile" 
-                className="px-8 py-4 bg-blue-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:opacity-90 transition-all shadow-lg shadow-blue-600/20"
-              >
-                Generate Now
-              </Link>
-            </div>
-          )}
-        </div>
-
-        {/* Services Section */}
-        <div className="space-y-10">
-          <div className="flex justify-between items-end">
-            <h3 className="text-2xl font-black tracking-tighter uppercase">Operations</h3>
-            <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Select a service to proceed</p>
+            )}
           </div>
           
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            <ServiceCard icon={<Smartphone />} label="Airtime" to="/airtime" color="bg-orange-500" />
-            <ServiceCard icon={<Wifi />} label="Data" to="/data" color="bg-blue-500" />
-            <ServiceCard icon={<Tv />} label="Cable" to="/cable" color="bg-purple-500" />
-            <ServiceCard icon={<Zap />} label="Electricity" to="/bills" color="bg-yellow-500" />
-            <ServiceCard icon={<GraduationCap />} label="Education" to="/education" color="bg-emerald-500" />
-            <ServiceCard icon={<ArrowLeftRight />} label="P2P" to="/p2p" color="bg-rose-500" />
-            <ServiceCard icon={<Gift />} label="Gift Cards" to="/giftcards" color="bg-indigo-500" />
-            <ServiceCard icon={<Users />} label="Referrals" to="/referrals" color="bg-cyan-500" />
+          {/* Decorative background element */}
+          <div className="absolute -right-10 -top-10 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl"></div>
+        </div>
+
+        {/* Search Bar */}
+        <Link to="/services" className="block relative group">
+          <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
+            <Search className="h-5 w-5 text-gray-400 group-hover:text-emerald-500 transition-colors" />
+          </div>
+          <div className="w-full pl-14 pr-4 py-5 bg-white dark:bg-emerald-950/20 border border-gray-100 dark:border-emerald-900/30 rounded-[2rem] text-sm font-bold text-gray-400 flex items-center shadow-sm group-hover:border-emerald-500 transition-all">
+            Search for a service...
+          </div>
+        </Link>
+
+        {/* Profile Completion Section */}
+        <div className="bg-white dark:bg-emerald-950/20 rounded-3xl p-6 border border-gray-100 dark:border-emerald-900/30 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="relative w-12 h-12 flex items-center justify-center">
+              <svg className="w-full h-full transform -rotate-90">
+                <circle cx="24" cy="24" r="20" stroke="currentColor" strokeWidth="4" fill="transparent" className="text-gray-100 dark:text-emerald-900/50" />
+                <circle cx="24" cy="24" r="20" stroke="currentColor" strokeWidth="4" fill="transparent" strokeDasharray={125.6} strokeDashoffset={125.6 * (1 - 0.75)} className="text-emerald-500" />
+              </svg>
+              <span className="absolute text-[10px] font-bold">75%</span>
+            </div>
+            <div>
+              <h3 className="text-sm font-bold">Complete your setup</h3>
+              <p className="text-[10px] text-gray-500">Just a few more steps to go</p>
+            </div>
+          </div>
+          <ChevronRight size={20} className="text-gray-400" />
+        </div>
+
+        {/* Quick Feature Cards */}
+        <div className="grid grid-cols-2 gap-4">
+          <Link to="/crypto" className="bg-orange-50 dark:bg-orange-950/20 p-6 rounded-3xl border border-orange-100 dark:border-orange-900/30 space-y-4 group transition-all active:scale-95">
+            <div className="w-12 h-12 bg-orange-500 text-white rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+              <Bitcoin size={24} />
+            </div>
+            <div>
+              <h4 className="text-sm font-bold">Crypto</h4>
+              <p className="text-[10px] text-gray-500">Buy & Sell</p>
+            </div>
+          </Link>
+          <Link to="/bills" className="bg-yellow-50 dark:bg-yellow-950/20 p-6 rounded-3xl border border-yellow-100 dark:border-yellow-900/30 space-y-4 group transition-all active:scale-95">
+            <div className="w-12 h-12 bg-yellow-500 text-white rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+              <Lightbulb size={24} />
+            </div>
+            <div>
+              <h4 className="text-sm font-bold">Electricity</h4>
+              <p className="text-[10px] text-gray-500">Pay Bills</p>
+            </div>
+          </Link>
+        </div>
+
+        {/* Favorite Services */}
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h3 className="text-sm font-bold">Favorite Services</h3>
+            <button className="text-[10px] font-bold text-emerald-600">Edit</button>
+          </div>
+          <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2">
+            <FavoriteItem icon={<Smartphone />} label="Airtime" to="/airtime" color="bg-emerald-600" />
+            <FavoriteItem icon={<Wifi />} label="Data" to="/data" color="bg-emerald-500" />
+            <FavoriteItem icon={<Tv />} label="Cable" to="/cable" color="bg-emerald-400" />
+            <FavoriteItem icon={<Plus />} label="Add" to="#" color="bg-gray-100 dark:bg-white/5" isPlaceholder />
+            <FavoriteItem icon={<Plus />} label="Add" to="#" color="bg-gray-100 dark:bg-white/5" isPlaceholder />
           </div>
         </div>
 
-        {/* Info Banners */}
-        <div className="grid lg:grid-cols-2 gap-10">
-          {/* Refer Banner */}
-          <div className="bg-black rounded-[3rem] p-12 text-white relative overflow-hidden group">
-            <div className="relative z-10 space-y-6">
-              <div className="inline-block px-4 py-2 bg-white/10 rounded-full text-[10px] font-black uppercase tracking-widest">Limited Offer</div>
-              <h4 className="text-4xl font-black tracking-tighter leading-none">Invite friends, <br /> earn ₦100.</h4>
-              <p className="text-gray-400 text-sm max-w-[240px]">Get rewarded for every successful referral you bring to the platform.</p>
-              <Link to="/referrals" className="inline-flex items-center space-x-3 text-blue-500 font-black uppercase tracking-widest text-[10px]">
-                <span>Get Started</span>
-                <ArrowLeftRight size={14} />
-              </Link>
-            </div>
-            <div className="absolute right-0 bottom-0 w-1/2 h-full opacity-20 group-hover:opacity-40 transition-opacity">
-              <img src="https://picsum.photos/seed/money/600/600" alt="Refer" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-            </div>
-          </div>
-
-          {/* Support Banner */}
-          <div className="bg-blue-50 dark:bg-blue-950/20 rounded-[3rem] p-12 border border-blue-100 dark:border-blue-900/30 space-y-8">
-            <h4 className="text-2xl font-black tracking-tighter uppercase text-blue-900 dark:text-blue-100">Need Assistance?</h4>
-            <div className="grid grid-cols-2 gap-4">
-              <SupportButton label="WhatsApp" color="bg-[#25D366]" />
-              <SupportButton label="Email Support" color="bg-blue-600" />
-              <SupportButton label="Call Center" color="bg-gray-900" />
-              <SupportButton label="Live Chat" color="bg-emerald-600" />
-            </div>
+        {/* Promotional Banner Slider */}
+        <div className="relative h-48 rounded-[2.5rem] overflow-hidden">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentBanner}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              className={`absolute inset-0 ${banners[currentBanner].color} p-8 flex items-center justify-between`}
+            >
+              <div className="space-y-3 max-w-[60%] z-10">
+                <h4 className="text-xl font-bold text-white leading-tight">{banners[currentBanner].title}</h4>
+                <p className="text-white/80 text-[10px]">{banners[currentBanner].desc}</p>
+                <button className="px-6 py-2 bg-white text-gray-900 rounded-full text-[10px] font-bold">{banners[currentBanner].cta}</button>
+              </div>
+              <div className="absolute right-0 top-0 h-full w-1/2">
+                <img src={banners[currentBanner].image} alt="Promo" className="w-full h-full object-cover mix-blend-overlay opacity-60" referrerPolicy="no-referrer" />
+              </div>
+            </motion.div>
+          </AnimatePresence>
+          
+          {/* Dots */}
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+            {banners.map((_, i) => (
+              <div key={i} className={`w-1.5 h-1.5 rounded-full transition-all ${i === currentBanner ? 'bg-white w-4' : 'bg-white/40'}`}></div>
+            ))}
           </div>
         </div>
 
-        {/* Notification */}
-        <div className="p-10 bg-emerald-50 dark:bg-emerald-950/20 rounded-[2.5rem] border border-emerald-100 dark:border-emerald-900/30 flex items-start space-x-6">
-          <div className="w-12 h-12 bg-emerald-500 text-white rounded-2xl flex items-center justify-center flex-shrink-0">
-            <ShieldCheck size={24} />
+        {/* Pay Bills Section */}
+        <div className="space-y-6">
+          <h3 className="text-sm font-bold">Pay Bills</h3>
+          <div className="grid grid-cols-4 gap-4">
+            <BillItem icon={<Smartphone />} label="Airtime" to="/airtime" color="text-emerald-600" />
+            <BillItem icon={<Wifi />} label="Data" to="/data" color="text-emerald-500" />
+            <BillItem icon={<Tv />} label="Cable TV" to="/cable" color="text-emerald-400" />
+            <BillItem icon={<Lightbulb />} label="Electricity" to="/bills" color="text-emerald-600" />
+            <BillItem icon={<GraduationCap />} label="Education" to="/education" color="text-emerald-500" />
+            <BillItem icon={<Bitcoin />} label="Crypto" to="/crypto" color="text-emerald-700" />
+            <BillItem icon={<LayoutGrid />} label="More" to="/services" color="text-gray-500" />
           </div>
-          <div className="space-y-2">
-            <h5 className="text-[10px] font-black uppercase tracking-widest text-emerald-600">Security Advisory</h5>
-            <p className="text-emerald-900 dark:text-emerald-100 text-sm font-medium leading-relaxed">
-              Never share your transaction PIN with anyone. Oplug staff will never ask for your password or PIN. Stay safe.
-            </p>
+        </div>
+
+        {/* Recent Transactions */}
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h3 className="text-sm font-bold">Recent Transactions</h3>
+            <Link to="/history" className="text-[10px] font-bold text-emerald-600">See All</Link>
+          </div>
+          <div className="space-y-3">
+            <TransactionItem title="MTN Data Purchase" amount="-₦2,500" date="Today, 10:45 AM" status="SUCCESS" />
+            <TransactionItem title="Wallet Funding" amount="+₦10,000" date="Yesterday, 08:20 PM" status="SUCCESS" />
           </div>
         </div>
       </motion.div>
@@ -261,21 +314,46 @@ const DashboardPage: React.FC = () => {
   );
 };
 
-const ServiceCard = ({ icon, label, to, color }: any) => (
-  <Link to={to} className="group">
-    <div className="p-8 bg-white dark:bg-white/2 rounded-[2.5rem] border border-gray-100 dark:border-white/5 flex flex-col items-center text-center space-y-6 hover:border-blue-500/50 transition-all hover:shadow-2xl hover:shadow-blue-500/10 active:scale-95">
-      <div className={`w-16 h-16 ${color} text-white rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}>
-        {React.cloneElement(icon as React.ReactElement, { size: 28 })}
-      </div>
-      <span className="text-[11px] font-black uppercase tracking-widest text-gray-500 dark:text-gray-400 group-hover:text-blue-600 transition-colors">{label}</span>
+const FavoriteItem = ({ icon, label, to, color, isPlaceholder }: any) => (
+  <Link to={to} className="flex flex-col items-center gap-2 flex-shrink-0">
+    <div className={`w-16 h-16 ${color} rounded-2xl flex items-center justify-center ${isPlaceholder ? 'text-gray-400 border-2 border-dashed border-gray-200 dark:border-white/10' : 'text-white shadow-lg'}`}>
+      {React.cloneElement(icon as React.ReactElement, { size: 24 })}
     </div>
+    <span className="text-[10px] font-medium text-gray-600 dark:text-gray-400">{label}</span>
   </Link>
 );
 
-const SupportButton = ({ label, color }: any) => (
-  <button className={`w-full ${color} text-white py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:opacity-90 transition-all active:scale-95`}>
-    {label}
-  </button>
+const BillItem = ({ icon, label, to, color }: any) => (
+  <Link to={to} className="flex flex-col items-center gap-3 p-4 bg-white dark:bg-emerald-950/20 rounded-2xl border border-gray-100 dark:border-emerald-900/30 transition-all active:scale-95">
+    <div className={`${color}`}>
+      {React.cloneElement(icon as React.ReactElement, { size: 24 })}
+    </div>
+    <span className="text-[9px] font-bold text-center leading-tight">{label}</span>
+  </Link>
+);
+
+const TransactionItem = ({ title, amount, date, status }: any) => (
+  <div className="flex items-center justify-between p-4 bg-white dark:bg-emerald-950/20 rounded-2xl border border-gray-100 dark:border-emerald-900/30">
+    <div className="flex items-center gap-4">
+      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${amount.startsWith('+') ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'}`}>
+        {amount.startsWith('+') ? <Plus size={18} /> : <Minus size={18} />}
+      </div>
+      <div>
+        <h4 className="text-xs font-bold">{title}</h4>
+        <p className="text-[10px] text-gray-500">{date}</p>
+      </div>
+    </div>
+    <div className="text-right">
+      <h4 className={`text-xs font-bold ${amount.startsWith('+') ? 'text-emerald-600' : 'text-gray-900 dark:text-white'}`}>{amount}</h4>
+      <span className="text-[8px] font-bold text-emerald-500 uppercase tracking-widest">{status}</span>
+    </div>
+  </div>
+);
+
+const Minus = ({ size, className }: any) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <line x1="5" y1="12" x2="19" y2="12" />
+  </svg>
 );
 
 export default DashboardPage;

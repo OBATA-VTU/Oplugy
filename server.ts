@@ -680,7 +680,7 @@ if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
   app.use(express.static(buildPath));
   
   // Handle SPA routing: serve index.html for any non-API routes
-  app.get('(.*)', (req, res, next) => {
+  app.get('*', (req, res, next) => {
     if (req.path.startsWith('/api')) return next();
     res.sendFile(path.join(buildPath, 'index.html'));
   });
@@ -694,6 +694,19 @@ async function processScheduledTransactions() {
   const now = admin.firestore.Timestamp.now();
   
   try {
+    console.log(`[Scheduler] Checking for pending transactions in project: ${admin.app().options.projectId}...`);
+    
+    // Test basic connectivity/permissions
+    try {
+      await db.collection('scheduled_transactions').limit(1).get();
+      console.log('[Scheduler] Basic collection access verified.');
+    } catch (testErr: any) {
+      console.error('[Scheduler] Basic collection access FAILED:', testErr.message);
+      if (testErr.message.includes('PERMISSION_DENIED')) {
+        console.error('[Scheduler] CRITICAL: Service account lacks permissions for scheduled_transactions.');
+      }
+    }
+
     const snapshot = await db.collection('scheduled_transactions')
       .where('status', '==', 'PENDING')
       .where('scheduledTime', '<=', now)

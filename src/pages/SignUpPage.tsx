@@ -39,7 +39,7 @@ const SignUpPage: React.FC = () => {
   return (
     <div className="min-h-screen flex bg-white overflow-hidden">
       {/* Left side: Visual */}
-      <div className="hidden lg:block lg:w-[55%] bg-blue-600 relative overflow-hidden">
+      <div className="hidden lg:block lg:w-[55%] bg-emerald-600 relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.1),transparent_70%)]"></div>
         
         <div className="absolute inset-0 flex flex-col items-center justify-center p-24 text-white">
@@ -100,7 +100,7 @@ const SignUpPage: React.FC = () => {
         </div>
         <div className="max-w-md w-full mx-auto lg:mx-0">
           <div className="space-y-4 mb-12">
-            <h2 className="text-[11px] font-black text-blue-600 uppercase tracking-[0.5em]">Registration</h2>
+            <h2 className="text-[11px] font-black text-emerald-600 uppercase tracking-[0.5em]">Registration</h2>
             <h1 className="text-5xl lg:text-7xl font-black text-gray-900 tracking-tighter leading-[0.85]">Create <br />Account.</h1>
             <p className="text-gray-400 text-lg font-medium leading-relaxed">Join Oplug v2 today and experience the future of digital payments.</p>
           </div>
@@ -115,7 +115,7 @@ const SignUpPage: React.FC = () => {
           <div className="mt-12 pt-8 border-t border-gray-50">
             <p className="text-center lg:text-left text-sm text-gray-500 font-medium">
               Already have an account?{' '}
-              <Link to="/login" className="font-black text-blue-600 hover:text-gray-900 transition-all underline underline-offset-4">
+              <Link to="/login" className="font-black text-emerald-600 hover:text-gray-900 transition-all underline underline-offset-4">
                 Login Here
               </Link>
             </p>
@@ -133,7 +133,7 @@ const FeatureCard = ({ icon, title, desc }: { icon: React.ReactNode, title: stri
     transition={{ duration: 0.5 }}
     className="p-8 bg-white/5 border border-white/10 rounded-[2.5rem] backdrop-blur-xl hover:bg-white/10 transition-all group"
   >
-    <div className="w-12 h-12 bg-white text-blue-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all shadow-lg">
+    <div className="w-12 h-12 bg-white text-emerald-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all shadow-lg">
       {icon}
     </div>
     <h4 className="text-lg font-black tracking-tight mb-1">{title}</h4>

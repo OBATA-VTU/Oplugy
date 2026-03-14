@@ -62,9 +62,9 @@ const PricingPage: React.FC = () => {
     <div className="max-w-[1400px] mx-auto space-y-12 pb-32 px-4 sm:px-6 lg:px-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-10 border-b border-gray-100 pb-12">
         <div>
-          <div className="inline-flex items-center space-x-2 px-3 py-1 bg-blue-50 rounded-full mb-6">
-            <div className="w-1.5 h-1.5 rounded-full bg-blue-600"></div>
-            <span className="text-[9px] font-black uppercase tracking-widest text-blue-600">Service Rates</span>
+          <div className="inline-flex items-center space-x-2 px-3 py-1 bg-emerald-50 rounded-full mb-6">
+            <div className="w-1.5 h-1.5 rounded-full bg-emerald-600"></div>
+            <span className="text-[9px] font-black uppercase tracking-widest text-emerald-600">Service Rates</span>
           </div>
           <h1 className="text-6xl lg:text-8xl font-black tracking-tighter leading-[0.85] uppercase">
             Service <br />
@@ -106,7 +106,7 @@ const PricingPage: React.FC = () => {
                       </div>
                       <span className="font-black text-[11px] uppercase tracking-widest">{net}</span>
                     </div>
-                    {activeNetwork === net && <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div>}
+                    {activeNetwork === net && <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>}
                   </button>
                 ))}
               </div>
@@ -124,7 +124,7 @@ const PricingPage: React.FC = () => {
                     className={`w-full flex items-center justify-between p-4 rounded-2xl transition-all ${activeCable === net ? 'bg-gray-950 text-white shadow-xl' : 'hover:bg-gray-50 text-gray-500'}`}
                   >
                     <span className="font-black text-[11px] uppercase tracking-widest ml-2">{net}</span>
-                    {activeCable === net && <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div>}
+                    {activeCable === net && <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>}
                   </button>
                 ))}
               </div>
@@ -133,7 +133,7 @@ const PricingPage: React.FC = () => {
 
           <div className="bg-gray-50 p-8 rounded-[2.5rem] border border-gray-100">
              <div className="flex items-center space-x-4 mb-6">
-                <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm text-blue-600">
+                <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm text-emerald-600">
                    <Globe size={20} />
                 </div>
                 <h4 className="text-sm font-black tracking-tight uppercase">Live Updates</h4>
@@ -185,7 +185,7 @@ const PricingPage: React.FC = () => {
                                       {activeTab === 'DATA' ? (
                                         <img src={getNetworkLogo(activeNetwork)} alt={activeNetwork} className="w-full h-full object-contain p-2" referrerPolicy="no-referrer" />
                                       ) : (
-                                        <div className="font-black text-blue-600 text-xs">
+                                        <div className="font-black text-emerald-600 text-xs">
                                           {activeTab === 'CABLE' ? activeCable.charAt(0) : 'E'}
                                         </div>
                                       )}
@@ -197,7 +197,7 @@ const PricingPage: React.FC = () => {
                                 </div>
                               </td>
                               <td className="px-10 py-8 text-center">
-                                <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest ${item.server === 2 ? 'bg-purple-50 text-purple-600 border border-purple-100' : 'bg-blue-50 text-blue-600 border border-blue-100'}`}>
+                                <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest ${item.server === 2 ? 'bg-purple-50 text-purple-600 border border-purple-100' : 'bg-emerald-50 text-emerald-600 border border-emerald-100'}`}>
                                   {item.server ? `S${item.server}` : 'STD'}
                                 </span>
                               </td>
@@ -226,7 +226,7 @@ const PricingPage: React.FC = () => {
                ) : (
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-12">
                     {operators.map(op => (
-                      <div key={op.id} className="p-10 bg-gray-50 rounded-[3rem] border-2 border-transparent hover:border-blue-100 hover:bg-white transition-all shadow-sm group relative overflow-hidden">
+                      <div key={op.id} className="p-10 bg-gray-50 rounded-[3rem] border-2 border-transparent hover:border-emerald-100 hover:bg-white transition-all shadow-sm group relative overflow-hidden">
                          <div className="relative z-10 flex items-center space-x-8">
                             <div className="w-20 h-20 bg-white rounded-[2rem] flex items-center justify-center shadow-xl border border-gray-100 group-hover:scale-110 transition-transform duration-500 overflow-hidden">
                                <img src={op.image || 'https://via.placeholder.com/100'} alt={op.name} className="h-10 w-10 object-contain" referrerPolicy="no-referrer" />
@@ -236,7 +236,7 @@ const PricingPage: React.FC = () => {
                                <p className="text-[10px] font-black uppercase tracking-widest text-emerald-500">Service Active</p>
                             </div>
                          </div>
-                         <div className="absolute top-0 right-0 w-32 h-32 bg-blue-600/5 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform duration-1000"></div>
+                         <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-600/5 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform duration-1000"></div>
                       </div>
                     ))}
                  </div>

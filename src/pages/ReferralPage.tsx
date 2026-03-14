@@ -37,7 +37,7 @@ const ReferralPage: React.FC = () => {
   return (
     <div className="max-w-4xl mx-auto space-y-12 pb-32">
       <div className="text-center space-y-4">
-        <div className="inline-flex p-4 bg-blue-50 text-blue-600 rounded-[2rem] mb-4 shadow-inner">
+        <div className="inline-flex p-4 bg-emerald-50 text-emerald-600 rounded-[2rem] mb-4 shadow-inner">
           <Gift className="w-10 h-10" />
         </div>
         <h2 className="text-5xl lg:text-6xl font-black text-gray-900 tracking-tighter">Refer & Earn</h2>
@@ -47,13 +47,13 @@ const ReferralPage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Left: Referral Link Card */}
         <div className="lg:col-span-7 space-y-8">
-          <div className="bg-white p-10 lg:p-12 rounded-[4rem] shadow-2xl shadow-blue-100/50 border border-gray-50 space-y-10 relative overflow-hidden">
+          <div className="bg-white p-10 lg:p-12 rounded-[4rem] shadow-2xl shadow-emerald-100/50 border border-gray-50 space-y-10 relative overflow-hidden">
             <div className="space-y-6 relative z-10">
               <div className="space-y-2">
-                <p className="text-[10px] font-black text-blue-600 uppercase tracking-[0.3em]">Your Unique Link</p>
+                <p className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.3em]">Your Unique Link</p>
                 <div className="bg-gray-50 p-6 rounded-[2rem] border-2 border-dashed border-gray-200 flex items-center justify-between group">
                   <p className="text-gray-400 font-bold truncate mr-4">{referralLink}</p>
-                  <button onClick={handleCopy} className={`p-4 rounded-2xl shadow-sm transition-all shrink-0 ${copied ? 'bg-green-500 text-white' : 'bg-white text-blue-600 hover:bg-blue-600 hover:text-white'}`}>
+                  <button onClick={handleCopy} className={`p-4 rounded-2xl shadow-sm transition-all shrink-0 ${copied ? 'bg-green-500 text-white' : 'bg-white text-emerald-600 hover:bg-emerald-600 hover:text-white'}`}>
                     {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
                   </button>
                 </div>
@@ -62,23 +62,23 @@ const ReferralPage: React.FC = () => {
               <div className="flex flex-col sm:flex-row gap-4">
                 <button 
                   onClick={handleShare}
-                  className="flex-1 py-6 bg-blue-600 text-white rounded-[2rem] font-black text-[11px] uppercase tracking-widest shadow-2xl shadow-blue-100 hover:bg-gray-950 transition-all flex items-center justify-center space-x-3"
+                  className="flex-1 py-6 bg-emerald-600 text-white rounded-[2rem] font-black text-[11px] uppercase tracking-widest shadow-2xl shadow-emerald-100 hover:bg-gray-950 transition-all flex items-center justify-center space-x-3"
                 >
                   <Share2 className="w-4 h-4" />
                   <span>Share Link</span>
                 </button>
                 <div className="flex-1 py-6 bg-gray-50 text-gray-900 rounded-[2rem] font-black text-[11px] uppercase tracking-widest flex items-center justify-center space-x-3 border border-gray-100">
-                  <TrendingUp className="w-4 h-4 text-blue-600" />
+                  <TrendingUp className="w-4 h-4 text-emerald-600" />
                   <span>{user?.referralCount || 0} Referrals</span>
                 </div>
               </div>
             </div>
             
-            <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-blue-50 rounded-full blur-3xl opacity-50"></div>
+            <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-emerald-50 rounded-full blur-3xl opacity-50"></div>
           </div>
 
           <div className="grid grid-cols-2 gap-6">
-            <StatCard icon={<Wallet className="w-6 h-6" />} label="Total Earned" value={`₦${(user?.referralEarnings || 0).toLocaleString()}`} color="blue" />
+            <StatCard icon={<Wallet className="w-6 h-6" />} label="Total Earned" value={`₦${(user?.referralEarnings || 0).toLocaleString()}`} color="emerald" />
             <StatCard icon={<Award className="w-6 h-6" />} label="Rank" value="Ambassador" color="amber" />
           </div>
         </div>
@@ -96,7 +96,7 @@ const ReferralPage: React.FC = () => {
 
             <div className="pt-8 border-t border-white/10">
               <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
+                <div className="w-12 h-12 bg-emerald-600 rounded-2xl flex items-center justify-center shadow-lg">
                   <Zap className="w-6 h-6" />
                 </div>
                 <p className="text-xs font-medium text-white/60 leading-relaxed">Your earnings are added to your wallet instantly. You can use it to buy anything on the app.</p>
@@ -109,9 +109,9 @@ const ReferralPage: React.FC = () => {
   );
 };
 
-const StatCard = ({ icon, label, value, color }: { icon: React.ReactNode, label: string, value: string, color: 'blue' | 'amber' }) => (
+const StatCard = ({ icon, label, value, color }: { icon: React.ReactNode, label: string, value: string, color: 'emerald' | 'amber' }) => (
   <div className="bg-white p-8 rounded-[3rem] shadow-xl border border-gray-50 space-y-4">
-    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${color === 'blue' ? 'bg-blue-50 text-blue-600' : 'bg-amber-50 text-amber-600'}`}>
+    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${color === 'emerald' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
       {icon}
     </div>
     <div>
@@ -123,7 +123,7 @@ const StatCard = ({ icon, label, value, color }: { icon: React.ReactNode, label:
 
 const Step = ({ icon, title, desc }: { icon: string, title: string, desc: string }) => (
   <div className="flex items-start space-x-6">
-    <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center font-black text-blue-400 shrink-0">{icon}</div>
+    <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center font-black text-emerald-400 shrink-0">{icon}</div>
     <div className="space-y-1">
       <h4 className="font-black tracking-tight">{title}</h4>
       <p className="text-xs text-white/40 font-medium leading-relaxed">{desc}</p>

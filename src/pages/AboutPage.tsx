@@ -7,7 +7,7 @@ const AboutPage: React.FC = () => {
       <div className="mb-32">
         <h1 className="text-7xl lg:text-[10vw] font-black tracking-tighter uppercase leading-[0.85] mb-12">
           Our <br />
-          <span className="text-blue-600">Mission.</span>
+          <span className="text-emerald-600">Mission.</span>
         </h1>
         <p className="text-3xl lg:text-5xl font-black tracking-tight leading-tight text-gray-500 dark:text-gray-400 max-w-4xl">
           We are building the infrastructure for digital payments in Nigeria. Fast, reliable, and accessible to everyone.
@@ -17,7 +17,7 @@ const AboutPage: React.FC = () => {
       <div className="grid lg:grid-cols-2 gap-24 items-center mb-48">
         <div className="space-y-12">
           <div className="flex items-center space-x-6">
-            <div className="w-16 h-16 bg-blue-600 text-white rounded-3xl flex items-center justify-center shadow-2xl shadow-blue-600/20">
+            <div className="w-16 h-16 bg-emerald-600 text-white rounded-3xl flex items-center justify-center shadow-2xl shadow-emerald-600/20">
               <Zap size={32} />
             </div>
             <h2 className="text-4xl font-black tracking-tight uppercase">Speed First</h2>
@@ -28,11 +28,11 @@ const AboutPage: React.FC = () => {
           <div className="grid grid-cols-2 gap-8 pt-12">
              <div className="space-y-2">
                 <p className="text-5xl font-black tracking-tighter">50K+</p>
-                <p className="text-[10px] font-black uppercase tracking-widest text-blue-600">Active Users</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600">Active Users</p>
              </div>
              <div className="space-y-2">
                 <p className="text-5xl font-black tracking-tighter">100K+</p>
-                <p className="text-[10px] font-black uppercase tracking-widest text-blue-600">Daily Orders</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600">Daily Orders</p>
              </div>
           </div>
         </div>
@@ -68,8 +68,8 @@ const AboutPage: React.FC = () => {
 };
 
 const ValueCard = ({ icon, title, desc }: any) => (
-  <div className="p-12 bg-gray-50 dark:bg-white/2 rounded-[3rem] border border-gray-100 dark:border-white/5 space-y-8 group hover:bg-blue-600 transition-all duration-700">
-    <div className="w-16 h-16 bg-white dark:bg-white/5 rounded-2xl flex items-center justify-center text-blue-600 group-hover:bg-white group-hover:text-blue-600 transition-all">
+  <div className="p-12 bg-gray-50 dark:bg-white/2 rounded-[3rem] border border-gray-100 dark:border-white/5 space-y-8 group hover:bg-emerald-600 transition-all duration-700">
+    <div className="w-16 h-16 bg-white dark:bg-white/5 rounded-2xl flex items-center justify-center text-emerald-600 group-hover:bg-white group-hover:text-emerald-600 transition-all">
       {icon}
     </div>
     <h3 className="text-3xl font-black tracking-tight uppercase group-hover:text-white transition-colors">{title}</h3>

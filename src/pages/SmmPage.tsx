@@ -172,7 +172,7 @@ const SmmPage: React.FC = () => {
       />
 
       <div className="text-center space-y-4">
-        <div className="inline-flex p-4 bg-purple-50 text-purple-600 rounded-[2rem] mb-4 shadow-inner">
+        <div className="inline-flex p-4 bg-emerald-50 text-emerald-600 rounded-[2rem] mb-4 shadow-inner">
           <Globe className="w-10 h-10" />
         </div>
         <h2 className="text-5xl lg:text-6xl font-black text-gray-900 tracking-tighter">Social Boost</h2>
@@ -182,12 +182,12 @@ const SmmPage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
         {/* Left Side: Selection */}
         <div className="lg:col-span-7 space-y-8">
-          <div className="bg-white p-8 lg:p-12 rounded-[3.5rem] shadow-2xl shadow-purple-100/50 border border-gray-50 space-y-10">
+          <div className="bg-white p-8 lg:p-12 rounded-[3.5rem] shadow-2xl shadow-emerald-100/50 border border-gray-50 space-y-10">
             <div className="space-y-4">
-              <label className="text-[10px] font-black text-purple-600 uppercase tracking-[0.3em] ml-4">1. Select Category</label>
+              <label className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.3em] ml-4">1. Select Category</label>
               <div className="relative">
                 <select 
-                  className="w-full p-6 bg-gray-50 rounded-[2rem] font-bold text-lg border-2 border-transparent focus:border-purple-600 focus:bg-white outline-none transition-all appearance-none"
+                  className="w-full p-6 bg-gray-50 rounded-[2rem] font-bold text-lg border-2 border-transparent focus:border-emerald-600 focus:bg-white outline-none transition-all appearance-none"
                   value={selectedCategory}
                   onChange={(e) => {
                     setSelectedCategory(e.target.value);
@@ -210,13 +210,13 @@ const SmmPage: React.FC = () => {
                   className="space-y-6"
                 >
                   <div className="flex items-center justify-between px-4">
-                    <label className="text-[10px] font-black text-purple-600 uppercase tracking-[0.3em]">2. Choose Service</label>
+                    <label className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.3em]">2. Choose Service</label>
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
                       <input 
                         type="text" 
                         placeholder="Search services..." 
-                        className="pl-9 pr-4 py-2 bg-gray-50 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-purple-500/20"
+                        className="pl-9 pr-4 py-2 bg-gray-50 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-emerald-500/20"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                       />
@@ -228,17 +228,17 @@ const SmmPage: React.FC = () => {
                       <button
                         key={s.service}
                         onClick={() => setSelectedService(s)}
-                        className={`p-6 rounded-[2rem] border-2 text-left transition-all flex items-center justify-between group ${selectedService?.service === s.service ? "border-purple-600 bg-purple-50 shadow-lg shadow-purple-50" : "border-gray-50 bg-gray-50 hover:border-gray-200"}`}
+                        className={`p-6 rounded-[2rem] border-2 text-left transition-all flex items-center justify-between group ${selectedService?.service === s.service ? "border-emerald-600 bg-emerald-50 shadow-lg shadow-emerald-50" : "border-gray-50 bg-gray-50 hover:border-gray-200"}`}
                       >
                         <div className="flex items-center space-x-4">
-                           <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all ${selectedService?.service === s.service ? "bg-white text-purple-600" : "bg-white text-gray-400"}`}>
+                           <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all ${selectedService?.service === s.service ? "bg-white text-emerald-600" : "bg-white text-gray-400"}`}>
                               {s.name.toLowerCase().includes('follower') ? <Users size={20} /> : 
                                s.name.toLowerCase().includes('like') ? <Heart size={20} /> :
                                s.name.toLowerCase().includes('comment') ? <MessageCircle size={20} /> :
                                <Share2 size={20} />}
                            </div>
                            <div>
-                              <p className={`font-bold text-sm ${selectedService?.service === s.service ? "text-purple-900" : "text-gray-700"}`}>{s.name}</p>
+                              <p className={`font-bold text-sm ${selectedService?.service === s.service ? "text-emerald-900" : "text-gray-700"}`}>{s.name}</p>
                               <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
                                 ₦{(() => {
                                   let rate = parseFloat(s.rate);
@@ -253,7 +253,7 @@ const SmmPage: React.FC = () => {
                               </p>
                            </div>
                         </div>
-                        <ChevronRight className={`w-5 h-5 transition-transform ${selectedService?.service === s.service ? "text-purple-600 translate-x-0" : "text-gray-300 -translate-x-2 opacity-0 group-hover:opacity-100 group-hover:translate-x-0"}`} />
+                        <ChevronRight className={`w-5 h-5 transition-transform ${selectedService?.service === s.service ? "text-emerald-600 translate-x-0" : "text-gray-300 -translate-x-2 opacity-0 group-hover:opacity-100 group-hover:translate-x-0"}`} />
                       </button>
                     ))}
                   </div>
@@ -265,13 +265,13 @@ const SmmPage: React.FC = () => {
 
         {/* Right Side: Order Form */}
         <div className="lg:col-span-5 space-y-8">
-          <div className="bg-white p-8 lg:p-12 rounded-[3.5rem] shadow-2xl shadow-purple-100/50 border border-gray-50 space-y-10">
+          <div className="bg-white p-8 lg:p-12 rounded-[3.5rem] shadow-2xl shadow-emerald-100/50 border border-gray-50 space-y-10">
             <div className="space-y-8">
               <div className="space-y-3">
                 <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">3. Link to Profile/Post</label>
                 <input 
                   type="text" 
-                  className="w-full p-6 bg-gray-50 border-2 border-transparent rounded-[2rem] font-bold text-lg outline-none focus:border-purple-600 focus:bg-white transition-all tracking-tight" 
+                  className="w-full p-6 bg-gray-50 border-2 border-transparent rounded-[2rem] font-bold text-lg outline-none focus:border-emerald-600 focus:bg-white transition-all tracking-tight" 
                   placeholder="https://instagram.com/p/..."
                   value={details.link}
                   onChange={(e) => setDetails({...details, link: e.target.value})}
@@ -283,7 +283,7 @@ const SmmPage: React.FC = () => {
                 <div className="relative">
                   <input 
                     type="number" 
-                    className="w-full p-6 bg-gray-50 border-2 border-transparent rounded-[2rem] font-bold text-2xl outline-none focus:border-purple-600 focus:bg-white transition-all tracking-tight" 
+                    className="w-full p-6 bg-gray-50 border-2 border-transparent rounded-[2rem] font-bold text-2xl outline-none focus:border-emerald-600 focus:bg-white transition-all tracking-tight" 
                     placeholder="Min: 100" 
                     value={details.quantity}
                     onChange={(e) => setDetails({...details, quantity: e.target.value})}
@@ -296,13 +296,13 @@ const SmmPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="p-8 bg-purple-50 rounded-[2.5rem] border-2 border-purple-100 space-y-4">
+              <div className="p-8 bg-emerald-50 rounded-[2.5rem] border-2 border-emerald-100 space-y-4">
                 <div className="flex justify-between items-center">
-                  <span className="text-[10px] font-black text-purple-400 uppercase tracking-widest">Total Price</span>
-                  <span className="text-3xl font-black text-purple-900 tracking-tighter">₦{calculatePrice().toLocaleString()}</span>
+                  <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Total Price</span>
+                  <span className="text-3xl font-black text-emerald-900 tracking-tighter">₦{calculatePrice().toLocaleString()}</span>
                 </div>
-                <div className="h-px bg-purple-200 w-full"></div>
-                <div className="flex items-center space-x-3 text-purple-600">
+                <div className="h-px bg-emerald-200 w-full"></div>
+                <div className="flex items-center space-x-3 text-emerald-600">
                   <Zap size={16} />
                   <span className="text-[10px] font-black uppercase tracking-widest">Instant Start Delivery</span>
                 </div>
@@ -312,7 +312,7 @@ const SmmPage: React.FC = () => {
             <button 
               onClick={handleOrder}
               disabled={isSubmitting || !selectedService}
-              className="w-full py-8 bg-purple-600 text-white rounded-[2.5rem] font-black text-[12px] uppercase tracking-[0.4em] shadow-2xl shadow-purple-100 hover:bg-gray-950 transition-all flex items-center justify-center space-x-4 transform active:scale-95 disabled:opacity-50"
+              className="w-full py-8 bg-emerald-600 text-white rounded-[2.5rem] font-black text-[12px] uppercase tracking-[0.4em] shadow-2xl shadow-emerald-100 hover:bg-gray-950 transition-all flex items-center justify-center space-x-4 transform active:scale-95 disabled:opacity-50"
             >
               {isSubmitting ? <Spinner /> : <><ShieldCheck className="w-5 h-5" /> <span>Boost Now</span></>}
             </button>
@@ -320,7 +320,7 @@ const SmmPage: React.FC = () => {
 
           <div className="bg-gray-950 p-10 rounded-[3rem] text-white relative overflow-hidden shadow-2xl">
              <div className="relative z-10 flex items-center space-x-6">
-                <div className="w-14 h-14 bg-purple-600 rounded-2xl flex items-center justify-center shrink-0 shadow-lg">
+                <div className="w-14 h-14 bg-emerald-600 rounded-2xl flex items-center justify-center shrink-0 shadow-lg">
                   <Info className="w-7 h-7" />
                 </div>
                 <div className="space-y-1">
@@ -328,7 +328,7 @@ const SmmPage: React.FC = () => {
                    <p className="text-white/40 font-medium text-sm leading-relaxed">Orders usually start within 0-60 minutes.</p>
                 </div>
              </div>
-             <div className="absolute top-0 right-0 w-48 h-48 bg-purple-600/10 rounded-full blur-[80px]"></div>
+             <div className="absolute top-0 right-0 w-48 h-48 bg-emerald-600/10 rounded-full blur-[80px]"></div>
           </div>
         </div>
       </div>

@@ -125,7 +125,7 @@ const GiftCardPage: React.FC = () => {
       />
 
       <div className="text-center space-y-4">
-        <div className="inline-flex p-4 bg-purple-50 text-purple-600 rounded-[2rem] mb-4 shadow-inner">
+        <div className="inline-flex p-4 bg-emerald-50 text-emerald-600 rounded-[2rem] mb-4 shadow-inner">
           <Gift className="w-10 h-10" />
         </div>
         <h2 className="text-5xl lg:text-6xl font-black text-gray-900 tracking-tighter">Gift Cards</h2>
@@ -147,7 +147,7 @@ const GiftCardPage: React.FC = () => {
         </button>
       </div>
 
-      <div className="bg-white p-10 lg:p-16 rounded-[4rem] shadow-2xl shadow-purple-100/50 border border-gray-50 relative overflow-hidden">
+      <div className="bg-white p-10 lg:p-16 rounded-[4rem] shadow-2xl shadow-emerald-100/50 border border-gray-50 relative overflow-hidden">
         <AnimatePresence mode="wait">
           {activeTab === 'GENERATE' ? (
             <motion.div 
@@ -168,7 +168,7 @@ const GiftCardPage: React.FC = () => {
                         value={amount}
                         onChange={(e) => setAmount(e.target.value)}
                         placeholder="0.00"
-                        className="w-full bg-gray-50 border-2 border-gray-50 p-10 pl-20 rounded-[3rem] text-5xl font-black tracking-tighter focus:bg-white focus:border-purple-600 outline-none transition-all"
+                        className="w-full bg-gray-50 border-2 border-gray-50 p-10 pl-20 rounded-[3rem] text-5xl font-black tracking-tighter focus:bg-white focus:border-emerald-600 outline-none transition-all"
                       />
                     </div>
                     <p className="text-center text-gray-400 text-sm font-medium">A 0.5% fee will be deducted from the receiver upon redemption.</p>
@@ -176,7 +176,7 @@ const GiftCardPage: React.FC = () => {
 
                   <button 
                     onClick={handleGenerate}
-                    className="w-full py-8 bg-purple-600 text-white rounded-[2.5rem] font-black text-[12px] uppercase tracking-[0.4em] shadow-2xl shadow-purple-100 hover:bg-gray-950 transition-all transform active:scale-95"
+                    className="w-full py-8 bg-emerald-600 text-white rounded-[2.5rem] font-black text-[12px] uppercase tracking-[0.4em] shadow-2xl shadow-emerald-100 hover:bg-gray-950 transition-all transform active:scale-95"
                   >
                     Generate Code
                   </button>
@@ -201,7 +201,7 @@ const GiftCardPage: React.FC = () => {
 
                   <button 
                     onClick={() => { setGeneratedCode(null); setAmount(''); }}
-                    className="w-full py-6 text-purple-600 font-black text-[10px] uppercase tracking-widest hover:text-gray-900 transition-all"
+                    className="w-full py-6 text-emerald-600 font-black text-[10px] uppercase tracking-widest hover:text-gray-900 transition-all"
                   >
                     Generate Another
                   </button>
@@ -224,23 +224,23 @@ const GiftCardPage: React.FC = () => {
                     value={redeemCode}
                     onChange={(e) => setRedeemCode(e.target.value.toUpperCase())}
                     placeholder="XXXX-XXXX"
-                    className="w-full bg-gray-50 border-2 border-gray-50 p-10 rounded-[3rem] text-5xl font-black tracking-[0.2em] text-center focus:bg-white focus:border-purple-600 outline-none transition-all uppercase"
+                    className="w-full bg-gray-50 border-2 border-gray-50 p-10 rounded-[3rem] text-5xl font-black tracking-[0.2em] text-center focus:bg-white focus:border-emerald-600 outline-none transition-all uppercase"
                   />
                 </div>
 
                 <button 
                   type="submit"
-                  className="w-full py-8 bg-purple-600 text-white rounded-[2.5rem] font-black text-[12px] uppercase tracking-[0.4em] shadow-2xl shadow-purple-100 hover:bg-gray-950 transition-all transform active:scale-95"
+                  className="w-full py-8 bg-emerald-600 text-white rounded-[2.5rem] font-black text-[12px] uppercase tracking-[0.4em] shadow-2xl shadow-emerald-100 hover:bg-gray-950 transition-all transform active:scale-95"
                 >
                   Redeem Now
                 </button>
               </form>
 
-              <div className="p-8 bg-purple-50 rounded-[2.5rem] border border-purple-100 flex items-center space-x-6">
-                <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm text-purple-600">
+              <div className="p-8 bg-emerald-50 rounded-[2.5rem] border border-emerald-100 flex items-center space-x-6">
+                <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm text-emerald-600">
                   <Zap size={24} />
                 </div>
-                <p className="text-[10px] font-black text-purple-900/40 uppercase tracking-widest leading-relaxed">
+                <p className="text-[10px] font-black text-emerald-900/40 uppercase tracking-widest leading-relaxed">
                   A 0.5% network charge applies to all gift card redemptions.
                 </p>
               </div>
@@ -256,7 +256,7 @@ const GiftCardPage: React.FC = () => {
             Send money to anyone on Oplug instantly with zero charges on generation.
           </p>
         </div>
-        <div className="w-24 h-24 bg-purple-600/20 rounded-full blur-3xl absolute -right-10 -top-10"></div>
+        <div className="w-24 h-24 bg-emerald-600/20 rounded-full blur-3xl absolute -right-10 -top-10"></div>
       </div>
     </div>
   );

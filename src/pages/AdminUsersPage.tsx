@@ -117,23 +117,23 @@ const AdminUsersPage: React.FC = () => {
     <div className="max-w-7xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-1000 pb-24">
       <div className="flex flex-col lg:flex-row justify-between lg:items-end gap-10">
         <div className="space-y-4">
-          <h2 className="text-[11px] font-black text-blue-600 uppercase tracking-[0.5em]">Governance Layer</h2>
-          <h1 className="text-5xl lg:text-8xl font-black text-gray-900 tracking-tighter leading-[0.85]">Node <br /><span className="text-blue-600">Repository.</span></h1>
+          <h2 className="text-[11px] font-black text-emerald-600 uppercase tracking-[0.5em]">Governance Layer</h2>
+          <h1 className="text-5xl lg:text-8xl font-black text-gray-900 tracking-tighter leading-[0.85]">Node <br /><span className="text-emerald-600">Repository.</span></h1>
         </div>
         <div className="flex flex-col sm:flex-row w-full lg:w-auto items-center gap-6">
           <div className="relative w-full sm:w-80 group">
-            <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-blue-600 transition-colors" />
+            <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-emerald-600 transition-colors" />
             <input 
               type="text" 
               placeholder="Search by identity..." 
-              className="w-full p-6 pl-16 bg-white border border-gray-100 rounded-[2rem] shadow-2xl focus:ring-8 focus:ring-blue-50 transition-all font-black text-lg outline-none"
+              className="w-full p-6 pl-16 bg-white border border-gray-100 rounded-[2rem] shadow-2xl focus:ring-8 focus:ring-emerald-50 transition-all font-black text-lg outline-none"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
           <button 
             onClick={() => fetchUsers()}
-            className="p-6 bg-white border border-gray-100 rounded-2xl shadow-xl text-gray-400 hover:text-blue-600 transition-all transform active:scale-95"
+            className="p-6 bg-white border border-gray-100 rounded-2xl shadow-xl text-gray-400 hover:text-emerald-600 transition-all transform active:scale-95"
             title="Refresh Matrix"
           >
             <RefreshCw className={`w-6 h-6 ${loading ? 'animate-spin' : ''}`} />
@@ -162,11 +162,11 @@ const AdminUsersPage: React.FC = () => {
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     key={u.id} 
-                    className="group hover:bg-blue-50/30 transition-all duration-500"
+                    className="group hover:bg-emerald-50/30 transition-all duration-500"
                   >
                     <td className="px-12 py-8">
                       <div className="flex items-center space-x-6">
-                        <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-[1.5rem] flex items-center justify-center font-black text-2xl shadow-inner group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
+                        <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-[1.5rem] flex items-center justify-center font-black text-2xl shadow-inner group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
                           {u.fullName?.charAt(0).toUpperCase() || '?'}
                         </div>
                         <div>
@@ -174,7 +174,7 @@ const AdminUsersPage: React.FC = () => {
                           <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center space-x-2">
                              <span>{u.email}</span>
                              <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
-                             <span className="text-blue-600">@{u.username}</span>
+                             <span className="text-emerald-600">@{u.username}</span>
                           </div>
                         </div>
                       </div>
@@ -182,7 +182,7 @@ const AdminUsersPage: React.FC = () => {
                     <td className="px-12 py-8">
                       <span className={`inline-flex px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-sm ${
                         u.role === 'admin' ? 'bg-gray-900 text-white' : 
-                        u.role === 'reseller' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500'
+                        u.role === 'reseller' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'
                       }`}>
                         {u.role}
                       </span>
@@ -211,7 +211,7 @@ const AdminUsersPage: React.FC = () => {
                         </button>
                         <button 
                           onClick={() => { setSelectedUser(u); setIsManageModalOpen(true); }}
-                          className="p-4 bg-gray-950 text-white rounded-2xl hover:bg-blue-600 transition-all shadow-xl transform active:scale-90"
+                          className="p-4 bg-gray-950 text-white rounded-2xl hover:bg-emerald-600 transition-all shadow-xl transform active:scale-90"
                         >
                           <Shield className="w-5 h-5" />
                         </button>
@@ -265,15 +265,15 @@ const AdminUsersPage: React.FC = () => {
                <span className="absolute left-8 top-1/2 -translate-y-1/2 text-gray-300 font-black text-4xl">₦</span>
                <input 
                  type="number" 
-                 className="w-full p-10 pl-20 bg-gray-50 border-2 border-transparent rounded-[3rem] text-5xl font-black tracking-tighter focus:ring-8 focus:ring-blue-50 focus:bg-white transition-all outline-none"
+                 className="w-full p-10 pl-20 bg-gray-50 border-2 border-transparent rounded-[3rem] text-5xl font-black tracking-tighter focus:ring-8 focus:ring-emerald-50 focus:bg-white transition-all outline-none"
                  placeholder="0.00"
                  value={finAmount}
                  onChange={(e) => setFinAmount(e.target.value)}
                />
             </div>
-            <div className="p-6 bg-blue-50 rounded-2xl border border-blue-100 flex items-center space-x-4">
-               <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-blue-600 shadow-sm"><UsersIcon /></div>
-               <p className="text-[11px] font-black text-blue-900 uppercase tracking-widest leading-relaxed">Targeting: {selectedUser?.fullName}</p>
+            <div className="p-6 bg-emerald-50 rounded-2xl border border-emerald-100 flex items-center space-x-4">
+               <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-emerald-600 shadow-sm"><UsersIcon /></div>
+               <p className="text-[11px] font-black text-emerald-900 uppercase tracking-widest leading-relaxed">Targeting: {selectedUser?.fullName}</p>
             </div>
           </div>
         </div>
@@ -325,7 +325,7 @@ const RoleButton: React.FC<RoleButtonProps> = ({ label, icon, active, onClick })
   <button 
     onClick={onClick}
     className={`p-8 border-2 rounded-[2.5rem] flex flex-col items-center gap-4 transition-all transform active:scale-95 ${
-      active ? 'border-blue-600 bg-blue-50 text-blue-600 shadow-2xl shadow-blue-100' : 'border-gray-50 bg-gray-50 text-gray-400 hover:border-gray-200'
+      active ? 'border-emerald-600 bg-emerald-50 text-emerald-600 shadow-2xl shadow-emerald-100' : 'border-gray-50 bg-gray-50 text-gray-400 hover:border-gray-200'
     }`}
   >
     <div className="text-2xl">{icon}</div>

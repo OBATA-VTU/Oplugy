@@ -19,7 +19,7 @@ const NavItem: React.FC<{ to: string; icon: ReactNode; children: ReactNode; onCl
     className={({ isActive }) =>
       `flex items-center justify-between px-6 py-4 rounded-[1.25rem] transition-all duration-500 group relative overflow-hidden ${
         isActive
-          ? 'bg-blue-600 text-white shadow-xl shadow-blue-500/20'
+          ? 'bg-emerald-600 text-white shadow-xl shadow-emerald-500/20'
           : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-white'
       }`
     }
@@ -31,7 +31,7 @@ const NavItem: React.FC<{ to: string; icon: ReactNode; children: ReactNode; onCl
     <ChevronRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0 relative z-10" />
     
     {/* Hover Effect Background */}
-    <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 opacity-0 group-hover:opacity-0 transition-opacity"></div>
+    <div className="absolute inset-0 bg-gradient-to-r from-emerald-600 to-emerald-700 opacity-0 group-hover:opacity-0 transition-opacity"></div>
   </NavLink>
 );
 
@@ -64,7 +64,7 @@ const Layout: React.FC = () => {
   }, [isProfileOpen]);
 
   const sidebarContent = (
-    <div className="h-full flex flex-col bg-white dark:bg-[#050505] text-gray-900 dark:text-white overflow-hidden border-r border-gray-100 dark:border-white/5 relative">
+    <div className="h-full flex flex-col bg-white dark:bg-[#022c22] text-gray-900 dark:text-white overflow-hidden border-r border-gray-100 dark:border-white/5 relative">
       <div className="p-12 mb-4 flex justify-between items-center">
         <Logo />
         <button 
@@ -76,10 +76,10 @@ const Layout: React.FC = () => {
       </div>
       
       <nav className="flex-grow px-8 space-y-1 overflow-y-auto no-scrollbar pb-10">
-        <div className="px-6 py-4 text-[10px] font-black uppercase tracking-[0.4em] text-gray-400 dark:text-white/20 mb-2">Main Console</div>
-        <NavItem to="/dashboard" icon={<Home className="w-5 h-5" />} onClick={closeSidebar}>Terminal</NavItem>
+        <div className="px-6 py-4 text-[10px] font-black uppercase tracking-[0.4em] text-gray-400 dark:text-white/20 mb-2">My Home</div>
+        <NavItem to="/dashboard" icon={<Home className="w-5 h-5" />} onClick={closeSidebar}>Dashboard</NavItem>
         
-        <div className="px-6 py-4 mt-10 text-[10px] font-black uppercase tracking-[0.4em] text-gray-400 dark:text-white/20 mb-2">Services</div>
+        <div className="px-6 py-4 mt-10 text-[10px] font-black uppercase tracking-[0.4em] text-gray-400 dark:text-white/20 mb-2">Buy Things</div>
         <NavItem to="/airtime" icon={<Smartphone className="w-5 h-5" />} onClick={closeSidebar}>Airtime</NavItem>
         <NavItem to="/data" icon={<Wifi className="w-5 h-5" />} onClick={closeSidebar}>Data Bundle</NavItem>
         <NavItem to="/cable" icon={<Tv className="w-5 h-5" />} onClick={closeSidebar}>Cable TV</NavItem>
@@ -87,21 +87,21 @@ const Layout: React.FC = () => {
         <NavItem to="/education" icon={<Smartphone className="w-5 h-5" />} onClick={closeSidebar}>Education</NavItem>
         <NavItem to="/schedule" icon={<Clock className="w-5 h-5" />} onClick={closeSidebar}>Scheduler</NavItem>
 
-        <div className="px-6 py-4 mt-10 text-[10px] font-black uppercase tracking-[0.4em] text-gray-400 dark:text-white/20 mb-2">Financials</div>
-        <NavItem to="/funding" icon={<Wallet className="w-5 h-5" />} onClick={closeSidebar}>Wallet Funding</NavItem>
-        <NavItem to="/referrals" icon={<Users className="w-5 h-5" />} onClick={closeSidebar}>Referrals</NavItem>
+        <div className="px-6 py-4 mt-10 text-[10px] font-black uppercase tracking-[0.4em] text-gray-400 dark:text-white/20 mb-2">My Wallet</div>
+        <NavItem to="/funding" icon={<Wallet className="w-5 h-5" />} onClick={closeSidebar}>Fund Wallet</NavItem>
+        <NavItem to="/referrals" icon={<Users className="w-5 h-5" />} onClick={closeSidebar}>Refer and Earn</NavItem>
         <NavItem to="/giftcards" icon={<CreditCard className="w-5 h-5" />} onClick={closeSidebar}>Gift Cards</NavItem>
-        <NavItem to="/history" icon={<History className="w-5 h-5" />} onClick={closeSidebar}>Ledger</NavItem>
-        <NavItem to="/pricing" icon={<DollarSign className="w-5 h-5" />} onClick={closeSidebar}>Rates</NavItem>
+        <NavItem to="/history" icon={<History className="w-5 h-5" />} onClick={closeSidebar}>History</NavItem>
+        <NavItem to="/pricing" icon={<DollarSign className="w-5 h-5" />} onClick={closeSidebar}>Our Prices</NavItem>
 
-        <div className="px-6 py-4 mt-10 text-[10px] font-black uppercase tracking-[0.4em] text-gray-400 dark:text-white/20 mb-2">System</div>
+        <div className="px-6 py-4 mt-10 text-[10px] font-black uppercase tracking-[0.4em] text-gray-400 dark:text-white/20 mb-2">Settings</div>
         <NavItem to="/profile" icon={<ShieldCheck className="w-5 h-5" />} onClick={closeSidebar}>Security</NavItem>
-        <NavItem to="/api-docs" icon={<Smartphone className="w-5 h-5" />} onClick={closeSidebar}>API Access</NavItem>
+        <NavItem to="/api-docs" icon={<Smartphone className="w-5 h-5" />} onClick={closeSidebar}>Developer API</NavItem>
         <NavItem to="/support" icon={<Smartphone className="w-5 h-5" />} onClick={closeSidebar}>Support</NavItem>
 
         {user?.role === 'admin' && (
           <div className="pt-10 mt-10 border-t border-gray-100 dark:border-white/5">
-            <div className="px-6 mb-4 text-[10px] font-black uppercase tracking-[0.4em] text-red-500">Root Admin</div>
+            <div className="px-6 mb-4 text-[10px] font-black uppercase tracking-[0.4em] text-red-500">Admin Only</div>
             <NavItem to="/admin" icon={<ShieldCheck className="w-5 h-5" />} onClick={closeSidebar}>Admin Panel</NavItem>
           </div>
         )}
@@ -113,16 +113,16 @@ const Layout: React.FC = () => {
           className="w-full flex items-center space-x-4 px-6 py-5 rounded-2xl text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all font-black text-[11px] uppercase tracking-widest group"
         >
           <LogOut className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-          <span>Terminate Session</span>
+          <span>Logout</span>
         </button>
       </div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-white dark:bg-[#050505] flex flex-col lg:flex-row font-sans transition-colors duration-700">
+    <div className="min-h-screen bg-white dark:bg-[#022c22] flex flex-col lg:flex-row font-sans transition-colors duration-700">
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex lg:flex-col lg:w-80 bg-white dark:bg-[#050505] flex-shrink-0 sticky top-0 h-screen z-50">
+      <aside className="hidden lg:flex lg:flex-col lg:w-80 bg-white dark:bg-[#022c22] flex-shrink-0 sticky top-0 h-screen z-50">
         {sidebarContent}
       </aside>
       
@@ -145,13 +145,13 @@ const Layout: React.FC = () => {
       </aside>
 
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="bg-white/90 dark:bg-[#050505]/90 backdrop-blur-3xl sticky top-0 z-40 flex items-center justify-between px-8 lg:px-20 py-8 border-b border-gray-100 dark:border-white/5">
+        <header className="bg-white/90 dark:bg-[#022c22]/90 backdrop-blur-3xl sticky top-0 z-40 flex items-center justify-between px-8 lg:px-20 py-8 border-b border-gray-100 dark:border-white/5">
           <div className="flex items-center space-x-8">
             <button className="lg:hidden text-gray-900 dark:text-white p-4 bg-gray-100 dark:bg-white/5 rounded-2xl active:scale-95 transition-all" onClick={() => setIsSidebarOpen(true)}>
               <Menu className="w-6 h-6" />
             </button>
             <div className="hidden sm:block">
-               <h1 className="text-[11px] font-black text-gray-400 dark:text-white/20 uppercase tracking-[0.5em] leading-none">Oplug <span className="text-blue-600">v2.5.0</span></h1>
+               <h1 className="text-[11px] font-black text-gray-400 dark:text-white/20 uppercase tracking-[0.5em] leading-none">Oplug <span className="text-emerald-600">v2.5.0</span></h1>
             </div>
           </div>
           
@@ -159,14 +159,14 @@ const Layout: React.FC = () => {
              <div className="flex items-center space-x-4">
                 <button 
                   onClick={toggleTheme}
-                  className="p-4 bg-gray-100 dark:bg-white/5 rounded-2xl text-gray-500 dark:text-gray-400 hover:text-blue-600 transition-all transform active:scale-90"
+                  className="p-4 bg-gray-100 dark:bg-white/5 rounded-2xl text-gray-500 dark:text-gray-400 hover:text-emerald-600 transition-all transform active:scale-90"
                 >
                   {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
                 </button>
              </div>
 
              <div className="text-right hidden sm:block">
-                <p className="text-[10px] font-black text-gray-400 dark:text-white/20 uppercase tracking-[0.4em] mb-2">Liquidity</p>
+                <p className="text-[10px] font-black text-gray-400 dark:text-white/20 uppercase tracking-[0.4em] mb-2">Wallet Balance</p>
                 <p className="text-gray-900 dark:text-white font-black text-3xl tracking-tighter leading-none">
                   ₦{walletBalance?.toLocaleString() || '0.00'}
                 </p>
@@ -177,7 +177,7 @@ const Layout: React.FC = () => {
              <div className="relative profile-dropdown-container">
                 <button 
                   onClick={toggleProfile}
-                  className={`w-16 h-16 rounded-[1.5rem] bg-gray-100 dark:bg-white/5 border-4 border-white dark:border-[#050505] shadow-2xl overflow-hidden flex items-center justify-center text-blue-600 font-black text-xl hover:scale-110 transition-all ${isProfileOpen ? 'bg-blue-600 text-white' : 'hover:bg-blue-600 hover:text-white'}`}
+                  className={`w-16 h-16 rounded-[1.5rem] bg-gray-100 dark:bg-white/5 border-4 border-white dark:border-[#022c22] shadow-2xl overflow-hidden flex items-center justify-center text-emerald-600 font-black text-xl hover:scale-110 transition-all ${isProfileOpen ? 'bg-emerald-600 text-white' : 'hover:bg-emerald-600 hover:text-white'}`}
                 >
                    {user?.username?.charAt(0).toUpperCase() || 'U'}
                 </button>
@@ -189,10 +189,10 @@ const Layout: React.FC = () => {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 10, scale: 0.95 }}
                       transition={{ duration: 0.2 }}
-                      className="absolute right-0 mt-6 w-80 bg-white dark:bg-[#0f172a] rounded-[2.5rem] shadow-2xl border border-gray-100 dark:border-white/5 z-50 p-8"
+                      className="absolute right-0 mt-6 w-80 bg-white dark:bg-[#064e3b] rounded-[2.5rem] shadow-2xl border border-gray-100 dark:border-white/5 z-50 p-8"
                     >
                        <div className="flex flex-col items-center text-center space-y-6 mb-8">
-                          <div className="w-24 h-24 rounded-[2rem] bg-gray-100 dark:bg-white/5 flex items-center justify-center text-blue-600 font-black text-4xl">
+                          <div className="w-24 h-24 rounded-[2rem] bg-gray-100 dark:bg-white/5 flex items-center justify-center text-emerald-600 font-black text-4xl">
                              {user?.username?.charAt(0).toUpperCase() || 'U'}
                           </div>
                           <div>

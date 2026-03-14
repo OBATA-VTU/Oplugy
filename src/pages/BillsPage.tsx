@@ -127,14 +127,14 @@ const BillsPage: React.FC = () => {
       />
 
       <div className="text-center space-y-4">
-        <div className="inline-flex p-4 bg-blue-50 text-blue-600 rounded-[2rem] mb-4 shadow-inner">
+        <div className="inline-flex p-4 bg-emerald-50 text-emerald-600 rounded-[2rem] mb-4 shadow-inner">
           <Lightbulb className="w-10 h-10" />
         </div>
         <h2 className="text-5xl lg:text-6xl font-black text-gray-900 tracking-tighter">Electricity</h2>
         <p className="text-gray-400 font-medium text-xl max-w-xl mx-auto">Pay your electricity bills and get tokens instantly.</p>
       </div>
 
-      <div className="bg-white p-8 lg:p-16 rounded-[4rem] shadow-2xl shadow-blue-100/50 border border-gray-50 relative overflow-hidden">
+      <div className="bg-white p-8 lg:p-16 rounded-[4rem] shadow-2xl shadow-emerald-100/50 border border-gray-50 relative overflow-hidden">
         <AnimatePresence mode="wait">
           {isSuccess ? (
             <motion.div 
@@ -150,7 +150,7 @@ const BillsPage: React.FC = () => {
                 <h3 className="text-4xl font-black text-gray-900 tracking-tighter">Success!</h3>
                 <p className="text-gray-400 font-medium text-lg">Your electricity bill has been paid.</p>
                 {token && (
-                  <div className="bg-gray-900 p-8 rounded-[2rem] border-t-4 border-blue-600 shadow-2xl mt-6">
+                  <div className="bg-gray-900 p-8 rounded-[2rem] border-t-4 border-emerald-600 shadow-2xl mt-6">
                     <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.3em] mb-2">Your Token</p>
                     <p className="text-4xl font-black text-white tracking-[0.2em]">{token}</p>
                   </div>
@@ -160,7 +160,7 @@ const BillsPage: React.FC = () => {
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <button 
                   onClick={resetAll}
-                  className="px-10 py-6 bg-blue-600 text-white rounded-3xl font-black text-[11px] uppercase tracking-widest hover:bg-gray-950 transition-all shadow-xl shadow-blue-100 flex items-center justify-center space-x-3"
+                  className="px-10 py-6 bg-emerald-600 text-white rounded-3xl font-black text-[11px] uppercase tracking-widest hover:bg-gray-950 transition-all shadow-xl shadow-emerald-100 flex items-center justify-center space-x-3"
                 >
                   <ArrowRight className="w-4 h-4" />
                   <span>Pay Another</span>
@@ -187,7 +187,7 @@ const BillsPage: React.FC = () => {
                   <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">1. Select Disco</label>
                   <div className="relative">
                     <select 
-                      className="w-full p-6 bg-gray-50 rounded-[2rem] font-bold text-lg border-2 border-transparent focus:border-blue-600 focus:bg-white outline-none transition-all appearance-none"
+                      className="w-full p-6 bg-gray-50 rounded-[2rem] font-bold text-lg border-2 border-transparent focus:border-emerald-600 focus:bg-white outline-none transition-all appearance-none"
                       value={selectedOperatorId}
                       onChange={(e) => {
                         setSelectedOperatorId(e.target.value);
@@ -207,13 +207,13 @@ const BillsPage: React.FC = () => {
                   <div className="flex p-2 bg-gray-50 rounded-[2rem]">
                     <button 
                       onClick={() => setMeterType('prepaid')}
-                      className={`flex-1 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all ${meterType === 'prepaid' ? 'bg-white text-blue-600 shadow-xl' : 'text-gray-400'}`}
+                      className={`flex-1 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all ${meterType === 'prepaid' ? 'bg-white text-emerald-600 shadow-xl' : 'text-gray-400'}`}
                     >
                       Prepaid
                     </button>
                     <button 
                       onClick={() => setMeterType('postpaid')}
-                      className={`flex-1 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all ${meterType === 'postpaid' ? 'bg-white text-blue-600 shadow-xl' : 'text-gray-400'}`}
+                      className={`flex-1 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all ${meterType === 'postpaid' ? 'bg-white text-emerald-600 shadow-xl' : 'text-gray-400'}`}
                     >
                       Postpaid
                     </button>
@@ -227,7 +227,7 @@ const BillsPage: React.FC = () => {
                     <div className="relative flex-1">
                       <input 
                         type="text" 
-                        className="w-full p-6 pl-14 bg-gray-50 border-2 border-transparent rounded-[2rem] font-bold text-xl outline-none focus:border-blue-600 focus:bg-white transition-all tracking-tight" 
+                        className="w-full p-6 pl-14 bg-gray-50 border-2 border-transparent rounded-[2rem] font-bold text-xl outline-none focus:border-emerald-600 focus:bg-white transition-all tracking-tight" 
                         placeholder="00000000000"
                         value={meterNumber}
                         onChange={(e) => {
@@ -240,7 +240,7 @@ const BillsPage: React.FC = () => {
                     <button 
                       onClick={handleVerify}
                       disabled={!selectedOperatorId || meterNumber.length < 5 || isLoading}
-                      className="px-8 bg-gray-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-600 transition-all disabled:opacity-30"
+                      className="px-8 bg-gray-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-emerald-600 transition-all disabled:opacity-30"
                     >
                       Verify
                     </button>
@@ -253,7 +253,7 @@ const BillsPage: React.FC = () => {
                   <div className="relative">
                     <input 
                       type="number" 
-                      className="w-full p-6 pl-14 bg-gray-50 border-2 border-transparent rounded-[2rem] font-bold text-xl outline-none focus:border-blue-600 focus:bg-white transition-all tracking-tight" 
+                      className="w-full p-6 pl-14 bg-gray-50 border-2 border-transparent rounded-[2rem] font-bold text-xl outline-none focus:border-emerald-600 focus:bg-white transition-all tracking-tight" 
                       placeholder="0.00"
                       value={amount}
                       onChange={(e) => setAmount(e.target.value)}
@@ -268,7 +268,7 @@ const BillsPage: React.FC = () => {
                   <div className="relative">
                     <input 
                       type="tel" 
-                      className="w-full p-6 pl-14 bg-gray-50 border-2 border-transparent rounded-[2rem] font-bold text-xl outline-none focus:border-blue-600 focus:bg-white transition-all tracking-tight" 
+                      className="w-full p-6 pl-14 bg-gray-50 border-2 border-transparent rounded-[2rem] font-bold text-xl outline-none focus:border-emerald-600 focus:bg-white transition-all tracking-tight" 
                       placeholder="08012345678"
                       maxLength={11}
                       value={phoneNumber}
@@ -284,13 +284,13 @@ const BillsPage: React.FC = () => {
                 <motion.div 
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="p-8 bg-blue-50 rounded-[3rem] border border-blue-100 flex items-center space-x-6"
+                  className="p-8 bg-emerald-50 rounded-[3rem] border border-emerald-100 flex items-center space-x-6"
                 >
-                  <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-blue-600 shadow-sm">
+                  <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-emerald-600 shadow-sm">
                     <Lightbulb className="w-6 h-6" />
                   </div>
                   <div>
-                    <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Customer Name</p>
+                    <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Customer Name</p>
                     <p className="text-xl font-black text-gray-900 tracking-tight uppercase">{customerName}</p>
                   </div>
                 </motion.div>
@@ -305,7 +305,7 @@ const BillsPage: React.FC = () => {
                   }
                   setShowPinModal(true);
                 }}
-                className="w-full py-10 bg-blue-600 text-white rounded-[3rem] font-black text-[14px] uppercase tracking-[0.4em] shadow-2xl shadow-blue-200 hover:bg-gray-950 transition-all transform active:scale-95 disabled:opacity-50 flex items-center justify-center space-x-4"
+                className="w-full py-10 bg-emerald-600 text-white rounded-[3rem] font-black text-[14px] uppercase tracking-[0.4em] shadow-2xl shadow-emerald-200 hover:bg-gray-950 transition-all transform active:scale-95 disabled:opacity-50 flex items-center justify-center space-x-4"
               >
                 {isPurchasing ? <LoadingScreen message="Processing..." /> : <><Zap className="w-5 h-5" /> <span>Pay Bill</span></>}
               </button>
@@ -314,13 +314,13 @@ const BillsPage: React.FC = () => {
         </AnimatePresence>
       </div>
 
-      <div className="p-10 bg-blue-50 rounded-[3rem] border border-blue-100 flex items-start space-x-8">
-        <div className="w-16 h-16 bg-blue-600 text-white rounded-2xl flex items-center justify-center shrink-0 shadow-lg">
+      <div className="p-10 bg-emerald-50 rounded-[3rem] border border-emerald-100 flex items-start space-x-8">
+        <div className="w-16 h-16 bg-emerald-600 text-white rounded-2xl flex items-center justify-center shrink-0 shadow-lg">
           <Zap className="w-8 h-8" />
         </div>
         <div className="space-y-2">
-          <h4 className="text-xl font-black text-blue-900 tracking-tight">Instant Token</h4>
-          <p className="text-blue-800/60 font-medium leading-relaxed">Your token will be ready immediately after payment. We will also send it to your phone via SMS.</p>
+          <h4 className="text-xl font-black text-emerald-900 tracking-tight">Instant Token</h4>
+          <p className="text-emerald-800/60 font-medium leading-relaxed">Your token will be ready immediately after payment. We will also send it to your phone via SMS.</p>
         </div>
       </div>
     </div>

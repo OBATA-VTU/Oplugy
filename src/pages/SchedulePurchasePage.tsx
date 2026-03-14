@@ -116,17 +116,17 @@ const SchedulePurchasePage: React.FC = () => {
   return (
     <div className="max-w-4xl mx-auto space-y-12 pb-32">
       <div className="text-center space-y-4">
-        <div className="inline-flex p-4 bg-blue-50 text-blue-600 rounded-[2rem] mb-4 shadow-inner">
+        <div className="inline-flex p-4 bg-emerald-50 text-emerald-600 rounded-[2rem] mb-4 shadow-inner">
           <Clock className="w-10 h-10" />
         </div>
         <h2 className="text-5xl lg:text-6xl font-black text-gray-900 tracking-tighter">Schedule</h2>
         <p className="text-gray-400 font-medium text-xl max-w-xl mx-auto">Set it and forget it. We'll handle your payments and recharges automatically for you.</p>
       </div>
 
-      <div className="bg-white p-10 lg:p-14 rounded-[4rem] shadow-2xl shadow-blue-100/50 border border-gray-50 space-y-12">
+      <div className="bg-white p-10 lg:p-14 rounded-[4rem] shadow-2xl shadow-emerald-100/50 border border-gray-50 space-y-12">
         {/* Service Selection */}
         <div className="space-y-6">
-          <p className="text-[10px] font-black text-blue-600 uppercase tracking-[0.3em] ml-4">1. Choose what you want to buy</p>
+          <p className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.3em] ml-4">1. Choose what you want to buy</p>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
               { id: 'airtime', icon: <Smartphone />, label: 'Airtime' },
@@ -137,12 +137,12 @@ const SchedulePurchasePage: React.FC = () => {
               <button
                 key={s.id}
                 onClick={() => setService(s.id as any)}
-                className={`p-6 rounded-[2.5rem] border-2 transition-all flex flex-col items-center gap-4 group ${service === s.id ? "border-blue-600 bg-blue-50 shadow-xl shadow-blue-50" : "border-gray-50 bg-gray-50 hover:border-gray-200"}`}
+                className={`p-6 rounded-[2.5rem] border-2 transition-all flex flex-col items-center gap-4 group ${service === s.id ? "border-emerald-600 bg-emerald-50 shadow-xl shadow-emerald-50" : "border-gray-50 bg-gray-50 hover:border-gray-200"}`}
               >
-                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all group-hover:scale-110 shadow-sm ${service === s.id ? "bg-white text-blue-600" : "bg-white text-gray-400"}`}>
+                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all group-hover:scale-110 shadow-sm ${service === s.id ? "bg-white text-emerald-600" : "bg-white text-gray-400"}`}>
                   {s.icon}
                 </div>
-                <span className={`text-[10px] font-black uppercase tracking-widest ${service === s.id ? "text-blue-600" : "text-gray-400"}`}>{s.label}</span>
+                <span className={`text-[10px] font-black uppercase tracking-widest ${service === s.id ? "text-emerald-600" : "text-gray-400"}`}>{s.label}</span>
               </button>
             ))}
           </div>
@@ -155,7 +155,7 @@ const SchedulePurchasePage: React.FC = () => {
               <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">2. Pick your Network / Provider</label>
               <div className="relative">
                 <select 
-                  className="w-full p-6 bg-gray-50 rounded-[2rem] font-bold text-lg border-2 border-transparent focus:border-blue-600 focus:bg-white outline-none transition-all appearance-none"
+                  className="w-full p-6 bg-gray-50 rounded-[2rem] font-bold text-lg border-2 border-transparent focus:border-emerald-600 focus:bg-white outline-none transition-all appearance-none"
                   value={details.network}
                   onChange={(e) => setDetails({...details, network: e.target.value, type: '', planId: ''})}
                 >
@@ -171,7 +171,7 @@ const SchedulePurchasePage: React.FC = () => {
                 <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">2b. Choose Data Type</label>
                 <div className="relative">
                   <select 
-                    className="w-full p-6 bg-gray-50 rounded-[2rem] font-bold text-lg border-2 border-transparent focus:border-blue-600 focus:bg-white outline-none transition-all appearance-none"
+                    className="w-full p-6 bg-gray-50 rounded-[2rem] font-bold text-lg border-2 border-transparent focus:border-emerald-600 focus:bg-white outline-none transition-all appearance-none"
                     value={details.type}
                     onChange={(e) => setDetails({...details, type: e.target.value, planId: ''})}
                   >
@@ -188,7 +188,7 @@ const SchedulePurchasePage: React.FC = () => {
                 <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">2c. Pick a {service === 'data' ? 'Data' : 'TV'} Plan</label>
                 <div className="relative">
                   <select 
-                    className="w-full p-6 bg-gray-50 rounded-[2rem] font-bold text-lg border-2 border-transparent focus:border-blue-600 focus:bg-white outline-none transition-all appearance-none"
+                    className="w-full p-6 bg-gray-50 rounded-[2rem] font-bold text-lg border-2 border-transparent focus:border-emerald-600 focus:bg-white outline-none transition-all appearance-none"
                     value={details.planId}
                     onChange={(e) => {
                       const plan = dataPlans.find(p => p.id === e.target.value);
@@ -207,7 +207,7 @@ const SchedulePurchasePage: React.FC = () => {
               <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">3. Who is receiving this?</label>
               <input 
                 type="text" 
-                className="w-full p-6 bg-gray-50 border-2 border-transparent rounded-[2rem] font-bold text-xl outline-none focus:border-blue-600 focus:bg-white transition-all tracking-tight" 
+                className="w-full p-6 bg-gray-50 border-2 border-transparent rounded-[2rem] font-bold text-xl outline-none focus:border-emerald-600 focus:bg-white transition-all tracking-tight" 
                 placeholder={service === 'tv' ? 'IUC Number' : service === 'power' ? 'Meter Number' : 'Phone Number'}
                 value={details.recipient}
                 onChange={(e) => setDetails({...details, recipient: e.target.value})}
@@ -222,7 +222,7 @@ const SchedulePurchasePage: React.FC = () => {
                 <span className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-xl">₦</span>
                 <input 
                   type="number" 
-                  className="w-full p-6 pl-14 bg-gray-50 border-2 border-transparent rounded-[2rem] font-bold text-2xl outline-none focus:border-blue-600 focus:bg-white transition-all tracking-tight" 
+                  className="w-full p-6 pl-14 bg-gray-50 border-2 border-transparent rounded-[2rem] font-bold text-2xl outline-none focus:border-emerald-600 focus:bg-white transition-all tracking-tight" 
                   placeholder="0.00" 
                   value={details.amount}
                   onChange={(e) => setDetails({...details, amount: e.target.value})}
@@ -237,7 +237,7 @@ const SchedulePurchasePage: React.FC = () => {
                   <Calendar className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300" />
                   <input 
                     type="date" 
-                    className="w-full p-6 pl-14 bg-gray-50 border-2 border-transparent rounded-[2rem] font-bold text-sm outline-none focus:border-blue-600 focus:bg-white transition-all"
+                    className="w-full p-6 pl-14 bg-gray-50 border-2 border-transparent rounded-[2rem] font-bold text-sm outline-none focus:border-emerald-600 focus:bg-white transition-all"
                     value={details.date}
                     onChange={(e) => setDetails({...details, date: e.target.value})}
                   />
@@ -249,7 +249,7 @@ const SchedulePurchasePage: React.FC = () => {
                   <Clock className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300" />
                   <input 
                     type="time" 
-                    className="w-full p-6 pl-14 bg-gray-50 border-2 border-transparent rounded-[2rem] font-bold text-sm outline-none focus:border-blue-600 focus:bg-white transition-all"
+                    className="w-full p-6 pl-14 bg-gray-50 border-2 border-transparent rounded-[2rem] font-bold text-sm outline-none focus:border-emerald-600 focus:bg-white transition-all"
                     value={details.time}
                     onChange={(e) => setDetails({...details, time: e.target.value})}
                   />
@@ -262,7 +262,7 @@ const SchedulePurchasePage: React.FC = () => {
         <button 
           onClick={handleSchedule}
           disabled={isScheduling}
-          className="w-full py-8 bg-blue-600 text-white rounded-[2.5rem] font-black text-[12px] uppercase tracking-[0.4em] shadow-2xl shadow-blue-100 hover:bg-gray-950 transition-all flex items-center justify-center space-x-4 transform active:scale-95 disabled:opacity-50"
+          className="w-full py-8 bg-emerald-600 text-white rounded-[2.5rem] font-black text-[12px] uppercase tracking-[0.4em] shadow-2xl shadow-emerald-100 hover:bg-gray-950 transition-all flex items-center justify-center space-x-4 transform active:scale-95 disabled:opacity-50"
         >
           {isScheduling ? <Spinner /> : <><ShieldCheck className="w-5 h-5" /> <span>Set it Up Now</span></>}
         </button>
@@ -270,7 +270,7 @@ const SchedulePurchasePage: React.FC = () => {
 
       <div className="bg-gray-950 p-12 rounded-[4rem] text-white relative overflow-hidden shadow-2xl">
          <div className="relative z-10 flex items-center space-x-8">
-            <div className="w-16 h-16 bg-blue-600 rounded-3xl flex items-center justify-center shrink-0 shadow-lg">
+            <div className="w-16 h-16 bg-emerald-600 rounded-3xl flex items-center justify-center shrink-0 shadow-lg">
               <Info className="w-8 h-8" />
             </div>
             <div className="space-y-2">
@@ -278,7 +278,7 @@ const SchedulePurchasePage: React.FC = () => {
                <p className="text-white/40 font-medium text-lg leading-relaxed">We'll make this payment for you automatically at the time you choose. Just make sure you have enough money in your wallet.</p>
             </div>
          </div>
-         <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/10 rounded-full blur-[100px]"></div>
+         <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-600/10 rounded-full blur-[100px]"></div>
       </div>
     </div>
   );

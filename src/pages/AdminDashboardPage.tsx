@@ -7,7 +7,7 @@ interface StatCardProps {
   icon: React.ReactNode;
   label: string;
   value: string | number;
-  color: 'blue' | 'green' | 'indigo' | 'gray' | 'red';
+  color: 'emerald' | 'green' | 'indigo' | 'gray' | 'red';
 }
 
 const AdminDashboardPage: React.FC = () => {
@@ -42,19 +42,19 @@ const AdminDashboardPage: React.FC = () => {
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
         <div>
-          <h2 className="text-[10px] font-black text-blue-600 uppercase tracking-[0.4em] mb-4">Admin Control</h2>
+          <h2 className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.4em] mb-4">Admin Control</h2>
           <h1 className="text-4xl lg:text-6xl font-black text-gray-900 tracking-tighter leading-none">System Overview</h1>
         </div>
         <button 
           onClick={() => fetchData()}
-          className="flex items-center space-x-2 bg-white border border-gray-100 px-6 py-3 rounded-2xl shadow-sm text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-blue-600 hover:border-blue-100 transition-all"
+          className="flex items-center space-x-2 bg-white border border-gray-100 px-6 py-3 rounded-2xl shadow-sm text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-emerald-600 hover:border-emerald-100 transition-all"
         >
           {loading ? <Spinner /> : <span>Refresh Data</span>}
         </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-8 mb-12">
-        <StatCard icon={<UsersIcon />} label="Total Users" value={stats?.totalUsers || 0} color="blue" />
+        <StatCard icon={<UsersIcon />} label="Total Users" value={stats?.totalUsers || 0} color="emerald" />
         <StatCard icon={<CurrencyDollarIcon />} label="User Balances" value={`₦${(stats?.totalBalance || 0).toLocaleString()}`} color="green" />
         <StatCard icon={<BoltIcon />} label="VTU Balance" value={`₦${balances.srv1.toLocaleString()}`} color="indigo" />
         <StatCard icon={<BoltIcon />} label="SMM Balance" value={`₦${balances.smm.toLocaleString()}`} color="red" />
@@ -82,12 +82,12 @@ const AdminDashboardPage: React.FC = () => {
             <h3 className="text-2xl font-black mb-4 tracking-tight">Security Note</h3>
             <p className="text-white/40 mb-10 text-sm leading-relaxed max-w-sm">Admin access is restricted. Please make sure your provider accounts have enough funds to avoid service failure.</p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <button className="bg-white text-gray-900 px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all shadow-xl shadow-white/5">
+              <button className="bg-white text-gray-900 px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-emerald-600 hover:text-white transition-all shadow-xl shadow-white/5">
                 View Logs
               </button>
             </div>
           </div>
-          <div className="absolute top-0 right-0 w-80 h-80 bg-blue-600/20 rounded-full blur-[100px] group-hover:bg-blue-600/30 transition-all"></div>
+          <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-600/20 rounded-full blur-[100px] group-hover:bg-emerald-600/30 transition-all"></div>
         </div>
       </div>
     </div>
@@ -96,7 +96,7 @@ const AdminDashboardPage: React.FC = () => {
 
 const StatCard: React.FC<StatCardProps> = ({ icon, label, value, color }) => {
   const colors: Record<string, string> = {
-    blue: 'bg-blue-600',
+    emerald: 'bg-emerald-600',
     green: 'bg-green-600',
     indigo: 'bg-indigo-600',
     red: 'bg-red-500',
@@ -115,7 +115,7 @@ const StatCard: React.FC<StatCardProps> = ({ icon, label, value, color }) => {
 
 const AlertItem = ({ type, message, time }: any) => (
   <div className="flex items-start space-x-4 p-5 rounded-2xl hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100">
-    <div className={`w-2.5 h-2.5 rounded-full mt-2 flex-shrink-0 animate-pulse ${type === 'success' ? 'bg-green-500' : 'bg-blue-500'}`}></div>
+    <div className={`w-2.5 h-2.5 rounded-full mt-2 flex-shrink-0 animate-pulse ${type === 'success' ? 'bg-green-500' : 'bg-emerald-500'}`}></div>
     <div className="flex-1">
       <p className="text-sm font-bold text-gray-800 tracking-tight">{message}</p>
       <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">{time}</p>

@@ -8,7 +8,7 @@ const PrivacyPage: React.FC = () => {
         <h1 className="text-4xl font-extrabold text-gray-900 mb-8">Privacy Policy</h1>
         <p className="text-gray-500 mb-8">Last updated: February 20, 2025</p>
         
-        <div className="prose prose-blue max-w-none text-gray-600 space-y-8">
+        <div className="prose prose-emerald max-w-none text-gray-600 space-y-8">
           <section>
             <h2 className="text-2xl font-bold text-gray-900 mb-4">1. What we know about you</h2>
             <p>We only keep information that you give us, like your name, email, and phone number, so you can use the app.</p>

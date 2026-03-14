@@ -30,7 +30,7 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({ message = "Starting Secur
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
-          className="text-[11px] font-black uppercase tracking-[0.4em] text-blue-600 animate-pulse"
+          className="text-[11px] font-black uppercase tracking-[0.4em] text-emerald-600 animate-pulse"
         >
           {message}
         </motion.p>
@@ -44,7 +44,7 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({ message = "Starting Secur
               repeat: Infinity,
               ease: "easeInOut"
             }}
-            className="w-full h-full bg-blue-600"
+            className="w-full h-full bg-emerald-600"
           />
         </div>
       </div>

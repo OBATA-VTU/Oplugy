@@ -95,7 +95,7 @@ const QuickBuyElectricity: React.FC = () => {
       <nav className="px-6 py-6 lg:px-12 bg-white/80 backdrop-blur-md border-b border-gray-100 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
            <Logo />
-           <button onClick={() => navigate('/quick-purchase')} className="flex items-center space-x-2 text-sm font-bold text-gray-500 hover:text-blue-600 transition-all">
+           <button onClick={() => navigate('/quick-purchase')} className="flex items-center space-x-2 text-sm font-bold text-gray-500 hover:text-emerald-600 transition-all">
               <ArrowLeft className="w-4 h-4" />
               <span>Back</span>
            </button>
@@ -105,10 +105,10 @@ const QuickBuyElectricity: React.FC = () => {
       <main className="flex-1 flex items-center justify-center p-4 lg:p-12">
         <div className="w-full max-w-2xl bg-white rounded-[2.5rem] p-8 lg:p-12 shadow-xl border border-gray-50 space-y-8">
           <div className="text-center space-y-2">
-            <div className="w-16 h-16 bg-orange-50 text-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <Zap className="w-8 h-8" />
             </div>
-            <h1 className="text-4xl font-black text-gray-900 tracking-tight">Electricity <span className="text-blue-600">Bill.</span></h1>
+            <h1 className="text-4xl font-black text-gray-900 tracking-tight">Electricity <span className="text-emerald-600">Bill.</span></h1>
             <p className="text-gray-500 font-medium">Pay for your meter instantly.</p>
           </div>
 
@@ -116,7 +116,7 @@ const QuickBuyElectricity: React.FC = () => {
             <div className="space-y-3">
               <label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider ml-2">1. Select Disco</label>
               <select 
-                className="w-full p-5 bg-gray-50 rounded-2xl font-bold text-lg border-2 border-transparent focus:border-blue-600 outline-none appearance-none transition-all disabled:opacity-50"
+                className="w-full p-5 bg-gray-50 rounded-2xl font-bold text-lg border-2 border-transparent focus:border-emerald-600 outline-none appearance-none transition-all disabled:opacity-50"
                 value={details.discoId}
                 onChange={(e) => {
                   const disco = discos.find(d => d.id === e.target.value);
@@ -138,7 +138,7 @@ const QuickBuyElectricity: React.FC = () => {
                   onClick={() => { setDetails({...details, meterType: 'prepaid'}); setCustomerName(null); }}
                   className={cn(
                     "flex-1 py-3 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all",
-                    details.meterType === 'prepaid' ? "bg-white text-blue-600 shadow-sm" : "text-gray-400"
+                    details.meterType === 'prepaid' ? "bg-white text-emerald-600 shadow-sm" : "text-gray-400"
                   )}
                 >
                   Prepaid
@@ -147,7 +147,7 @@ const QuickBuyElectricity: React.FC = () => {
                   onClick={() => { setDetails({...details, meterType: 'postpaid'}); setCustomerName(null); }}
                   className={cn(
                     "flex-1 py-3 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all",
-                    details.meterType === 'postpaid' ? "bg-white text-blue-600 shadow-sm" : "text-gray-400"
+                    details.meterType === 'postpaid' ? "bg-white text-emerald-600 shadow-sm" : "text-gray-400"
                   )}
                 >
                   Postpaid
@@ -160,7 +160,7 @@ const QuickBuyElectricity: React.FC = () => {
               <div className="flex gap-3">
                 <input 
                   type="text" 
-                  className="flex-1 p-5 bg-gray-50 border-2 border-transparent rounded-2xl font-bold text-xl outline-none focus:border-blue-600 focus:bg-white transition-all tracking-tight" 
+                  className="flex-1 p-5 bg-gray-50 border-2 border-transparent rounded-2xl font-bold text-xl outline-none focus:border-emerald-600 focus:bg-white transition-all tracking-tight" 
                   placeholder="Enter meter number"
                   value={details.meterNo}
                   onChange={(e) => { setDetails({...details, meterNo: e.target.value}); setCustomerName(null); }}
@@ -168,7 +168,7 @@ const QuickBuyElectricity: React.FC = () => {
                 <button 
                   onClick={handleVerify}
                   disabled={verifying || !details.meterNo || !details.discoId}
-                  className="px-6 bg-gray-900 text-white rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-blue-600 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="px-6 bg-gray-900 text-white rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-emerald-600 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {verifying ? <Spinner /> : <><Search className="w-4 h-4" /> <span>Verify</span></>}
                 </button>
@@ -202,7 +202,7 @@ const QuickBuyElectricity: React.FC = () => {
                 <span className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-xl">₦</span>
                 <input 
                   type="number" 
-                  className="w-full p-5 pl-12 bg-gray-50 border-2 border-transparent rounded-2xl font-bold text-2xl outline-none focus:border-blue-600 focus:bg-white transition-all tracking-tight" 
+                  className="w-full p-5 pl-12 bg-gray-50 border-2 border-transparent rounded-2xl font-bold text-2xl outline-none focus:border-emerald-600 focus:bg-white transition-all tracking-tight" 
                   placeholder="0.00" 
                   value={details.amount} 
                   onChange={(e) => setDetails({...details, amount: e.target.value})} 
@@ -213,7 +213,7 @@ const QuickBuyElectricity: React.FC = () => {
             <button 
               onClick={handleNext}
               disabled={!customerName || !details.amount}
-              className="w-full py-6 bg-blue-600 hover:bg-gray-900 text-white rounded-2xl font-bold uppercase tracking-widest text-sm shadow-xl shadow-blue-100 transition-all flex items-center justify-center space-x-3 transform active:scale-95 disabled:opacity-50"
+              className="w-full py-6 bg-emerald-600 hover:bg-gray-900 text-white rounded-2xl font-bold uppercase tracking-widest text-sm shadow-xl shadow-emerald-100 transition-all flex items-center justify-center space-x-3 transform active:scale-95 disabled:opacity-50"
             >
               <span>Continue to Checkout</span>
               <ChevronRight className="w-5 h-5" />

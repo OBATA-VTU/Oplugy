@@ -24,6 +24,7 @@ export function initializeFirebaseAdmin() {
       }
 
       const projectId = serviceAccount.project_id || process.env.FIREBASE_PROJECT_ID || 'oplug-vtu';
+      console.log(`[Firebase Admin] Detected Project ID: ${projectId}`);
       
       if (serviceAccount.project_id && serviceAccount.private_key) {
         console.log(`[Firebase Admin] Initializing with Service Account for project: ${projectId}`);

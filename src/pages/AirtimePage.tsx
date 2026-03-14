@@ -152,7 +152,7 @@ const AirtimePage: React.FC = () => {
         </motion.div>
         <h1 className="text-6xl lg:text-9xl font-black text-gray-900 tracking-tighter leading-[0.8] py-2">
           Recharge <br />
-          <span className="text-blue-600">Instantly.</span>
+          <span className="text-emerald-600">Instantly.</span>
         </h1>
         <p className="text-gray-400 font-medium text-xl max-w-xl mx-auto leading-relaxed">
           Fast, secure, and reliable airtime recharge for all networks in Nigeria.
@@ -163,7 +163,7 @@ const AirtimePage: React.FC = () => {
         {/* Progress Bar */}
         <div className="absolute -top-8 left-0 w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
           <motion.div 
-            className="h-full bg-blue-600"
+            className="h-full bg-emerald-600"
             initial={{ width: '0%' }}
             animate={{ 
               width: step === 'NETWORK' ? '20%' : 
@@ -196,7 +196,7 @@ const AirtimePage: React.FC = () => {
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0, transition: { delay: idx * 0.05 } }}
                       onClick={() => handleNetworkSelect(op)}
-                      className="group relative p-10 bg-gray-50 hover:bg-white rounded-[3rem] flex flex-col items-center gap-6 transition-all border-2 border-transparent hover:border-blue-600 hover:shadow-2xl hover:shadow-blue-100"
+                      className="group relative p-10 bg-gray-50 hover:bg-white rounded-[3rem] flex flex-col items-center gap-6 transition-all border-2 border-transparent hover:border-emerald-600 hover:shadow-2xl hover:shadow-emerald-100"
                     >
                       <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center shadow-sm group-hover:scale-110 group-hover:rotate-6 transition-all overflow-hidden p-3">
                         <img src={op.image} alt={op.name} className="w-full h-full object-contain" />
@@ -223,11 +223,11 @@ const AirtimePage: React.FC = () => {
 
                 <div className="space-y-10">
                   <div className="relative group">
-                    <span className="absolute left-12 top-1/2 -translate-y-1/2 text-5xl font-black text-gray-200 group-focus-within:text-blue-600 transition-colors">₦</span>
+                    <span className="absolute left-12 top-1/2 -translate-y-1/2 text-5xl font-black text-gray-200 group-focus-within:text-emerald-600 transition-colors">₦</span>
                     <input 
                       type="number" 
                       autoFocus
-                      className="w-full p-12 pl-24 bg-gray-50 border-4 border-transparent focus:border-blue-600 focus:bg-white rounded-[4rem] text-7xl lg:text-9xl font-black tracking-tighter outline-none transition-all placeholder:text-gray-100"
+                      className="w-full p-12 pl-24 bg-gray-50 border-4 border-transparent focus:border-emerald-600 focus:bg-white rounded-[4rem] text-7xl lg:text-9xl font-black tracking-tighter outline-none transition-all placeholder:text-gray-100"
                       placeholder="0"
                       value={amount}
                       onChange={(e) => setAmount(e.target.value)}
@@ -239,7 +239,7 @@ const AirtimePage: React.FC = () => {
                       <button 
                         key={val}
                         onClick={() => setAmount(String(val))}
-                        className="py-4 bg-gray-50 hover:bg-blue-50 hover:text-blue-600 rounded-2xl font-black text-sm transition-all border border-transparent hover:border-blue-100"
+                        className="py-4 bg-gray-50 hover:bg-emerald-50 hover:text-emerald-600 rounded-2xl font-black text-sm transition-all border border-transparent hover:border-emerald-100"
                       >
                         ₦{val}
                       </button>
@@ -249,7 +249,7 @@ const AirtimePage: React.FC = () => {
                   <button 
                     disabled={numericAmount < 50}
                     onClick={handleAmountSubmit}
-                    className="w-full py-10 bg-blue-600 text-white rounded-[3rem] font-black text-[14px] uppercase tracking-[0.4em] shadow-2xl shadow-blue-200 hover:bg-gray-950 transition-all transform active:scale-95 disabled:opacity-50"
+                    className="w-full py-10 bg-emerald-600 text-white rounded-[3rem] font-black text-[14px] uppercase tracking-[0.4em] shadow-2xl shadow-emerald-200 hover:bg-gray-950 transition-all transform active:scale-95 disabled:opacity-50"
                   >
                     Continue
                   </button>
@@ -274,12 +274,12 @@ const AirtimePage: React.FC = () => {
                 <div className="space-y-10">
                   <div className="relative">
                     <div className="absolute left-10 top-1/2 -translate-y-1/2 w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-sm border border-gray-100">
-                      <Smartphone className="text-blue-600 w-8 h-8" />
+                      <Smartphone className="text-emerald-600 w-8 h-8" />
                     </div>
                     <input 
                       type="tel" 
                       autoFocus
-                      className="w-full p-12 pl-32 bg-gray-50 border-4 border-transparent focus:border-blue-600 focus:bg-white rounded-[4rem] text-5xl lg:text-7xl font-black tracking-tighter outline-none transition-all placeholder:text-gray-200"
+                      className="w-full p-12 pl-32 bg-gray-50 border-4 border-transparent focus:border-emerald-600 focus:bg-white rounded-[4rem] text-5xl lg:text-7xl font-black tracking-tighter outline-none transition-all placeholder:text-gray-200"
                       placeholder="08012345678"
                       maxLength={11}
                       value={phoneNumber}
@@ -290,7 +290,7 @@ const AirtimePage: React.FC = () => {
                   <button 
                     disabled={phoneNumber.length !== 11}
                     onClick={handlePhoneSubmit}
-                    className="w-full py-10 bg-blue-600 text-white rounded-[3rem] font-black text-[14px] uppercase tracking-[0.4em] shadow-2xl shadow-blue-200 hover:bg-gray-950 transition-all transform active:scale-95 disabled:opacity-50"
+                    className="w-full py-10 bg-emerald-600 text-white rounded-[3rem] font-black text-[14px] uppercase tracking-[0.4em] shadow-2xl shadow-emerald-200 hover:bg-gray-950 transition-all transform active:scale-95 disabled:opacity-50"
                   >
                     Review Order
                   </button>
@@ -308,7 +308,7 @@ const AirtimePage: React.FC = () => {
                 className="space-y-12"
               >
                 <div className="text-center space-y-4">
-                  <div className="w-20 h-20 bg-blue-50 text-blue-600 rounded-[2rem] flex items-center justify-center mx-auto shadow-inner">
+                  <div className="w-20 h-20 bg-emerald-50 text-emerald-600 rounded-[2rem] flex items-center justify-center mx-auto shadow-inner">
                     <Receipt className="w-10 h-10" />
                   </div>
                   <h3 className="text-4xl font-black text-gray-900 tracking-tight">Confirm Order</h3>
@@ -317,7 +317,7 @@ const AirtimePage: React.FC = () => {
 
                 <div className="bg-gray-50 p-12 rounded-[3.5rem] space-y-8 border border-gray-100 relative overflow-hidden">
                   <div className="absolute top-0 right-0 p-8 opacity-5">
-                    <Zap className="w-32 h-32 text-blue-600" />
+                    <Zap className="w-32 h-32 text-emerald-600" />
                   </div>
                   
                   <div className="space-y-6 relative z-10">
@@ -329,7 +329,7 @@ const AirtimePage: React.FC = () => {
                         <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Total to Pay</span>
                         <p className="text-gray-400 text-xs font-medium">No hidden charges</p>
                       </div>
-                      <span className="text-5xl font-black text-blue-600 tracking-tighter">₦{numericAmount.toLocaleString()}</span>
+                      <span className="text-5xl font-black text-emerald-600 tracking-tighter">₦{numericAmount.toLocaleString()}</span>
                     </div>
                   </div>
                 </div>
@@ -337,7 +337,7 @@ const AirtimePage: React.FC = () => {
                 <div className="space-y-6">
                   <button 
                     onClick={() => setShowPinModal(true)}
-                    className="w-full py-10 bg-blue-600 text-white rounded-[3rem] font-black text-[14px] uppercase tracking-[0.4em] shadow-2xl shadow-blue-200 hover:bg-gray-950 transition-all transform active:scale-95"
+                    className="w-full py-10 bg-emerald-600 text-white rounded-[3rem] font-black text-[14px] uppercase tracking-[0.4em] shadow-2xl shadow-emerald-200 hover:bg-gray-950 transition-all transform active:scale-95"
                   >
                     Confirm & Pay
                   </button>
@@ -380,7 +380,7 @@ const AirtimePage: React.FC = () => {
                 <div className="flex flex-col sm:flex-row gap-6 justify-center pt-8">
                   <button 
                     onClick={resetAll}
-                    className="px-12 py-8 bg-blue-600 text-white rounded-[2.5rem] font-black text-[12px] uppercase tracking-[0.3em] hover:bg-gray-950 transition-all shadow-2xl shadow-blue-100 flex items-center justify-center space-x-4 group"
+                    className="px-12 py-8 bg-emerald-600 text-white rounded-[2.5rem] font-black text-[12px] uppercase tracking-[0.3em] hover:bg-gray-950 transition-all shadow-2xl shadow-emerald-100 flex items-center justify-center space-x-4 group"
                   >
                     <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
                     <span>Buy Again</span>
@@ -400,13 +400,13 @@ const AirtimePage: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div className="p-12 bg-blue-50 rounded-[4rem] border border-blue-100 flex flex-col items-center text-center space-y-6 group hover:bg-white hover:shadow-2xl transition-all">
-          <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center text-blue-600 shadow-sm group-hover:scale-110 transition-all">
+        <div className="p-12 bg-emerald-50 rounded-[4rem] border border-emerald-100 flex flex-col items-center text-center space-y-6 group hover:bg-white hover:shadow-2xl transition-all">
+          <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center text-emerald-600 shadow-sm group-hover:scale-110 transition-all">
             <Zap className="w-10 h-10" />
           </div>
           <div className="space-y-2">
-            <h4 className="text-2xl font-black text-blue-900 tracking-tight">Instant Delivery</h4>
-            <p className="text-blue-800/60 font-medium leading-relaxed">Our automated system ensures your airtime reaches the destination in seconds.</p>
+            <h4 className="text-2xl font-black text-emerald-900 tracking-tight">Instant Delivery</h4>
+            <p className="text-emerald-800/60 font-medium leading-relaxed">Our automated system ensures your airtime reaches the destination in seconds.</p>
           </div>
         </div>
 
@@ -418,7 +418,7 @@ const AirtimePage: React.FC = () => {
             <h4 className="text-2xl font-black tracking-tight">Secure Payment</h4>
             <p className="text-white/40 font-medium leading-relaxed">Your transactions are protected by bank-grade security and encryption.</p>
           </div>
-          <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-blue-600/20 rounded-full blur-[80px]"></div>
+          <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-emerald-600/20 rounded-full blur-[80px]"></div>
         </div>
       </div>
     </div>
@@ -435,7 +435,7 @@ const CheckoutRow = ({ label, value }: { label: string, value: string }) => (
 const BackButton = ({ onClick }: { onClick: () => void }) => (
   <button 
     onClick={onClick}
-    className="text-[10px] font-black text-gray-400 uppercase tracking-widest hover:text-blue-600 transition-all flex items-center space-x-2"
+    className="text-[10px] font-black text-gray-400 uppercase tracking-widest hover:text-emerald-600 transition-all flex items-center space-x-2"
   >
     <span>← Back to previous step</span>
   </button>

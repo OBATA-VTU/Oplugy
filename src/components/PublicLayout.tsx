@@ -25,7 +25,7 @@ const PublicLayout: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-white dark:bg-[#050505] text-gray-900 dark:text-white font-sans selection:bg-blue-600 selection:text-white flex flex-col">
+    <div className="min-h-screen bg-white dark:bg-[#050505] text-gray-900 dark:text-white font-sans selection:bg-emerald-600 selection:text-white flex flex-col">
       {/* Navigation */}
       <nav className={`fixed w-full z-[100] transition-all duration-300 ${scrolled ? 'bg-white dark:bg-gray-900 py-3 border-b border-gray-200 dark:border-gray-800 shadow-md' : 'bg-white/80 dark:bg-gray-900/80 backdrop-blur-md py-5'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex justify-between items-center">
@@ -34,13 +34,13 @@ const PublicLayout: React.FC = () => {
           {/* Desktop Links */}
           <div className="hidden lg:flex items-center space-x-8">
             {navLinks.map((link) => (
-              <Link key={link.name} to={link.to} className="text-sm font-semibold text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400 transition-colors">
+              <Link key={link.name} to={link.to} className="text-sm font-semibold text-gray-700 hover:text-emerald-600 dark:text-gray-300 dark:hover:text-emerald-400 transition-colors">
                 {link.name}
               </Link>
             ))}
             <div className="w-px h-6 bg-gray-200 dark:bg-gray-700 mx-2"></div>
-            <Link to="/login" className="text-sm font-semibold text-gray-900 dark:text-white hover:text-blue-600 transition-colors">Login</Link>
-            <Link to="/signup" className="bg-blue-600 text-white px-6 py-2.5 rounded-lg text-sm font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20">Register</Link>
+            <Link to="/login" className="text-sm font-semibold text-gray-900 dark:text-white hover:text-emerald-600 transition-colors">Login</Link>
+            <Link to="/signup" className="bg-emerald-600 text-white px-6 py-2.5 rounded-lg text-sm font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-600/20">Register</Link>
           </div>
 
           {/* Mobile Menu Trigger */}
@@ -84,7 +84,7 @@ const PublicLayout: React.FC = () => {
                     key={link.name} 
                     to={link.to} 
                     onClick={() => setIsMenuOpen(false)}
-                    className="text-lg font-semibold text-gray-800 dark:text-gray-200 hover:text-blue-600 transition-colors"
+                    className="text-lg font-semibold text-gray-800 dark:text-gray-200 hover:text-emerald-600 transition-colors"
                   >
                     {link.name}
                   </Link>
@@ -93,7 +93,7 @@ const PublicLayout: React.FC = () => {
 
               <div className="mt-auto space-y-4">
                 <Link to="/login" onClick={() => setIsMenuOpen(false)} className="block w-full py-4 text-center font-bold text-sm border border-gray-200 dark:border-gray-700 rounded-xl">Login</Link>
-                <Link to="/signup" onClick={() => setIsMenuOpen(false)} className="block w-full py-4 text-center font-bold text-sm bg-blue-600 text-white rounded-xl">Register Now</Link>
+                <Link to="/signup" onClick={() => setIsMenuOpen(false)} className="block w-full py-4 text-center font-bold text-sm bg-emerald-600 text-white rounded-xl">Register Now</Link>
               </div>
             </motion.div>
           </>

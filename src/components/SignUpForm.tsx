@@ -86,7 +86,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ onSubmit, onGoogleSignUp, isLoa
           <input type="text" id="referralCode" className="w-full py-4 px-5 bg-gray-50 border border-gray-100 rounded-xl" placeholder="Enter code if you have one" value={formData.referralCode} onChange={handleChange} disabled={isLoading} />
         </div>
         
-        <button type="submit" className="w-full bg-blue-600 hover:bg-black text-white font-black py-5 rounded-2xl shadow-xl shadow-blue-100 transition-all uppercase tracking-widest text-[11px]" disabled={isLoading}>
+        <button type="submit" className="w-full bg-emerald-600 hover:bg-black text-white font-black py-5 rounded-2xl shadow-xl shadow-emerald-100 transition-all uppercase tracking-widest text-[11px]" disabled={isLoading}>
           {isLoading ? <Spinner /> : 'Create My Account'}
         </button>
       </form>

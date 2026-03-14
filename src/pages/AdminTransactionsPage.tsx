@@ -45,23 +45,23 @@ const AdminTransactionsPage: React.FC = () => {
     <div className="max-w-7xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-1000 pb-24">
       <div className="flex flex-col lg:flex-row justify-between lg:items-end gap-10">
         <div className="space-y-4">
-          <h2 className="text-[11px] font-black text-blue-600 uppercase tracking-[0.5em]">Global Ledger</h2>
-          <h1 className="text-5xl lg:text-8xl font-black text-gray-900 tracking-tighter leading-[0.85]">System <br /><span className="text-blue-600">Traffic.</span></h1>
+          <h2 className="text-[11px] font-black text-emerald-600 uppercase tracking-[0.5em]">Global Ledger</h2>
+          <h1 className="text-5xl lg:text-8xl font-black text-gray-900 tracking-tighter leading-[0.85]">System <br /><span className="text-emerald-600">Traffic.</span></h1>
         </div>
         <div className="flex flex-col sm:flex-row w-full lg:w-auto items-center gap-6">
           <div className="relative w-full sm:w-80 group">
-            <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-blue-600 transition-colors" />
+            <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-emerald-600 transition-colors" />
             <input 
               type="text" 
               placeholder="Filter by ID or user..." 
-              className="w-full p-6 pl-16 bg-white border border-gray-100 rounded-[2rem] shadow-2xl focus:ring-8 focus:ring-blue-50 transition-all font-black text-lg outline-none"
+              className="w-full p-6 pl-16 bg-white border border-gray-100 rounded-[2rem] shadow-2xl focus:ring-8 focus:ring-emerald-50 transition-all font-black text-lg outline-none"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
           <button 
             onClick={fetchLedger}
-            className="p-6 bg-white border border-gray-100 rounded-2xl shadow-xl text-gray-400 hover:text-blue-600 transition-all transform active:scale-95"
+            className="p-6 bg-white border border-gray-100 rounded-2xl shadow-xl text-gray-400 hover:text-emerald-600 transition-all transform active:scale-95"
           >
             <RefreshCw className={`w-6 h-6 ${loading ? 'animate-spin' : ''}`} />
           </button>
@@ -89,11 +89,11 @@ const AdminTransactionsPage: React.FC = () => {
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     key={t.id} 
-                    className="group hover:bg-blue-50/30 transition-all duration-500"
+                    className="group hover:bg-emerald-50/30 transition-all duration-500"
                   >
                     <td className="px-12 py-8">
                       <div className="flex items-center space-x-4">
-                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${t.type === 'FUNDING' ? 'bg-green-50 text-green-600' : 'bg-blue-50 text-blue-600'} shadow-inner`}>
+                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${t.type === 'FUNDING' ? 'bg-green-50 text-green-600' : 'bg-emerald-50 text-emerald-600'} shadow-inner`}>
                           {t.type === 'FUNDING' ? <ArrowDownLeft className="w-6 h-6" /> : <ArrowUpRight className="w-6 h-6" />}
                         </div>
                         <div>
@@ -105,8 +105,8 @@ const AdminTransactionsPage: React.FC = () => {
                     <td className="px-12 py-8">
                       <div className="text-sm font-black text-gray-900 tracking-tight mb-1">{t.source}</div>
                       <div className="flex items-center space-x-2">
-                        <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
-                        <span className="text-[9px] font-black uppercase tracking-widest text-blue-600">{t.type}</span>
+                        <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
+                        <span className="text-[9px] font-black uppercase tracking-widest text-emerald-600">{t.type}</span>
                       </div>
                     </td>
                     <td className="px-12 py-8 text-right">

@@ -1,5 +1,5 @@
 import React from 'react';
-import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { NotificationProvider } from './context/NotificationContext';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
@@ -50,6 +50,7 @@ import MediaTest from './pages/tests/MediaTest';
 import PublicLayout from './components/PublicLayout';
 import BlogPage from './pages/BlogPage';
 import AboutPage from './pages/AboutPage';
+import AllServicesPage from './pages/AllServicesPage';
 import { useAuth } from './hooks/useAuth';
 import ScrollToTop from './components/ScrollToTop';
 
@@ -95,6 +96,7 @@ const App: React.FC = () => {
                 {/* ROUTES WITH SIDEBAR (Layout) - PROTECTED */}
                 <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
                   <Route path="/dashboard" element={<DashboardPage />} />
+                  <Route path="/services" element={<AllServicesPage />} />
                   <Route path="/airtime" element={<AirtimePage />} />
                   <Route path="/data" element={<DataPage />} />
                   <Route path="/bills" element={<BillsPage />} />
