@@ -28,6 +28,24 @@ const AirtimePage: React.FC = () => {
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [showPinModal, setShowPinModal] = useState(false);
   const [showInsufficientModal, setShowInsufficientModal] = useState(false);
+  const [recentRecipients, setRecentRecipients] = useState<string[]>([]);
+
+  useEffect(() => {
+    const fetchRecent = async () => {
+      const res = await vtuService.getTransactionHistory();
+      if (res.status && res.data) {
+        const airtimeTx = res.data
+          .filter(tx => tx.type === 'AIRTIME' && tx.remarks?.includes('Recharge for'))
+          .map(tx => tx.remarks?.split('Recharge for ')[1] || '')
+          .filter(num => num && num.length === 11);
+        
+        // Unique numbers
+        const unique = Array.from(new Set(airtimeTx)).slice(0, 5);
+        setRecentRecipients(unique);
+      }
+    };
+    fetchRecent();
+  }, []);
 
   useEffect(() => {
     const fetchOperators = async () => {
@@ -286,6 +304,23 @@ const AirtimePage: React.FC = () => {
                       onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
                     />
                   </div>
+
+                  {recentRecipients.length > 0 && (
+                    <div className="space-y-4">
+                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">Recent Recipients</p>
+                      <div className="flex flex-wrap gap-3">
+                        {recentRecipients.map(num => (
+                          <button
+                            key={num}
+                            onClick={() => setPhoneNumber(num)}
+                            className="px-6 py-3 bg-gray-50 hover:bg-emerald-50 hover:text-emerald-600 rounded-2xl font-bold text-sm transition-all border border-transparent hover:border-emerald-100"
+                          >
+                            {num}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   <button 
                     disabled={phoneNumber.length !== 11}

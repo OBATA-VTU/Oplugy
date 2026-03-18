@@ -44,6 +44,13 @@ async function logTransaction(userId: string, type: TransactionResponse['type'],
     if (status !== 'FAILED' && type !== 'FUNDING' && type !== 'REFERRAL') {
       await updateDoc(doc(db, "users", user.uid), { walletBalance: increment(-Number(amount)) });
     }
+    
+    // Handle Reseller Profit Accumulation
+    if (extraData.profit && extraData.profit > 0) {
+      await updateDoc(doc(db, "users", user.uid), { 
+        accumulatedProfit: increment(Number(extraData.profit)) 
+      });
+    }
   } catch (e) { console.error("History log fail:", e); }
 }
 
@@ -67,7 +74,7 @@ export const vtuService = {
     }
   },
 
-  purchaseAirtime: async (payload: { network: string; phone: string; amount: number }): Promise<ApiResponse<TransactionResponse>> => {
+  purchaseAirtime: async (payload: { network: string; phone: string; amount: number; resellerPrice?: number }): Promise<ApiResponse<TransactionResponse>> => {
     const user = auth.currentUser;
     if (!user) return { status: false, message: 'Please login to continue.' };
 
@@ -78,7 +85,17 @@ export const vtuService = {
     });
     
     if (res.status) {
-      await logTransaction(user.uid, 'AIRTIME', payload.amount, `${payload.network} Airtime`, `Recharge for ${payload.phone}`, 'SUCCESS');
+      // Calculate profit if applicable
+      let profit = 0;
+      try {
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        const userData = userDoc.data();
+        if (userData?.role === 'reseller' && userData?.resellerPricePreference === 'PROFIT_ACCUMULATION' && payload.resellerPrice) {
+          profit = payload.amount - payload.resellerPrice;
+        }
+      } catch (e) {}
+
+      await logTransaction(user.uid, 'AIRTIME', payload.amount, `${payload.network} Airtime`, `Recharge for ${payload.phone}`, 'SUCCESS', { profit });
       return { status: true, message: res.message, data: res.data };
     }
     return res;
@@ -220,6 +237,7 @@ export const vtuService = {
           for (const p of filtered) {
             const planId = String(p.serviceID);
             const manual = await getManualPrice(planId, role);
+            const manualReseller = await getManualPrice(planId, 'reseller');
             const rawBase = Number(String(p.amount).replace(/,/g, ''));
             const validityStr = p.validity ? ` (${p.validity})` : '';
             
@@ -227,6 +245,7 @@ export const vtuService = {
               id: planId,
               name: `${p.dataPlan} ${p.dataType}${validityStr}`,
               amount: manual || rawBase, 
+              resellerPrice: manualReseller || rawBase,
               validity: p.validity || '30 Days'
             });
           }
@@ -285,7 +304,7 @@ export const vtuService = {
     return { status: false, message: 'No plans found.' };
   },
 
-  purchaseData: async (payload: { plan_id: string; phone_number: string; amount: number; network: string; plan_name: string; server?: 1 | 2 }): Promise<ApiResponse<TransactionResponse>> => {
+  purchaseData: async (payload: { plan_id: string; phone_number: string; amount: number; network: string; plan_name: string; server?: 1 | 2; resellerPrice?: number }): Promise<ApiResponse<TransactionResponse>> => {
     const user = auth.currentUser;
     if (!user) return { status: false, message: 'Please login to continue.' };
     
@@ -300,7 +319,18 @@ export const vtuService = {
 
     if (res.status) {
       const apiStatus = res.data?.status === 'success' ? 'SUCCESS' : 'PENDING';
-      await logTransaction(user.uid, 'DATA', payload.amount, `${payload.network} Data`, `Bundle ${payload.plan_name} for ${payload.phone_number}`, apiStatus);
+      
+      // Calculate profit if applicable
+      let profit = 0;
+      try {
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        const userData = userDoc.data();
+        if (userData?.role === 'reseller' && userData?.resellerPricePreference === 'PROFIT_ACCUMULATION' && payload.resellerPrice) {
+          profit = payload.amount - payload.resellerPrice;
+        }
+      } catch (e) {}
+
+      await logTransaction(user.uid, 'DATA', payload.amount, `${payload.network} Data`, `Bundle ${payload.plan_name} for ${payload.phone_number}`, apiStatus, { profit });
       return { status: true, message: res.message, data: res.data };
     }
     return res;
@@ -374,7 +404,11 @@ export const vtuService = {
 
   verifyCableSmartcard: async (payload: { biller: string; smartCardNumber: string }): Promise<ApiResponse<VerificationResponse>> => {
     return await cipApiClient<any>('validatecable', { 
-      data: { serviceID: payload.biller, iucNum: payload.smartCardNumber }, 
+      data: { 
+        serviceID: payload.biller, 
+        iucNum: payload.smartCardNumber,
+        cable: payload.biller // Add cable field
+      }, 
       method: 'POST',
       server: 1
     });
@@ -385,7 +419,11 @@ export const vtuService = {
     if (!user) return { status: false, message: 'Auth required.' };
 
     const res = await cipApiClient<any>('subcable', { 
-      data: { serviceID: payload.planCode, iucNum: payload.smartCardNumber }, 
+      data: { 
+        serviceID: payload.planCode, 
+        iucNum: payload.smartCardNumber,
+        cable: payload.biller // Add cable field
+      }, 
       method: 'POST',
       server: 1
     });

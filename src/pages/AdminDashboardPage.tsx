@@ -85,6 +85,18 @@ const AdminDashboardPage: React.FC = () => {
               <button className="bg-white text-gray-900 px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-emerald-600 hover:text-white transition-all shadow-xl shadow-white/5">
                 View Logs
               </button>
+              <button 
+                onClick={async () => {
+                  if (window.confirm("Are you sure you want to process all reseller profit payouts? This will reset accumulated profits and log payout transactions.")) {
+                    const res = await adminService.processResellerPayouts();
+                    alert(res.message);
+                    fetchData();
+                  }
+                }}
+                className="bg-emerald-600 text-white px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-white hover:text-gray-900 transition-all shadow-xl shadow-emerald-900/20"
+              >
+                Process Reseller Payouts
+              </button>
             </div>
           </div>
           <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-600/20 rounded-full blur-[100px] group-hover:bg-emerald-600/30 transition-all"></div>

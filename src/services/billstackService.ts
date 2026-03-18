@@ -32,14 +32,14 @@ export const billstackService = {
     bank?: '9PSB' | 'PALMPAY';
     reference: string;
   }): Promise<ApiResponse<BillstackResponse>> => {
-    try {
-      const res = await apiClient<any>('/api/proxy?server=billstack', '', {
+    const makeRequest = async (emailToUse: string) => {
+      return await apiClient<any>('/api/proxy?server=billstack', '', {
         method: 'POST',
         data: {
           endpoint: 'v2/thirdparty/generateVirtualAccount/',
           method: 'POST',
           data: {
-            email: payload.email,
+            email: emailToUse,
             firstName: payload.firstName,
             lastName: payload.lastName,
             phone: payload.phone,
@@ -48,6 +48,21 @@ export const billstackService = {
           }
         }
       });
+    };
+
+    try {
+      let res = await makeRequest(payload.email);
+
+      // Check for specific Billstack error regarding duplicate email requests
+      if (!res.status && res.data?.message?.toLowerCase().includes('multiple requests at a time for same email')) {
+        console.warn('Billstack duplicate email error detected. Retrying with a unique random email...');
+        
+        // Generate a unique random email to bypass the conflict
+        const randomString = Math.random().toString(36).substring(2, 10);
+        const fallbackEmail = `user_${randomString}_${Date.now()}@oplug.com`;
+        
+        res = await makeRequest(fallbackEmail);
+      }
 
       if (res.status && res.data?.status) {
         return {

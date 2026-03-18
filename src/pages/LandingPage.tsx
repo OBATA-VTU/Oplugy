@@ -5,17 +5,18 @@ import {
   Smartphone, 
   ArrowRight, CheckCircle2,
   Users,
-  Wifi, Tv, Lightbulb, Zap as ZapIcon
+  Wifi, Tv, Lightbulb, Zap as ZapIcon,
+  Bitcoin, Coins, Wallet as WalletIcon
 } from 'lucide-react';
 
 const LandingPage: React.FC = () => {
   const services = [
+    { name: 'Crypto Hub', icon: <Bitcoin className="w-8 h-8" />, desc: 'Buy, sell, and fund your wallet with Bitcoin, Ethereum, and more.', color: 'bg-orange-500' },
+    { name: 'Cheap Data', icon: <Wifi className="w-8 h-8" />, desc: 'Buy cheap data plans for all networks at wholesale prices.', color: 'bg-blue-500' },
     { name: 'Airtime Topup', icon: <Smartphone className="w-8 h-8" />, desc: 'Instant airtime recharge for MTN, GLO, Airtel, and 9mobile.', color: 'bg-emerald-500' },
-    { name: 'Cheap Data', icon: <Wifi className="w-8 h-8" />, desc: 'Buy cheap data plans for all networks at wholesale prices.', color: 'bg-green-500' },
-    { name: 'Cable TV', icon: <Tv className="w-8 h-8" />, desc: 'Renew your DSTV, GOTV, and Startimes subscriptions instantly.', color: 'bg-emerald-600' },
+    { name: 'Cable TV', icon: <Tv className="w-8 h-8" />, desc: 'Renew your DSTV, GOTV, and Startimes subscriptions instantly.', color: 'bg-purple-600' },
     { name: 'Electricity Bills', icon: <Lightbulb className="w-8 h-8" />, desc: 'Pay your electricity bills (Prepaid & Postpaid) with ease.', color: 'bg-yellow-500' },
-    { name: 'Exam Pins', icon: <CheckCircle2 className="w-8 h-8" />, desc: 'Purchase WAEC, NECO, and NABTEB result checker pins.', color: 'bg-emerald-700' },
-    { name: 'SMM Services', icon: <Users className="w-8 h-8" />, desc: 'Boost your social media presence with our SMM tools.', color: 'bg-emerald-800' },
+    { name: 'SMM Services', icon: <Users className="w-8 h-8" />, desc: 'Boost your social media presence with our SMM tools.', color: 'bg-pink-600' },
   ];
 
   const features = [
@@ -27,7 +28,7 @@ const LandingPage: React.FC = () => {
   return (
     <div className="bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white font-sans selection:bg-emerald-600 selection:text-white">
       {/* HERO SECTION */}
-      <section className="relative bg-gradient-to-br from-emerald-700 to-emerald-900 py-20 lg:py-32 overflow-hidden">
+      <section className="relative bg-gradient-to-br from-gray-900 via-emerald-900 to-black py-20 lg:py-32 overflow-hidden">
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <motion.div
@@ -36,11 +37,15 @@ const LandingPage: React.FC = () => {
               transition={{ duration: 0.8 }}
               className="text-white"
             >
-              <h1 className="text-4xl lg:text-6xl font-extrabold leading-tight mb-6">
-                Fast, Reliable & Secure <span className="text-yellow-400">VTU Platform</span>
+              <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 px-4 py-2 rounded-full text-sm font-medium mb-6 backdrop-blur-md">
+                <Bitcoin size={16} className="text-orange-400" />
+                <span>Now Supporting Crypto Payments</span>
+              </div>
+              <h1 className="text-4xl lg:text-7xl font-extrabold leading-tight mb-6 tracking-tighter">
+                The Ultimate <span className="text-emerald-400">Digital Assets</span> Platform
               </h1>
-              <p className="text-lg lg:text-xl text-emerald-100 mb-10 leading-relaxed">
-                Experience the best way to buy Airtime, Data, Pay Bills, and more at the cheapest rates in Nigeria. Join thousands of happy users today!
+              <p className="text-lg lg:text-xl text-gray-300 mb-10 leading-relaxed max-w-xl">
+                Buy Airtime, Data, and Crypto at the best rates. Secure, fast, and fully automated transactions for the modern Nigerian.
               </p>
               <div className="flex flex-wrap gap-4">
                 <Link to="/signup" className="bg-yellow-400 text-emerald-900 px-8 py-4 rounded-lg text-lg font-bold hover:bg-yellow-500 transition-all shadow-xl">
@@ -64,14 +69,26 @@ const LandingPage: React.FC = () => {
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.8 }}
-              className="hidden lg:block"
+              className="hidden lg:block relative"
             >
+              <div className="absolute -inset-4 bg-emerald-500/20 rounded-full blur-3xl animate-pulse"></div>
               <img 
-                src="https://picsum.photos/seed/nigeria-vtu/800/600" 
-                alt="VTU Services" 
-                className="rounded-2xl shadow-2xl border-8 border-white/10"
+                src="https://picsum.photos/seed/crypto-trading/800/800" 
+                alt="Digital Assets" 
+                className="rounded-3xl shadow-2xl border border-white/10 relative z-10"
                 referrerPolicy="no-referrer"
               />
+              <div className="absolute -bottom-6 -right-6 bg-card p-6 rounded-2xl shadow-2xl border border-white/10 backdrop-blur-xl z-20">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center text-white">
+                    <Bitcoin size={24} />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider">Bitcoin Price</p>
+                    <p className="text-xl font-black">$64,231</p>
+                  </div>
+                </div>
+              </div>
             </motion.div>
           </div>
         </div>
@@ -172,13 +189,15 @@ const LandingPage: React.FC = () => {
                 desc: 'Sign up in seconds with just your basic details.',
                 svg: (
                   <svg width="160" height="160" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    {/* Animated Woman Character Placeholder */}
                     <circle cx="100" cy="100" r="80" fill="#10b981" fillOpacity="0.1" />
                     <path d="M70 150C70 130 80 120 100 120C120 120 130 130 130 150" stroke="#10b981" strokeWidth="8" strokeLinecap="round" />
                     <circle cx="100" cy="80" r="30" stroke="#10b981" strokeWidth="8" />
                     <path d="M140 60L160 40M160 40H140M160 40V60" stroke="#fbbf24" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
                     <rect x="130" y="80" width="40" height="60" rx="8" fill="white" stroke="#10b981" strokeWidth="4" />
                     <circle cx="150" cy="95" r="5" fill="#10b981" />
+                    {/* Crypto Symbol */}
+                    <circle cx="40" cy="40" r="15" fill="#f59e0b" fillOpacity="0.2" />
+                    <text x="35" y="45" fill="#f59e0b" fontSize="14" fontWeight="bold">₿</text>
                   </svg>
                 )
               },
@@ -226,38 +245,28 @@ const LandingPage: React.FC = () => {
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid lg:grid-cols-2 gap-20 items-center mb-32">
             <div>
-              <h2 className="text-emerald-600 font-bold uppercase tracking-wider mb-2">Instant Data</h2>
-              <p className="text-4xl lg:text-5xl font-black mb-6 leading-tight text-gray-900 dark:text-white">Buy Data with Ease</p>
+              <h2 className="text-emerald-600 font-bold uppercase tracking-wider mb-2">Crypto Trading</h2>
+              <p className="text-4xl lg:text-5xl font-black mb-6 leading-tight text-gray-900 dark:text-white">Buy & Sell Crypto</p>
               <p className="text-gray-600 dark:text-gray-400 text-lg mb-10 leading-relaxed">
-                Enjoy the cheapest data rates in Nigeria. Our system is fully automated, ensuring you get your data instantly after payment.
+                Trade Bitcoin, Ethereum, and other popular cryptocurrencies instantly. Our platform provides the most secure and fastest way to manage your digital assets.
               </p>
               <Link to="/signup" className="bg-emerald-600 text-white px-10 py-5 rounded-xl font-bold text-lg hover:bg-emerald-700 transition-all shadow-xl inline-block">
-                Get Started
+                Start Trading
               </Link>
             </div>
             <div className="flex justify-center">
-              {/* Woman buying data SVG */}
+              {/* Crypto Trading SVG */}
               <svg width="400" height="400" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <circle cx="100" cy="100" r="90" fill="#10b981" fillOpacity="0.05" />
-                {/* Character Body */}
+                {/* Chart */}
+                <path d="M40 140L70 110L100 130L140 80L160 100" stroke="#10b981" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
+                {/* Coins */}
+                <circle cx="140" cy="80" r="20" fill="#f59e0b" />
+                <text x="135" y="87" fill="white" fontSize="20" fontWeight="bold">₿</text>
+                <circle cx="60" cy="60" r="15" fill="#6366f1" />
+                <text x="56" y="65" fill="white" fontSize="14" fontWeight="bold">Ξ</text>
+                {/* Character */}
                 <path d="M60 180C60 150 80 130 100 130C120 130 140 150 140 180" stroke="#10b981" strokeWidth="10" strokeLinecap="round" />
-                {/* Head */}
-                <circle cx="100" cy="80" r="35" stroke="#10b981" strokeWidth="10" />
-                {/* Phone */}
-                <rect x="130" y="70" width="45" height="80" rx="10" fill="white" stroke="#10b981" strokeWidth="5" />
-                {/* Success Notification */}
-                <motion.g
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ repeat: Infinity, duration: 3, repeatDelay: 1 }}
-                >
-                  <rect x="110" y="30" width="80" height="30" rx="15" fill="#10b981" />
-                  <text x="120" y="50" fill="white" fontSize="8" fontWeight="bold">Success!</text>
-                  <path d="M170 40L175 45L185 35" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-                </motion.g>
-                {/* Signal lines */}
-                <path d="M40 60C30 70 30 90 40 100" stroke="#fbbf24" strokeWidth="5" strokeLinecap="round" />
-                <path d="M30 50C15 65 15 95 30 110" stroke="#fbbf24" strokeWidth="5" strokeLinecap="round" opacity="0.5" />
               </svg>
             </div>
           </div>
@@ -295,27 +304,30 @@ const LandingPage: React.FC = () => {
           {/* New Sections */}
           <div className="grid lg:grid-cols-2 gap-20 items-center mt-32 mb-32">
             <div>
-              <h2 className="text-emerald-600 font-bold uppercase tracking-wider mb-2">Power Up</h2>
-              <p className="text-4xl lg:text-5xl font-black mb-6 leading-tight text-gray-900 dark:text-white">Electricity Bill Payment</p>
+              <h2 className="text-emerald-600 font-bold uppercase tracking-wider mb-2">Instant Funding</h2>
+              <p className="text-4xl lg:text-5xl font-black mb-6 leading-tight text-gray-900 dark:text-white">Fund Wallet with Crypto</p>
               <p className="text-gray-600 dark:text-gray-400 text-lg mb-10 leading-relaxed">
-                Never stay in the dark. Pay your electricity bills for all major DISCOs in Nigeria instantly. Both prepaid and postpaid supported.
+                No bank? No problem. Use your crypto assets to fund your Oplug wallet instantly and start buying services immediately.
               </p>
               <Link to="/signup" className="bg-emerald-600 text-white px-10 py-5 rounded-xl font-bold text-lg hover:bg-emerald-700 transition-all shadow-xl inline-block">
-                Pay Bill
+                Fund Now
               </Link>
             </div>
             <div className="flex justify-center">
-              {/* Man paying electricity SVG */}
+              {/* Wallet Funding SVG */}
               <svg width="400" height="400" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <circle cx="100" cy="100" r="90" fill="#10b981" fillOpacity="0.05" />
-                {/* Lightbulb */}
-                <path d="M100 40C80 40 70 55 70 70C70 85 80 95 90 100V115H110V100C120 95 130 85 130 70C130 55 120 40 100 40Z" stroke="#fbbf24" strokeWidth="8" />
-                <path d="M90 125H110" stroke="#fbbf24" strokeWidth="8" strokeLinecap="round" />
-                {/* Character */}
-                <path d="M140 180C140 160 150 150 170 150" stroke="#10b981" strokeWidth="8" strokeLinecap="round" />
-                <circle cx="170" cy="130" r="20" stroke="#10b981" strokeWidth="8" />
-                {/* Spark lines */}
-                <path d="M100 20V30M140 40L130 50M60 40L70 50" stroke="#fbbf24" strokeWidth="4" strokeLinecap="round" />
+                {/* Wallet */}
+                <rect x="50" y="70" width="100" height="70" rx="12" fill="#064e3b" stroke="#10b981" strokeWidth="8" />
+                <rect x="130" y="90" width="30" height="30" rx="6" fill="#fbbf24" />
+                {/* Coins falling into wallet */}
+                <motion.g
+                  animate={{ y: [0, 40, 0] }}
+                  transition={{ repeat: Infinity, duration: 2 }}
+                >
+                  <circle cx="100" cy="40" r="10" fill="#f59e0b" />
+                  <text x="96" y="44" fill="white" fontSize="10" fontWeight="bold">₿</text>
+                </motion.g>
               </svg>
             </div>
           </div>
@@ -356,24 +368,24 @@ const LandingPage: React.FC = () => {
           <div className="bg-gradient-to-r from-emerald-800 to-emerald-950 rounded-[3rem] p-12 lg:p-20 text-white relative overflow-hidden">
             <div className="grid lg:grid-cols-2 gap-12 items-center relative z-10">
               <div>
-                <h2 className="text-4xl lg:text-5xl font-black mb-6 leading-tight">Start Your Own VTU Business Today!</h2>
+                <h2 className="text-4xl lg:text-5xl font-black mb-6 leading-tight">Start Your Crypto Journey Today!</h2>
                 <p className="text-xl text-emerald-100 mb-10 leading-relaxed">
-                  Join our reseller program and get access to even cheaper rates. Build your own customer base and earn daily income with Oplug.
+                  Join thousands of users who trust Oplug for their digital asset management. Secure, fast, and reliable.
                 </p>
                 <Link to="/signup" className="bg-white text-emerald-900 px-10 py-5 rounded-xl font-bold text-lg hover:bg-emerald-50 transition-all shadow-xl inline-block">
-                  Become a Reseller
+                  Create Free Account
                 </Link>
               </div>
               <div className="flex justify-center">
-                {/* Reseller Character SVG */}
+                {/* Crypto Character SVG */}
                 <svg width="350" height="350" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <circle cx="100" cy="100" r="90" fill="white" fillOpacity="0.1" />
                   {/* Character */}
                   <path d="M60 160C60 130 80 110 100 110C120 110 140 130 140 160" stroke="white" strokeWidth="10" strokeLinecap="round" />
                   <circle cx="100" cy="70" r="30" stroke="white" strokeWidth="10" />
-                  {/* Money Bag */}
-                  <path d="M140 80C160 80 170 90 170 110C170 130 160 140 140 140" fill="#fbbf24" />
-                  <text x="145" y="115" fill="#064e3b" fontSize="12" fontWeight="bold">₦</text>
+                  {/* Bitcoin Icon */}
+                  <circle cx="150" cy="100" r="25" fill="#f59e0b" />
+                  <text x="142" y="110" fill="white" fontSize="24" fontWeight="bold">₿</text>
                   {/* Smile */}
                   <path d="M90 75C90 80 110 80 110 75" stroke="white" strokeWidth="4" strokeLinecap="round" />
                 </svg>

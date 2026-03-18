@@ -16,13 +16,20 @@ const ProfilePage: React.FC = () => {
   const [copied, setCopied] = useState<string | null>(null);
   
   const [pinForm, setPinForm] = useState({ oldPin: '', newPin: '', confirmPin: '' });
+  const [bankForm, setBankForm] = useState({
+    bankName: user?.bankDetails?.bankName || '',
+    accountNumber: user?.bankDetails?.accountNumber || '',
+    accountName: user?.bankDetails?.accountName || '',
+  });
   const [webhookUrl, setWebhookUrl] = useState(user?.webhookUrl || '');
   const [showApiKey, setShowApiKey] = useState(false);
   const [apiKey, setApiKey] = useState(user?.apiKey || '');
 
-  const [bvn, setBvn] = useState('');
+  const [kycType, setKycType] = useState<'BVN' | 'NIN'>('BVN');
+  const [kycValue, setKycValue] = useState('');
   const [isVerifyingKyc, setIsVerifyingKyc] = useState(false);
   const [isUpgradingReseller, setIsUpgradingReseller] = useState(false);
+  const [showKycModal, setShowKycModal] = useState(false);
 
   const [personalInfo, setPersonalInfo] = useState({
     fullName: user?.fullName || '',
@@ -107,38 +114,54 @@ const ProfilePage: React.FC = () => {
     setIsUpdating(false);
   };
 
+  const handleUpdateBankDetails = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+    setIsUpdating(true);
+    try {
+      const userRef = doc(db, "users", user.id);
+      await updateDoc(userRef, { bankDetails: bankForm });
+      addNotification("Bank details updated successfully.", "success");
+    } catch (e) {
+      addNotification("Failed to update bank details.", "error");
+    }
+    setIsUpdating(false);
+  };
+
   const handleKycSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !bvn) return;
-    if (bvn.length !== 11) {
+    if (!user || !kycValue) return;
+    
+    if (kycType === 'BVN' && kycValue.length !== 11) {
       addNotification("BVN must be 11 digits.", "warning");
       return;
     }
-
-    if (!user.virtualAccount?.account_number) {
-      addNotification("Please generate a virtual account first.", "warning");
+    
+    if (kycType === 'NIN' && kycValue.length !== 11) {
+      addNotification("NIN must be 11 digits.", "warning");
       return;
     }
 
     setIsVerifyingKyc(true);
     try {
-      const response = await billstackService.upgradeAccount({
-        accountNumber: user.virtualAccount.account_number,
-        bvn: bvn
-      });
-
-      if (response.status) {
-        const userRef = doc(db, "users", user.id);
-        await updateDoc(userRef, { 
-          isVerified: true,
-          bvn: bvn,
-          kycStatus: 'VERIFIED'
+      // If they have a virtual account, we try to upgrade it on Billstack
+      if (user.virtualAccount?.account_number && kycType === 'BVN') {
+        await billstackService.upgradeAccount({
+          accountNumber: user.virtualAccount.account_number,
+          bvn: kycValue
         });
-        addNotification("KYC Verified successfully! You now have a verified badge.", "success");
-        setBvn('');
-      } else {
-        addNotification(response.message || "KYC Verification failed.", "error");
       }
+
+      const userRef = doc(db, "users", user.id);
+      await updateDoc(userRef, { 
+        isVerified: true,
+        kycType: kycType,
+        kycValue: kycValue,
+        kycStatus: 'VERIFIED'
+      });
+      addNotification("KYC Verified successfully!", "success");
+      setKycValue('');
+      setShowKycModal(false);
     } catch (error: any) {
       console.error("KYC Error:", error);
       addNotification(error.message || "An error occurred during KYC verification.", "error");
@@ -153,26 +176,22 @@ const ProfilePage: React.FC = () => {
       addNotification("You are already on a premium plan.", "info");
       return;
     }
-    if (!user.isVerified) {
-      addNotification("Please complete KYC verification first.", "warning");
-      setActiveTab('KYC');
-      return;
-    }
+    
     if (user.walletBalance < 1200) {
       addNotification("Insufficient balance. You need ₦1,200 for reseller upgrade.", "error");
       return;
     }
 
-    if (!window.confirm("Upgrade to Reseller for ₦1,200? This will give you access to lower rates.")) return;
+    if (!window.confirm("Upgrade to Reseller for ₦1,200?")) return;
 
     setIsUpgradingReseller(true);
     try {
       const userRef = doc(db, "users", user.id);
       
-      // Atomic update would be better, but for now:
       await updateDoc(userRef, { 
         role: 'reseller',
-        walletBalance: user.walletBalance - 1200
+        walletBalance: user.walletBalance - 1200,
+        resellerPricePreference: 'DISCOUNT' // Default
       });
 
       // Record transaction
@@ -188,6 +207,11 @@ const ProfilePage: React.FC = () => {
       });
 
       addNotification("Congratulations! You are now a Reseller.", "success");
+      
+      // Show KYC modal if not verified
+      if (!user.isVerified) {
+        setShowKycModal(true);
+      }
     } catch (error: any) {
       addNotification("Upgrade failed. Please try again.", "error");
     } finally {
@@ -426,21 +450,33 @@ const ProfilePage: React.FC = () => {
                 <div className="space-y-10">
                   <div className="bg-blue-50/50 p-8 rounded-3xl border border-blue-100">
                     <p className="text-blue-800 text-sm font-medium leading-relaxed">
-                      Verify your identity using your Bank Verification Number (BVN). This is required for reseller upgrades and to ensure the security of your account.
+                      Verify your identity using your Bank Verification Number (BVN) or National Identity Number (NIN). This is required for reseller upgrades and to ensure the security of your account.
                     </p>
                   </div>
 
                   <form onSubmit={handleKycSubmit} className="max-w-md space-y-8">
+                    <div className="space-y-4">
+                      <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-4">Select ID Type</label>
+                      <select 
+                        value={kycType}
+                        onChange={(e) => setKycType(e.target.value as any)}
+                        className="w-full p-6 bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-[2rem] text-sm font-black tracking-tight focus:bg-white dark:focus:bg-[#050505] outline-none transition-all"
+                      >
+                        <option value="BVN">BVN (Recommended)</option>
+                        <option value="NIN">NIN</option>
+                      </select>
+                    </div>
+
                     <ProfileInput 
-                      label="Bank Verification Number (BVN)" 
-                      value={bvn} 
-                      onChange={(v: string) => setBvn(v.replace(/\D/g, ''))} 
+                      label={`${kycType} Number`} 
+                      value={kycValue} 
+                      onChange={(v: string) => setKycValue(v.replace(/\D/g, ''))} 
                       maxLength={11}
-                      placeholder="Enter 11-digit BVN"
+                      placeholder={`Enter 11-digit ${kycType}`}
                     />
                     
                     <button 
-                      disabled={isVerifyingKyc || bvn.length !== 11}
+                      disabled={isVerifyingKyc || kycValue.length !== 11}
                       className="w-full bg-blue-600 text-white py-5 rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-gray-950 transition-all shadow-xl shadow-blue-100 disabled:opacity-50"
                     >
                       {isVerifyingKyc ? 'Verifying...' : 'Verify Identity'}
@@ -451,7 +487,59 @@ const ProfilePage: React.FC = () => {
             </motion.div>
           )}
 
-          {(activeTab === 'BANK' || activeTab === 'PASSWORD') && (
+          {activeTab === 'BANK' && (
+            <motion.div 
+              key="bank"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="space-y-12"
+            >
+              <div className="flex items-center space-x-4 mb-10">
+                 <div className="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
+                    <Shield size={24} />
+                 </div>
+                 <h3 className="text-xl font-black uppercase tracking-tight">Bank Settings</h3>
+              </div>
+
+              <div className="bg-blue-50/50 p-8 rounded-3xl border border-blue-100 mb-10">
+                <p className="text-blue-800 text-sm font-medium leading-relaxed">
+                  These details will be used to process your rewards, cashback, and reseller profits. Please ensure they are accurate.
+                </p>
+              </div>
+
+              <form onSubmit={handleUpdateBankDetails} className="max-w-md space-y-8">
+                <ProfileInput 
+                  label="Bank Name" 
+                  value={bankForm.bankName} 
+                  onChange={(v: string) => setBankForm({...bankForm, bankName: v})} 
+                  placeholder="e.g. GTBank"
+                />
+                <ProfileInput 
+                  label="Account Number" 
+                  value={bankForm.accountNumber} 
+                  onChange={(v: string) => setBankForm({...bankForm, accountNumber: v})} 
+                  maxLength={10}
+                  placeholder="10-digit account number"
+                />
+                <ProfileInput 
+                  label="Account Name" 
+                  value={bankForm.accountName} 
+                  onChange={(v: string) => setBankForm({...bankForm, accountName: v})} 
+                  placeholder="Full name on account"
+                />
+                
+                <button 
+                  disabled={isUpdating}
+                  className="w-full bg-blue-600 text-white py-5 rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-gray-950 transition-all shadow-xl shadow-blue-100 disabled:opacity-50"
+                >
+                  {isUpdating ? 'Saving...' : 'Save Bank Details'}
+                </button>
+              </form>
+            </motion.div>
+          )}
+
+          {activeTab === 'PASSWORD' && (
             <div className="flex flex-col items-center justify-center py-20 text-center space-y-6">
                <div className="w-20 h-20 rounded-full bg-gray-50 flex items-center justify-center text-gray-300">
                   <Shield size={40} />
@@ -464,6 +552,66 @@ const ProfilePage: React.FC = () => {
           )}
         </AnimatePresence>
       </div>
+      <AnimatePresence>
+        {showKycModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="bg-white dark:bg-[#0f172a] rounded-[3rem] p-10 max-w-lg w-full shadow-2xl space-y-8"
+            >
+              <div className="text-center space-y-4">
+                <div className="w-20 h-20 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mx-auto">
+                  <Shield size={40} />
+                </div>
+                <h3 className="text-2xl font-black uppercase tracking-tight">KYC Required</h3>
+                <p className="text-gray-500 text-sm">
+                  Congratulations on your upgrade! Your account will still be using the normal <span className="font-bold text-blue-600">Smart User Price</span> until you complete your KYC verification.
+                </p>
+              </div>
+
+              <form onSubmit={handleKycSubmit} className="space-y-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">Select ID Type</label>
+                  <select 
+                    value={kycType}
+                    onChange={(e) => setKycType(e.target.value as any)}
+                    className="w-full p-5 bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-2xl text-sm font-black outline-none"
+                  >
+                    <option value="BVN">BVN (Recommended)</option>
+                    <option value="NIN">NIN</option>
+                  </select>
+                </div>
+
+                <ProfileInput 
+                  label={`${kycType} Number`} 
+                  value={kycValue} 
+                  onChange={(v: string) => setKycValue(v.replace(/\D/g, ''))} 
+                  maxLength={11}
+                  placeholder={`Enter 11-digit ${kycType}`}
+                />
+
+                <div className="flex gap-4">
+                  <button 
+                    type="button"
+                    onClick={() => setShowKycModal(false)}
+                    className="flex-1 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest bg-gray-100 text-gray-400"
+                  >
+                    Later
+                  </button>
+                  <button 
+                    disabled={isVerifyingKyc || kycValue.length !== 11}
+                    className="flex-1 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest bg-blue-600 text-white shadow-lg shadow-blue-100 disabled:opacity-50"
+                  >
+                    {isVerifyingKyc ? 'Verifying...' : 'Verify Now'}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

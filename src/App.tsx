@@ -23,6 +23,7 @@ import TransactionHistoryPage from './pages/TransactionHistoryPage';
 import ReferralPage from './pages/ReferralPage';
 import SchedulePurchasePage from './pages/SchedulePurchasePage';
 import SmmPage from './pages/SmmPage';
+import CryptoPage from './pages/CryptoPage';
 import QuickPurchasePage from './pages/QuickPurchasePage';
 import QuickBuyAirtime from './pages/quick-buy/QuickBuyAirtime';
 import QuickBuyData from './pages/quick-buy/QuickBuyData';
@@ -53,6 +54,8 @@ import AboutPage from './pages/AboutPage';
 import AllServicesPage from './pages/AllServicesPage';
 import { useAuth } from './hooks/useAuth';
 import ScrollToTop from './components/ScrollToTop';
+import { db } from './firebase/config';
+import { doc, getDocFromCache, getDocFromServer } from 'firebase/firestore';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, isLoading } = useAuth();
@@ -62,6 +65,19 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 };
 
 const App: React.FC = () => {
+  React.useEffect(() => {
+    async function testConnection() {
+      try {
+        await getDocFromServer(doc(db, 'test', 'connection'));
+      } catch (error) {
+        if (error instanceof Error && error.message.includes('the client is offline')) {
+          console.error("Please check your Firebase configuration. The client is offline.");
+        }
+      }
+    }
+    testConnection();
+  }, []);
+
   return (
     <ThemeProvider>
       <NotificationProvider>
@@ -109,6 +125,7 @@ const App: React.FC = () => {
                   <Route path="/referrals" element={<ReferralPage />} />
                   <Route path="/schedule" element={<SchedulePurchasePage />} />
                   <Route path="/smm" element={<SmmPage />} />
+                  <Route path="/crypto" element={<CryptoPage />} />
                   <Route path="/api-docs" element={<ApiDocsPage />} />
                 </Route>
 

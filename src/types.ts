@@ -26,6 +26,17 @@ export interface User {
     bank_id: string;
     reference: string;
   };
+  isVerified: boolean;
+  kycStatus: 'PENDING' | 'VERIFIED' | 'FAILED' | 'NONE';
+  kycType?: 'BVN' | 'NIN';
+  kycValue?: string;
+  bankDetails?: {
+    bankName: string;
+    accountNumber: string;
+    accountName: string;
+  };
+  resellerPricePreference?: 'DISCOUNT' | 'PROFIT_ACCUMULATION';
+  accumulatedProfit?: number;
 }
 
 export interface ManualPrice {
@@ -66,6 +77,7 @@ export interface DataPlan {
   id: string; 
   name: string;
   amount: number; 
+  resellerPrice?: number;
   validity: string;
   type?: string;
   size?: string;
@@ -79,7 +91,7 @@ export interface TransactionResponse {
   userEmail?: string;
   amount: number; 
   status: 'SUCCESS' | 'PENDING' | 'FAILED';
-  type: 'AIRTIME' | 'DATA' | 'CABLE' | 'ELECTRICITY' | 'FUNDING' | 'REFERRAL' | 'EDUCATION';
+  type: 'AIRTIME' | 'DATA' | 'CABLE' | 'ELECTRICITY' | 'FUNDING' | 'REFERRAL' | 'EDUCATION' | 'CRYPTO' | 'SYSTEM';
   source: string;
   remarks: string;
   fee?: number;

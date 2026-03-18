@@ -5,7 +5,7 @@ import { createProxyMiddleware } from 'http-proxy-middleware';
 import * as admin from 'firebase-admin';
 import axios from 'axios';
 import crypto from 'crypto';
-import { initializeFirebaseAdmin } from './src/firebase/admin';
+import { initializeFirebaseAdmin, db } from './src/firebase/admin';
 
 // Initialize Firebase Admin
 initializeFirebaseAdmin();
@@ -176,7 +176,6 @@ async function callOgaviral(action: string, data: any = {}) {
 // --- Auth Endpoints ---
 app.post('/api/auth/login', async (req, res) => {
   const { email } = req.body;
-  const db = admin.firestore();
   const snapshot = await db.collection('users').where('email', '==', email).limit(1).get();
   if (snapshot.empty) {
     return res.status(404).json({ status: false, message: 'User not found.' });
@@ -187,7 +186,6 @@ app.post('/api/auth/login', async (req, res) => {
 
 app.post('/api/auth/signup', async (req, res) => {
   const userData = req.body;
-  const db = admin.firestore();
   const existing = await db.collection('users').where('email', '==', userData.email).limit(1).get();
   if (!existing.empty) {
     return res.status(400).json({ status: false, message: 'User already exists.' });
@@ -211,7 +209,6 @@ app.get('/api/auth/me', async (req, res) => {
   const idToken = authHeader.split('Bearer ')[1];
   try {
     const decodedToken = await admin.auth().verifyIdToken(idToken);
-    const db = admin.firestore();
     const userDoc = await db.collection('users').doc(decodedToken.uid).get();
     if (!userDoc.exists) {
       const userRecord = await admin.auth().getUser(decodedToken.uid);
@@ -246,7 +243,6 @@ app.post("/api/admin/sync-services", async (req, res) => {
 
     if (response.data.status === 'success' && response.data.data) {
       const { dataPlans = [], cablePlans = [], electricityPlans = [] } = response.data.data;
-      const db = admin.firestore();
       const batch = db.batch();
 
       // Sync Data Plans
@@ -348,7 +344,6 @@ app.post("/api/vtu/purchase", async (req, res) => {
   }
 
   try {
-    const db = admin.firestore();
     const userRef = db.collection('users').doc(userId);
     const userDoc = await userRef.get();
     const userData = userDoc.data();
@@ -499,7 +494,6 @@ app.post('/api/webhooks/inlomax', async (req, res) => {
   
   if (admin.apps.length) {
     try {
-      const db = admin.firestore();
       const { status, reference, request_id } = payload;
       const txRef = reference || request_id;
 
@@ -535,7 +529,6 @@ app.post('/api/paystack-webhook', async (req, res) => {
     const data = event.data;
     const amount = data.amount / 100;
     const email = data.customer.email;
-    const db = admin.firestore();
     const snapshot = await db.collection('users').where('email', '==', email).limit(1).get();
     if (!snapshot.empty) {
       const userRef = snapshot.docs[0].ref;
@@ -555,7 +548,6 @@ app.post('/api/giftcards/generate', async (req, res) => {
   if (!amount || !userId) return res.status(400).json({ status: false, message: 'Amount and User ID required' });
   
   try {
-    const db = admin.firestore();
     const userRef = db.collection('users').doc(userId);
     const userDoc = await userRef.get();
     
@@ -596,7 +588,6 @@ app.post('/api/giftcards/redeem', async (req, res) => {
   if (!code || !userId) return res.status(400).json({ status: false, message: 'Code and User ID required' });
   
   try {
-    const db = admin.firestore();
     const giftcardRef = db.collection('giftcards').doc(code.toUpperCase());
     const giftcardDoc = await giftcardRef.get();
     
@@ -651,7 +642,6 @@ app.post('/api/billstack-webhook', async (req, res) => {
   if (payload.event === 'PAYMENT_NOTIFIFICATION' && payload.data?.type === 'RESERVED_ACCOUNT_TRANSACTION') {
     const data = payload.data;
     const amount = parseFloat(data.amount);
-    const db = admin.firestore();
     const accountNumber = data.account?.account_number;
     const snapshot = await db.collection('users').where('virtualAccount.account_number', '==', accountNumber).limit(1).get();
     if (!snapshot.empty) {
@@ -690,11 +680,10 @@ if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
 async function processScheduledTransactions() {
   if (!admin.apps.length) return;
   
-  const db = admin.firestore();
   const now = admin.firestore.Timestamp.now();
   
   try {
-    console.log(`[Scheduler] Checking for pending transactions in project: ${admin.app().options.projectId}...`);
+    console.log(`[Scheduler] Checking for pending transactions in project: ${admin.app().options.projectId}, database: ${admin.app().options.databaseId || '(default)'}...`);
     
     // Test basic connectivity/permissions
     try {
@@ -704,6 +693,7 @@ async function processScheduledTransactions() {
       console.error('[Scheduler] Basic collection access FAILED:', testErr.message);
       if (testErr.message.includes('PERMISSION_DENIED')) {
         console.error('[Scheduler] CRITICAL: Service account lacks permissions for scheduled_transactions.');
+        console.error('[Scheduler] Auth details:', admin.app().options.credential ? 'Credential present' : 'No credential');
       }
     }
 
@@ -762,6 +752,7 @@ async function processScheduledTransactions() {
             endpoint = 'subcable';
             payload.serviceID = planId;
             payload.iucNum = recipient;
+            payload.cable = network; // Add cable field
             break;
           case 'power':
             endpoint = 'payelectric';

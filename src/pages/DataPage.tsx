@@ -142,7 +142,8 @@ const DataPage: React.FC = () => {
         amount: selectedPlan.amount,
         network: selectedOperator,
         plan_name: selectedPlan.name,
-        server: 1
+        server: 1,
+        resellerPrice: selectedPlan.resellerPrice
       });
       
       if (res.status) {
@@ -298,25 +299,68 @@ const DataPage: React.FC = () => {
                   </div>
                 )}
 
-                {/* Plan Selection */}
-                <div className="space-y-4">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">{dataTypes.length > 0 ? '3' : '2'}. Data Plan</label>
-                  <div className="relative">
-                    <select 
-                      className="w-full p-6 bg-gray-50 rounded-[2rem] font-bold text-lg border-2 border-transparent focus:border-emerald-600 focus:bg-white outline-none transition-all appearance-none"
-                      value={selectedPlanId}
-                      onChange={(e) => setSelectedPlanId(e.target.value)}
-                      disabled={!selectedOperator}
-                    >
-                      <option value="">Select Bundle</option>
-                      {dataPlans.map(p => <option key={p.id} value={p.id}>{p.name} - ₦{p.amount}</option>)}
-                    </select>
-                    <ChevronDown className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-                  </div>
+                {/* Plan Selection - Grid instead of Dropdown */}
+                <div className="md:col-span-2 space-y-6">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">
+                    {dataTypes.length > 0 ? '3' : '2'}. Select Data Plan
+                  </label>
+                  
+                  {!selectedOperator ? (
+                    <div className="p-12 bg-gray-50 rounded-[3rem] border-2 border-dashed border-gray-200 text-center space-y-4">
+                      <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto shadow-sm text-gray-300">
+                        <Smartphone className="w-8 h-8" />
+                      </div>
+                      <p className="text-gray-400 font-medium">Please select a network provider first.</p>
+                    </div>
+                  ) : dataPlans.length === 0 ? (
+                    <div className="p-12 bg-gray-50 rounded-[3rem] border-2 border-dashed border-gray-200 text-center space-y-4">
+                      <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto shadow-sm text-gray-300 animate-pulse">
+                        <Zap className="w-8 h-8" />
+                      </div>
+                      <p className="text-gray-400 font-medium">No plans found for this category.</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {dataPlans.map((p) => (
+                        <motion.button
+                          key={p.id}
+                          whileHover={{ y: -5 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => setSelectedPlanId(p.id)}
+                          className={`p-8 rounded-[2.5rem] border-2 text-left transition-all relative overflow-hidden group ${
+                            selectedPlanId === p.id 
+                              ? 'border-emerald-600 bg-emerald-50 shadow-xl shadow-emerald-100' 
+                              : 'border-gray-100 bg-white hover:border-emerald-200 hover:shadow-lg'
+                          }`}
+                        >
+                          {selectedPlanId === p.id && (
+                            <div className="absolute top-4 right-4">
+                              <CheckCircle2 className="w-6 h-6 text-emerald-600" />
+                            </div>
+                          )}
+                          <div className="space-y-4">
+                            <div className="space-y-1">
+                              <p className={`text-2xl font-black tracking-tighter leading-none ${selectedPlanId === p.id ? 'text-emerald-900' : 'text-gray-900'}`}>
+                                {p.name.split(' ')[0]}
+                              </p>
+                              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                {p.validity || '30 Days'}
+                              </p>
+                            </div>
+                            <div className="pt-4 border-t border-gray-100 group-hover:border-emerald-100 transition-colors">
+                              <p className={`text-xl font-black ${selectedPlanId === p.id ? 'text-emerald-600' : 'text-gray-900'}`}>
+                                ₦{p.amount.toLocaleString()}
+                              </p>
+                            </div>
+                          </div>
+                        </motion.button>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* Phone Number */}
-                <div className="space-y-4">
+                <div className="md:col-span-2 space-y-4">
                   <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">{dataTypes.length > 0 ? '4' : '3'}. Phone Number</label>
                   <div className="relative">
                     <input 

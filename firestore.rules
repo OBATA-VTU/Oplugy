@@ -2,64 +2,127 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Helper to check if user is admin
-    function isAdmin() {
-      return request.auth != null && 
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
-    }
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Fields:
+    //   - username: string (required)
+    //   - email: string (required, email format)
+    //   - walletBalance: number (required)
+    //   - role: string (required, 'user' or 'admin')
+    //   - phone: string (optional)
+    //   - isPinSet: boolean (optional)
+    //   - pin: string (optional)
+    //   - createdAt: timestamp (optional)
+    //
+    // Collection: transactions
+    // Fields:
+    //   - uid: string (required)
+    //   - type: string (required)
+    //   - amount: number (required)
+    //   - nairaAmount: number (optional)
+    //   - status: string (required, 'PENDING', 'SUCCESS', 'FAILED')
+    //   - createdAt: timestamp (required)
+    //   ... other optional fields
+    //
+    // ===============================================================
 
-    // Rules for the 'users' collection
-    match /users/{userId} {
-      allow read, write: if isAdmin();
-      // Allow user to get their own document
-      allow get: if request.auth != null && request.auth.uid == userId;
-      // Allow creation of new user document
-      allow create: if request.auth != null && request.auth.uid == userId;
-      // Allow user to update their own document
-      allow update: if request.auth != null && request.auth.uid == userId;
-      // Allow searching for usernames during signup
-      allow list: if true;
-    }
-
-    // Rules for the 'transactions' collection
-    match /transactions/{transactionId} {
-      allow read, write: if isAdmin();
-      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
-      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-    }
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
     
-    match /transactions {
-      allow list: if request.auth != null && (isAdmin() || request.query.limit <= 100);
+    function isAuthenticated() {
+      return request.auth != null;
     }
 
-    // Rules for the 'settings' collection - Allow public read for global config
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && (
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+        (request.auth.token.email == "ayubaboluwatife246@gmail.com" && request.auth.token.email_verified == true)
+      );
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['username', 'email', 'walletBalance', 'role']) &&
+             data.username is string && data.username.size() > 0 && data.username.size() < 50 &&
+             isValidEmail(data.email) &&
+             data.walletBalance is number &&
+             data.role in ['user', 'admin'];
+    }
+
+    function isValidTransaction(data) {
+      return data.keys().hasAll(['uid', 'type', 'amount', 'status', 'createdAt']) &&
+             data.uid is string &&
+             data.type is string &&
+             data.amount is number &&
+             data.status in ['PENDING', 'SUCCESS', 'FAILED'] &&
+             data.createdAt is timestamp;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      // PII Protection: Only owner or admin can read
+      allow read: if isOwner(userId) || isAdmin();
+      
+      // Create: User can create their own profile as 'user' role
+      allow create: if isOwner(userId) && 
+                      isValidUser(request.resource.data) && 
+                      request.resource.data.role == 'user' &&
+                      request.resource.data.walletBalance == 0;
+      
+      // Update: Owner can update non-sensitive fields, Admin can update everything
+      allow update: if (isOwner(userId) && 
+                       isValidUser(request.resource.data) && 
+                       request.resource.data.role == resource.data.role &&
+                       request.resource.data.walletBalance == resource.data.walletBalance) || 
+                      isAdmin();
+      
+      // List: Only admin can list users
+      allow list: if isAdmin();
+    }
+
+    match /transactions/{transactionId} {
+      // Only owner or admin can read
+      allow read: if (isAuthenticated() && resource.data.uid == request.auth.uid) || isAdmin();
+      
+      // Create: User can create their own transaction
+      allow create: if isAuthenticated() && 
+                      request.resource.data.uid == request.auth.uid &&
+                      isValidTransaction(request.resource.data);
+      
+      // Update/Delete: Only admin
+      allow update, delete: if isAdmin();
+      
+      // List: Owner can list their own, admin can list all
+      allow list: if (isAuthenticated() && request.query.limit <= 100) || isAdmin();
+    }
+
     match /settings/{settingId} {
+      // Public read for global config, admin write
       allow read: if true;
       allow write: if isAdmin();
     }
 
-    // Rules for manual pricing - Allow public read for price display
-    match /manual_pricing/{planId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-
-    // Rules for scheduled transactions
-    match /scheduled_transactions/{id} {
-      allow read, write: if request.auth != null && (
-        isAdmin() || 
-        (resource != null && resource.data.userId == request.auth.uid) || 
-        (request.resource != null && request.resource.data.userId == request.auth.uid)
-      );
-    }
-
-    // Rules for giftcards
-    match /giftcards/{id} {
-      allow read: if request.auth != null && (
-        isAdmin() || 
-        (resource != null && (resource.data.creatorId == request.auth.uid || resource.data.redeemerId == request.auth.uid))
-      );
-      allow write: if isAdmin();
+    // Default deny
+    match /{path=**} {
+      allow read, write: if false;
     }
   }
 }

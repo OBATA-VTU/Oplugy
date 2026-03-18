@@ -6,7 +6,7 @@ import { Operator } from '../types';
 import PinPromptModal from '../components/PinPromptModal';
 import InsufficientBalanceModal from '../components/InsufficientBalanceModal';
 import LoadingScreen from '../components/LoadingScreen';
-import { CheckCircle2, Receipt, ArrowRight, Zap, Smartphone, CreditCard, Lightbulb, ChevronDown } from 'lucide-react';
+import { CheckCircle2, Receipt, ArrowRight, Zap, Smartphone, CreditCard, Lightbulb, ChevronDown, Droplets, Flame } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 
@@ -30,11 +30,16 @@ const BillsPage: React.FC = () => {
   const [showInsufficientModal, setShowInsufficientModal] = useState(false);
   const [token, setToken] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [utilityType, setUtilityType] = useState<'electricity' | 'water' | 'gas'>('electricity');
 
   const numericAmount = parseFloat(amount);
   const selectedOperator = operators.find(op => op.id === selectedOperatorId);
 
   const fetchOperators = useCallback(async () => {
+    if (utilityType !== 'electricity') {
+      setOperators([]);
+      return;
+    }
     setIsLoading(true);
     setLoadingMessage('Loading Companies...');
     const response = await vtuService.getElectricityOperators();
@@ -42,7 +47,7 @@ const BillsPage: React.FC = () => {
       setOperators(response.data);
     }
     setIsLoading(false);
-  }, []);
+  }, [utilityType]);
 
   useEffect(() => {
     fetchOperators();
@@ -128,10 +133,31 @@ const BillsPage: React.FC = () => {
 
       <div className="text-center space-y-4">
         <div className="inline-flex p-4 bg-emerald-50 text-emerald-600 rounded-[2rem] mb-4 shadow-inner">
-          <Lightbulb className="w-10 h-10" />
+          {utilityType === 'electricity' ? <Lightbulb className="w-10 h-10" /> : 
+           utilityType === 'water' ? <Droplets className="w-10 h-10" /> : 
+           <Flame className="w-10 h-10" />}
         </div>
-        <h2 className="text-5xl lg:text-6xl font-black text-gray-900 tracking-tighter">Electricity</h2>
-        <p className="text-gray-400 font-medium text-xl max-w-xl mx-auto">Pay your electricity bills and get tokens instantly.</p>
+        <h2 className="text-5xl lg:text-6xl font-black text-gray-900 tracking-tighter capitalize">{utilityType}</h2>
+        <p className="text-gray-400 font-medium text-xl max-w-xl mx-auto">Pay your {utilityType} bills instantly.</p>
+      </div>
+
+      <div className="flex p-2 bg-white rounded-[3rem] shadow-xl max-w-md mx-auto border border-gray-100">
+        {(['electricity', 'water', 'gas'] as const).map((type) => (
+          <button
+            key={type}
+            onClick={() => {
+              setUtilityType(type);
+              resetAll();
+            }}
+            className={`flex-1 py-6 rounded-[2.5rem] font-black text-[11px] uppercase tracking-widest transition-all ${
+              utilityType === type 
+                ? 'bg-emerald-600 text-white shadow-2xl shadow-emerald-200' 
+                : 'text-gray-400 hover:text-gray-600'
+            }`}
+          >
+            {type}
+          </button>
+        ))}
       </div>
 
       <div className="bg-white p-8 lg:p-16 rounded-[4rem] shadow-2xl shadow-emerald-100/50 border border-gray-50 relative overflow-hidden">
@@ -148,7 +174,7 @@ const BillsPage: React.FC = () => {
               </div>
               <div className="space-y-4">
                 <h3 className="text-4xl font-black text-gray-900 tracking-tighter">Success!</h3>
-                <p className="text-gray-400 font-medium text-lg">Your electricity bill has been paid.</p>
+                <p className="text-gray-400 font-medium text-lg">Your {utilityType} bill has been paid.</p>
                 {token && (
                   <div className="bg-gray-900 p-8 rounded-[2rem] border-t-4 border-emerald-600 shadow-2xl mt-6">
                     <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.3em] mb-2">Your Token</p>
@@ -172,6 +198,21 @@ const BillsPage: React.FC = () => {
                   <Receipt className="w-4 h-4" />
                   <span>View Receipt</span>
                 </button>
+              </div>
+            </motion.div>
+          ) : utilityType !== 'electricity' ? (
+            <motion.div 
+              key="unavailable"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-center py-20 space-y-6"
+            >
+              <div className="w-20 h-20 bg-gray-50 rounded-3xl flex items-center justify-center mx-auto text-gray-300">
+                {utilityType === 'water' ? <Droplets className="w-10 h-10" /> : <Flame className="w-10 h-10" />}
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-2xl font-black text-gray-900 tracking-tighter">Service Unavailable</h3>
+                <p className="text-gray-400 font-medium">We're currently working on adding {utilityType} payments. Please check back soon!</p>
               </div>
             </motion.div>
           ) : (

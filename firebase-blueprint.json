@@ -1,0 +1,65 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile and balance information",
+      "type": "object",
+      "properties": {
+        "username": { "type": "string", "description": "Display name" },
+        "email": { "type": "string", "format": "email", "description": "User email" },
+        "walletBalance": { "type": "number", "description": "Naira balance" },
+        "role": { "type": "string", "enum": ["user", "admin"], "description": "User role" },
+        "phone": { "type": "string", "description": "Phone number" },
+        "isPinSet": { "type": "boolean", "description": "Whether transaction PIN is set" },
+        "pin": { "type": "string", "description": "Hashed transaction PIN" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Account creation time" }
+      },
+      "required": ["username", "email", "walletBalance", "role"]
+    },
+    "Transaction": {
+      "title": "Transaction",
+      "description": "Financial and crypto transactions",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "User ID" },
+        "type": { "type": "string", "description": "Transaction type (e.g., crypto_purchase, crypto_sell, crypto_fund, CREDIT, DEBIT)" },
+        "amount": { "type": "number", "description": "Amount in USD or other currency" },
+        "nairaAmount": { "type": "number", "description": "Amount in Naira" },
+        "currency": { "type": "string", "description": "Currency code" },
+        "crypto_currency": { "type": "string", "description": "Crypto currency code" },
+        "status": { "type": "string", "enum": ["PENDING", "SUCCESS", "FAILED"], "description": "Transaction status" },
+        "payment_id": { "type": "string", "description": "NOWPayments payment ID" },
+        "order_id": { "type": "string", "description": "Internal order ID" },
+        "payout_id": { "type": "string", "description": "NOWPayments payout ID" },
+        "address": { "type": "string", "description": "Crypto wallet address" },
+        "source": { "type": "string", "description": "Transaction source (e.g., Paystack, NOWPayments)" },
+        "reference": { "type": "string", "description": "External reference" },
+        "remarks": { "type": "string", "description": "Additional notes" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Transaction time" }
+      },
+      "required": ["uid", "type", "amount", "status", "createdAt"]
+    },
+    "GlobalSettings": {
+      "title": "Global Settings",
+      "description": "Global configuration for the platform",
+      "type": "object",
+      "properties": {
+        "cryptoRate": { "type": "number", "description": "NGN per USD rate for crypto" }
+      }
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User documents"
+    },
+    "/transactions/{transactionId}": {
+      "schema": "Transaction",
+      "description": "Transaction history"
+    },
+    "/settings/global": {
+      "schema": "GlobalSettings",
+      "description": "Global configuration"
+    }
+  }
+}

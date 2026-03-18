@@ -6,6 +6,7 @@ import {
   updateDoc, 
   getDoc, 
   query, 
+  where,
   increment,
   limit,
   orderBy,
@@ -214,6 +215,55 @@ export const adminService = {
       return { status: true, message: "Network logos updated." };
     } catch (error: any) {
       return { status: false, message: "Failed to update network logos" };
+    }
+  },
+
+  async processResellerPayouts(): Promise<ApiResponse<any>> {
+    try {
+      const usersRef = collection(db, "users");
+      const q = query(usersRef, where("role", "==", "reseller"), where("accumulatedProfit", ">", 0));
+      const snapshot = await getDocs(q);
+      
+      let processedCount = 0;
+      let totalAmount = 0;
+      
+      for (const userDoc of snapshot.docs) {
+        const userData = userDoc.data();
+        const profit = userData.accumulatedProfit;
+        const bankDetails = userData.bankDetails;
+        
+        if (profit > 0 && bankDetails?.accountNumber) {
+          // In a real app, you would call a payout API here (e.g., Paystack, Flutterwave)
+          // For this demo, we'll just log the payout and reset the profit
+          
+          await addDoc(collection(db, "transactions"), {
+            userId: userDoc.id,
+            userEmail: userData.email,
+            type: 'PAYOUT',
+            amount: profit,
+            source: 'Reseller Profit Payout',
+            remarks: `Monthly profit payout to ${bankDetails.bankName} (${bankDetails.accountNumber})`,
+            status: 'SUCCESS',
+            date_created: serverTimestamp(),
+            date_updated: serverTimestamp()
+          });
+          
+          await updateDoc(doc(db, "users", userDoc.id), {
+            accumulatedProfit: 0
+          });
+          
+          processedCount++;
+          totalAmount += profit;
+        }
+      }
+      
+      return { 
+        status: true, 
+        message: `Successfully processed ${processedCount} payouts totaling ₦${totalAmount.toLocaleString()}`,
+        data: { processedCount, totalAmount }
+      };
+    } catch (error: any) {
+      return { status: false, message: error.message || "Failed to process payouts" };
     }
   }
 };
